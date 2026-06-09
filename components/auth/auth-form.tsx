@@ -104,25 +104,6 @@ export function AuthForm({ mode }: { mode: Mode }) {
 
   return (
     <div className="flex flex-col gap-5">
-      <Button
-        type="button"
-        variant="outline"
-        onClick={handleGoogle}
-        loading={oauthLoading}
-        className="w-full border-border bg-surface text-gb-ink hover:bg-gb-cream"
-      >
-        <GoogleIcon />
-        Continuar com Google
-      </Button>
-
-      <div className="flex items-center gap-3" role="separator">
-        <span className="h-px flex-1 bg-border" />
-        <span className="text-xs font-medium uppercase tracking-wide text-muted">
-          ou
-        </span>
-        <span className="h-px flex-1 bg-border" />
-      </div>
-
       <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
         {!isLogin && (
           <>
