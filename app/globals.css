@@ -1,0 +1,101 @@
+@import "tailwindcss";
+
+
+/* ------------------------------------------------------------------ */
+/*  Design tokens — base Grupo Boticário                              */
+/*  Valores GB-aligned recomendados. Trocar pelos hex oficiais        */
+/*  do manual de marca quando disponíveis (somente estes tokens).     */
+/* ------------------------------------------------------------------ */
+@theme {
+  /* Extra-small breakpoint */
+  --breakpoint-xs: 30rem; /* 480px */
+
+  /* Marca */
+  --color-gb-green: #00a859;
+  --color-gb-green-dark: #006341;
+  --color-gb-green-deep: #063d2b;
+  --color-gb-cream: #f7f3ec;
+  --color-gb-ink: #14211b;
+  --color-gb-slate: #4a5751;
+  --color-gb-gold: #d9a441;
+
+  /* Raridades (espelha a tabela `rarities` do banco) */
+  --color-rarity-common: #a8a8a8;
+  --color-rarity-rare: #ffd700;
+  --color-rarity-super: #ff6ec7;
+
+  /* Semânticos */
+  --color-primary: var(--color-gb-green);
+  --color-primary-hover: var(--color-gb-green-dark);
+  --color-surface: #ffffff;
+  --color-background: var(--color-gb-cream);
+  --color-foreground: var(--color-gb-ink);
+  --color-muted: var(--color-gb-slate);
+  --color-border: #e3ddd1;
+
+  /* Tipografia (variáveis injetadas por next/font em layout.tsx) */
+  --font-display: var(--font-fraunces), Georgia, "Times New Roman", serif;
+  --font-body: var(--font-mulish), system-ui, -apple-system, sans-serif;
+
+  /* Raio e sombra com intenção (papel premium) */
+  --radius-card: 1rem;
+  --shadow-paper: 0 1px 2px rgba(20, 33, 27, 0.06),
+    0 12px 32px -12px rgba(6, 61, 43, 0.18);
+
+  /* Motion */
+  --ease-quick: 200ms;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-body);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+  }
+
+  /* Foco visível e acessível em toda a aplicação */
+  :focus-visible {
+    outline: 2px solid var(--color-gb-green);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+}
+
+/* ── Animações customizadas ──────────────────────────────────────────── */
+@keyframes shimmer {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+
+@layer utilities {
+  .animate-shimmer {
+    animation: shimmer 2.4s infinite linear;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

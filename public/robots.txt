@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+# Bloquear rotas privadas
+Disallow: /admin
+Disallow: /api/
+Disallow: /figurinha
+
+Sitemap: https://album.grupoboticario.com.br/sitemap.xml
