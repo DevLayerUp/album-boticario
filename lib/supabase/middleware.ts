@@ -6,41 +6,56 @@ type CookieToSet = { name: string; value: string; options?: CookieOptions };
 const PUBLIC_ROUTES = ["/login", "/register", "/auth"];
 const ADMIN_PREFIX = "/admin";
 
+/** Rotas que nunca precisam de autenticação (recursos do sistema/browser) */
+const ALWAYS_PUBLIC = [
+  "/manifest.webmanifest",
+  "/robots.txt",
+  "/sitemap.xml",
+  "/favicon.svg",
+  "/favicon.ico",
+  "/.well-known/",
+  "/opengraph-image",
+];
+
 /**
- * Remove cookies de sessão do Supabase em chunks que ficaram
- * acumulados no browser (causa do HTTP 431).
- * Mantém apenas o cookie canônico "sb-<ref>-auth-token" (sem sufixo).
+ * Remove chunks ANTIGOS do cookie de sessão Supabase (causa do HTTP 431).
+ * SÓ apaga chunks (.0, .1, ...) quando existe um cookie canônico sem sufixo,
+ * indicando que o Supabase já migrou para o formato único.
+ * Se a sessão está armazenada APENAS em chunks, NÃO os apaga.
  */
 function purgeStaleAuthChunks(
   request: NextRequest,
   response: NextResponse,
 ): void {
-  const cookiePrefix = "sb-";
   const chunkPattern = /^sb-.+-auth-token\.\d+$/;
+  const canonicalPattern = /^sb-.+-auth-token$/;
 
-  request.cookies.getAll().forEach(({ name }) => {
+  const allCookies = request.cookies.getAll();
+
+  // Se não há cookie canônico (sem sufixo), os chunks SÃO a sessão ativa — não apagar
+  const hasCanonical = allCookies.some(({ name }) => canonicalPattern.test(name));
+  if (!hasCanonical) return;
+
+  // Só chegamos aqui se existe um canônico → os chunks são resíduos antigos
+  allCookies.forEach(({ name }) => {
     if (chunkPattern.test(name)) {
       response.cookies.set(name, "", { maxAge: 0, path: "/" });
     }
   });
-
-  // Garante que o cookie canônico não seja apagado caso exista
-  const canonical = request.cookies
-    .getAll()
-    .find(
-      ({ name }) =>
-        name.startsWith(cookiePrefix) &&
-        name.endsWith("-auth-token") &&
-        !chunkPattern.test(name),
-    );
-  if (canonical) {
-    // não toca no canônico — deixa o Supabase gerenciá-lo
-    void canonical;
-  }
 }
 
 /** Atualiza a sessão e aplica proteção de rotas (usuário e admin). */
 export async function updateSession(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  // Sempre deixa passar: recursos do browser/sistema (sem chamar getUser)
+  const isAlwaysPublic = ALWAYS_PUBLIC.some(
+    (p) => pathname === p || pathname.startsWith(p),
+  );
+  if (isAlwaysPublic) {
+    return NextResponse.next({ request });
+  }
+
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(
@@ -66,15 +81,18 @@ export async function updateSession(request: NextRequest) {
 
   const {
     data: { user },
+    error: authError,
   } = await supabase.auth.getUser();
 
-  const { pathname } = request.nextUrl;
+  console.log(`[MIDDLEWARE] ${pathname} — user: ${user?.id ?? "null"} ${authError ? "ERR:" + authError.message : ""}`);
+
   const isPublic = PUBLIC_ROUTES.some(
     (route) => pathname === route || pathname.startsWith(`${route}/`),
   );
 
   // Não autenticado tentando acessar rota protegida → login
   if (!user && !isPublic) {
+    console.log(`[MIDDLEWARE] sem sessão em rota protegida → redirect /login?redirect=${pathname}`);
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.searchParams.set("redirect", pathname);
@@ -95,6 +113,7 @@ export async function updateSession(request: NextRequest) {
 
   // Autenticado em rota de auth → dashboard
   if (user && (pathname === "/login" || pathname === "/register")) {
+    console.log(`[MIDDLEWARE] usuário autenticado em /login → redirect /dashboard`);
     const url = request.nextUrl.clone();
     url.pathname = "/dashboard";
     return NextResponse.redirect(url);

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -10,9 +10,17 @@ import { Input } from "@/components/ui/input";
 type Mode = "login" | "register";
 
 export function AuthForm({ mode }: { mode: Mode }) {
-  const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectTo = searchParams.get("redirect") ?? "/dashboard";
+  // Só aceita redirects para rotas internas do app (começa com /)
+  // Rejeita recursos do browser como /manifest.webmanifest, /.well-known, etc.
+  const rawRedirect = searchParams.get("redirect") ?? "/dashboard";
+  const SAFE_REDIRECT_PREFIXES = [
+    "/dashboard", "/album", "/colecao", "/pacotinhos",
+    "/quiz", "/missoes", "/trocas", "/perfil", "/figurinha", "/admin",
+  ];
+  const redirectTo = SAFE_REDIRECT_PREFIXES.some((p) => rawRedirect.startsWith(p))
+    ? rawRedirect
+    : "/dashboard";
 
   const [fullName, setFullName] = useState("");
   const [birthDate, setBirthDate] = useState("");
@@ -40,13 +48,20 @@ export function AuthForm({ mode }: { mode: Mode }) {
 
     try {
       if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({
+        console.log("[AUTH] Tentando login com email:", email);
+        const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
-        if (error) throw error;
-        router.push(redirectTo);
-        router.refresh();
+        if (error) {
+          console.error("[AUTH] Erro no signInWithPassword:", error.message, error.status);
+          throw error;
+        }
+        console.log("[AUTH] Login OK — user id:", data.user?.id, "session:", !!data.session);
+        console.log("[AUTH] Redirecionando para:", redirectTo);
+        // Força reload completo para garantir que os cookies de sessão
+        // sejam enviados corretamente ao servidor antes de renderizar.
+        window.location.href = redirectTo;
       } else {
         const nome = fullName.trim();
         if (nome.length < 3) {

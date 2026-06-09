@@ -6,6 +6,9 @@ type CookieToSet = { name: string; value: string; options?: CookieOptions };
 /** Cliente Supabase para Server Components, Server Actions e Route Handlers. */
 export async function createClient() {
   const cookieStore = await cookies();
+  const allCookies = cookieStore.getAll();
+  const authCookies = allCookies.filter((c) => c.name.startsWith("sb-"));
+  console.log(`[SUPABASE SERVER] cookies auth: [${authCookies.map((c) => c.name).join(", ")}]`);
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

@@ -10,10 +10,14 @@ export default async function DashboardPage() {
   const supabase = await createClient();
   const {
     data: { user },
+    error: authError,
   } = await supabase.auth.getUser();
+
+  console.log("[DASHBOARD] getUser →", user?.id ?? "null", authError?.message ?? "");
 
   // Guard: se não há sessão válida, redireciona para login
   if (!user) {
+    console.log("[DASHBOARD] sem user → redirect /login");
     redirect("/login");
   }
 
@@ -45,7 +49,7 @@ export default async function DashboardPage() {
       .from("user_missions")
       .select("*", { count: "exact", head: true })
       .eq("user_id", user.id)
-      .eq("status", "completed"),
+      .not("completed_at", "is", null),
   ]);
 
   const nome =
