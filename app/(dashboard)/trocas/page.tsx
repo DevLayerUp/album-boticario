@@ -1,4 +1,4 @@
-import { TrocasClient } from "./trocas-client";
+import TrocasClient from "./trocas-client";
 
 export const metadata = { title: "Trocas | Álbum Boticário" };
 
