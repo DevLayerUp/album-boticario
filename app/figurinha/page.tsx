@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { StickerOnboarding } from "@/components/sticker/sticker-onboarding";
 
@@ -8,12 +9,13 @@ export default async function FigurinhaPage() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
 
   // Busca o profile para verificar se já existe uma figurinha
   const { data: profile } = await supabase
     .from("profiles")
     .select("sticker_url, display_name")
-    .eq("id", user!.id)
+    .eq("id", user.id)
     .single();
 
   const firstName =

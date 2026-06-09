@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Início" };
@@ -11,6 +12,11 @@ export default async function DashboardPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
+  // Guard: se não há sessão válida, redireciona para login
+  if (!user) {
+    redirect("/login");
+  }
+
   const [
     profileRes,
     stickersRes,
@@ -19,26 +25,26 @@ export default async function DashboardPage() {
     filledRes,
     missionsRes,
   ] = await Promise.all([
-    supabase.from("profiles").select("sticker_url").eq("id", user!.id).single(),
+    supabase.from("profiles").select("sticker_url").eq("id", user.id).single(),
     supabase
       .from("user_stickers")
       .select("*", { count: "exact", head: true })
-      .eq("user_id", user!.id)
+      .eq("user_id", user.id)
       .gte("quantity", 1),
     supabase
-      .from("user_packs")
+      .from("packs")
       .select("*", { count: "exact", head: true })
-      .eq("user_id", user!.id)
-      .eq("status", "available"),
+      .eq("user_id", user.id)
+      .is("opened_at", null),
     supabase.from("album_slots").select("*", { count: "exact", head: true }),
     supabase
-      .from("user_album_stickers")
+      .from("user_album")
       .select("*", { count: "exact", head: true })
-      .eq("user_id", user!.id),
+      .eq("user_id", user.id),
     supabase
       .from("user_missions")
       .select("*", { count: "exact", head: true })
-      .eq("user_id", user!.id)
+      .eq("user_id", user.id)
       .eq("status", "completed"),
   ]);
 

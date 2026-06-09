@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { AlbumClient } from "./album-client";
 
@@ -9,6 +10,7 @@ export default async function AlbumPage() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
 
   // Categories
   const { data: categories } = await supabase
@@ -20,13 +22,13 @@ export default async function AlbumPage() {
   const { data: userAlbum } = await supabase
     .from("user_album")
     .select("slot_id, sticker_id, pasted_at")
-    .eq("user_id", user!.id);
+    .eq("user_id", user.id);
 
   // User stickers inventory
   const { data: userStickers } = await supabase
     .from("user_stickers")
     .select("sticker_id, quantity")
-    .eq("user_id", user!.id);
+    .eq("user_id", user.id);
 
   // Total slots for progress
   const { count: totalSlots } = await supabase

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { ColecaoClient } from "./colecao-client";
 
@@ -9,6 +10,7 @@ export default async function ColecaoPage() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
 
   // All stickers visible in the app
   const { data: allStickers } = await supabase
@@ -25,7 +27,7 @@ export default async function ColecaoPage() {
   const { data: userStickers } = await supabase
     .from("user_stickers")
     .select("sticker_id, quantity")
-    .eq("user_id", user!.id);
+    .eq("user_id", user.id);
 
   // Categories for filter
   const { data: categories } = await supabase
