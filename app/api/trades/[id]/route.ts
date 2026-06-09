@@ -161,6 +161,15 @@ export async function POST(request: NextRequest, { params }: Params) {
     .eq("status", "pending")
     .neq("id", tradeId);
 
+  // Auto-fulfill any open wish from the receiver for the offered sticker
+  // (receiver just received the sticker they were wishing for)
+  await supabase
+    .from("trade_wishes")
+    .update({ status: "fulfilled" })
+    .eq("user_id", trade.receiver_id)
+    .eq("sticker_id", trade.offered_sticker_id)
+    .eq("status", "open");
+
   // Increment mission progress for both
   await Promise.all([
     incrementMissionProgress(supabase, user.id, "trade_count", 1),
