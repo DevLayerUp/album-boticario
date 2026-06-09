@@ -86,7 +86,7 @@ export async function POST(request: NextRequest, { params }: Params) {
       .maybeSingle(),
   ]);
 
-  if (!requesterHas || requesterHas.quantity < 2) {
+  if (!requesterHas || requesterHas.quantity < 1) {
     await supabase
       .from("trade_requests")
       .update({ status: "cancelled", resolved_at: new Date().toISOString() })

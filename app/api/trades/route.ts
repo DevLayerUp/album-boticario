@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Você não pode trocar consigo mesmo" }, { status: 400 });
   }
 
-  // 1. Requester must have qty >= 2 of the offered sticker
+  // 1. Requester must have at least 1 copy of the offered sticker
   const { data: offeredOwned } = await supabase
     .from("user_stickers")
     .select("quantity")
@@ -92,9 +92,9 @@ export async function POST(request: NextRequest) {
     .eq("sticker_id", offered_sticker_id)
     .maybeSingle();
 
-  if (!offeredOwned || offeredOwned.quantity < 2) {
+  if (!offeredOwned || offeredOwned.quantity < 1) {
     return NextResponse.json(
-      { error: "Você precisa ter pelo menos 2 cópias para oferecer uma em troca" },
+      { error: "Você não possui essa figurinha para oferecer" },
       { status: 400 }
     );
   }

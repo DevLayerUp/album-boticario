@@ -3,7 +3,8 @@ import { createClient } from "@/lib/supabase/server";
 
 /**
  * GET /api/trades/available
- * Returns the current user's stickers with qty >= 2 (eligible to offer in a trade).
+ * Returns the current user's stickers with qty >= 1 (eligible to offer in a trade).
+ * Users can trade any sticker they own, even their only copy.
  */
 export async function GET() {
   const supabase = await createClient();
@@ -20,7 +21,7 @@ export async function GET() {
       )
     `)
     .eq("user_id", user.id)
-    .gte("quantity", 2)
+    .gte("quantity", 1)
     .order("quantity", { ascending: false });
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
@@ -29,7 +30,7 @@ export async function GET() {
     (data ?? []).map((row) => ({
       sticker: row.stickers,
       quantity: row.quantity,
-      tradeable: row.quantity - 1, // how many can be offered (keeping 1)
+      tradeable: row.quantity, // all copies can be offered
     }))
   );
 }

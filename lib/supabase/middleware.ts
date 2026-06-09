@@ -3,18 +3,22 @@ import { NextResponse, type NextRequest } from "next/server";
 
 type CookieToSet = { name: string; value: string; options?: CookieOptions };
 
+/** Rotas públicas que não exigem sessão */
 const PUBLIC_ROUTES = ["/login", "/register", "/auth"];
 const ADMIN_PREFIX = "/admin";
 
 /** Rotas que nunca precisam de autenticação (recursos do sistema/browser) */
 const ALWAYS_PUBLIC = [
+  "/",                    // landing page
   "/manifest.webmanifest",
   "/robots.txt",
   "/sitemap.xml",
+  "/sitemap-0.xml",
   "/favicon.svg",
   "/favicon.ico",
   "/.well-known/",
   "/opengraph-image",
+  "/api/categories",      // endpoint público de categorias
 ];
 
 /**

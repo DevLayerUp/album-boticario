@@ -448,8 +448,11 @@ function FulfillWishModal({
   const [sending, setSending]   = useState(false);
   const [error, setError]       = useState("");
 
-  const canOffer = wish.sticker != null &&
-    myAvailable.some((m) => m.sticker?.id === wish.sticker!.id);
+  const myEntry   = wish.sticker != null
+    ? myAvailable.find((m) => m.sticker?.id === wish.sticker!.id)
+    : undefined;
+  const canOffer  = myEntry != null;
+  const isLastCopy = myEntry != null && myEntry.quantity === 1;
 
   async function send() {
     if (!selected || !wish.sticker || !wish.user) return;
@@ -494,9 +497,17 @@ function FulfillWishModal({
               Você vai oferecer
             </p>
             <p className="text-sm font-semibold text-gb-ink">{wish.sticker?.name}</p>
-            {!canOffer && (
+            {!canOffer ? (
               <p className="mt-1 text-xs text-red-500">
-                Você não tem duplicatas desta figurinha
+                Você não possui esta figurinha
+              </p>
+            ) : isLastCopy ? (
+              <p className="mt-1 text-xs text-amber-600">
+                ⚠ Você só tem 1 cópia — ela será enviada na troca
+              </p>
+            ) : (
+              <p className="mt-1 text-xs text-gb-green">
+                ✓ Você tem {myEntry!.quantity} cópias
               </p>
             )}
           </div>
@@ -783,7 +794,7 @@ function ExploreTab() {
                       </button>
                     ) : (
                       <div className="flex items-center justify-center gap-2 rounded-2xl border border-dashed border-gray-200 bg-gray-50 py-2.5 text-xs text-muted">
-                        Você não tem duplicatas desta figurinha
+                        Você não possui esta figurinha
                       </div>
                     )}
                   </div>
