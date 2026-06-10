@@ -67,7 +67,6 @@ export function FlipBook({
 
   return (
     <div className="select-none">
-      {/* Spread counter + dot pagination */}
       <div className="mb-3 flex items-center justify-between px-1">
         <span className="text-sm text-verde-escuro-300">
           Páginas{" "}
@@ -94,7 +93,6 @@ export function FlipBook({
         </div>
       </div>
 
-      {/* Book spread stage */}
       <div className="relative mx-auto w-full max-w-[1396px] overflow-hidden">
         <AnimatePresence mode="wait" custom={direction}>
           <motion.div
@@ -106,56 +104,27 @@ export function FlipBook({
             exit="exit"
             className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-0"
           >
-            {/* Left page */}
             {leftPage && (
-<<<<<<< Updated upstream
               <AlbumPage
                 page={leftPage}
                 side="left"
                 pastedSlotIds={pastedSlotIds}
                 ownedMap={ownedMap}
                 onPaste={onPaste}
+                userStickerUrl={userStickerUrl}
               />
-=======
-              <div className="relative">
-                {/* Page edge shadow (right side = spine) */}
-                <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-4 bg-gradient-to-l from-black/10 to-transparent md:block" />
-                <AlbumPage
-                  page={leftPage}
-                  pastedSlotIds={pastedSlotIds}
-                  ownedMap={ownedMap}
-                  onPaste={onPaste}
-                  userStickerUrl={userStickerUrl}
-                />
-              </div>
->>>>>>> Stashed changes
             )}
 
-            {/* Right page */}
             {rightPage ? (
-<<<<<<< Updated upstream
               <AlbumPage
                 page={rightPage}
                 side="right"
                 pastedSlotIds={pastedSlotIds}
                 ownedMap={ownedMap}
                 onPaste={onPaste}
+                userStickerUrl={userStickerUrl}
               />
-=======
-              <div className="relative">
-                {/* Page edge shadow (left side = spine) */}
-                <div className="pointer-events-none absolute inset-y-0 left-0 hidden w-4 bg-gradient-to-r from-black/10 to-transparent md:block" />
-                <AlbumPage
-                  page={rightPage}
-                  pastedSlotIds={pastedSlotIds}
-                  ownedMap={ownedMap}
-                  onPaste={onPaste}
-                  userStickerUrl={userStickerUrl}
-                />
-              </div>
->>>>>>> Stashed changes
             ) : (
-              /* Empty right page placeholder */
               <div className="hidden rounded-r-card bg-verde-escuro-500/95 md:flex md:items-center md:justify-center">
                 <p className="text-sm text-verde-100/60">Última página</p>
               </div>
@@ -164,7 +133,6 @@ export function FlipBook({
         </AnimatePresence>
       </div>
 
-      {/* Navigation */}
       <div className="mt-5 flex items-center justify-between">
         <button
           onClick={() => goTo(spreadIndex - 1)}

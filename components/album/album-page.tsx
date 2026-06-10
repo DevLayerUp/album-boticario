@@ -1,20 +1,18 @@
 "use client";
 
 import Image from "next/image";
-<<<<<<< Updated upstream
+import Link from "next/link";
+import { Camera } from "lucide-react";
 import { StickerSlot, type SlotSticker } from "./sticker-slot";
-import { parseLayoutData, type Title3Data } from "@/lib/album-templates";
+import {
+  parseLayoutData,
+  type Title3Data,
+  type ProfileData,
+} from "@/lib/album-templates";
 import { dashboardAssets } from "@/lib/dashboard-assets";
 import { cn } from "@/lib/utils";
 
 export type PageSide = "left" | "right";
-=======
-import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
-import { CheckCircle2, Camera } from "lucide-react";
-import { StickerSlot, type SlotSticker } from "./sticker-slot";
-import { parseLayoutData, type Title3Data, type ProfileData } from "@/lib/album-templates";
->>>>>>> Stashed changes
 
 export interface AlbumPageData {
   id: number;
@@ -45,7 +43,6 @@ interface AlbumPageProps {
   userStickerUrl?: string | null;
 }
 
-// ─── Page shell — fundo verde escuro + blobs decorativos (Figma 28:583) ───────
 function PageShell({
   side,
   children,
@@ -65,7 +62,6 @@ function PageShell({
           : "rounded-card md:rounded-l-none",
       )}
     >
-      {/* Elementos decorativos importados manualmente (fallback: verde sólido) */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 bg-no-repeat"
@@ -80,7 +76,6 @@ function PageShell({
   );
 }
 
-// ─── Badge do logo (caixa branca no rodapé da página, Figma 28:1130) ──────────
 function LogoBadge() {
   return (
     <div className="flex h-[53px] w-[98px] items-center justify-center rounded-input bg-white">
@@ -97,14 +92,12 @@ function LogoBadge() {
   );
 }
 
-// ─── Template: title3 — título + texto + 3 figurinhas + logo ──────────────────
 function Title3Page({ page, side, pastedSlotIds, ownedMap, onPaste }: AlbumPageProps) {
   const slots = [...page.album_slots].sort((a, b) => a.slot_number - b.slot_number);
 
-  // Parse JSON layout data stored in `content`
-  const data     = parseLayoutData(page.content) as Title3Data;
-  const title    = data.title ?? page.title ?? null;
-  const text     = data.text ?? null;
+  const data  = parseLayoutData(page.content) as Title3Data;
+  const title = data.title ?? page.title ?? null;
+  const text  = data.text ?? null;
 
   return (
     <PageShell side={side}>
@@ -122,7 +115,6 @@ function Title3Page({ page, side, pastedSlotIds, ownedMap, onPaste }: AlbumPageP
           />
         )}
 
-        {/* 3 figurinhas em linha */}
         <div className="mt-8 grid grid-cols-3 gap-4 md:gap-7">
           {slots.slice(0, 3).map((slot) => {
             const stickerId = slot.stickers?.id;
@@ -140,7 +132,6 @@ function Title3Page({ page, side, pastedSlotIds, ownedMap, onPaste }: AlbumPageP
           })}
         </div>
 
-        {/* Logo no rodapé */}
         <div className="mt-auto flex justify-center pt-10">
           <LogoBadge />
         </div>
@@ -149,45 +140,23 @@ function Title3Page({ page, side, pastedSlotIds, ownedMap, onPaste }: AlbumPageP
   );
 }
 
-<<<<<<< Updated upstream
-// ─── Template: 3x3 — grade de 9 figurinhas ────────────────────────────────────
-function Grid3x3Page({ page, side, pastedSlotIds, ownedMap, onPaste }: AlbumPageProps) {
-  const slots = [...page.album_slots].sort((a, b) => a.slot_number - b.slot_number);
-=======
-// ─── Template: profile (user photo sticker) ─────────────────────────────────────
-function ProfilePage({ page, userStickerUrl }: AlbumPageProps) {
-  const data  = parseLayoutData(page.content) as ProfileData;
-  const title = data.title ?? page.title ?? "Minha Figurinha";
+function ProfilePage({ page, side, userStickerUrl }: AlbumPageProps) {
+  const data       = parseLayoutData(page.content) as ProfileData;
+  const title      = data.title ?? page.title ?? "Minha Figurinha";
   const hasSticker = Boolean(userStickerUrl);
 
   return (
-    <div
-      className="relative flex min-h-[480px] flex-col overflow-hidden rounded-2xl p-5"
-      style={{ background: "#1A5C35" }}
-    >
-      <PageBackground />
-
-      <div className="relative z-10 mb-4">
-        <p className="mb-1 text-[10px] font-semibold uppercase tracking-widest text-white/50">
-          Pág. {page.page_number}
-        </p>
+    <PageShell side={side}>
+      <div className="flex flex-1 flex-col items-center justify-center px-6 py-8 sm:px-[10%]">
         {title && (
-          <h2 className="font-display text-2xl font-extrabold leading-tight text-white drop-shadow">
+          <h2 className="mb-8 text-center font-display text-3xl font-bold leading-[1.4] text-white md:text-4xl">
             {title}
           </h2>
         )}
-        <div className="mt-2">
-          <ProgressBar filled={hasSticker ? 1 : 0} total={1} />
-        </div>
-      </div>
 
-      <div className="relative z-10 flex flex-1 flex-col items-center justify-center py-4">
         {hasSticker ? (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.92 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ type: "spring", stiffness: 260, damping: 22 }}
-            className="relative overflow-hidden rounded-2xl shadow-2xl shadow-black/30"
+          <div
+            className="relative overflow-hidden rounded-card shadow-2xl shadow-black/30"
             style={{ width: 200, aspectRatio: "400/550" }}
           >
             <Image
@@ -198,10 +167,10 @@ function ProfilePage({ page, userStickerUrl }: AlbumPageProps) {
               sizes="200px"
               priority
             />
-          </motion.div>
+          </div>
         ) : (
           <div
-            className="flex flex-col items-center justify-center gap-4 rounded-2xl border-2 border-dashed border-white/25 bg-white/5 p-8 text-center"
+            className="flex flex-col items-center justify-center gap-4 rounded-card border-2 border-dashed border-white/25 bg-white/5 p-8 text-center"
             style={{ width: 200, aspectRatio: "400/550" }}
           >
             <Camera className="size-10 text-white/40" strokeWidth={1.5} />
@@ -210,29 +179,23 @@ function ProfilePage({ page, userStickerUrl }: AlbumPageProps) {
             </p>
             <Link
               href="/figurinha"
-              className="rounded-pill bg-[#D6E44A] px-5 py-2 text-sm font-semibold text-[#1A5C35] transition-[filter,transform] duration-200 hover:-translate-y-px hover:brightness-95"
+              className="rounded-pill bg-amarelo px-5 py-2 text-sm font-semibold text-verde-escuro-500 transition-[filter,transform] duration-200 hover:-translate-y-px hover:brightness-95"
             >
               Criar figurinha
             </Link>
           </div>
         )}
-      </div>
 
-      {hasSticker && <CompleteBanner />}
-    </div>
+        <div className="mt-auto flex justify-center pt-10">
+          <LogoBadge />
+        </div>
+      </div>
+    </PageShell>
   );
 }
 
-// ─── Template: 3x3 ────────────────────────────────────────────────────────────
-function Grid3x3Page({ page, pastedSlotIds, ownedMap, onPaste }: AlbumPageProps) {
-  const slots    = [...page.album_slots].sort((a, b) => a.slot_number - b.slot_number);
-  const filled   = slots.filter((s) => pastedSlotIds.has(s.id)).length;
-  const total    = slots.length;
-  const complete = total > 0 && filled === total;
-
-  const data  = parseLayoutData(page.content);
-  const title = (data as { title?: string }).title ?? page.title ?? null;
->>>>>>> Stashed changes
+function Grid3x3Page({ page, side, pastedSlotIds, ownedMap, onPaste }: AlbumPageProps) {
+  const slots = [...page.album_slots].sort((a, b) => a.slot_number - b.slot_number);
 
   return (
     <PageShell side={side}>
@@ -258,40 +221,12 @@ function Grid3x3Page({ page, pastedSlotIds, ownedMap, onPaste }: AlbumPageProps)
   );
 }
 
-// ─── Exported component ────────────────────────────────────────────────────────
-<<<<<<< Updated upstream
 export function AlbumPage(props: AlbumPageProps) {
+  if (props.page.layout_template === "profile") {
+    return <ProfilePage {...props} />;
+  }
   if (props.page.layout_template === "title3") {
     return <Title3Page {...props} />;
-=======
-export function AlbumPage({
-  page,
-  pastedSlotIds,
-  ownedMap,
-  onPaste,
-  userStickerUrl,
-}: AlbumPageProps) {
-  if (page.layout_template === "profile") {
-    return (
-      <ProfilePage
-        page={page}
-        pastedSlotIds={pastedSlotIds}
-        ownedMap={ownedMap}
-        onPaste={onPaste}
-        userStickerUrl={userStickerUrl}
-      />
-    );
-  }
-  if (page.layout_template === "title3") {
-    return (
-      <Title3Page
-        page={page}
-        pastedSlotIds={pastedSlotIds}
-        ownedMap={ownedMap}
-        onPaste={onPaste}
-      />
-    );
->>>>>>> Stashed changes
   }
   return <Grid3x3Page {...props} />;
 }
