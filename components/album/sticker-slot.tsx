@@ -418,17 +418,17 @@ export function StickerSlot({
         {showPasteModal && sticker && (
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center"
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
             onClick={() => !pasting && setShowPasteModal(false)}
           >
             <div className="absolute inset-0 bg-verde-escuro-500/20 backdrop-blur-[10px]" />
 
             <motion.div
-              initial={{ y: 70, opacity: 0, scale: 0.94 }}
-              animate={{ y: 0, opacity: 1, scale: 1 }}
-              exit={{ y: 50, opacity: 0, scale: 0.94 }}
-              transition={{ type: "spring", stiffness: 340, damping: 28 }}
-              className="relative w-full max-w-sm overflow-hidden rounded-card bg-[#ebffe6] shadow-card"
+              initial={{ scale: 0.88, opacity: 0, y: 16 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.92, opacity: 0, y: 12 }}
+              transition={{ type: "spring", stiffness: 320, damping: 28 }}
+              className="relative max-h-[92dvh] w-full max-w-sm overflow-y-auto rounded-card bg-[#ebffe6] shadow-card"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="p-6">

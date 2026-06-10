@@ -6,48 +6,27 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AlbumPage, type AlbumPageData } from "./album-page";
 
+type HTMLFlipBookComponent = typeof import("react-pageflip").default;
+
+interface PageFlipApi {
+  flipPrev: (corner?: "top" | "bottom") => void;
+  flipNext: (corner?: "top" | "bottom") => void;
+}
+
+interface HTMLFlipBookHandle {
+  pageFlip: () => PageFlipApi;
+}
+
 /* ─────────────────────────────────────────────────────────────────────────────
  * react-pageflip uses browser-only APIs at initialisation time.
  * Dynamic import with ssr: false keeps it out of the server render pass.
  * ───────────────────────────────────────────────────────────────────────── */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const HTMLFlipBook = dynamic(() => import("react-pageflip"), {
   ssr: false,
   loading: () => (
     <div className="h-[560px] animate-pulse rounded-card bg-verde-escuro-500/10" />
   ),
-}) as React.ComponentType<React.ComponentProps<"div"> & FlipBookLibProps>;
-
-/* Minimal typing for the subset of props we actually use */
-interface FlipBookLibProps {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ref?: React.Ref<any>;
-  width: number;
-  height: number;
-  size?: "fixed" | "stretch";
-  minWidth?: number;
-  maxWidth?: number;
-  minHeight?: number;
-  maxHeight?: number;
-  drawShadow?: boolean;
-  flippingTime?: number;
-  usePortrait?: boolean;
-  startZIndex?: number;
-  autoSize?: boolean;
-  maxShadowOpacity?: number;
-  showCover?: boolean;
-  mobileScrollSupport?: boolean;
-  clickEventForward?: boolean;
-  useMouseEvents?: boolean;
-  swipeDistance?: number;
-  showPageCorners?: boolean;
-  disableFlipByClick?: boolean;
-  startPage?: number;
-  className: string;
-  style: React.CSSProperties;
-  children: React.ReactNode;
-  onFlip?: (e: { data: number }) => void;
-}
+}) as HTMLFlipBookComponent;
 
 /* ─── Public props ───────────────────────────────────────────────────────── */
 interface FlipBookProps {
@@ -90,8 +69,7 @@ export function FlipBook({
   onPaste,
   userStickerUrl,
 }: FlipBookProps) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const bookRef = useRef<any>(null);
+  const bookRef = useRef<HTMLFlipBookHandle | null>(null);
 
   // currentPage = left-page index of the currently visible spread (0, 2, 4 …)
   const [currentPage, setCurrentPage] = useState(0);
@@ -161,13 +139,14 @@ export function FlipBook({
                targets — sticker slots are buttons, so tapping them opens the
                modal and never flips. Empty page areas still flip on tap/swipe. */
             clickEventForward
+            useMouseEvents
             /* 80 px drag required — prevents accidental flips from short nudges */
             swipeDistance={80}
             showPageCorners={false}
-            /* disableFlipByClick is intentionally OFF: when true the library
-               cannot flip BACKWARD in portrait/mobile (its hardcoded prev-corner
-               point lands off-screen and fails the corner test). Tap-protection
-               for interactive elements is handled by rendering them as buttons. */
+            /* disableFlipByClick=false: when true the library cannot flip
+               BACKWARD in portrait/mobile. Sticker slots are <button> elements
+               so taps on them are ignored by clickEventForward. */
+            disableFlipByClick={false}
             startPage={0}
             className=""
             style={{}}
