@@ -4,12 +4,15 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
 import {
   Plus, Trash2, BookOpen, Layers, Settings2, Save, X,
-  Loader2, CheckCircle2, FileText, ImageIcon, Upload,
+  Loader2, CheckCircle2, FileText, ImageIcon, Upload, PenLine, Hash,
 } from "lucide-react";
 import { TemplatePicker } from "@/components/admin/template-picker";
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 import { RichTextEditor } from "@/components/admin/rich-text-editor";
-import { TEMPLATE_MAP, type TemplateId } from "@/lib/album-templates";
+import {
+  TEMPLATE_MAP, type TemplateId,
+  parseLayoutData, type Title3Data,
+} from "@/lib/album-templates";
 
 interface Category { id: number; name: string }
 interface PageRow {
@@ -46,7 +49,7 @@ const EMPTY_FORM = {
   page_number: 1,
   title: "",
   background_url: "",
-  layout_template: "3x3" as TemplateId,
+  layout_template: "title3" as TemplateId,
   page_type: "sticker" as "sticker" | "info",
 };
 
@@ -470,6 +473,330 @@ function InfoPageEditorModal({
   );
 }
 
+// ─── Layout content editor for sticker pages ─────────────────────────────────
+function LayoutContentModal({
+  page,
+  onClose,
+}: {
+  page: PageRow;
+  onClose: (updated?: Partial<PageRow>) => void;
+}) {
+  const isTitle3   = page.layout_template === "title3";
+  const initial    = parseLayoutData(page.content) as Title3Data;
+
+  const [title,    setTitle]    = useState(initial.title    ?? page.title ?? "");
+  const [text,     setText]     = useState(isTitle3 ? (initial.text ?? "") : "");
+  const [imageUrl, setImageUrl] = useState(isTitle3 ? (initial.image_url ?? page.background_url ?? "") : "");
+  const [uploading, setUploading] = useState(false);
+  const [saving,   setSaving]   = useState(false);
+  const [saved,    setSaved]    = useState(false);
+  const [error,    setError]    = useState("");
+  const fileRef                 = useRef<HTMLInputElement>(null);
+
+  async function handleImageUpload(file: File) {
+    setUploading(true); setError("");
+    try {
+      const fd = new FormData(); fd.append("file", file);
+      const res  = await fetch("/api/admin/upload/page-image", { method: "POST", body: fd });
+      const data = await res.json();
+      if (!res.ok) { setError(data.error ?? "Erro ao enviar imagem"); return; }
+      setImageUrl(data.url); setSaved(false);
+    } finally { setUploading(false); }
+  }
+
+  async function handleSave() {
+    setSaving(true); setError("");
+    try {
+      const layoutData: Title3Data & { title?: string } = { title: title || undefined };
+      if (isTitle3) {
+        if (text)     layoutData.text      = text;
+        if (imageUrl) layoutData.image_url = imageUrl;
+      }
+
+      const res = await fetch(`/api/admin/paginas/${page.id}`, {
+        method:  "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ layout_data: layoutData }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setError(data.error ?? "Erro ao salvar"); return; }
+      setSaved(true);
+      setTimeout(() => onClose({ title: title || null, content: JSON.stringify(layoutData) }), 700);
+    } finally { setSaving(false); }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto p-4 py-8" onClick={() => onClose()}>
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+      <div className="relative w-full max-w-2xl rounded-2xl bg-white shadow-2xl" onClick={(e) => e.stopPropagation()}>
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-border px-6 py-4">
+          <div className="flex items-center gap-3">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gb-green/10 text-gb-green">
+              <PenLine size={16} />
+            </span>
+            <div>
+              <h2 className="font-display text-base font-semibold text-gb-ink">
+                Editar Conteúdo — Pág. {page.page_number}
+                {page.title ? ` · ${page.title}` : ""}
+              </h2>
+              <p className="text-xs text-muted">
+                {isTitle3 ? "Título, texto e imagem opcional" : "Título da página"}
+              </p>
+            </div>
+          </div>
+          <button onClick={() => onClose()} className="rounded-lg p-2 text-gray-400 hover:bg-gray-100">
+            <X size={18} />
+          </button>
+        </div>
+
+        <div className="p-6 space-y-5">
+          {/* Title */}
+          <div>
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-gray-500">
+              Título da Página
+            </label>
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => { setTitle(e.target.value); setSaved(false); }}
+              placeholder="ex: Perfumes Clássicos"
+              className="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm outline-none focus:border-gb-green"
+            />
+          </div>
+
+          {/* Image + rich text — only for title3 */}
+          {isTitle3 && (
+            <>
+              {/* Image */}
+              <div>
+                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-gray-500">
+                  Imagem de Destaque (opcional)
+                </label>
+                <div className="relative overflow-hidden rounded-xl border-2 border-dashed border-border bg-gray-50 transition-colors hover:border-gb-green/50">
+                  {imageUrl ? (
+                    <div className="relative">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={imageUrl} alt="Imagem" className="h-32 w-full rounded-xl object-cover" />
+                      <button
+                        onClick={() => { setImageUrl(""); setSaved(false); }}
+                        className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/50 text-white hover:bg-red-500"
+                      >
+                        <X size={12} />
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => fileRef.current?.click()}
+                      disabled={uploading}
+                      className="flex w-full flex-col items-center gap-2 py-6 text-center"
+                    >
+                      {uploading ? (
+                        <Loader2 size={24} className="animate-spin text-gb-green/50" />
+                      ) : (
+                        <Upload size={24} className="text-gray-400" />
+                      )}
+                      <span className="text-sm text-gray-500">
+                        {uploading ? "Enviando…" : "Clique para enviar uma imagem"}
+                      </span>
+                      <span className="text-xs text-gray-400">JPG, PNG, WebP — máx. 5 MB</span>
+                    </button>
+                  )}
+                  <input
+                    ref={fileRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    className="sr-only"
+                    onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageUpload(f); e.target.value = ""; }}
+                  />
+                </div>
+                <div className="mt-2 flex items-center gap-2">
+                  <ImageIcon size={13} className="shrink-0 text-gray-400" />
+                  <input
+                    type="url"
+                    value={imageUrl}
+                    onChange={(e) => { setImageUrl(e.target.value); setSaved(false); }}
+                    placeholder="Ou cole uma URL de imagem…"
+                    className="min-w-0 flex-1 rounded-lg border border-border bg-surface px-2.5 py-1.5 text-xs outline-none focus:border-gb-green"
+                  />
+                </div>
+              </div>
+
+              {/* Rich text */}
+              <div>
+                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-gray-500">
+                  Texto da Página
+                </label>
+                <RichTextEditor
+                  value={text}
+                  onChange={(html) => { setText(html); setSaved(false); }}
+                  minHeight={200}
+                />
+                <p className="mt-1 text-xs text-gray-400">
+                  Este texto aparece abaixo do título, antes das figurinhas.
+                </p>
+              </div>
+            </>
+          )}
+
+          {error && <p className="rounded-xl bg-red-50 px-4 py-2.5 text-sm text-red-600">{error}</p>}
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-between border-t border-border px-6 py-4">
+          {saved ? (
+            <span className="flex items-center gap-2 text-sm font-medium text-gb-green"><CheckCircle2 size={16} /> Salvo!</span>
+          ) : (
+            <span className="text-sm text-gray-400">Template: {page.layout_template}</span>
+          )}
+          <div className="flex gap-3">
+            <button onClick={() => onClose()} className="rounded-xl border border-border px-5 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50">Fechar</button>
+            <button
+              onClick={handleSave}
+              disabled={saving || uploading}
+              className="flex items-center gap-2 rounded-xl bg-gb-green px-6 py-2.5 text-sm font-semibold text-white hover:bg-gb-green-dark disabled:opacity-60"
+            >
+              {saving ? <Loader2 size={15} className="animate-spin" /> : <Save size={15} />}
+              {saving ? "Salvando…" : "Salvar Conteúdo"}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Page number editor ───────────────────────────────────────────────────────
+function PageNumberModal({
+  page,
+  pages,
+  onClose,
+}: {
+  page: PageRow;
+  pages: PageRow[];
+  onClose: (updated?: number) => void;
+}) {
+  const [pageNumber, setPageNumber] = useState(page.page_number);
+  const [saving, setSaving]         = useState(false);
+  const [saved, setSaved]           = useState(false);
+  const [error, setError]           = useState("");
+
+  const duplicate = pages.some(
+    (p) => p.id !== page.id && p.category_id === page.category_id && p.page_number === pageNumber,
+  );
+
+  async function handleSave() {
+    if (pageNumber < 1 || !Number.isInteger(pageNumber)) {
+      setError("Informe um número inteiro maior que zero");
+      return;
+    }
+    if (duplicate) {
+      setError("Já existe outra página com este número nesta categoria");
+      return;
+    }
+    if (pageNumber === page.page_number) {
+      onClose();
+      return;
+    }
+
+    setSaving(true);
+    setError("");
+    try {
+      const res = await fetch(`/api/admin/paginas/${page.id}`, {
+        method:  "PUT",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ page_number: pageNumber }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setError(data.error ?? "Erro ao salvar"); return; }
+      setSaved(true);
+      setTimeout(() => onClose(pageNumber), 600);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => onClose()}>
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+      <div
+        className="relative w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="mb-5 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-100 text-amber-600">
+              <Hash size={16} />
+            </span>
+            <div>
+              <h2 className="font-display text-base font-semibold text-gb-ink">Numeração da Página</h2>
+              <p className="text-xs text-muted truncate max-w-[200px]">
+                {page.title ? page.title : `ID ${page.id}`}
+              </p>
+            </div>
+          </div>
+          <button onClick={() => onClose()} className="rounded-lg p-2 text-gray-400 hover:bg-gray-100">
+            <X size={18} />
+          </button>
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-gray-500">
+              Número da Página
+            </label>
+            <input
+              type="number"
+              min={1}
+              step={1}
+              value={pageNumber}
+              onChange={(e) => { setPageNumber(Number(e.target.value)); setSaved(false); setError(""); }}
+              className="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm outline-none focus:border-gb-green"
+            />
+            <p className="mt-1.5 text-xs text-gray-400">
+              Define a ordem desta página dentro da categoria no álbum.
+            </p>
+          </div>
+
+          {duplicate && (
+            <p className="rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-700">
+              Outra página nesta categoria já usa o número {pageNumber}.
+            </p>
+          )}
+          {error && <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>}
+        </div>
+
+        <div className="mt-6 flex items-center justify-between">
+          {saved ? (
+            <span className="flex items-center gap-2 text-sm font-medium text-gb-green">
+              <CheckCircle2 size={16} /> Salvo!
+            </span>
+          ) : (
+            <span className="text-sm text-gray-400">Atual: {page.page_number}</span>
+          )}
+          <div className="flex gap-2">
+            <button
+              onClick={() => onClose()}
+              className="rounded-xl border border-border px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={saving || duplicate}
+              className="flex items-center gap-2 rounded-xl bg-gb-green px-5 py-2 text-sm font-semibold text-white hover:bg-gb-green-dark disabled:opacity-60"
+            >
+              {saving ? <Loader2 size={15} className="animate-spin" /> : <Save size={15} />}
+              Salvar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main component ───────────────────────────────────────────────────────────
 export function PaginasClient({ initialCategories, initialPages }: PaginasClientProps) {
   const [pages, setPages]              = useState<PageRow[]>(initialPages);
@@ -479,8 +806,10 @@ export function PaginasClient({ initialCategories, initialPages }: PaginasClient
   const [deleteId, setDeleteId]        = useState<number | null>(null);
   const [catFilter, setCatFilter]      = useState<number | "all">("all");
   const [error, setError]              = useState("");
-  const [configPage, setConfigPage]    = useState<PageRow | null>(null);
-  const [infoEditPage, setInfoEditPage] = useState<PageRow | null>(null);
+  const [configPage, setConfigPage]        = useState<PageRow | null>(null);
+  const [infoEditPage, setInfoEditPage]    = useState<PageRow | null>(null);
+  const [contentEditPage, setContentEditPage] = useState<PageRow | null>(null);
+  const [numberEditPage, setNumberEditPage]   = useState<PageRow | null>(null);
 
   const categories = initialCategories;
 
@@ -669,6 +998,13 @@ export function PaginasClient({ initialCategories, initialPages }: PaginasClient
                     </div>
 
                     {/* Action buttons */}
+                    <button
+                      onClick={() => setNumberEditPage(p)}
+                      title="Editar numeração"
+                      className="shrink-0 rounded-lg p-1.5 text-amber-600 hover:bg-amber-50"
+                    >
+                      <Hash size={15} />
+                    </button>
                     {isInfo ? (
                       <button
                         onClick={() => setInfoEditPage(p)}
@@ -678,13 +1014,22 @@ export function PaginasClient({ initialCategories, initialPages }: PaginasClient
                         <Settings2 size={15} />
                       </button>
                     ) : (
-                      <button
-                        onClick={() => setConfigPage(p)}
-                        title="Configurar slots"
-                        className="shrink-0 rounded-lg p-1.5 text-gb-green hover:bg-gb-green/10"
-                      >
-                        <Settings2 size={15} />
-                      </button>
+                      <>
+                        <button
+                          onClick={() => setContentEditPage(p)}
+                          title="Editar título e texto"
+                          className="shrink-0 rounded-lg p-1.5 text-blue-500 hover:bg-blue-50"
+                        >
+                          <PenLine size={15} />
+                        </button>
+                        <button
+                          onClick={() => setConfigPage(p)}
+                          title="Configurar slots"
+                          className="shrink-0 rounded-lg p-1.5 text-gb-green hover:bg-gb-green/10"
+                        >
+                          <Settings2 size={15} />
+                        </button>
+                      </>
                     )}
 
                     <button
@@ -836,6 +1181,47 @@ export function PaginasClient({ initialCategories, initialPages }: PaginasClient
               );
             }
             setInfoEditPage(null);
+          }}
+        />
+      )}
+
+      {/* ── Sticker page layout content modal ──────────────────────────────── */}
+      {contentEditPage && (
+        <LayoutContentModal
+          page={contentEditPage}
+          onClose={(updated) => {
+            if (updated) {
+              setPages((prev) =>
+                prev.map((p) =>
+                  p.id === contentEditPage.id ? { ...p, ...updated } : p
+                )
+              );
+            }
+            setContentEditPage(null);
+          }}
+        />
+      )}
+
+      {/* ── Page number modal ──────────────────────────────────────────────── */}
+      {numberEditPage && (
+        <PageNumberModal
+          page={numberEditPage}
+          pages={pages}
+          onClose={(newNumber) => {
+            if (newNumber !== undefined) {
+              setPages((prev) =>
+                prev
+                  .map((p) =>
+                    p.id === numberEditPage.id ? { ...p, page_number: newNumber } : p
+                  )
+                  .sort((a, b) =>
+                    a.category_id !== b.category_id
+                      ? a.category_id - b.category_id
+                      : a.page_number - b.page_number
+                  )
+              );
+            }
+            setNumberEditPage(null);
           }}
         />
       )}

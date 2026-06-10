@@ -1,9 +1,17 @@
 /**
  * Album page layout templates.
- * Each template defines a grid (cols × rows) that auto-generates album_slots.
+ *
+ * Templates:
+ *   title3  → title + rich-text paragraph + optional image + 3 sticker slots
+ *   3x3     → 9 sticker slots in a 3 × 3 grid
+ *
+ * Layout content is stored as JSON in the `content` DB column for sticker pages.
+ * Info pages continue to use `content` as raw HTML.
  */
 
-export type TemplateId = "2x2" | "2x3" | "3x3" | "2x4" | "3x4" | "4x4";
+// ─── Template registry ────────────────────────────────────────────────────────
+
+export type TemplateId = "title3" | "3x3";
 
 export interface AlbumTemplate {
   id: TemplateId;
@@ -14,26 +22,47 @@ export interface AlbumTemplate {
 }
 
 export const ALBUM_TEMPLATES: AlbumTemplate[] = [
-  { id: "2x2", label: "2 × 2",  cols: 2, rows: 2, total: 4  },
-  { id: "2x3", label: "2 × 3",  cols: 2, rows: 3, total: 6  },
-  { id: "3x3", label: "3 × 3",  cols: 3, rows: 3, total: 9  },
-  { id: "2x4", label: "2 × 4",  cols: 2, rows: 4, total: 8  },
-  { id: "3x4", label: "3 × 4",  cols: 3, rows: 4, total: 12 },
-  { id: "4x4", label: "4 × 4",  cols: 4, rows: 4, total: 16 },
+  { id: "title3", label: "Título + 3", cols: 3, rows: 1, total: 3 },
+  { id: "3x3",    label: "3 × 3",      cols: 3, rows: 3, total: 9 },
 ];
 
 export const TEMPLATE_MAP = Object.fromEntries(
   ALBUM_TEMPLATES.map((t) => [t.id, t]),
 ) as Record<TemplateId, AlbumTemplate>;
 
-/** Returns the Tailwind grid-cols-* class for a given template id */
-export function templateColsClass(templateId: string): string {
-  const t = TEMPLATE_MAP[templateId as TemplateId];
-  const cols = t?.cols ?? 3;
-  const map: Record<number, string> = {
-    2: "grid-cols-2",
-    3: "grid-cols-3",
-    4: "grid-cols-4",
-  };
-  return map[cols] ?? "grid-cols-3";
+/** Returns a Tailwind grid-cols-* class — both templates use 3 columns */
+export function templateColsClass(_templateId: string): string {
+  return "grid-cols-3";
+}
+
+// ─── Per-template layout data (stored as JSON in `content`) ───────────────────
+
+/** Fields for the "title3" template */
+export interface Title3Data {
+  title?: string;
+  text?: string;      // rich HTML paragraph
+  image_url?: string;
+}
+
+/** Fields for the "3x3" template */
+export interface Grid3x3Data {
+  title?: string;
+}
+
+/** Union of all possible layout data shapes */
+export type LayoutData = Title3Data | Grid3x3Data;
+
+/**
+ * Safely parses the `content` column value for a sticker page.
+ * Returns an empty object if content is null, blank, or invalid JSON.
+ */
+export function parseLayoutData(raw: string | null | undefined): LayoutData {
+  if (!raw) return {};
+  try {
+    const parsed = JSON.parse(raw);
+    if (typeof parsed === "object" && parsed !== null) return parsed as LayoutData;
+    return {};
+  } catch {
+    return {};
+  }
 }

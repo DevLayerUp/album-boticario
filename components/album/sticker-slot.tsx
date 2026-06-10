@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { Lock, Plus, Sparkles, Star } from "lucide-react";
+import { Lock, Plus, Sparkles, X } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 export interface SlotSticker {
@@ -27,20 +27,6 @@ export interface StickerSlotProps {
   isPasted: boolean;
   owned: number;
   onPaste?: (slotId: number, stickerId: number) => Promise<void>;
-}
-
-// ─── Rarity config ────────────────────────────────────────────────────────────
-const RARITY_STARS: Record<string, number> = {
-  legendary: 4, "super-rare": 3, rare: 2, common: 1,
-};
-
-/** Darkens a hex color by mixing it toward black */
-function darkenHex(hex: string, amount = 0.3): string {
-  const c = hex.replace("#", "");
-  const r = Math.round(parseInt(c.slice(0, 2), 16) * (1 - amount));
-  const g = Math.round(parseInt(c.slice(2, 4), 16) * (1 - amount));
-  const b = Math.round(parseInt(c.slice(4, 6), 16) * (1 - amount));
-  return `#${[r, g, b].map((v) => v.toString(16).padStart(2, "0")).join("")}`;
 }
 
 // ─── Particle burst ───────────────────────────────────────────────────────────
@@ -77,131 +63,174 @@ function PasteBurst({ color, slug }: { color: string; slug: string }) {
   );
 }
 
-// ─── Card back — rarity-colored gradient with highlighted description ──────────
-function CardBack({ sticker, slotNumber }: { sticker: SlotSticker; slotNumber: number }) {
-  const hex    = sticker.rarities?.color_hex ?? "#9ca3af";
-  const slug   = sticker.rarities?.slug      ?? "common";
-  const rarity = sticker.rarities?.name      ?? "Comum";
-  const stars  = RARITY_STARS[slug] ?? 1;
-  const dark   = darkenHex(hex, 0.38);
-  const mid    = darkenHex(hex, 0.18);
-  const shimmer = slug === "legendary" || slug === "super-rare";
-  const numStr  = String(slotNumber).padStart(3, "0");
+// ─── Detail modal — flip frente/verso ─────────────────────────────────────────
+function StickerDetailModal({
+  sticker,
+  slotNumber,
+  onClose,
+}: {
+  sticker: SlotSticker;
+  slotNumber: number;
+  onClose: () => void;
+}) {
+  const [showBack, setShowBack] = useState(false);
+
+  const rarityColor = sticker.rarities?.color_hex ?? "#41ab5d";
+  const rarityName  = sticker.rarities?.name      ?? "Comum";
+  const animation   = sticker.rarities?.animation_type ?? "none";
+
+  useEffect(() => {
+    setShowBack(false);
+  }, [sticker.id]);
 
   return (
-    <div
-      className="absolute inset-0 flex flex-col overflow-hidden rounded-t-xl"
-      style={{
-        background: `linear-gradient(158deg, ${hex} 0%, ${mid} 48%, ${dark} 100%)`,
-        backfaceVisibility: "hidden",
-        WebkitBackfaceVisibility: "hidden",
-        transform: "rotateY(180deg)",
-      }}
+    <motion.div
+      key="sticker-detail"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      onClick={onClose}
     >
-      {/* Subtle diagonal light sweep for depth */}
-      <div
-        className="pointer-events-none absolute inset-0"
-        style={{
-          background:
-            "linear-gradient(135deg, rgba(255,255,255,0.18) 0%, transparent 45%, rgba(0,0,0,0.12) 100%)",
-        }}
-      />
+      <div className="absolute inset-0 bg-black/55 backdrop-blur-md" />
 
-      {/* Fine dot texture */}
-      <div
-        className="pointer-events-none absolute inset-0 opacity-[0.12]"
-        style={{
-          backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.9) 1px, transparent 1px)",
-          backgroundSize: "8px 8px",
-        }}
-      />
-
-      {/* ── Header: stars + card number ── */}
-      <div className="relative z-10 flex items-center justify-between px-2.5 pt-2 pb-1">
-        <div className="flex gap-0.5">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Star
-              key={i}
-              size={8}
-              className={i < stars ? "fill-white text-white drop-shadow" : "text-white/20"}
-            />
-          ))}
-        </div>
-        <span className="font-mono text-[8px] font-bold tracking-widest text-white/70">
-          #{numStr}
-        </span>
-      </div>
-
-      {/* ── Stamp image ── */}
-      <div className="relative z-10 flex justify-center">
-        <div
-          className="relative h-[52px] w-[52px] overflow-hidden rounded-full"
-          style={{
-            border: "2.5px solid rgba(255,255,255,0.75)",
-            boxShadow: "0 2px 12px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.2)",
-          }}
+      <motion.div
+        initial={{ scale: 0.88, opacity: 0, y: 16 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.92, opacity: 0, y: 12 }}
+        transition={{ type: "spring", stiffness: 320, damping: 28 }}
+        className="relative w-full max-w-[280px] rounded-2xl p-4 shadow-2xl"
+        style={{ background: "#F5F0E6", border: "3px solid #E8E2D4" }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Fechar"
+          className="absolute right-3 top-3 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-black/10 text-gray-600 transition hover:bg-black/20"
         >
-          <Image
-            src={sticker.image_url}
-            alt={sticker.name}
-            fill
-            className="object-cover scale-110"
-            sizes="52px"
-          />
-          {shimmer && (
-            <motion.div
-              className="pointer-events-none absolute inset-0"
-              animate={{ backgroundPositionX: ["0%", "220%"] }}
-              transition={{ duration: 2.5, repeat: Infinity, ease: "linear", repeatDelay: 1.5 }}
+          <X size={16} />
+        </button>
+
+        {/* Flip card */}
+        <div className="mx-auto mt-2 flex justify-center" style={{ perspective: "1000px" }}>
+          <motion.div
+            animate={{ rotateY: showBack ? 180 : 0 }}
+            transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+            className="relative"
+            style={{
+              width: 200,
+              height: 287.5,
+              transformStyle: "preserve-3d",
+            }}
+          >
+            {/* Frente */}
+            <div
+              className="absolute inset-0 overflow-hidden rounded-xl shadow-lg"
+              style={{ backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden" }}
+            >
+              <Image
+                src={sticker.image_url}
+                alt={sticker.name}
+                fill
+                className="object-cover"
+                sizes="200px"
+                priority
+              />
+              {animation === "holographic" && (
+                <motion.div
+                  className="pointer-events-none absolute inset-0 opacity-30"
+                  animate={{ backgroundPositionX: ["0%", "200%"] }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                  style={{
+                    background:
+                      "linear-gradient(115deg, transparent 25%, rgba(255,255,255,0.75) 45%, transparent 65%)",
+                    backgroundSize: "200% 100%",
+                  }}
+                />
+              )}
+              {(animation === "glow" || animation === "holographic") && (
+                <div
+                  className="pointer-events-none absolute inset-0 rounded-xl"
+                  style={{ boxShadow: `inset 0 0 18px ${rarityColor}55` }}
+                />
+              )}
+            </div>
+
+            {/* Verso */}
+            <div
+              className="absolute inset-0 flex flex-col overflow-hidden rounded-xl bg-[#1A5C35] shadow-lg"
               style={{
-                background:
-                  "linear-gradient(120deg, transparent 20%, rgba(255,255,255,0.8) 42%, transparent 62%)",
-                backgroundSize: "220% 100%",
+                backfaceVisibility: "hidden",
+                WebkitBackfaceVisibility: "hidden",
+                transform: "rotateY(180deg)",
               }}
+            >
+              <div className="bg-[#74c476] px-3 py-2.5">
+                <h3 className="text-center font-display text-[11px] font-extrabold uppercase leading-tight tracking-wide text-white">
+                  {sticker.name}
+                </h3>
+              </div>
+              <div className="flex-1 overflow-y-auto px-4 py-3">
+                <p className="text-center text-[11px] font-medium leading-relaxed text-white/90">
+                  {sticker.description ??
+                    "Figurinha exclusiva da coleção Grupo Boticário."}
+                </p>
+              </div>
+              <div className="flex items-center justify-between px-3 pb-3 pt-1">
+                <span className="font-mono text-[9px] font-bold text-white/40">
+                  #{String(slotNumber).padStart(3, "0")}
+                </span>
+                <span
+                  className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold text-white"
+                  style={{ background: rarityColor }}
+                >
+                  👍 {rarityName}
+                </span>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Frente / Verso toggle */}
+        <div className="mt-5 flex items-center justify-center gap-3">
+          <button
+            type="button"
+            onClick={() => setShowBack(false)}
+            className={`text-xs font-bold uppercase tracking-wider transition-colors ${
+              !showBack ? "text-[#1A5C35]" : "text-gray-400"
+            }`}
+          >
+            Frente
+          </button>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={showBack}
+            aria-label={showBack ? "Mostrando verso" : "Mostrando frente"}
+            onClick={() => setShowBack((v) => !v)}
+            className="relative h-7 w-14 rounded-full transition-colors"
+            style={{ background: showBack ? "#1A5C35" : "#c8c0b0" }}
+          >
+            <motion.span
+              layout
+              transition={{ type: "spring", stiffness: 500, damping: 30 }}
+              className="absolute top-0.5 h-6 w-6 rounded-full bg-white shadow-md"
+              style={{ left: showBack ? "calc(100% - 1.625rem)" : "0.125rem" }}
             />
-          )}
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowBack(true)}
+            className={`text-xs font-bold uppercase tracking-wider transition-colors ${
+              showBack ? "text-[#1A5C35]" : "text-gray-400"
+            }`}
+          >
+            Verso
+          </button>
         </div>
-      </div>
-
-      {/* ── Sticker name ── */}
-      <div className="relative z-10 mt-2 px-2 text-center">
-        <h4 className="font-display text-[11px] font-extrabold leading-tight tracking-tight text-white drop-shadow">
-          {sticker.name}
-        </h4>
-      </div>
-
-      {/* ── Description box — em destaque ── */}
-      <div className="relative z-10 mx-2 mt-2 flex-1 overflow-hidden">
-        <div
-          className="h-full rounded-xl px-2.5 py-2"
-          style={{
-            background: "rgba(0,0,0,0.28)",
-            backdropFilter: "blur(4px)",
-            border: "1px solid rgba(255,255,255,0.18)",
-          }}
-        >
-          <p className="line-clamp-4 text-center text-[9px] font-medium leading-relaxed text-white/95">
-            {sticker.description ?? "Figurinha exclusiva da coleção Grupo Boticário."}
-          </p>
-        </div>
-      </div>
-
-      {/* ── Footer: brand + rarity ── */}
-      <div className="relative z-10 flex items-center justify-between px-2.5 pb-2 pt-1.5">
-        <span className="text-[7px] font-semibold uppercase tracking-[0.15em] text-white/50">
-          Grupo Boticário
-        </span>
-        <span
-          className="rounded-full px-1.5 py-0.5 text-[7px] font-bold uppercase tracking-wide text-white"
-          style={{
-            background: "rgba(255,255,255,0.2)",
-            border: "1px solid rgba(255,255,255,0.35)",
-          }}
-        >
-          {rarity}
-        </span>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }
 
@@ -209,12 +238,12 @@ function CardBack({ sticker, slotNumber }: { sticker: SlotSticker; slotNumber: n
 export function StickerSlot({
   slotId, slotNumber, sticker, isPasted, owned, onPaste,
 }: StickerSlotProps) {
-  const [showModal, setShowModal]   = useState(false);
-  const [pasting, setPasting]       = useState(false);
-  const [justPasted, setJustPasted] = useState(false);
-  const [showBurst, setShowBurst]   = useState(false);
-  const [error, setError]           = useState("");
-  const [flipped, setFlipped]       = useState(false);
+  const [showPasteModal, setShowPasteModal]   = useState(false);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [pasting, setPasting]                 = useState(false);
+  const [justPasted, setJustPasted]           = useState(false);
+  const [showBurst, setShowBurst]             = useState(false);
+  const [error, setError]                     = useState("");
 
   const rarityColor = sticker?.rarities?.color_hex  ?? "#9ca3af";
   const raritySlug  = sticker?.rarities?.slug        ?? "common";
@@ -230,7 +259,7 @@ export function StickerSlot({
     try {
       await onPaste(slotId, sticker.id);
       setJustPasted(true);
-      setShowModal(false);
+      setShowPasteModal(false);
       setTimeout(() => { setShowBurst(true); setTimeout(() => setShowBurst(false), 1400); }, 120);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Erro ao colar figurinha");
@@ -253,8 +282,8 @@ export function StickerSlot({
         ].join(" ")}
         style={isComplete ? { borderColor: rarityColor + "70" } : undefined}
         onClick={() => {
-          if (isComplete) setFlipped((f) => !f);
-          else if (canPaste) setShowModal(true);
+          if (isComplete) setShowDetailModal(true);
+          else if (canPaste) setShowPasteModal(true);
         }}
         whileHover={!isComplete && canPaste ? { scale: 1.04, y: -2 } : undefined}
         whileTap={!isComplete && canPaste ? { scale: 0.96 } : undefined}
@@ -274,86 +303,53 @@ export function StickerSlot({
 
         {/* ── CARD AREA ──────────────────────────────────────────── */}
         {isComplete ? (
-          <div className="relative aspect-[3/4] w-full" style={{ perspective: "700px" }}>
+          <div className="relative aspect-[16/23] w-full overflow-hidden rounded-t-xl">
             <motion.div
-              animate={{ rotateY: flipped ? 180 : 0 }}
-              transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+              initial={justPasted ? { scale: 0.55, opacity: 0, rotateY: -95 } : false}
+              animate={{ scale: 1, opacity: 1, rotateY: 0 }}
+              transition={{ type: "spring", stiffness: 210, damping: 20, delay: 0.05 }}
               className="relative h-full w-full"
-              style={{ transformStyle: "preserve-3d" }}
             >
-              {/* ── FRONT ── */}
-              <div
-                className="absolute inset-0 overflow-hidden rounded-t-xl"
-                style={{ backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden" }}
-              >
-                <motion.div
-                  initial={justPasted ? { scale: 0.55, opacity: 0, rotateY: -95 } : false}
-                  animate={{ scale: 1, opacity: 1, rotateY: 0 }}
-                  transition={{ type: "spring", stiffness: 210, damping: 20, delay: 0.05 }}
-                  className="h-full w-full"
-                  style={{ transformStyle: "preserve-3d" }}
-                >
-                  {sticker && (
-                    <Image src={sticker.image_url} alt={sticker.name} fill
-                      className="object-cover" sizes="120px" />
-                  )}
-                </motion.div>
-
-                {/* Holographic shimmer for legendary/super-rare */}
-                {animation === "holographic" && (
-                  <motion.div
-                    className="pointer-events-none absolute inset-0 opacity-25"
-                    animate={{ backgroundPositionX: ["0%", "200%"] }}
-                    transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-                    style={{
-                      background: "linear-gradient(115deg, transparent 25%, rgba(255,255,255,0.7) 45%, transparent 65%)",
-                      backgroundSize: "200% 100%",
-                    }}
-                  />
-                )}
-
-                {/* Rarity glow inset */}
-                {(animation === "glow" || animation === "holographic") && (
-                  <div className="pointer-events-none absolute inset-0 rounded-t-xl"
-                    style={{ boxShadow: `inset 0 0 14px ${rarityColor}55` }} />
-                )}
-
-                {/* Corner fold / tap hint */}
-                <div className="pointer-events-none absolute bottom-0 right-0">
-                  <svg width="18" height="18" viewBox="0 0 18 18">
-                    <path d="M18 18 L0 18 L18 0 Z" fill={rarityColor + "50"} />
-                    <path d="M18 18 L0 18 L18 0 Z" fill={rarityColor + "30"} />
-                  </svg>
-                </div>
-
-                <AnimatePresence>
-                  {showBurst && sticker && (
-                    <PasteBurst color={rarityColor} slug={raritySlug} />
-                  )}
-                </AnimatePresence>
-              </div>
-
-              {/* ── BACK ── */}
               {sticker && (
-                <CardBack sticker={sticker} slotNumber={slotNumber} />
+                <Image
+                  src={sticker.image_url}
+                  alt={sticker.name}
+                  fill
+                  className="object-cover"
+                  sizes="120px"
+                />
               )}
-            </motion.div>
 
-            {/* Flip indicator pill below card (visible, not on the card) */}
-            <motion.div
-              animate={{ opacity: flipped ? 0 : 1 }}
-              transition={{ duration: 0.2 }}
-              className="absolute -bottom-3 left-0 right-0 flex justify-center pointer-events-none"
-            >
-              <span className="rounded-full border px-1.5 py-0.5 text-[7px] font-semibold uppercase tracking-widest"
-                style={{ borderColor: rarityColor + "60", color: rarityColor + "cc", background: "white" }}>
-                ver info
-              </span>
+              {animation === "holographic" && (
+                <motion.div
+                  className="pointer-events-none absolute inset-0 opacity-25"
+                  animate={{ backgroundPositionX: ["0%", "200%"] }}
+                  transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                  style={{
+                    background:
+                      "linear-gradient(115deg, transparent 25%, rgba(255,255,255,0.7) 45%, transparent 65%)",
+                    backgroundSize: "200% 100%",
+                  }}
+                />
+              )}
+
+              {(animation === "glow" || animation === "holographic") && (
+                <div
+                  className="pointer-events-none absolute inset-0 rounded-t-xl"
+                  style={{ boxShadow: `inset 0 0 14px ${rarityColor}55` }}
+                />
+              )}
+
+              <AnimatePresence>
+                {showBurst && sticker && (
+                  <PasteBurst color={rarityColor} slug={raritySlug} />
+                )}
+              </AnimatePresence>
             </motion.div>
           </div>
         ) : (
           /* ── NOT PASTED ──────────────────────────────────────────── */
-          <div className="relative aspect-[3/4] w-full rounded-t-xl" style={{ perspective: "600px" }}>
+          <div className="relative aspect-[16/23] w-full rounded-t-xl" style={{ perspective: "600px" }}>
             {isOwned ? (
               <div className="relative h-full w-full overflow-hidden rounded-t-xl">
                 {sticker ? (
@@ -390,13 +386,24 @@ export function StickerSlot({
         </p>
       </motion.div>
 
+      {/* ── Sticker detail modal (flip frente/verso) ─────────────────────────── */}
+      <AnimatePresence>
+        {showDetailModal && sticker && (
+          <StickerDetailModal
+            sticker={sticker}
+            slotNumber={slotNumber}
+            onClose={() => setShowDetailModal(false)}
+          />
+        )}
+      </AnimatePresence>
+
       {/* ── PASTE CONFIRMATION MODAL ──────────────────────────────────────────── */}
       <AnimatePresence>
-        {showModal && sticker && (
+        {showPasteModal && sticker && (
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center"
-            onClick={() => !pasting && setShowModal(false)}
+            onClick={() => !pasting && setShowPasteModal(false)}
           >
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
 
@@ -479,7 +486,7 @@ export function StickerSlot({
                 )}
 
                 <div className="mt-5 flex gap-3">
-                  <button onClick={() => setShowModal(false)} disabled={pasting}
+                  <button onClick={() => setShowPasteModal(false)} disabled={pasting}
                     className="flex-1 rounded-2xl border border-gray-200 py-3 text-sm font-medium text-gray-600 transition hover:bg-gray-50 disabled:opacity-50">
                     Cancelar
                   </button>
