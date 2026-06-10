@@ -16,7 +16,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
   const rawRedirect = searchParams.get("redirect") ?? "/dashboard";
   const SAFE_REDIRECT_PREFIXES = [
     "/dashboard", "/album", "/colecao", "/pacotinhos",
-    "/quiz", "/missoes", "/trocas", "/perfil", "/figurinha", "/admin",
+    "/quiz", "/missoes", "/trocas", "/ranking", "/perfil", "/figurinha", "/admin",
   ];
   const redirectTo = SAFE_REDIRECT_PREFIXES.some((p) => rawRedirect.startsWith(p))
     ? rawRedirect

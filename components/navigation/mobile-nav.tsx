@@ -10,6 +10,7 @@ import {
   ArrowLeftRight,
   HelpCircle,
   Target,
+  Trophy,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -28,6 +29,7 @@ const NAV: MobileNavLink[] = [
   { href: "/trocas", label: "Trocas", icon: ArrowLeftRight },
   { href: "/quiz", label: "Quizz", icon: HelpCircle },
   { href: "/missoes", label: "Missões", icon: Target },
+  { href: "/ranking", label: "Ranking", icon: Trophy },
 ];
 
 export function MobileNav() {
@@ -36,7 +38,7 @@ export function MobileNav() {
   return (
     <nav
       aria-label="Navegação"
-      className="sticky bottom-0 z-20 flex items-center justify-around border-t border-border bg-surface/95 pb-[env(safe-area-inset-bottom)] pt-1 backdrop-blur md:hidden"
+      className="sticky bottom-0 z-20 flex items-center gap-0.5 overflow-x-auto border-t border-border bg-surface/95 px-1 pb-[env(safe-area-inset-bottom)] pt-1 backdrop-blur [-ms-overflow-style:none] [scrollbar-width:none] md:hidden [&::-webkit-scrollbar]:hidden"
     >
       {NAV.map(({ href, label, icon: Icon }) => {
         const isActive =
@@ -50,7 +52,7 @@ export function MobileNav() {
             href={href}
             aria-current={isActive ? "page" : undefined}
             className={cn(
-              "flex min-h-[44px] min-w-[44px] flex-col items-center justify-center gap-0.5 px-1.5 text-[10px] font-medium transition-colors duration-200",
+              "flex min-h-[44px] shrink-0 flex-col items-center justify-center gap-0.5 px-2 text-[10px] font-medium transition-colors duration-200",
               isActive
                 ? "font-bold text-verde-500"
                 : "text-verde-escuro-500/60",

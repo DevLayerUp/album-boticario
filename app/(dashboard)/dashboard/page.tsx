@@ -163,7 +163,7 @@ export default async function DashboardPage() {
             Explorar
           </h2>
           <span className="text-sm text-verde-escuro-capa/60">
-            7 áreas disponíveis
+            8 áreas disponíveis
           </span>
         </div>
 
@@ -223,6 +223,13 @@ export default async function DashboardPage() {
             cta="Trocar"
             theme="green"
             backgroundImage={dashboardAssets.cards.trocas}
+          />
+          <FeatureCard
+            title="Ranking"
+            description="Veja quem lidera a coleção: álbum completo, missões cumpridas e trocas feitas."
+            href="/ranking"
+            cta="Ver ranking"
+            theme="gold"
           />
         </div>
       </section>
