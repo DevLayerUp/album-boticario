@@ -1,11 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  REFERRAL_STORAGE_KEY,
+  normalizeReferralCode,
+} from "@/lib/referrals";
 
 type Mode = "login" | "register";
 
@@ -37,6 +41,26 @@ export function AuthForm({ mode }: { mode: Mode }) {
   const [message, setMessage] = useState<string | null>(null);
 
   const isLogin = mode === "login";
+
+  const refFromUrl = normalizeReferralCode(searchParams.get("ref"));
+
+  useEffect(() => {
+    if (!refFromUrl) return;
+    try {
+      localStorage.setItem(REFERRAL_STORAGE_KEY, refFromUrl);
+    } catch {
+      /* ignore */
+    }
+  }, [refFromUrl]);
+
+  function getStoredReferralCode(): string | null {
+    if (refFromUrl) return refFromUrl;
+    try {
+      return normalizeReferralCode(localStorage.getItem(REFERRAL_STORAGE_KEY));
+    } catch {
+      return null;
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -74,18 +98,29 @@ export function AuthForm({ mode }: { mode: Mode }) {
           throw new Error("Data de nascimento inválida.");
         }
 
+        const referralCode = getStoredReferralCode();
+        const signUpData: Record<string, string> = {
+          full_name: nome,
+          birth_date: birthDate,
+        };
+        if (referralCode) {
+          signUpData.referral_code = referralCode;
+        }
+
         const { error } = await supabase.auth.signUp({
           email,
           password,
           options: {
             emailRedirectTo: `${window.location.origin}/auth/callback`,
-            data: {
-              full_name: nome,
-              birth_date: birthDate,
-            },
+            data: signUpData,
           },
         });
         if (error) throw error;
+        try {
+          localStorage.removeItem(REFERRAL_STORAGE_KEY);
+        } catch {
+          /* ignore */
+        }
         setMessage(
           "Conta criada! Verifique seu e-mail para confirmar o cadastro.",
         );
@@ -104,6 +139,14 @@ export function AuthForm({ mode }: { mode: Mode }) {
   async function handleGoogle() {
     setError(null);
     setOauthLoading(true);
+    const referralCode = getStoredReferralCode();
+    if (referralCode) {
+      try {
+        localStorage.setItem(REFERRAL_STORAGE_KEY, referralCode);
+      } catch {
+        /* ignore */
+      }
+    }
     const supabase = createClient();
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
@@ -120,6 +163,11 @@ export function AuthForm({ mode }: { mode: Mode }) {
   return (
     <div className="flex flex-col gap-5">
       <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
+        {!isLogin && refFromUrl && (
+          <p className="rounded-lg bg-gb-green/10 px-3 py-2 text-sm text-gb-green-dark">
+            Você está entrando com um convite de amigo. O cadastro será vinculado automaticamente.
+          </p>
+        )}
         {!isLogin && (
           <>
             <Input
@@ -192,7 +240,13 @@ export function AuthForm({ mode }: { mode: Mode }) {
       <p className="text-center text-sm text-muted">
         {isLogin ? "Ainda não tem conta?" : "Já tem uma conta?"}{" "}
         <Link
-          href={isLogin ? "/register" : "/login"}
+          href={
+            isLogin
+              ? refFromUrl
+                ? `/register?ref=${encodeURIComponent(refFromUrl)}`
+                : "/register"
+              : "/login"
+          }
           className="font-semibold text-gb-green-dark underline-offset-2 hover:underline"
         >
           {isLogin ? "Cadastre-se" : "Entrar"}

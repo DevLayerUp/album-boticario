@@ -6,7 +6,11 @@ import { NavItem } from "@/components/navigation/nav-item";
 import { MobileNav } from "@/components/navigation/mobile-nav";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { Wordmark } from "@/components/brand/wordmark";
+<<<<<<< Updated upstream
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
+=======
+import { ReferralClaimOnLoad } from "@/components/referral/referral-claim-on-load";
+>>>>>>> Stashed changes
 
 const NAV = [
   { href: "/dashboard",  label: "Início" },
@@ -32,7 +36,12 @@ export default async function DashboardLayout({
   if (!user) redirect("/login");
 
   return (
+<<<<<<< Updated upstream
     <DashboardShell>
+=======
+    <div className="flex min-h-dvh flex-col">
+      <ReferralClaimOnLoad />
+>>>>>>> Stashed changes
       <header className="sticky top-0 z-20 border-b border-border bg-surface/90 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-[1680px] items-center justify-between gap-6 px-6 md:px-12 2xl:px-[120px]">
           {/* Marca */}

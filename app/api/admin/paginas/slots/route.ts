@@ -42,8 +42,11 @@ export async function PATCH(request: NextRequest) {
     assignments?: Array<{ slot_id: number; sticker_id: number | null }>;
   };
 
-  if (!Array.isArray(assignments) || assignments.length === 0) {
+  if (!Array.isArray(assignments)) {
     return NextResponse.json({ error: "assignments é obrigatório" }, { status: 400 });
+  }
+  if (assignments.length === 0) {
+    return NextResponse.json({ success: true, updated: 0 });
   }
 
   const errors: string[] = [];

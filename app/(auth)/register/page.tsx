@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import { AuthForm } from "@/components/auth/auth-form";
+import { ReferralCapture } from "@/components/referral/referral-capture";
 import { Card, CardContent } from "@/components/ui/card";
 import { Wordmark } from "@/components/brand/wordmark";
 
@@ -13,6 +14,7 @@ export default function RegisterPage() {
       <Card>
         <CardContent className="pt-6">
           <Suspense fallback={<div className="h-64" />}>
+            <ReferralCapture />
             <AuthForm mode="register" />
           </Suspense>
         </CardContent>

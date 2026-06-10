@@ -31,6 +31,7 @@ interface AlbumClientProps {
   initialUserAlbum: AlbumEntry[];
   initialUserStickers: UserSticker[];
   totalSlots: number;
+  userStickerUrl?: string | null;
 }
 
 export function AlbumClient({
@@ -38,6 +39,7 @@ export function AlbumClient({
   initialUserAlbum,
   initialUserStickers,
   totalSlots,
+  userStickerUrl = null,
 }: AlbumClientProps) {
   const [activeCatId, setActiveCatId] = useState<number | null>(
     categories[0]?.id ?? null
@@ -219,6 +221,7 @@ export function AlbumClient({
               pastedSlotIds={pastedSlotIds}
               ownedMap={ownedMap}
               onPaste={handlePaste}
+              userStickerUrl={userStickerUrl}
             />
           )}
         </>

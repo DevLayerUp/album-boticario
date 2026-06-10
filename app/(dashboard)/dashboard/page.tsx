@@ -14,6 +14,9 @@ import { HeroBanner } from "@/components/dashboard/hero-banner";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { FeatureCard } from "@/components/dashboard/feature-card";
 import { dashboardAssets } from "@/lib/dashboard-assets";
+import { InviteCard } from "@/components/dashboard/invite-card";
+import { buildInviteUrl } from "@/lib/referrals";
+import { headers } from "next/headers";
 
 export const metadata: Metadata = { title: "Início" };
 
@@ -28,13 +31,26 @@ export default async function DashboardPage() {
 
   const [
     profileRes,
+    referralCodeRes,
+    referralsRes,
     stickersRes,
     packsRes,
     slotsRes,
     filledRes,
     tradesRes,
   ] = await Promise.all([
-    supabase.from("profiles").select("sticker_url").eq("id", user.id).single(),
+    supabase
+      .from("profiles")
+      .select("sticker_url, display_name, referral_code")
+      .eq("id", user.id)
+      .single(),
+    supabase.rpc("ensure_referral_code", { p_user_id: user.id }),
+    supabase
+      .from("profiles")
+      .select("id, display_name, created_at", { count: "exact" })
+      .eq("referred_by", user.id)
+      .order("created_at", { ascending: false })
+      .limit(5),
     supabase
       .from("user_stickers")
       .select("*", { count: "exact", head: true })
@@ -74,6 +90,24 @@ export default async function DashboardPage() {
   const filledSlots = filledRes.count ?? 0;
   const albumPct = Math.round((filledSlots / totalSlots) * 100);
   const totalTrades = tradesRes.count ?? 0;
+
+  const headersList = await headers();
+  const siteOrigin =
+    process.env.NEXT_PUBLIC_SITE_URL ??
+    headersList.get("origin") ??
+    "http://localhost:3000";
+  const referralCode =
+    referralCodeRes.data ??
+    profileRes.data?.referral_code ??
+    null;
+  const referralData = referralCode
+    ? {
+        referral_code: referralCode,
+        invite_url: buildInviteUrl(referralCode, siteOrigin),
+        signup_count: referralsRes.count ?? 0,
+        recent_signups: referralsRes.data ?? [],
+      }
+    : null;
 
   return (
     <div className="flex flex-col gap-8">
@@ -155,6 +189,13 @@ export default async function DashboardPage() {
           icon={ArrowLeftRight}
         />
       </div>
+
+      {referralData && (
+        <InviteCard
+          data={referralData}
+          inviterName={profileRes.data?.display_name ?? primeiroNome}
+        />
+      )}
 
       {/* ── Explorar ─────────────────────────────────────────────────── */}
       <section>

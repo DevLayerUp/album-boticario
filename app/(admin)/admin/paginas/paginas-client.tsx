@@ -12,6 +12,7 @@ import { RichTextEditor } from "@/components/admin/rich-text-editor";
 import {
   TEMPLATE_MAP, type TemplateId,
   parseLayoutData, type Title3Data,
+  isProfileTemplate,
 } from "@/lib/album-templates";
 
 interface Category { id: number; name: string }
@@ -71,8 +72,13 @@ function SlotConfigModal({
   const [search, setSearch]             = useState("");
 
   const template = TEMPLATE_MAP[page.layout_template as TemplateId];
+  const isProfile = isProfileTemplate(page.layout_template);
 
   const loadData = useCallback(async () => {
+    if (isProfile) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
       const [slotsRes, stickersRes] = await Promise.all([
@@ -91,7 +97,7 @@ function SlotConfigModal({
     } finally {
       setLoading(false);
     }
-  }, [page.id]);
+  }, [page.id, isProfile]);
 
   useEffect(() => { loadData(); }, [loadData]);
 
@@ -101,6 +107,10 @@ function SlotConfigModal({
   }
 
   async function handleSave() {
+    if (isProfile || slots.length === 0) {
+      onClose(false);
+      return;
+    }
     setSaving(true);
     setError("");
     try {
@@ -149,6 +159,16 @@ function SlotConfigModal({
 
         {loading ? (
           <div className="flex h-64 items-center justify-center"><Loader2 size={28} className="animate-spin text-gb-green/50" /></div>
+        ) : isProfile ? (
+          <div className="p-6">
+            <p className="text-sm text-gray-600">
+              Esta página usa o template <strong>Minha Figurinha</strong>. Não há slots de catálogo —
+              cada usuário vê a figurinha personalizada criada com a foto em <strong>/figurinha</strong>.
+            </p>
+            <p className="mt-3 text-sm text-gray-500">
+              Use o botão de lápis para editar apenas o título da página.
+            </p>
+          </div>
         ) : (
           <div className="p-6 space-y-6">
             <p className="text-sm text-gray-500">
@@ -226,10 +246,12 @@ function SlotConfigModal({
           )}
           <div className="flex gap-3">
             <button onClick={() => onClose(saved)} className="rounded-xl border border-border px-5 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50">Fechar</button>
-            <button onClick={handleSave} disabled={saving} className="flex items-center gap-2 rounded-xl bg-gb-green px-6 py-2.5 text-sm font-semibold text-white hover:bg-gb-green-dark disabled:opacity-60">
-              {saving ? <Loader2 size={15} className="animate-spin" /> : <Save size={15} />}
-              {saving ? "Salvando…" : "Salvar"}
-            </button>
+            {!isProfile && (
+              <button onClick={handleSave} disabled={saving} className="flex items-center gap-2 rounded-xl bg-gb-green px-6 py-2.5 text-sm font-semibold text-white hover:bg-gb-green-dark disabled:opacity-60">
+                {saving ? <Loader2 size={15} className="animate-spin" /> : <Save size={15} />}
+                {saving ? "Salvando…" : "Salvar"}
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -482,6 +504,7 @@ function LayoutContentModal({
   onClose: (updated?: Partial<PageRow>) => void;
 }) {
   const isTitle3   = page.layout_template === "title3";
+  const isProfile  = isProfileTemplate(page.layout_template);
   const initial    = parseLayoutData(page.content) as Title3Data;
 
   const [title,    setTitle]    = useState(initial.title    ?? page.title ?? "");
@@ -541,7 +564,11 @@ function LayoutContentModal({
                 {page.title ? ` · ${page.title}` : ""}
               </h2>
               <p className="text-xs text-muted">
-                {isTitle3 ? "Título, texto e imagem opcional" : "Título da página"}
+                {isTitle3
+                  ? "Título, texto e imagem opcional"
+                  : isProfile
+                    ? "Título da página (a figurinha vem da foto do usuário)"
+                    : "Título da página"}
               </p>
             </div>
           </div>
@@ -866,10 +893,12 @@ export function PaginasClient({ initialCategories, initialPages }: PaginasClient
       setShowForm(false);
 
       // Auto-open appropriate editor
-      if (form.page_type === "sticker") {
-        setConfigPage(newPage);
-      } else {
+      if (form.page_type === "info") {
         setInfoEditPage(newPage);
+      } else if (isProfileTemplate(form.layout_template)) {
+        setContentEditPage(newPage);
+      } else {
+        setConfigPage(newPage);
       }
     } finally {
       setSaving(false);
@@ -958,14 +987,19 @@ export function PaginasClient({ initialCategories, initialPages }: PaginasClient
           ) : (
             <div className="grid grid-cols-1 divide-y divide-border sm:grid-cols-2 lg:grid-cols-3">
               {catPages.map((p) => {
-                const isInfo = p.page_type === "info";
-                const tpl    = TEMPLATE_MAP[p.layout_template as TemplateId];
+                const isInfo    = p.page_type === "info";
+                const isProfile = isProfileTemplate(p.layout_template);
+                const tpl       = TEMPLATE_MAP[p.layout_template as TemplateId];
                 return (
                   <div key={p.id} className="flex items-center gap-3 px-5 py-4">
                     {/* Mini preview */}
                     {isInfo ? (
                       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-violet-100 text-violet-500">
                         <FileText size={16} />
+                      </div>
+                    ) : isProfile ? (
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-100">
+                        <div className="h-7 w-5 rounded-[2px] bg-gb-green/40" />
                       </div>
                     ) : (
                       <div
@@ -991,6 +1025,8 @@ export function PaginasClient({ initialCategories, initialPages }: PaginasClient
                           <span className="inline-flex items-center gap-1 text-violet-600">
                             <FileText size={10} /> Informativa
                           </span>
+                        ) : isProfile ? (
+                          <span className="text-amber-700">Minha Figurinha · foto do usuário</span>
                         ) : (
                           `${p.layout_template} · ${p.slot_count} slots`
                         )}
@@ -1022,13 +1058,15 @@ export function PaginasClient({ initialCategories, initialPages }: PaginasClient
                         >
                           <PenLine size={15} />
                         </button>
-                        <button
-                          onClick={() => setConfigPage(p)}
-                          title="Configurar slots"
-                          className="shrink-0 rounded-lg p-1.5 text-gb-green hover:bg-gb-green/10"
-                        >
-                          <Settings2 size={15} />
-                        </button>
+                        {!isProfile && (
+                          <button
+                            onClick={() => setConfigPage(p)}
+                            title="Configurar slots"
+                            className="shrink-0 rounded-lg p-1.5 text-gb-green hover:bg-gb-green/10"
+                          >
+                            <Settings2 size={15} />
+                          </button>
+                        )}
                       </>
                     )}
 
@@ -1133,7 +1171,9 @@ export function PaginasClient({ initialCategories, initialPages }: PaginasClient
                     onChange={(id) => setForm((f) => ({ ...f, layout_template: id }))}
                   />
                   <p className="mt-2 text-xs text-gray-400">
-                    {TEMPLATE_MAP[form.layout_template]?.total ?? 9} slots serão criados automaticamente.
+                    {form.layout_template === "profile"
+                      ? "Exibe a figurinha personalizada que cada usuário cria com sua foto — sem slots de catálogo."
+                      : `${TEMPLATE_MAP[form.layout_template]?.total ?? 9} slots serão criados automaticamente.`}
                   </p>
                 </div>
               )}

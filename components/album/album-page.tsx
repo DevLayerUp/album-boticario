@@ -1,12 +1,20 @@
 "use client";
 
 import Image from "next/image";
+<<<<<<< Updated upstream
 import { StickerSlot, type SlotSticker } from "./sticker-slot";
 import { parseLayoutData, type Title3Data } from "@/lib/album-templates";
 import { dashboardAssets } from "@/lib/dashboard-assets";
 import { cn } from "@/lib/utils";
 
 export type PageSide = "left" | "right";
+=======
+import Link from "next/link";
+import { motion, AnimatePresence } from "framer-motion";
+import { CheckCircle2, Camera } from "lucide-react";
+import { StickerSlot, type SlotSticker } from "./sticker-slot";
+import { parseLayoutData, type Title3Data, type ProfileData } from "@/lib/album-templates";
+>>>>>>> Stashed changes
 
 export interface AlbumPageData {
   id: number;
@@ -33,6 +41,8 @@ interface AlbumPageProps {
   pastedSlotIds: Set<number>;
   ownedMap: Map<number, number>;
   onPaste: (slotId: number, stickerId: number) => Promise<void>;
+  /** User's personalized sticker from photo upload (profiles.sticker_url) */
+  userStickerUrl?: string | null;
 }
 
 // ─── Page shell — fundo verde escuro + blobs decorativos (Figma 28:583) ───────
@@ -139,9 +149,90 @@ function Title3Page({ page, side, pastedSlotIds, ownedMap, onPaste }: AlbumPageP
   );
 }
 
+<<<<<<< Updated upstream
 // ─── Template: 3x3 — grade de 9 figurinhas ────────────────────────────────────
 function Grid3x3Page({ page, side, pastedSlotIds, ownedMap, onPaste }: AlbumPageProps) {
   const slots = [...page.album_slots].sort((a, b) => a.slot_number - b.slot_number);
+=======
+// ─── Template: profile (user photo sticker) ─────────────────────────────────────
+function ProfilePage({ page, userStickerUrl }: AlbumPageProps) {
+  const data  = parseLayoutData(page.content) as ProfileData;
+  const title = data.title ?? page.title ?? "Minha Figurinha";
+  const hasSticker = Boolean(userStickerUrl);
+
+  return (
+    <div
+      className="relative flex min-h-[480px] flex-col overflow-hidden rounded-2xl p-5"
+      style={{ background: "#1A5C35" }}
+    >
+      <PageBackground />
+
+      <div className="relative z-10 mb-4">
+        <p className="mb-1 text-[10px] font-semibold uppercase tracking-widest text-white/50">
+          Pág. {page.page_number}
+        </p>
+        {title && (
+          <h2 className="font-display text-2xl font-extrabold leading-tight text-white drop-shadow">
+            {title}
+          </h2>
+        )}
+        <div className="mt-2">
+          <ProgressBar filled={hasSticker ? 1 : 0} total={1} />
+        </div>
+      </div>
+
+      <div className="relative z-10 flex flex-1 flex-col items-center justify-center py-4">
+        {hasSticker ? (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.92 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ type: "spring", stiffness: 260, damping: 22 }}
+            className="relative overflow-hidden rounded-2xl shadow-2xl shadow-black/30"
+            style={{ width: 200, aspectRatio: "400/550" }}
+          >
+            <Image
+              src={userStickerUrl!}
+              alt="Sua figurinha personalizada"
+              fill
+              className="object-cover"
+              sizes="200px"
+              priority
+            />
+          </motion.div>
+        ) : (
+          <div
+            className="flex flex-col items-center justify-center gap-4 rounded-2xl border-2 border-dashed border-white/25 bg-white/5 p-8 text-center"
+            style={{ width: 200, aspectRatio: "400/550" }}
+          >
+            <Camera className="size-10 text-white/40" strokeWidth={1.5} />
+            <p className="text-sm leading-relaxed text-white/70">
+              Crie sua figurinha com sua foto para aparecer aqui.
+            </p>
+            <Link
+              href="/figurinha"
+              className="rounded-pill bg-[#D6E44A] px-5 py-2 text-sm font-semibold text-[#1A5C35] transition-[filter,transform] duration-200 hover:-translate-y-px hover:brightness-95"
+            >
+              Criar figurinha
+            </Link>
+          </div>
+        )}
+      </div>
+
+      {hasSticker && <CompleteBanner />}
+    </div>
+  );
+}
+
+// ─── Template: 3x3 ────────────────────────────────────────────────────────────
+function Grid3x3Page({ page, pastedSlotIds, ownedMap, onPaste }: AlbumPageProps) {
+  const slots    = [...page.album_slots].sort((a, b) => a.slot_number - b.slot_number);
+  const filled   = slots.filter((s) => pastedSlotIds.has(s.id)).length;
+  const total    = slots.length;
+  const complete = total > 0 && filled === total;
+
+  const data  = parseLayoutData(page.content);
+  const title = (data as { title?: string }).title ?? page.title ?? null;
+>>>>>>> Stashed changes
 
   return (
     <PageShell side={side}>
@@ -168,9 +259,39 @@ function Grid3x3Page({ page, side, pastedSlotIds, ownedMap, onPaste }: AlbumPage
 }
 
 // ─── Exported component ────────────────────────────────────────────────────────
+<<<<<<< Updated upstream
 export function AlbumPage(props: AlbumPageProps) {
   if (props.page.layout_template === "title3") {
     return <Title3Page {...props} />;
+=======
+export function AlbumPage({
+  page,
+  pastedSlotIds,
+  ownedMap,
+  onPaste,
+  userStickerUrl,
+}: AlbumPageProps) {
+  if (page.layout_template === "profile") {
+    return (
+      <ProfilePage
+        page={page}
+        pastedSlotIds={pastedSlotIds}
+        ownedMap={ownedMap}
+        onPaste={onPaste}
+        userStickerUrl={userStickerUrl}
+      />
+    );
+  }
+  if (page.layout_template === "title3") {
+    return (
+      <Title3Page
+        page={page}
+        pastedSlotIds={pastedSlotIds}
+        ownedMap={ownedMap}
+        onPaste={onPaste}
+      />
+    );
+>>>>>>> Stashed changes
   }
   return <Grid3x3Page {...props} />;
 }

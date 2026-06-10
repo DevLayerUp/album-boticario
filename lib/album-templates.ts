@@ -4,6 +4,7 @@
  * Templates:
  *   title3  → title + rich-text paragraph + optional image + 3 sticker slots
  *   3x3     → 9 sticker slots in a 3 × 3 grid
+ *   profile → single centered slot filled with the user's photo sticker (profiles.sticker_url)
  *
  * Layout content is stored as JSON in the `content` DB column for sticker pages.
  * Info pages continue to use `content` as raw HTML.
@@ -11,7 +12,7 @@
 
 // ─── Template registry ────────────────────────────────────────────────────────
 
-export type TemplateId = "title3" | "3x3";
+export type TemplateId = "title3" | "3x3" | "profile";
 
 export interface AlbumTemplate {
   id: TemplateId;
@@ -22,8 +23,9 @@ export interface AlbumTemplate {
 }
 
 export const ALBUM_TEMPLATES: AlbumTemplate[] = [
-  { id: "title3", label: "Título + 3", cols: 3, rows: 1, total: 3 },
-  { id: "3x3",    label: "3 × 3",      cols: 3, rows: 3, total: 9 },
+  { id: "title3",  label: "Título + 3",      cols: 3, rows: 1, total: 3 },
+  { id: "3x3",     label: "3 × 3",           cols: 3, rows: 3, total: 9 },
+  { id: "profile", label: "Minha Figurinha", cols: 1, rows: 1, total: 0 },
 ];
 
 export const TEMPLATE_MAP = Object.fromEntries(
@@ -49,8 +51,18 @@ export interface Grid3x3Data {
   title?: string;
 }
 
+/** Fields for the "profile" template (user photo sticker in the center) */
+export interface ProfileData {
+  title?: string;
+}
+
 /** Union of all possible layout data shapes */
-export type LayoutData = Title3Data | Grid3x3Data;
+export type LayoutData = Title3Data | Grid3x3Data | ProfileData;
+
+/** Templates that do not use catalog sticker slots */
+export function isProfileTemplate(templateId: string): boolean {
+  return templateId === "profile";
+}
 
 /**
  * Safely parses the `content` column value for a sticker page.

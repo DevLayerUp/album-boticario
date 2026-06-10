@@ -10,6 +10,7 @@ interface FlipBookProps {
   pastedSlotIds: Set<number>;
   ownedMap: Map<number, number>;
   onPaste: (slotId: number, stickerId: number) => Promise<void>;
+  userStickerUrl?: string | null;
 }
 
 /**
@@ -17,7 +18,13 @@ interface FlipBookProps {
  * spreadIndex 0 → pages[0] + pages[1]
  * spreadIndex 1 → pages[2] + pages[3]  …
  */
-export function FlipBook({ pages, pastedSlotIds, ownedMap, onPaste }: FlipBookProps) {
+export function FlipBook({
+  pages,
+  pastedSlotIds,
+  ownedMap,
+  onPaste,
+  userStickerUrl,
+}: FlipBookProps) {
   const totalSpreads = Math.ceil(pages.length / 2);
   const [spreadIndex, setSpreadIndex] = useState(0);
   const [direction, setDirection] = useState<1 | -1>(1);
@@ -101,6 +108,7 @@ export function FlipBook({ pages, pastedSlotIds, ownedMap, onPaste }: FlipBookPr
           >
             {/* Left page */}
             {leftPage && (
+<<<<<<< Updated upstream
               <AlbumPage
                 page={leftPage}
                 side="left"
@@ -108,10 +116,24 @@ export function FlipBook({ pages, pastedSlotIds, ownedMap, onPaste }: FlipBookPr
                 ownedMap={ownedMap}
                 onPaste={onPaste}
               />
+=======
+              <div className="relative">
+                {/* Page edge shadow (right side = spine) */}
+                <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-4 bg-gradient-to-l from-black/10 to-transparent md:block" />
+                <AlbumPage
+                  page={leftPage}
+                  pastedSlotIds={pastedSlotIds}
+                  ownedMap={ownedMap}
+                  onPaste={onPaste}
+                  userStickerUrl={userStickerUrl}
+                />
+              </div>
+>>>>>>> Stashed changes
             )}
 
             {/* Right page */}
             {rightPage ? (
+<<<<<<< Updated upstream
               <AlbumPage
                 page={rightPage}
                 side="right"
@@ -119,6 +141,19 @@ export function FlipBook({ pages, pastedSlotIds, ownedMap, onPaste }: FlipBookPr
                 ownedMap={ownedMap}
                 onPaste={onPaste}
               />
+=======
+              <div className="relative">
+                {/* Page edge shadow (left side = spine) */}
+                <div className="pointer-events-none absolute inset-y-0 left-0 hidden w-4 bg-gradient-to-r from-black/10 to-transparent md:block" />
+                <AlbumPage
+                  page={rightPage}
+                  pastedSlotIds={pastedSlotIds}
+                  ownedMap={ownedMap}
+                  onPaste={onPaste}
+                  userStickerUrl={userStickerUrl}
+                />
+              </div>
+>>>>>>> Stashed changes
             ) : (
               /* Empty right page placeholder */
               <div className="hidden rounded-r-card bg-verde-escuro-500/95 md:flex md:items-center md:justify-center">

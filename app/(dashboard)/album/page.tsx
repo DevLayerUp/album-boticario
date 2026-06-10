@@ -30,6 +30,12 @@ export default async function AlbumPage() {
     .select("sticker_id, quantity")
     .eq("user_id", user.id);
 
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("sticker_url")
+    .eq("id", user.id)
+    .single();
+
   // Total slots for progress
   const { count: totalSlots } = await supabase
     .from("album_slots")
@@ -41,6 +47,7 @@ export default async function AlbumPage() {
       initialUserAlbum={userAlbum ?? []}
       initialUserStickers={userStickers ?? []}
       totalSlots={totalSlots ?? 0}
+      userStickerUrl={profile?.sticker_url ?? null}
     />
   );
 }
