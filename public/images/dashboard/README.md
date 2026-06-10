@@ -19,6 +19,8 @@ cards/pacotinhos.png→ card "Pacotinhos"        (tema gold)
 cards/quiz.png      → card "Quizz"             (tema verde)
 cards/missoes.png   → card "Missões"           (tema azul)
 cards/trocas.png    → card "Trocas"            (tema verde)
+album/bg-esquerdo.png → blobs decorativos da página esquerda do álbum
+album/bg-direito.png  → blobs decorativos da página direita do álbum
 ```
 
 Recomendado: PNG/WebP, headers de card ~ 600×460px, hero ~ 1200×420px.

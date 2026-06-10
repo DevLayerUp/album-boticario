@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
+import Link from "next/link";
 import Image from "next/image";
-import { BookOpen, Loader2 } from "lucide-react";
+import { ArrowLeftRight, Flag, HelpCircle, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { FlipBook } from "@/components/album/flip-book";
 import type { AlbumPageData } from "@/components/album/album-page";
@@ -103,85 +104,114 @@ export function AlbumClient({
   const progressPct  = totalSlots > 0 ? Math.round((filledCount / totalSlots) * 100) : 0;
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       {/* ── Header ─────────────────────────────────────────────────────── */}
-      <div>
-        <div className="flex items-center gap-3">
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gb-green/10 text-gb-green">
-            <BookOpen size={18} />
-          </span>
-          <div>
-            <h1 className="font-display text-2xl font-semibold text-gb-ink">
-              Meu Álbum
-            </h1>
-            <p className="text-sm text-muted">
-              {filledCount} de {totalSlots} figurinhas coladas
-            </p>
+      <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+        {/* Título + progresso */}
+        <div className="min-w-0 flex-1">
+          <h1 className="font-display text-4xl font-bold leading-[1.4] text-verde-escuro-500 md:text-5xl">
+            Meu Álbum
+          </h1>
+          <p className="mt-2 text-lg text-black md:text-xl">
+            {filledCount} de {totalSlots} figurinhas coladas
+          </p>
+
+          <div className="mt-4 flex items-center gap-4">
+            <div className="h-2 w-full max-w-[525px] overflow-hidden rounded-pill bg-verde-100">
+              <motion.div
+                className="h-full rounded-pill bg-verde-500"
+                initial={{ width: 0 }}
+                animate={{ width: `${progressPct}%` }}
+                transition={{ duration: 0.8, ease: "easeOut" }}
+                role="progressbar"
+                aria-valuenow={progressPct}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-label={`${progressPct}% do álbum completo`}
+              />
+            </div>
+            <span className="shrink-0 text-lg font-bold text-verde-escuro-500 md:text-xl">
+              {progressPct}% concluído
+            </span>
           </div>
         </div>
 
-        {/* Global progress bar */}
-        <div className="mt-4 h-2.5 w-full overflow-hidden rounded-full bg-gray-100">
-          <motion.div
-            className="h-full rounded-full bg-gb-green"
-            initial={{ width: 0 }}
-            animate={{ width: `${progressPct}%` }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-            role="progressbar"
-            aria-valuenow={progressPct}
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-label={`${progressPct}% do álbum completo`}
-          />
+        {/* CTAs — conquiste mais figurinhas */}
+        <div className="flex shrink-0 flex-col gap-3">
+          <p className="text-base font-medium text-[#3d3d3d]">
+            Conquiste mais figurinhas:
+          </p>
+          <div className="flex flex-wrap gap-4">
+            <Link
+              href="/quiz"
+              className="inline-flex h-10 items-center justify-center gap-2.5 rounded-pill bg-azul-500 px-10 py-2 text-base font-medium text-azul-100 transition-colors hover:bg-azul-escuro-500"
+            >
+              <HelpCircle size={24} />
+              Responder Quizz
+            </Link>
+            <Link
+              href="/missoes"
+              className="inline-flex h-10 items-center justify-center gap-2.5 rounded-pill border border-azul-500 px-10 py-2 text-base font-medium text-azul-500 transition-colors hover:bg-azul-500/10"
+            >
+              <Flag size={24} />
+              Minhas missões
+            </Link>
+            <Link
+              href="/trocas"
+              className="inline-flex h-10 items-center justify-center gap-2.5 rounded-pill border border-azul-500 px-10 py-2 text-base font-medium text-azul-500 transition-colors hover:bg-azul-500/10"
+            >
+              <ArrowLeftRight size={24} />
+              Trocar
+            </Link>
+          </div>
         </div>
-        <p className="mt-1 text-right text-xs font-semibold text-gb-green">
-          {progressPct}%
-        </p>
       </div>
 
       {/* ── Category tabs ───────────────────────────────────────────────── */}
       {categories.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-gray-200 p-8 text-center text-sm text-gray-400">
+        <div className="rounded-card border border-dashed border-verde-300 p-8 text-center text-sm text-verde-escuro-300">
           Nenhuma categoria cadastrada ainda. O admin precisa criar as categorias e páginas do álbum.
         </div>
       ) : (
         <>
-          <div
-            className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 md:mx-0 md:px-0"
-            role="tablist"
-          >
-            {categories.map((cat) => (
-              <button
-                key={cat.id}
-                role="tab"
-                aria-selected={activeCatId === cat.id}
-                onClick={() => setActiveCatId(cat.id)}
-                className={`flex shrink-0 items-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium transition-all duration-200 ${
-                  activeCatId === cat.id
-                    ? "border-gb-green bg-gb-green text-white shadow-md shadow-gb-green/20"
-                    : "border-border bg-surface text-muted hover:border-gb-green/40 hover:text-gb-green-dark"
-                }`}
-              >
-                {cat.cover_image && (
-                  <div className="relative h-5 w-5 overflow-hidden rounded-full">
-                    <Image
-                      src={cat.cover_image}
-                      alt=""
-                      fill
-                      className="object-cover"
-                      sizes="20px"
-                    />
-                  </div>
-                )}
-                {cat.name}
-              </button>
-            ))}
-          </div>
+          {categories.length > 1 && (
+            <div
+              className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 md:mx-0 md:px-0"
+              role="tablist"
+            >
+              {categories.map((cat) => (
+                <button
+                  key={cat.id}
+                  role="tab"
+                  aria-selected={activeCatId === cat.id}
+                  onClick={() => setActiveCatId(cat.id)}
+                  className={`flex shrink-0 cursor-pointer items-center gap-2 rounded-pill border px-5 py-2 text-sm font-medium transition-all duration-200 ${
+                    activeCatId === cat.id
+                      ? "border-verde-500 bg-verde-500 text-white"
+                      : "border-verde-300 bg-white text-verde-500 hover:border-verde-500 hover:text-verde-escuro-500"
+                  }`}
+                >
+                  {cat.cover_image && (
+                    <div className="relative h-5 w-5 overflow-hidden rounded-full">
+                      <Image
+                        src={cat.cover_image}
+                        alt=""
+                        fill
+                        className="object-cover"
+                        sizes="20px"
+                      />
+                    </div>
+                  )}
+                  {cat.name}
+                </button>
+              ))}
+            </div>
+          )}
 
           {/* FlipBook */}
           {loadingPages ? (
             <div className="flex h-72 items-center justify-center">
-              <Loader2 size={28} className="animate-spin text-gb-green/50" />
+              <Loader2 size={28} className="animate-spin text-verde-500" />
             </div>
           ) : (
             <FlipBook

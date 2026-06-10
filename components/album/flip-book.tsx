@@ -24,7 +24,7 @@ export function FlipBook({ pages, pastedSlotIds, ownedMap, onPaste }: FlipBookPr
 
   if (pages.length === 0) {
     return (
-      <div className="flex h-64 items-center justify-center rounded-2xl border border-dashed border-gray-200 text-sm text-gray-400">
+      <div className="flex h-64 items-center justify-center rounded-card border border-dashed border-verde-300 text-center text-sm text-verde-escuro-300">
         Nenhuma página cadastrada nesta categoria.
         <br />
         Crie páginas no painel admin → Páginas do Álbum.
@@ -62,13 +62,13 @@ export function FlipBook({ pages, pastedSlotIds, ownedMap, onPaste }: FlipBookPr
     <div className="select-none">
       {/* Spread counter + dot pagination */}
       <div className="mb-3 flex items-center justify-between px-1">
-        <span className="text-sm text-gray-500">
+        <span className="text-sm text-verde-escuro-300">
           Páginas{" "}
-          <span className="font-semibold text-gb-ink">{spreadIndex * 2 + 1}</span>
+          <span className="font-bold text-verde-escuro-500">{spreadIndex * 2 + 1}</span>
           {rightPage && (
-            <>–<span className="font-semibold text-gb-ink">{spreadIndex * 2 + 2}</span></>
+            <>–<span className="font-bold text-verde-escuro-500">{spreadIndex * 2 + 2}</span></>
           )}{" "}
-          de <span className="font-semibold text-gb-ink">{pages.length}</span>
+          de <span className="font-bold text-verde-escuro-500">{pages.length}</span>
         </span>
 
         <div className="flex gap-1.5">
@@ -76,10 +76,10 @@ export function FlipBook({ pages, pastedSlotIds, ownedMap, onPaste }: FlipBookPr
             <button
               key={i}
               onClick={() => goTo(i)}
-              className={`rounded-full transition-all duration-200 ${
+              className={`cursor-pointer rounded-pill transition-all duration-200 ${
                 i === spreadIndex
-                  ? "h-2 w-6 bg-gb-green"
-                  : "h-2 w-2 bg-gray-200 hover:bg-gray-300"
+                  ? "h-2 w-6 bg-verde-500"
+                  : "h-2 w-2 bg-verde-100 hover:bg-verde-200"
               }`}
               aria-label={`Spread ${i + 1}`}
             />
@@ -88,7 +88,7 @@ export function FlipBook({ pages, pastedSlotIds, ownedMap, onPaste }: FlipBookPr
       </div>
 
       {/* Book spread stage */}
-      <div className="relative overflow-hidden">
+      <div className="relative mx-auto w-full max-w-[1396px] overflow-hidden">
         <AnimatePresence mode="wait" custom={direction}>
           <motion.div
             key={spreadIndex}
@@ -97,58 +97,49 @@ export function FlipBook({ pages, pastedSlotIds, ownedMap, onPaste }: FlipBookPr
             initial="enter"
             animate="center"
             exit="exit"
-            className="grid grid-cols-1 gap-2 md:grid-cols-2"
+            className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-0"
           >
             {/* Left page */}
             {leftPage && (
-              <div className="relative">
-                {/* Page edge shadow (right side = spine) */}
-                <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-4 bg-gradient-to-l from-black/10 to-transparent md:block" />
-                <AlbumPage
-                  page={leftPage}
-                  pastedSlotIds={pastedSlotIds}
-                  ownedMap={ownedMap}
-                  onPaste={onPaste}
-                />
-              </div>
+              <AlbumPage
+                page={leftPage}
+                side="left"
+                pastedSlotIds={pastedSlotIds}
+                ownedMap={ownedMap}
+                onPaste={onPaste}
+              />
             )}
 
             {/* Right page */}
             {rightPage ? (
-              <div className="relative">
-                {/* Page edge shadow (left side = spine) */}
-                <div className="pointer-events-none absolute inset-y-0 left-0 hidden w-4 bg-gradient-to-r from-black/10 to-transparent md:block" />
-                <AlbumPage
-                  page={rightPage}
-                  pastedSlotIds={pastedSlotIds}
-                  ownedMap={ownedMap}
-                  onPaste={onPaste}
-                />
-              </div>
+              <AlbumPage
+                page={rightPage}
+                side="right"
+                pastedSlotIds={pastedSlotIds}
+                ownedMap={ownedMap}
+                onPaste={onPaste}
+              />
             ) : (
               /* Empty right page placeholder */
-              <div className="hidden rounded-2xl border border-dashed border-gray-100 bg-gray-50/60 md:flex md:items-center md:justify-center">
-                <p className="text-sm text-gray-300">Última página</p>
+              <div className="hidden rounded-r-card bg-verde-escuro-500/95 md:flex md:items-center md:justify-center">
+                <p className="text-sm text-verde-100/60">Última página</p>
               </div>
             )}
           </motion.div>
         </AnimatePresence>
-
-        {/* Book spine shadow overlay (center) */}
-        <div className="pointer-events-none absolute inset-y-0 left-1/2 hidden w-3 -translate-x-1/2 bg-gradient-to-r from-black/8 via-black/15 to-black/8 md:block" />
       </div>
 
       {/* Navigation */}
-      <div className="mt-4 flex items-center justify-between">
+      <div className="mt-5 flex items-center justify-between">
         <button
           onClick={() => goTo(spreadIndex - 1)}
           disabled={spreadIndex === 0}
-          className="flex items-center gap-1.5 rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-30"
+          className="flex cursor-pointer items-center gap-1.5 rounded-pill border border-verde-500 px-6 py-2.5 text-sm font-medium text-verde-escuro-500 transition-colors hover:bg-verde-500/10 disabled:cursor-not-allowed disabled:opacity-30"
         >
           <ChevronLeft size={16} /> Anterior
         </button>
 
-        <p className="text-xs text-gray-400">
+        <p className="hidden text-xs text-verde-escuro-300 sm:block">
           {leftPage?.title ?? `Página ${leftPage?.page_number ?? ""}`}
           {rightPage?.title ? ` · ${rightPage.title}` : rightPage ? ` · Pág. ${rightPage.page_number}` : ""}
         </p>
@@ -156,7 +147,7 @@ export function FlipBook({ pages, pastedSlotIds, ownedMap, onPaste }: FlipBookPr
         <button
           onClick={() => goTo(spreadIndex + 1)}
           disabled={spreadIndex === totalSpreads - 1}
-          className="flex items-center gap-1.5 rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-30"
+          className="flex cursor-pointer items-center gap-1.5 rounded-pill border border-verde-500 px-6 py-2.5 text-sm font-medium text-verde-escuro-500 transition-colors hover:bg-verde-500/10 disabled:cursor-not-allowed disabled:opacity-30"
         >
           Próxima <ChevronRight size={16} />
         </button>

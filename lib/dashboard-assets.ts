@@ -18,6 +18,13 @@ export const dashboardAssets = {
   hero: `${BASE}/hero.png`,
   /** Logotipo "Fãs da Natureza" usado no header. */
   logo: `${BASE}/logo.png`,
+  /** Elementos decorativos das páginas do álbum (blobs sobre o verde escuro). */
+  album: {
+    left:  `${BASE}/album/bg-esquerdo.png`,
+    right: `${BASE}/album/bg-direito.png`,
+    /** Imagem decorativa do fundo geral da página /album (position bottom). */
+    page:  `${BASE}/album/bg-page.png`,
+  },
   /** Headers dos feature cards da seção "Explorar". */
   cards: {
     figurinha: `${BASE}/cards/figurinha.png`,
