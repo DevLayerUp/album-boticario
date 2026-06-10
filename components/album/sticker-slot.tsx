@@ -278,11 +278,16 @@ export function StickerSlot({
 
   return (
     <>
-      {/* ── Slot 160×229, raio 8px, borda 5px na cor da raridade (Figma 28:1120) ── */}
-      <motion.div
+      {/* ── Slot 160×229, raio 8px, borda 5px na cor da raridade (Figma 28:1120) ──
+           Rendered as <button> so the flip-book library treats it as an
+           interactive target (clickEventForward): taps open the modal and never
+           trigger a page flip. Inner content is pointer-events-none so the touch
+           target is always the button itself, not a child img/div/span. */}
+      <motion.button
+        type="button"
         layout
         className={[
-          "relative aspect-160/229 w-full overflow-hidden rounded-input border-[5px] transition-colors duration-300",
+          "relative block aspect-160/229 w-full overflow-hidden rounded-input border-[5px] text-left transition-colors duration-300",
           isComplete
             ? "cursor-pointer"
             : canPaste
@@ -310,7 +315,7 @@ export function StickerSlot({
             initial={justPasted ? { scale: 0.55, opacity: 0, rotateY: -95 } : false}
             animate={{ scale: 1, opacity: 1, rotateY: 0 }}
             transition={{ type: "spring", stiffness: 210, damping: 20, delay: 0.05 }}
-            className="relative h-full w-full"
+            className="pointer-events-none relative h-full w-full"
           >
             {sticker && (
               <Image
@@ -350,7 +355,7 @@ export function StickerSlot({
           </motion.div>
         ) : (
           /* ── NÃO COLADA ─────────────────────────────────────────────── */
-          <div className="relative h-full w-full">
+          <div className="pointer-events-none relative h-full w-full">
             {/* Número do slot */}
             <span className="absolute left-1.5 top-1.5 z-10 rounded-pill bg-black/25 px-1.5 py-0.5 text-[10px] font-bold text-white">
               #{slotNumber}
@@ -392,7 +397,7 @@ export function StickerSlot({
             )}
           </div>
         )}
-      </motion.div>
+      </motion.button>
 
       {/* ── Sticker detail modal (flip frente/verso) ─────────────────────────── */}
       {mounted && createPortal(

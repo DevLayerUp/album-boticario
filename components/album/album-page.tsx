@@ -41,14 +41,18 @@ interface AlbumPageProps {
   onPaste: (slotId: number, stickerId: number) => Promise<void>;
   /** User's personalized sticker from photo upload (profiles.sticker_url) */
   userStickerUrl?: string | null;
+  /** When true, fills the fixed-height flipbook page (h-full + spine-straight borders) */
+  inFlipBook?: boolean;
 }
 
 function PageShell({
   side,
   children,
+  inFlipBook = false,
 }: {
   side: PageSide;
   children: React.ReactNode;
+  inFlipBook?: boolean;
 }) {
   const decoration =
     side === "left" ? dashboardAssets.album.left : dashboardAssets.album.right;
@@ -56,10 +60,20 @@ function PageShell({
   return (
     <div
       className={cn(
-        "relative flex min-h-[480px] flex-col overflow-hidden bg-verde-escuro-500",
-        side === "left"
-          ? "rounded-card md:rounded-r-none"
-          : "rounded-card md:rounded-l-none",
+        "relative flex flex-col overflow-hidden bg-verde-escuro-500",
+        inFlipBook
+          ? cn(
+              "h-full",
+              side === "left"
+                ? "rounded-l-card rounded-r-none"
+                : "rounded-r-card rounded-l-none",
+            )
+          : cn(
+              "min-h-[480px]",
+              side === "left"
+                ? "rounded-card md:rounded-r-none"
+                : "rounded-card md:rounded-l-none",
+            ),
       )}
     >
       <div
@@ -92,7 +106,7 @@ function LogoBadge() {
   );
 }
 
-function Title3Page({ page, side, pastedSlotIds, ownedMap, onPaste }: AlbumPageProps) {
+function Title3Page({ page, side, pastedSlotIds, ownedMap, onPaste, inFlipBook }: AlbumPageProps) {
   const slots = [...page.album_slots].sort((a, b) => a.slot_number - b.slot_number);
 
   const data  = parseLayoutData(page.content) as Title3Data;
@@ -100,7 +114,7 @@ function Title3Page({ page, side, pastedSlotIds, ownedMap, onPaste }: AlbumPageP
   const text  = data.text ?? null;
 
   return (
-    <PageShell side={side}>
+    <PageShell side={side} inFlipBook={inFlipBook}>
       <div className="flex flex-1 flex-col px-6 pb-8 pt-10 sm:px-[10%] sm:pt-[14%]">
         {title && (
           <h2 className="font-display text-3xl font-bold leading-[1.4] text-white md:text-5xl">
@@ -140,13 +154,13 @@ function Title3Page({ page, side, pastedSlotIds, ownedMap, onPaste }: AlbumPageP
   );
 }
 
-function ProfilePage({ page, side, userStickerUrl }: AlbumPageProps) {
+function ProfilePage({ page, side, userStickerUrl, inFlipBook }: AlbumPageProps) {
   const data       = parseLayoutData(page.content) as ProfileData;
   const title      = data.title ?? page.title ?? "Minha Figurinha";
   const hasSticker = Boolean(userStickerUrl);
 
   return (
-    <PageShell side={side}>
+    <PageShell side={side} inFlipBook={inFlipBook}>
       <div className="flex flex-1 flex-col items-center justify-center px-6 py-8 sm:px-[10%]">
         {title && (
           <h2 className="mb-8 text-center font-display text-3xl font-bold leading-[1.4] text-white md:text-4xl">
@@ -194,11 +208,11 @@ function ProfilePage({ page, side, userStickerUrl }: AlbumPageProps) {
   );
 }
 
-function Grid3x3Page({ page, side, pastedSlotIds, ownedMap, onPaste }: AlbumPageProps) {
+function Grid3x3Page({ page, side, pastedSlotIds, ownedMap, onPaste, inFlipBook }: AlbumPageProps) {
   const slots = [...page.album_slots].sort((a, b) => a.slot_number - b.slot_number);
 
   return (
-    <PageShell side={side}>
+    <PageShell side={side} inFlipBook={inFlipBook}>
       <div className="flex flex-1 flex-col justify-center px-6 py-8 sm:px-[12%] sm:py-[7.5%]">
         <div className="grid grid-cols-3 gap-x-4 gap-y-5 md:gap-x-6 md:gap-y-8">
           {slots.map((slot) => {
