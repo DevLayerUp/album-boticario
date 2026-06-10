@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { LogOut } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 
@@ -22,6 +23,7 @@ export function SignOutButton() {
       onClick={handleSignOut}
       loading={loading}
     >
+      {!loading && <LogOut aria-hidden className="size-4" strokeWidth={1.8} />}
       Sair
     </Button>
   );

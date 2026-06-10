@@ -1,19 +1,12 @@
 import type { Metadata, Viewport } from "next";
-import { Fraunces, Mulish } from "next/font/google";
+import { Barlow } from "next/font/google";
 import "./globals.css";
 
-const fraunces = Fraunces({
+const barlow = Barlow({
   subsets: ["latin"],
-  variable: "--font-fraunces",
+  variable: "--font-barlow",
   display: "swap",
-  weight: ["400", "500", "600", "700", "900"],
-});
-
-const mulish = Mulish({
-  subsets: ["latin"],
-  variable: "--font-mulish",
-  display: "swap",
-  weight: ["400", "500", "600", "700", "800"],
+  weight: ["400", "500", "700", "800"],
 });
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
@@ -59,7 +52,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#063d2b",
+  themeColor: "#0d6632",
   colorScheme: "light",
   width: "device-width",
   initialScale: 1,
@@ -72,7 +65,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="pt-BR" className={`${fraunces.variable} ${mulish.variable}`}>
+    <html lang="pt-BR" className={barlow.variable}>
       <body id="root">
         {/* Skip-to-content link for keyboard users */}
         <a

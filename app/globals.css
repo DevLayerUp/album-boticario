@@ -2,45 +2,88 @@
 
 
 /* ------------------------------------------------------------------ */
-/*  Design tokens — base Grupo Boticário                              */
-/*  Valores GB-aligned recomendados. Trocar pelos hex oficiais        */
-/*  do manual de marca quando disponíveis (somente estes tokens).     */
+/*  Design tokens — Design System FGB (Fãs da Natureza)               */
+/*  Fonte de verdade: Figma "Design System FGB" (node 18:816).        */
+/*  Documentado em .docs/10-DESIGN-SYSTEM.md                          */
 /* ------------------------------------------------------------------ */
 @theme {
   /* Extra-small breakpoint */
   --breakpoint-xs: 30rem; /* 480px */
 
-  /* Marca */
-  --color-gb-green: #00a859;
-  --color-gb-green-dark: #006341;
-  --color-gb-green-deep: #063d2b;
-  --color-gb-cream: #f7f3ec;
-  --color-gb-ink: #14211b;
-  --color-gb-slate: #4a5751;
-  --color-gb-gold: #d9a441;
+  /* ── Verde (primária) ─────────────────────────────────────────── */
+  --color-verde-500: #42a52a;
+  --color-verde-400: #68b755;
+  --color-verde-300: #8ec97f;
+  --color-verde-200: #b3dbaa;
+  --color-verde-100: #d9edd4;
 
-  /* Raridades (espelha a tabela `rarities` do banco) */
-  --color-rarity-common: #a8a8a8;
-  --color-rarity-rare: #ffd700;
-  --color-rarity-super: #ff6ec7;
+  /* ── Verde Escuro (institucional) ─────────────────────────────── */
+  --color-verde-escuro-500: #0d6632;
+  --color-verde-escuro-400: #3d855b;
+  --color-verde-escuro-300: #6ea384;
+  --color-verde-escuro-200: #9ec2ad;
+  --color-verde-escuro-100: #cfe0d6;
+  --color-verde-escuro-capa: #052e04;
 
-  /* Semânticos */
-  --color-primary: var(--color-gb-green);
-  --color-primary-hover: var(--color-gb-green-dark);
+  /* ── Azul (secundária) ────────────────────────────────────────── */
+  --color-azul-500: #00aedb;
+  --color-azul-400: #33bee2;
+  --color-azul-300: #66cee9;
+  --color-azul-200: #99dff1;
+  --color-azul-100: #cceff8;
+  --color-azul-escuro-500: #09357a;
+
+  /* ── Apoio ────────────────────────────────────────────────────── */
+  --color-amarelo: #deda00;
+  --color-verde-genz: #99d624;
+  --color-gold-500: #d2a309;
+  --color-gold-700: #b57d02;
+  --color-branco: #f9f8f7;
+  --color-branco-seringueira: #eaffe8;
+
+  /* Superfícies de cards por tema */
+  --color-surface-green: #edfee8;
+  --color-surface-blue: #f3fbff;
+  --color-surface-gold: #ffffe9;
+
+  /* ── Semânticos ───────────────────────────────────────────────── */
+  --color-primary: var(--color-verde-500);
+  --color-primary-hover: var(--color-verde-escuro-500);
   --color-surface: #ffffff;
-  --color-background: var(--color-gb-cream);
-  --color-foreground: var(--color-gb-ink);
-  --color-muted: var(--color-gb-slate);
-  --color-border: #e3ddd1;
+  --color-background: var(--color-branco);
+  --color-foreground: var(--color-verde-escuro-capa);
+  --color-muted: #4a5751;
+  --color-border: #e3e3e0;
 
-  /* Tipografia (variáveis injetadas por next/font em layout.tsx) */
-  --font-display: var(--font-fraunces), Georgia, "Times New Roman", serif;
-  --font-body: var(--font-mulish), system-ui, -apple-system, sans-serif;
+  /* ── Aliases de compatibilidade (gb-* legado → paleta FGB) ──────── */
+  /* Mantidos para que landing/auth/admin e componentes existentes     */
+  /* continuem resolvendo cores on-brand sem refatoração imediata.     */
+  --color-gb-green: var(--color-verde-500);
+  --color-gb-green-dark: var(--color-verde-escuro-500);
+  --color-gb-green-deep: var(--color-verde-escuro-capa);
+  --color-gb-cream: var(--color-branco-seringueira);
+  --color-gb-ink: var(--color-verde-escuro-capa);
+  --color-gb-slate: #4a5751;
+  --color-gb-gold: var(--color-gold-500);
+  --color-rarity-common: var(--color-verde-genz);
+  --color-rarity-rare: var(--color-azul-500);
+  --color-rarity-super: var(--color-gold-700);
 
-  /* Raio e sombra com intenção (papel premium) */
-  --radius-card: 1rem;
-  --shadow-paper: 0 1px 2px rgba(20, 33, 27, 0.06),
-    0 12px 32px -12px rgba(6, 61, 43, 0.18);
+  /* ── Tipografia — Barlow (injetada por next/font em layout.tsx) ── */
+  --font-display: var(--font-barlow), system-ui, -apple-system, sans-serif;
+  --font-body: var(--font-barlow), system-ui, -apple-system, sans-serif;
+
+  /* ── Raio ─────────────────────────────────────────────────────── */
+  --radius-card: 24px;
+  --radius-block: 16px;
+  --radius-pill: 50px;
+  --radius-input: 8px;
+  --radius-chip: 4px;
+
+  /* ── Sombra ───────────────────────────────────────────────────── */
+  --shadow-card: 0 4px 10px rgba(0, 0, 0, 0.15);
+  --shadow-paper: 0 1px 2px rgba(5, 46, 4, 0.06),
+    0 12px 32px -12px rgba(13, 102, 50, 0.18);
 
   /* Motion */
   --ease-quick: 200ms;
@@ -65,13 +108,13 @@
   h3,
   h4 {
     font-family: var(--font-display);
-    line-height: 1.15;
-    letter-spacing: -0.01em;
+    line-height: 1.2;
+    font-weight: 700;
   }
 
   /* Foco visível e acessível em toda a aplicação */
   :focus-visible {
-    outline: 2px solid var(--color-gb-green);
+    outline: 2px solid var(--color-verde-500);
     outline-offset: 2px;
     border-radius: 4px;
   }
@@ -102,7 +145,6 @@
   .rotate-y-180 {
     transform: rotateY(180deg);
   }
-  /* group-hover variant handled inline via Tailwind group */
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { User } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { NavItem } from "@/components/navigation/nav-item";
 import { MobileNav } from "@/components/navigation/mobile-nav";
 import { SignOutButton } from "@/components/auth/sign-out-button";
+import { Wordmark } from "@/components/brand/wordmark";
 
 const NAV = [
   { href: "/dashboard",  label: "Início" },
@@ -11,9 +13,8 @@ const NAV = [
   { href: "/album",      label: "Álbum" },
   { href: "/colecao",    label: "Coleção" },
   { href: "/trocas",     label: "Trocas" },
-  { href: "/quiz",       label: "Quiz" },
+  { href: "/quiz",       label: "Quizz" },
   { href: "/missoes",    label: "Missões" },
-  { href: "/perfil",     label: "Perfil" },
 ];
 
 export default async function DashboardLayout({
@@ -31,20 +32,14 @@ export default async function DashboardLayout({
   return (
     <div className="flex min-h-dvh flex-col">
       <header className="sticky top-0 z-20 border-b border-border bg-surface/90 backdrop-blur-md">
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-6 px-4">
-          {/* Wordmark */}
+        <div className="mx-auto flex h-16 max-w-[1680px] items-center justify-between gap-6 px-6 md:px-12 2xl:px-[120px]">
+          {/* Marca */}
           <Link
             href="/dashboard"
-            className="flex shrink-0 flex-col leading-none"
-            aria-label="Álbum GB — início"
+            className="flex shrink-0 items-center"
+            aria-label="Fãs da Natureza — início"
           >
-            <span className="font-display text-[10px] font-semibold uppercase tracking-[0.18em] text-gb-green sm:text-[11px]">
-              Grupo Boticário
-            </span>
-            <span className="font-display text-base font-semibold text-gb-green-deep sm:text-lg">
-              <span className="sm:hidden">Álbum GB</span>
-              <span className="hidden sm:inline">Álbum de Figurinhas</span>
-            </span>
+            <Wordmark tone="dark" />
           </Link>
 
           {/* Nav desktop */}
@@ -57,14 +52,14 @@ export default async function DashboardLayout({
             ))}
           </nav>
 
-          {/* Right side: link to perfil + sign out */}
-          <div className="flex shrink-0 items-center gap-2">
+          {/* Lado direito: perfil + sair */}
+          <div className="flex shrink-0 items-center gap-1">
             <Link
               href="/perfil"
               aria-label="Meu perfil"
-              className="hidden items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm text-gb-slate transition-colors hover:text-gb-ink md:flex"
+              className="hidden items-center gap-1.5 rounded-pill px-3 py-1.5 text-sm font-medium text-verde-escuro-500 transition-colors hover:bg-verde-500/10 md:flex"
             >
-              <svg aria-hidden width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><circle cx="8" cy="5" r="3"/><path d="M2 14c0-3.31 2.69-5 6-5s6 1.69 6 5"/></svg>
+              <User aria-hidden className="size-4" strokeWidth={1.8} />
               Perfil
             </Link>
             <SignOutButton />
@@ -74,7 +69,7 @@ export default async function DashboardLayout({
 
       <main
         id="main-content"
-        className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 pb-24 md:pb-8"
+        className="mx-auto w-full max-w-[1680px] flex-1 px-6 py-8 pb-24 md:px-12 md:pb-8 2xl:px-[120px]"
         tabIndex={-1}
       >
         {children}
