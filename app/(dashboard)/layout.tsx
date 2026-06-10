@@ -15,6 +15,7 @@ const NAV = [
   { href: "/trocas",     label: "Trocas" },
   { href: "/quiz",       label: "Quizz" },
   { href: "/missoes",    label: "Missões" },
+  { href: "/ranking",    label: "Ranking" },
 ];
 
 export default async function DashboardLayout({
@@ -45,7 +46,7 @@ export default async function DashboardLayout({
           {/* Nav desktop */}
           <nav
             aria-label="Navegação principal"
-            className="hidden items-center gap-1 md:flex"
+            className="hidden min-w-0 flex-1 items-center justify-center gap-1 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] md:flex [&::-webkit-scrollbar]:hidden"
           >
             {NAV.map((item) => (
               <NavItem key={item.href} href={item.href} label={item.label} />
