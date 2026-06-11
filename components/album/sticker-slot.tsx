@@ -4,8 +4,8 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { Lock, Plus, Sparkles, ThumbsUp, X } from "lucide-react";
-import { rarityColor } from "@/lib/rarity";
+import { Lock, Plus, Sparkles, ThumbsUp, Trophy, X } from "lucide-react";
+import { rarityColor, rarityTheme, type RarityTheme } from "@/lib/rarity";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 export interface SlotSticker {
@@ -68,13 +68,52 @@ function PasteBurst({ color, slug }: { color: string; slug: string }) {
 }
 
 // ─── Tag de nome da figurinha (Figma 28:1531) ─────────────────────────────────
-function StickerNameTag({ name, fullWidth }: { name: string; fullWidth?: boolean }) {
+function StickerNameTag({
+  name,
+  fullWidth,
+  bgColor,
+}: {
+  name: string;
+  fullWidth?: boolean;
+  bgColor: string;
+}) {
   return (
     <span
-      className={`flex items-end justify-center rounded-card rounded-br-none bg-verde-500 px-4 py-2 text-center font-display text-lg font-bold uppercase leading-tight text-white sm:text-2xl sm:leading-8 ${
+      className={`flex items-end justify-center rounded-card rounded-br-none px-4 py-2 text-center font-display text-lg font-bold uppercase leading-tight text-white sm:text-2xl sm:leading-8 ${
         fullWidth ? "w-full" : ""
       }`}
+      style={{ backgroundColor: bgColor }}
     >
+      {name}
+    </span>
+  );
+}
+
+function RarityBadge({
+  name,
+  slug,
+  theme,
+}: {
+  name: string;
+  slug: string;
+  theme: RarityTheme;
+}) {
+  const { badge } = theme;
+  const Icon = slug === "super_rare" ? Trophy : ThumbsUp;
+
+  return (
+    <span
+      className="inline-flex items-center gap-2.5 rounded-pill px-10 py-2 text-base font-medium"
+      style={{
+        color: badge.text,
+        background:
+          badge.kind === "gradient"
+            ? `linear-gradient(to right, ${badge.gradientFrom}, ${badge.gradientTo})`
+            : badge.background,
+        boxShadow: badge.shadow,
+      }}
+    >
+      <Icon size={slug === "super_rare" ? 20 : 17} />
       {name}
     </span>
   );
@@ -90,7 +129,8 @@ function StickerDetailModal({
 }) {
   const [showBack, setShowBack] = useState(false);
 
-  const color      = rarityColor(sticker.rarities?.slug, sticker.rarities?.color_hex);
+  const slug       = sticker.rarities?.slug ?? "common";
+  const theme      = rarityTheme(slug, sticker.rarities?.color_hex);
   const rarityName = sticker.rarities?.name ?? "Comum";
   const animation  = sticker.rarities?.animation_type ?? "none";
 
@@ -139,7 +179,7 @@ function StickerDetailModal({
             <div
               className="absolute inset-0 overflow-hidden rounded-block border-[5px]"
               style={{
-                borderColor: color,
+                borderColor: theme.border,
                 backfaceVisibility: "hidden",
                 WebkitBackfaceVisibility: "hidden",
               }}
@@ -166,21 +206,22 @@ function StickerDetailModal({
               )}
               {/* Nome sobre a imagem, próximo da base */}
               <div className="absolute inset-x-2 bottom-10 flex justify-center sm:bottom-16">
-                <StickerNameTag name={sticker.name} />
+                <StickerNameTag name={sticker.name} bgColor={theme.nameTag} />
               </div>
             </div>
 
             {/* ── Verso ── */}
             <div
-              className="absolute inset-0 flex flex-col items-center justify-between gap-4 overflow-hidden rounded-block border-[5px] bg-[#1d501f] px-6 py-8 sm:py-10"
+              className="absolute inset-0 flex flex-col items-center justify-between gap-4 overflow-hidden rounded-block border-[5px] px-6 py-8 sm:py-10"
               style={{
-                borderColor: color,
+                borderColor: theme.border,
+                backgroundColor: theme.backBg,
                 backfaceVisibility: "hidden",
                 WebkitBackfaceVisibility: "hidden",
                 transform: "rotateY(180deg)",
               }}
             >
-              <StickerNameTag name={sticker.name} fullWidth />
+              <StickerNameTag name={sticker.name} fullWidth bgColor={theme.nameTag} />
 
               <div className="flex min-h-0 flex-1 items-center overflow-y-auto">
                 <p className="text-center text-base leading-[1.4] text-white sm:text-xl">
@@ -189,13 +230,7 @@ function StickerDetailModal({
                 </p>
               </div>
 
-              <span
-                className="inline-flex items-center gap-2.5 rounded-pill px-10 py-2 text-base font-medium text-verde-100"
-                style={{ background: "var(--color-verde-500)" }}
-              >
-                <ThumbsUp size={17} />
-                {rarityName}
-              </span>
+              <RarityBadge name={rarityName} slug={slug} theme={theme} />
             </div>
           </motion.div>
         </div>
