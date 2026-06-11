@@ -127,8 +127,9 @@ export function ColecaoClient({
   return (
     <div className="flex flex-col gap-8 md:gap-10">
 
-      {/* ── Hero (tema gold — FeatureCard pattern) ───────────────────────── */}
+      {/* ── Hero ─────────────────────────────────────────────────────────── */}
       <section className="overflow-hidden rounded-card shadow-card">
+        {/* Faixa de imagem */}
         <div className="relative h-[140px] overflow-hidden bg-gold-500 md:h-[168px]">
           <div
             aria-hidden
@@ -138,22 +139,25 @@ export function ColecaoClient({
           <div className="absolute inset-0 bg-linear-to-t from-gold-700/75 via-gold-700/20 to-transparent" />
         </div>
 
+        {/* Corpo */}
         <div className="bg-surface-gold px-6 py-5 md:px-8 md:py-7">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
             <div className="min-w-0 flex-1">
-              <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-gold-700/80">
-                Inventário
+              {/* Eyebrow institucional — caixa-alta, tracking generoso */}
+              <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-gold-700/70">
+                Meu inventário
               </p>
-              <h1 className="mt-1 font-display text-4xl font-bold leading-[1.2] text-verde-escuro-500 md:text-5xl">
+              <h1 className="mt-1 font-display text-4xl font-bold leading-[1.15] text-verde-escuro-500 md:text-5xl">
                 Minha Coleção
               </h1>
-              <p className="mt-2 text-base text-verde-escuro-capa/65 md:text-lg">
+              <p className="mt-2 text-base text-verde-escuro-capa/60 md:text-lg">
                 {ownedTotal} de {allStickers.length} figurinhas descobertas
               </p>
 
+              {/* Barra de progresso */}
               <div className="mt-4 flex items-center gap-3">
                 <div
-                  className="relative h-2.5 w-full max-w-[280px] overflow-hidden rounded-pill bg-gold-500/25"
+                  className="relative h-2.5 w-full max-w-[280px] overflow-hidden rounded-pill bg-gold-500/20"
                   role="progressbar"
                   aria-valuenow={progressPct}
                   aria-valuemin={0}
@@ -177,6 +181,7 @@ export function ColecaoClient({
               </div>
             </div>
 
+            {/* CTAs sóbrios, rótulos curtos (guia-visual §8) */}
             <div className="flex shrink-0 flex-wrap gap-2">
               <Link
                 href="/album"
@@ -188,7 +193,7 @@ export function ColecaoClient({
               {duplicateTotal > 0 && (
                 <Link
                   href="/trocas"
-                  className="inline-flex h-10 items-center gap-2 rounded-pill border border-gold-500/60 bg-surface px-5 text-sm font-medium text-verde-escuro-500 transition-colors hover:bg-gold-500/10"
+                  className="inline-flex h-10 items-center gap-2 rounded-pill border border-gold-500/50 bg-surface px-5 text-sm font-medium text-verde-escuro-500 transition-colors hover:bg-gold-500/10"
                 >
                   <ArrowLeftRight size={15} aria-hidden />
                   Trocar repetidas
@@ -278,7 +283,7 @@ export function ColecaoClient({
                 onChange={(e) => setOnlyOwned(e.target.checked)}
                 className="size-3.5 rounded border-gold-500/40 accent-gold-500"
               />
-              <span className="hidden sm:inline">Minhas</span>
+              <span className="hidden sm:inline">Apenas minhas</span>
             </label>
           </div>
         </div>
@@ -356,11 +361,21 @@ export function ColecaoClient({
 
       {/* ── Grid ──────────────────────────────────────────────────────────── */}
       <section aria-label="Figurinhas da coleção">
+        {/* Cabeçalho da seção — hierarquia editorial */}
         <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
-          <p aria-live="polite" aria-atomic="true" className="text-sm text-verde-escuro-400">
-            <span className="font-semibold text-verde-escuro-500">{filtered.length}</span>{" "}
-            de {allStickers.length} figurinhas
-          </p>
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-verde-escuro-400/60">
+              Figurinhas
+            </p>
+            <p
+              aria-live="polite"
+              aria-atomic="true"
+              className="mt-0.5 text-sm text-verde-escuro-400"
+            >
+              <span className="font-semibold text-verde-escuro-500">{filtered.length}</span>{" "}
+              de {allStickers.length} exibidas
+            </p>
+          </div>
           {!onlyOwned && duplicateTotal === 0 && ownedTotal > 0 && (
             <p className="flex items-center gap-1.5 text-xs text-verde-escuro-300">
               <Package size={12} aria-hidden />
@@ -381,8 +396,8 @@ export function ColecaoClient({
             </p>
             <p className="max-w-sm text-sm leading-relaxed text-verde-escuro-capa/60">
               {hasActiveFilters
-                ? "Tente outros filtros ou limpe a busca."
-                : "Sua coleção ainda está vazia. Comece abrindo pacotinhos ou respondendo o quizz."}
+                ? "Tente ajustar os filtros ou limpar a busca."
+                : "Sua coleção ainda está vazia. Comece abrindo pacotinhos ou respondendo o quiz."}
             </p>
             {hasActiveFilters ? (
               <button

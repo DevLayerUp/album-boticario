@@ -1,64 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Lock, Package, ThumbsUp, Trophy, X } from "lucide-react";
+import { ArrowLeftRight, Layers, Tag, X } from "lucide-react";
 import { rarityTheme } from "@/lib/rarity";
-import type { RarityTheme } from "@/lib/rarity";
+import { cn } from "@/lib/utils";
 import type { CollectionSticker } from "./types";
-
-function StickerNameTag({
-  name,
-  fullWidth,
-  bgColor,
-}: {
-  name: string;
-  fullWidth?: boolean;
-  bgColor: string;
-}) {
-  return (
-    <span
-      className={`flex items-end justify-center rounded-card rounded-br-none px-4 py-2 text-center font-display text-lg font-bold uppercase leading-tight text-white sm:text-2xl sm:leading-8 ${
-        fullWidth ? "w-full" : ""
-      }`}
-      style={{ backgroundColor: bgColor }}
-    >
-      {name}
-    </span>
-  );
-}
-
-function RarityBadge({
-  name,
-  slug,
-  theme,
-}: {
-  name: string;
-  slug: string;
-  theme: RarityTheme;
-}) {
-  const { badge } = theme;
-  const Icon = slug === "super_rare" ? Trophy : ThumbsUp;
-
-  return (
-    <span
-      className="inline-flex items-center gap-2.5 rounded-pill px-10 py-2 text-base font-medium"
-      style={{
-        color: badge.text,
-        background:
-          badge.kind === "gradient"
-            ? `linear-gradient(to right, ${badge.gradientFrom}, ${badge.gradientTo})`
-            : badge.background,
-        boxShadow: badge.shadow,
-      }}
-    >
-      <Icon size={slug === "super_rare" ? 20 : 17} />
-      {name}
-    </span>
-  );
-}
 
 interface CollectionStickerModalProps {
   sticker: CollectionSticker;
@@ -66,199 +14,188 @@ interface CollectionStickerModalProps {
   onClose: () => void;
 }
 
+/**
+ * Modal de detalhe de figurinha na coleção.
+ *
+ * Layout: overlay escuro + painel central.
+ * Desktop: imagem à esquerda + infos à direita.
+ * Mobile: empilhado verticalmente.
+ *
+ * Segue guia-visual.md: tipografia hierárquica, paleta verde-institucional,
+ * espaçamento generoso, CTAs sóbrios com rótulos curtos.
+ */
 export function CollectionStickerModal({
   sticker,
   quantity,
   onClose,
 }: CollectionStickerModalProps) {
-  const [showBack, setShowBack] = useState(false);
-  const owned = quantity > 0;
-
-  const slug       = sticker.rarities?.slug ?? "common";
-  const theme      = rarityTheme(slug, sticker.rarities?.color_hex);
+  const theme = rarityTheme(sticker.rarities?.slug, sticker.rarities?.color_hex);
   const rarityName = sticker.rarities?.name ?? "Comum";
-  const animation  = sticker.rarities?.animation_type ?? "none";
-
-  useEffect(() => {
-    setShowBack(false);
-  }, [sticker.id]);
+  const categoryName = sticker.sticker_categories?.name;
+  const isDuplicate = quantity > 1;
 
   return (
-    <motion.div
-      key="collection-sticker-detail"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      onClick={onClose}
-    >
-      <div className="absolute inset-0 bg-verde-escuro-500/20 backdrop-blur-[10px]" />
-
+    <>
+      {/* Overlay */}
       <motion.div
-        initial={{ scale: 0.88, opacity: 0, y: 16 }}
-        animate={{ scale: 1, opacity: 1, y: 0 }}
-        exit={{ scale: 0.92, opacity: 0, y: 12 }}
-        transition={{ type: "spring", stiffness: 320, damping: 28 }}
-        className="relative flex max-h-[92dvh] w-full max-w-[497px] flex-col overflow-y-auto rounded-card bg-surface-gold p-6 shadow-card sm:p-8"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label="Fechar"
-          className="absolute right-5 top-5 z-20 flex h-10 w-10 cursor-pointer items-center justify-center text-verde-escuro-500 transition-colors hover:text-gold-700"
-        >
-          <X size={32} strokeWidth={2.5} />
-        </button>
+        className="fixed inset-0 z-50 bg-verde-escuro-capa/60 backdrop-blur-sm"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.2 }}
+        onClick={onClose}
+        aria-hidden
+      />
 
-        {!owned ? (
-          /* ── Não descoberta ── */
-          <div className="mt-8 flex flex-col items-center gap-5 text-center">
-            <div className="relative aspect-160/229 w-40 overflow-hidden rounded-block border-[5px] border-white/25">
+      {/* Painel */}
+      <motion.div
+        role="dialog"
+        aria-modal
+        aria-label={`Detalhes de ${sticker.name}`}
+        className={cn(
+          "fixed left-1/2 top-1/2 z-50 w-[calc(100vw-2rem)] max-w-[640px] -translate-x-1/2 -translate-y-1/2",
+          "overflow-hidden rounded-card bg-surface shadow-[0_24px_60px_rgba(5,46,4,0.35)]",
+        )}
+        initial={{ opacity: 0, scale: 0.94, y: 12 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.94, y: 12 }}
+        transition={{ duration: 0.22, ease: [0.25, 0.46, 0.45, 0.94] }}
+      >
+        {/* Faixa de cor de raridade no topo */}
+        <div
+          className="h-1 w-full"
+          style={{ backgroundColor: theme.border }}
+          aria-hidden
+        />
+
+        <div className="flex flex-col sm:flex-row">
+          {/* ── Coluna da imagem ─────────────────────────────────── */}
+          <div
+            className="relative flex shrink-0 items-center justify-center overflow-hidden sm:w-[220px]"
+            style={{ backgroundColor: theme.backBg }}
+          >
+            <div className="relative m-5 aspect-2/3 w-[140px] sm:w-[160px]">
               <Image
                 src={sticker.image_url}
-                alt=""
+                alt={sticker.name}
                 fill
-                className="object-cover blur-sm grayscale brightness-50"
-                sizes="160px"
+                sizes="200px"
+                className="rounded-[12px] object-cover shadow-lg"
+                style={{ border: `3px solid ${theme.border}` }}
+                priority
               />
-              <div className="absolute inset-0 flex items-center justify-center bg-verde-escuro-capa/50">
-                <Lock size={28} className="text-white/80" aria-hidden />
-              </div>
             </div>
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gold-700/70">
-                Ainda não descoberta
-              </p>
-              <h2 className="mt-1 font-display text-2xl font-bold uppercase text-verde-escuro-500">
-                {sticker.name}
-              </h2>
-              {sticker.sticker_categories && (
-                <p className="mt-1 text-sm text-verde-escuro-400">
-                  {sticker.sticker_categories.name}
+
+            {/* Badge de quantidade absoluto sobre a imagem */}
+            {quantity > 0 && (
+              <div
+                className="absolute bottom-3 right-3 flex items-center gap-1.5 rounded-pill px-2.5 py-1 text-xs font-bold"
+                style={{
+                  backgroundColor: theme.border,
+                  color: "#fff",
+                }}
+              >
+                <Layers size={11} strokeWidth={2.5} aria-hidden />
+                {quantity}×
+              </div>
+            )}
+          </div>
+
+          {/* ── Coluna de detalhes ───────────────────────────────── */}
+          <div className="flex flex-1 flex-col gap-4 p-5 sm:p-6">
+            {/* Cabeçalho */}
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                {/* Label institucional — caixa-alta pequena */}
+                <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-verde-escuro-400/60">
+                  Figurinha
                 </p>
+                <h2 className="mt-0.5 font-display text-2xl font-bold leading-tight text-verde-escuro-500">
+                  {sticker.name}
+                </h2>
+              </div>
+
+              <button
+                type="button"
+                onClick={onClose}
+                aria-label="Fechar"
+                className="mt-0.5 flex shrink-0 size-8 items-center justify-center rounded-full border border-border bg-surface text-verde-escuro-400 transition-colors hover:bg-verde-100 hover:text-verde-escuro-500"
+              >
+                <X size={15} strokeWidth={2.5} aria-hidden />
+              </button>
+            </div>
+
+            {/* Badges — raridade + categoria */}
+            <div className="flex flex-wrap gap-2">
+              <span
+                className="inline-flex items-center rounded-pill px-3 py-1 text-[11px] font-bold uppercase tracking-wider"
+                style={{
+                  background:
+                    theme.badge.kind === "gradient"
+                      ? `linear-gradient(135deg, ${theme.badge.gradientFrom}, ${theme.badge.gradientTo})`
+                      : (theme.badge.background ?? theme.border),
+                  color: theme.badge.text,
+                  boxShadow: theme.badge.shadow,
+                }}
+              >
+                {rarityName}
+              </span>
+
+              {categoryName && (
+                <span className="inline-flex items-center gap-1.5 rounded-pill border border-gold-500/30 bg-surface-gold px-3 py-1 text-[11px] font-semibold text-gold-700">
+                  <Tag size={10} strokeWidth={2} aria-hidden />
+                  {categoryName}
+                </span>
               )}
             </div>
-            <p className="max-w-xs text-sm leading-relaxed text-verde-escuro-capa/65">
-              Abra pacotinhos ou complete missões para encontrar esta figurinha na sua coleção.
-            </p>
-            <Link
-              href="/pacotinhos"
-              className="inline-flex h-10 items-center gap-2 rounded-pill bg-gold-500 px-8 text-sm font-semibold text-white transition-colors hover:bg-gold-700"
-            >
-              <Package size={15} aria-hidden />
-              Ver pacotinhos
-            </Link>
-          </div>
-        ) : (
-          <>
-            {/* Quantidade */}
-            {quantity > 1 && (
-              <p className="mt-2 text-center text-xs font-medium text-gold-700">
-                Você possui {quantity} cópias
+
+            {/* Descrição */}
+            {sticker.description && (
+              <p className="text-sm leading-relaxed text-verde-escuro-capa/65">
+                {sticker.description}
               </p>
             )}
 
-            {/* Flip card */}
-            <div className="mx-auto mt-4 w-full max-w-[392px]" style={{ perspective: "1200px" }}>
-              <motion.div
-                animate={{ rotateY: showBack ? 180 : 0 }}
-                transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-                className="relative aspect-392/560 w-full"
-                style={{ transformStyle: "preserve-3d" }}
-              >
-                <div
-                  className="absolute inset-0 overflow-hidden rounded-block border-[5px]"
-                  style={{
-                    borderColor: theme.border,
-                    backfaceVisibility: "hidden",
-                    WebkitBackfaceVisibility: "hidden",
-                  }}
-                >
-                  <Image
-                    src={sticker.image_url}
-                    alt={sticker.name}
-                    fill
-                    className="object-cover"
-                    sizes="392px"
-                    priority
-                  />
-                  {animation === "holographic" && (
-                    <motion.div
-                      className="pointer-events-none absolute inset-0 opacity-30"
-                      animate={{ backgroundPositionX: ["0%", "200%"] }}
-                      transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                      style={{
-                        background:
-                          "linear-gradient(115deg, transparent 25%, rgba(255,255,255,0.75) 45%, transparent 65%)",
-                        backgroundSize: "200% 100%",
-                      }}
-                    />
-                  )}
-                  <div className="absolute inset-x-2 bottom-10 flex justify-center sm:bottom-16">
-                    <StickerNameTag name={sticker.name} bgColor={theme.nameTag} />
-                  </div>
-                </div>
+            {/* Status de posse */}
+            <div className="mt-auto flex flex-col gap-3 border-t border-border pt-4">
+              {quantity === 0 ? (
+                <p className="text-sm text-verde-escuro-400/70">
+                  Você ainda não tem esta figurinha.
+                </p>
+              ) : (
+                <p className="text-sm text-verde-escuro-500">
+                  Você tem{" "}
+                  <strong className="font-bold">
+                    {quantity} cópia{quantity > 1 ? "s" : ""}
+                  </strong>{" "}
+                  desta figurinha.
+                </p>
+              )}
 
-                <div
-                  className="absolute inset-0 flex flex-col items-center justify-between gap-4 overflow-hidden rounded-block border-[5px] px-6 py-8 sm:py-10"
-                  style={{
-                    borderColor: theme.border,
-                    backgroundColor: theme.backBg,
-                    backfaceVisibility: "hidden",
-                    WebkitBackfaceVisibility: "hidden",
-                    transform: "rotateY(180deg)",
-                  }}
+              {/* CTAs */}
+              <div className="flex flex-wrap gap-2">
+                {isDuplicate && (
+                  <Link
+                    href="/trocas"
+                    onClick={onClose}
+                    className="inline-flex h-9 items-center gap-1.5 rounded-pill bg-verde-500 px-4 text-sm font-medium text-white transition-colors hover:bg-verde-escuro-500"
+                  >
+                    <ArrowLeftRight size={13} aria-hidden />
+                    Oferecer para troca
+                  </Link>
+                )}
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="inline-flex h-9 items-center rounded-pill border border-border bg-surface px-4 text-sm font-medium text-verde-escuro-400 transition-colors hover:bg-verde-100 hover:text-verde-escuro-500"
                 >
-                  <StickerNameTag name={sticker.name} fullWidth bgColor={theme.nameTag} />
-                  <div className="flex min-h-0 flex-1 items-center overflow-y-auto">
-                    <p className="text-center text-base leading-[1.4] text-white sm:text-xl">
-                      {sticker.description ??
-                        "Figurinha exclusiva da coleção Fãs da Natureza."}
-                    </p>
-                  </div>
-                  <RarityBadge name={rarityName} slug={slug} theme={theme} />
-                </div>
-              </motion.div>
+                  Fechar
+                </button>
+              </div>
             </div>
-
-            {/* Frente / Verso */}
-            <div className="mb-1 mt-8 flex items-center justify-center gap-4">
-              <button
-                type="button"
-                onClick={() => setShowBack(false)}
-                className="cursor-pointer text-base font-medium uppercase text-gold-700 transition-opacity hover:opacity-80"
-              >
-                Frente
-              </button>
-              <button
-                type="button"
-                role="switch"
-                aria-checked={showBack}
-                aria-label={showBack ? "Mostrando verso" : "Mostrando frente"}
-                onClick={() => setShowBack((v) => !v)}
-                className={`relative h-8 w-[87px] cursor-pointer rounded-pill transition-colors ${
-                  showBack ? "bg-gold-700" : "bg-gold-500"
-                }`}
-              >
-                <motion.span
-                  layout
-                  transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                  className={`absolute top-[3px] h-[26px] w-[26px] rounded-full bg-white`}
-                  style={{ left: showBack ? "calc(100% - 29px)" : "3px" }}
-                />
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowBack(true)}
-                className="cursor-pointer text-base font-medium uppercase text-verde-escuro-500 transition-opacity hover:opacity-80"
-              >
-                Verso
-              </button>
-            </div>
-          </>
-        )}
+          </div>
+        </div>
       </motion.div>
-    </motion.div>
+    </>
   );
 }

@@ -2,8 +2,8 @@
 
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { Lock, Sparkles } from "lucide-react";
-import { rarityColor, rarityTheme } from "@/lib/rarity";
+import { Lock } from "lucide-react";
+import { rarityColor } from "@/lib/rarity";
 import { cn } from "@/lib/utils";
 import type { CollectionSticker } from "./types";
 
@@ -15,8 +15,15 @@ interface CollectionStickerCardProps {
 }
 
 /**
- * Card de figurinha na grade da coleção — Figma DS §4 Figurinha.
- * Borda 5px na cor da raridade; estado bloqueado para não possuídas.
+ * Card do grid de coleção.
+ *
+ * Estados visuais:
+ *  - unowned  → silhueta escurecida com ícone de cadeado
+ *  - owned    → imagem completa com borda colorida por raridade
+ *  - quantity > 1 → badge de quantidade sobreposto
+ *
+ * Segue guia-visual.md: paleta verde-institucional, tipografia em caixa-alta,
+ * cards editoriais limpos com profundidade discreta.
  */
 export function CollectionStickerCard({
   sticker,
@@ -24,109 +31,103 @@ export function CollectionStickerCard({
   index,
   onSelect,
 }: CollectionStickerCardProps) {
-  const owned    = quantity > 0;
-  const slug     = sticker.rarities?.slug ?? "common";
-  const color    = rarityColor(slug, sticker.rarities?.color_hex);
-  const theme    = rarityTheme(slug, sticker.rarities?.color_hex);
-  const animType = sticker.rarities?.animation_type ?? "none";
+  const owned = quantity > 0;
+  const border = rarityColor(sticker.rarities?.slug, sticker.rarities?.color_hex);
 
   return (
     <motion.button
       type="button"
-      layout
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35, delay: Math.min(index * 0.03, 0.45), ease: "easeOut" }}
       onClick={onSelect}
-      className={cn(
-        "group relative aspect-160/229 w-full cursor-pointer overflow-hidden rounded-block border-[5px] text-left",
-        "transition-[transform,box-shadow] duration-200",
-        owned
-          ? "hover:-translate-y-1 hover:shadow-[0_8px_24px_rgba(0,0,0,0.14)]"
-          : "opacity-90",
-      )}
-      style={{
-        borderColor: owned ? color : "rgba(255,255,255,0.2)",
-      }}
       aria-label={
         owned
-          ? `${sticker.name}, ${quantity} na coleção`
-          : `${sticker.name}, ainda não descoberta`
+          ? `Ver detalhes de ${sticker.name} (${quantity} cópia${quantity > 1 ? "s" : ""})`
+          : `${sticker.name} — não descoberta`
+      }
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.25, delay: Math.min(index * 0.025, 0.6) }}
+      whileHover={owned ? { y: -3 } : undefined}
+      className={cn(
+        "group relative flex cursor-pointer flex-col overflow-hidden rounded-card text-left",
+        "transition-[shadow,opacity] duration-200",
+        owned ? "shadow-sm hover:shadow-paper" : "opacity-55 hover:opacity-70",
+      )}
+      style={
+        owned
+          ? { border: `2px solid ${border}` }
+          : { border: "2px solid #ccc" }
       }
     >
       {/* Imagem */}
-      <Image
-        src={sticker.image_url}
-        alt=""
-        fill
+      <div
         className={cn(
-          "object-cover transition-[filter,transform] duration-300",
-          owned ? "group-hover:scale-[1.03]" : "scale-105 blur-[3px] grayscale brightness-[0.45]",
+          "relative aspect-2/3 w-full overflow-hidden",
+          !owned && "bg-verde-escuro-capa/10",
         )}
-        sizes="(max-width: 640px) 33vw, (max-width: 1024px) 20vw, 160px"
-      />
-
-      {/* Holográfico (super rara) */}
-      {owned && animType === "holographic" && (
-        <motion.div
-          className="pointer-events-none absolute inset-0 opacity-25"
-          animate={{ backgroundPositionX: ["0%", "200%"] }}
-          transition={{ duration: 3.5, repeat: Infinity, ease: "linear" }}
-          style={{
-            background:
-              "linear-gradient(115deg, transparent 25%, rgba(255,255,255,0.75) 45%, transparent 65%)",
-            backgroundSize: "200% 100%",
-          }}
+      >
+        <Image
+          src={sticker.image_url}
+          alt={owned ? sticker.name : "Figurinha bloqueada"}
+          fill
+          sizes="(max-width: 480px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
+          className={cn(
+            "object-cover transition-transform duration-300",
+            !owned && "grayscale opacity-30",
+            owned && "group-hover:scale-[1.03]",
+          )}
         />
-      )}
 
-      {/* Glow interno */}
-      {owned && (animType === "glow" || animType === "holographic") && (
-        <div
-          className="pointer-events-none absolute inset-0"
-          style={{ boxShadow: `inset 0 0 12px ${color}44` }}
-        />
-      )}
+        {!owned && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Lock
+              size={22}
+              strokeWidth={2}
+              className="text-verde-escuro-400/50"
+              aria-hidden
+            />
+          </div>
+        )}
 
-      {/* Estado bloqueado */}
-      {!owned && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 bg-verde-escuro-capa/55">
-          <span className="flex size-9 items-center justify-center rounded-full bg-black/30 backdrop-blur-sm">
-            <Lock size={16} className="text-white/80" aria-hidden />
-          </span>
-          <span className="text-[9px] font-bold uppercase tracking-wider text-white/70">
-            Não descoberta
-          </span>
-        </div>
-      )}
+        {/* Glow de raridade ao fazer hover (owned only) */}
+        {owned && (
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+            style={{
+              background: `radial-gradient(ellipse at center, ${border}22 0%, transparent 70%)`,
+            }}
+          />
+        )}
 
-      {/* Quantidade */}
-      {owned && quantity > 1 && (
-        <span className="absolute right-1.5 top-1.5 z-10 rounded-pill bg-amarelo px-1.5 py-0.5 text-[10px] font-bold text-verde-escuro-500 shadow-sm">
-          {quantity}×
-        </span>
-      )}
-
-      {/* Super rara — sparkle */}
-      {owned && slug === "super_rare" && (
-        <Sparkles
-          size={14}
-          className="absolute left-1.5 top-1.5 z-10 text-gold-500 drop-shadow-sm"
-          aria-hidden
-        />
-      )}
-
-      {/* Nome (possuídas) */}
-      {owned && (
-        <div className="absolute inset-x-1 bottom-2 z-10 flex justify-center opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-visible:opacity-100">
+        {/* Badge de quantidade (2+) */}
+        {quantity > 1 && (
           <span
-            className="max-w-full truncate rounded-card rounded-br-none px-2.5 py-1 text-center font-display text-[10px] font-bold uppercase leading-tight text-white sm:text-xs"
-            style={{ backgroundColor: theme.nameTag }}
+            className="absolute right-1.5 top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[10px] font-bold text-white"
+            style={{ backgroundColor: border }}
+            aria-label={`${quantity} cópias`}
           >
-            {sticker.name}
+            {quantity}
           </span>
-        </div>
-      )}
+        )}
+      </div>
+
+      {/* Nome */}
+      <div
+        className={cn(
+          "px-2 py-1.5 text-center",
+          owned ? "bg-surface" : "bg-verde-escuro-100/30",
+        )}
+        style={owned ? { borderTop: `1.5px solid ${border}22` } : undefined}
+      >
+        <p
+          className={cn(
+            "truncate text-[10px] font-bold uppercase tracking-widest leading-tight",
+            owned ? "text-verde-escuro-500" : "text-verde-escuro-300",
+          )}
+        >
+          {sticker.name}
+        </p>
+      </div>
     </motion.button>
   );
 }

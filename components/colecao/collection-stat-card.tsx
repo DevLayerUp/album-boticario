@@ -1,73 +1,66 @@
 import Link from "next/link";
-import { ArrowUpRight, type LucideIcon } from "lucide-react";
+import { type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface CollectionStatCardProps {
   label: string;
   value: number;
-  hint?: string;
   icon: LucideIcon;
-  accent?: string;
+  accent: string;
+  hint?: string;
   href?: string;
 }
 
 /**
- * Stat card tema gold — Design System FGB §4 (Stat card, variante soft).
+ * Card de estatística da coleção (Descobertas / Repetidas / Faltam).
+ * Tema gold — fundo surface-gold, acento configurável por prop.
  */
 export function CollectionStatCard({
   label,
   value,
-  hint,
   icon: Icon,
-  accent = "var(--color-verde-escuro-500)",
+  accent,
+  hint,
   href,
 }: CollectionStatCardProps) {
   const inner = (
-    <>
-      <div className="flex items-start justify-between gap-2">
-        <span className="flex items-center gap-1.5 text-gold-700/80">
-          <Icon aria-hidden className="size-5 shrink-0" strokeWidth={2} />
-          <span className="text-[11px] font-bold uppercase tracking-wider">
-            {label}
-          </span>
+    <div
+      className={cn(
+        "group flex flex-col gap-3 rounded-block border border-gold-500/20 bg-surface-gold px-5 py-4",
+        "transition-[transform,box-shadow] duration-200",
+        href && "cursor-pointer hover:-translate-y-0.5 hover:shadow-paper",
+      )}
+    >
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-gold-700/70">
+          {label}
         </span>
-        {href && (
-          <span
-            className={cn(
-              "flex size-7 items-center justify-center rounded-chip border border-gold-500/30",
-              "transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5",
-            )}
-          >
-            <ArrowUpRight aria-hidden className="size-4 text-gold-700" strokeWidth={2.2} />
-          </span>
-        )}
+        <span
+          className="flex size-8 items-center justify-center rounded-chip bg-verde-100"
+          style={{ color: accent }}
+          aria-hidden
+        >
+          <Icon size={15} strokeWidth={2.2} />
+        </span>
       </div>
-      <div>
-        <p
+
+      <div className="flex items-end gap-2">
+        <span
           className="font-display text-4xl font-bold leading-none"
           style={{ color: accent }}
         >
-          {value}
-        </p>
-        {hint && (
-          <span className="mt-1 block text-[10px] text-gold-700/60">{hint}</span>
-        )}
+          {value.toLocaleString("pt-BR")}
+        </span>
       </div>
-    </>
-  );
 
-  const className = cn(
-    "group flex min-h-[120px] flex-col justify-between rounded-block border border-gold-500/25 bg-surface-gold p-4",
-    href && "cursor-pointer transition-[transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-card",
+      {hint && (
+        <p className="text-[11px] leading-snug text-verde-escuro-400/70">{hint}</p>
+      )}
+    </div>
   );
 
   if (href) {
-    return (
-      <Link href={href} className={className}>
-        {inner}
-      </Link>
-    );
+    return <Link href={href}>{inner}</Link>;
   }
-
-  return <div className={className}>{inner}</div>;
+  return inner;
 }
