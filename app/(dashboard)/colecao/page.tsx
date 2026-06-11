@@ -16,7 +16,7 @@ export default async function ColecaoPage() {
   const { data: allStickers } = await supabase
     .from("stickers")
     .select(
-      `id, name, image_url, is_user_type,
+      `id, name, description, image_url, is_user_type,
        sticker_categories (id, name),
        rarities (id, name, slug, color_hex, animation_type)`
     )
@@ -47,7 +47,7 @@ export default async function ColecaoPage() {
 
   // Supabase returns 1:1 joins as arrays; normalise to single objects
   const raw = (allStickers ?? []) as Array<{
-    id: number; name: string; image_url: string; is_user_type: boolean;
+    id: number; name: string; description: string | null; image_url: string; is_user_type: boolean;
     sticker_categories: { id: number; name: string }[] | { id: number; name: string } | null;
     rarities: { id: number; name: string; slug: string; color_hex: string; animation_type: string }[] | { id: number; name: string; slug: string; color_hex: string; animation_type: string } | null;
   }>;
