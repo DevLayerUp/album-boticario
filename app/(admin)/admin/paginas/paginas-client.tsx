@@ -12,7 +12,7 @@ import { RichTextEditor } from "@/components/admin/rich-text-editor";
 import {
   TEMPLATE_MAP, type TemplateId,
   parseLayoutData, type Title3Data,
-  isProfileTemplate,
+  isProfileTemplate, hasRichTextContent,
 } from "@/lib/album-templates";
 
 interface Category { id: number; name: string }
@@ -503,12 +503,14 @@ function LayoutContentModal({
   page: PageRow;
   onClose: (updated?: Partial<PageRow>) => void;
 }) {
-  const isTitle3   = page.layout_template === "title3";
-  const isProfile  = isProfileTemplate(page.layout_template);
-  const initial    = parseLayoutData(page.content) as Title3Data;
+  const isTitle3      = page.layout_template === "title3";
+  const isGrid6       = page.layout_template === "grid6";
+  const hasRichText   = hasRichTextContent(page.layout_template);
+  const isProfile     = isProfileTemplate(page.layout_template);
+  const initial       = parseLayoutData(page.content) as Title3Data;
 
   const [title,    setTitle]    = useState(initial.title    ?? page.title ?? "");
-  const [text,     setText]     = useState(isTitle3 ? (initial.text ?? "") : "");
+  const [text,     setText]     = useState(hasRichText ? (initial.text ?? "") : "");
   const [imageUrl, setImageUrl] = useState(isTitle3 ? (initial.image_url ?? page.background_url ?? "") : "");
   const [uploading, setUploading] = useState(false);
   const [saving,   setSaving]   = useState(false);
@@ -531,10 +533,8 @@ function LayoutContentModal({
     setSaving(true); setError("");
     try {
       const layoutData: Title3Data & { title?: string } = { title: title || undefined };
-      if (isTitle3) {
-        if (text)     layoutData.text      = text;
-        if (imageUrl) layoutData.image_url = imageUrl;
-      }
+      if (hasRichText && text) layoutData.text = text;
+      if (isTitle3 && imageUrl) layoutData.image_url = imageUrl;
 
       const res = await fetch(`/api/admin/paginas/${page.id}`, {
         method:  "PATCH",
@@ -566,9 +566,11 @@ function LayoutContentModal({
               <p className="text-xs text-muted">
                 {isTitle3
                   ? "Título, texto e imagem opcional"
-                  : isProfile
-                    ? "Título da página (a figurinha vem da foto do usuário)"
-                    : "Título da página"}
+                  : isGrid6
+                    ? "Título e texto abaixo das figurinhas"
+                    : isProfile
+                      ? "Título da página (a figurinha vem da foto do usuário)"
+                      : "Título da página"}
               </p>
             </div>
           </div>
@@ -591,6 +593,23 @@ function LayoutContentModal({
               className="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm outline-none focus:border-gb-green"
             />
           </div>
+
+          {/* Rich text — title3 and grid6 */}
+          {hasRichText && !isTitle3 && (
+            <div>
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-gray-500">
+                Texto da Página
+              </label>
+              <RichTextEditor
+                value={text}
+                onChange={(html) => { setText(html); setSaved(false); }}
+                minHeight={200}
+              />
+              <p className="mt-1 text-xs text-gray-400">
+                Este texto aparece abaixo do título, depois das figurinhas.
+              </p>
+            </div>
+          )}
 
           {/* Image + rich text — only for title3 */}
           {isTitle3 && (
@@ -895,7 +914,10 @@ export function PaginasClient({ initialCategories, initialPages }: PaginasClient
       // Auto-open appropriate editor
       if (form.page_type === "info") {
         setInfoEditPage(newPage);
-      } else if (isProfileTemplate(form.layout_template)) {
+      } else if (
+        isProfileTemplate(form.layout_template) ||
+        hasRichTextContent(form.layout_template)
+      ) {
         setContentEditPage(newPage);
       } else {
         setConfigPage(newPage);
@@ -1001,6 +1023,14 @@ export function PaginasClient({ initialCategories, initialPages }: PaginasClient
                       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-100">
                         <div className="h-7 w-5 rounded-[2px] bg-gb-green/40" />
                       </div>
+                    ) : p.layout_template === "tri3" ? (
+                      <div className="flex h-9 w-9 shrink-0 items-center gap-px rounded-lg bg-gb-green/5 p-1">
+                        <div className="h-[70%] w-[38%] rounded-[2px] bg-gb-green/30" />
+                        <div className="flex h-full flex-1 flex-col justify-center gap-px">
+                          <div className="flex-1 rounded-[2px] bg-gb-green/30" />
+                          <div className="flex-1 rounded-[2px] bg-gb-green/30" />
+                        </div>
+                      </div>
                     ) : (
                       <div
                         className="grid shrink-0 gap-0.5"
@@ -1088,10 +1118,15 @@ export function PaginasClient({ initialCategories, initialPages }: PaginasClient
       {showForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setShowForm(false)}>
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
-          <div className="relative w-full max-w-2xl rounded-2xl bg-white p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-            <h2 className="mb-5 font-display text-lg font-semibold text-gb-ink">Nova Página do Álbum</h2>
+          <div
+            className="relative flex max-h-[min(90vh,820px)] w-full max-w-2xl flex-col rounded-2xl bg-white shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="border-b border-border px-6 py-5">
+              <h2 className="font-display text-lg font-semibold text-gb-ink">Nova Página do Álbum</h2>
+            </div>
 
-            <div className="space-y-4">
+            <div className="flex-1 space-y-4 overflow-y-auto px-6 py-5">
               {/* Page type toggle */}
               <div>
                 <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-gray-500">Tipo de Página</label>
@@ -1125,6 +1160,24 @@ export function PaginasClient({ initialCategories, initialPages }: PaginasClient
                   ))}
                 </div>
               </div>
+
+              {/* Template picker — right after type so it's always visible */}
+              {form.page_type === "sticker" && (
+                <div>
+                  <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-gray-500">
+                    Layout da Página — quantas figurinhas por página
+                  </label>
+                  <TemplatePicker
+                    value={form.layout_template}
+                    onChange={(id) => setForm((f) => ({ ...f, layout_template: id }))}
+                  />
+                  <p className="mt-2 text-xs text-gray-400">
+                    {form.layout_template === "profile"
+                      ? "Exibe a figurinha personalizada que cada usuário cria com sua foto — sem slots de catálogo."
+                      : `${TEMPLATE_MAP[form.layout_template]?.total ?? 9} slots serão criados automaticamente.`}
+                  </p>
+                </div>
+              )}
 
               {/* Category */}
               <div>
@@ -1160,24 +1213,6 @@ export function PaginasClient({ initialCategories, initialPages }: PaginasClient
                 </div>
               </div>
 
-              {/* Template picker — only for sticker pages */}
-              {form.page_type === "sticker" && (
-                <div>
-                  <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-gray-500">
-                    Layout da Página — quantas figurinhas por página
-                  </label>
-                  <TemplatePicker
-                    value={form.layout_template}
-                    onChange={(id) => setForm((f) => ({ ...f, layout_template: id }))}
-                  />
-                  <p className="mt-2 text-xs text-gray-400">
-                    {form.layout_template === "profile"
-                      ? "Exibe a figurinha personalizada que cada usuário cria com sua foto — sem slots de catálogo."
-                      : `${TEMPLATE_MAP[form.layout_template]?.total ?? 9} slots serão criados automaticamente.`}
-                  </p>
-                </div>
-              )}
-
               {form.page_type === "info" && (
                 <div className="rounded-xl border border-violet-100 bg-violet-50 px-4 py-3 text-sm text-violet-700">
                   Após criar, um editor será aberto para você inserir a <strong>imagem</strong> e o <strong>conteúdo HTML</strong> da página.
@@ -1187,7 +1222,7 @@ export function PaginasClient({ initialCategories, initialPages }: PaginasClient
               {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>}
             </div>
 
-            <div className="mt-6 flex justify-end gap-3">
+            <div className="flex justify-end gap-3 border-t border-border px-6 py-4">
               <button onClick={() => setShowForm(false)} className="rounded-xl border border-border px-5 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50">
                 Cancelar
               </button>

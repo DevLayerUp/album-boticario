@@ -29,6 +29,8 @@ export interface StickerSlotProps {
   isPasted: boolean;
   owned: number;
   onPaste?: (slotId: number, stickerId: number) => Promise<void>;
+  /** default 160×229 — large 199×284 (tri3 template) */
+  size?: "default" | "large";
 }
 
 // ─── Particle burst ───────────────────────────────────────────────────────────
@@ -241,8 +243,10 @@ function StickerDetailModal({
 
 // ─── Main StickerSlot component ───────────────────────────────────────────────
 export function StickerSlot({
-  slotId, slotNumber, sticker, isPasted, owned, onPaste,
+  slotId, slotNumber, sticker, isPasted, owned, onPaste, size = "default",
 }: StickerSlotProps) {
+  const aspectClass = size === "large" ? "aspect-[199/284]" : "aspect-160/229";
+  const imageSizes  = size === "large" ? "199px" : "(max-width: 768px) 30vw, 200px";
   const [showPasteModal, setShowPasteModal]   = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [pasting, setPasting]                 = useState(false);
@@ -287,7 +291,7 @@ export function StickerSlot({
         type="button"
         layout
         className={[
-          "relative block aspect-160/229 w-full overflow-hidden rounded-input border-[5px] text-left transition-colors duration-300",
+          `relative block ${aspectClass} w-full overflow-hidden rounded-input border-[5px] text-left transition-colors duration-300`,
           isComplete
             ? "cursor-pointer"
             : canPaste
@@ -323,7 +327,7 @@ export function StickerSlot({
                 alt={sticker.name}
                 fill
                 className="object-cover"
-                sizes="(max-width: 768px) 30vw, 200px"
+                sizes={imageSizes}
               />
             )}
 

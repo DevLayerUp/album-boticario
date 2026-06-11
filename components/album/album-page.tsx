@@ -7,6 +7,7 @@ import { StickerSlot, type SlotSticker } from "./sticker-slot";
 import {
   parseLayoutData,
   type Title3Data,
+  type Grid6Data,
   type ProfileData,
 } from "@/lib/album-templates";
 import { dashboardAssets } from "@/lib/dashboard-assets";
@@ -208,6 +209,102 @@ function ProfilePage({ page, side, userStickerUrl, inFlipBook }: AlbumPageProps)
   );
 }
 
+function Grid6Page({ page, side, pastedSlotIds, ownedMap, onPaste, inFlipBook }: AlbumPageProps) {
+  const slots = [...page.album_slots].sort((a, b) => a.slot_number - b.slot_number);
+
+  const data  = parseLayoutData(page.content) as Grid6Data;
+  const title = data.title ?? page.title ?? null;
+  const text  = data.text ?? null;
+
+  return (
+    <PageShell side={side} inFlipBook={inFlipBook}>
+      <div className="flex flex-1 flex-col px-6 pb-8 pt-8 sm:px-[10%] sm:pt-[10%]">
+        <div className="grid grid-cols-3 gap-3 md:gap-5">
+          {slots.slice(0, 6).map((slot) => {
+            const stickerId = slot.stickers?.id;
+            return (
+              <StickerSlot
+                key={slot.id}
+                slotId={slot.id}
+                slotNumber={slot.slot_number}
+                sticker={slot.stickers}
+                isPasted={pastedSlotIds.has(slot.id)}
+                owned={stickerId ? (ownedMap.get(stickerId) ?? 0) : 0}
+                onPaste={onPaste}
+              />
+            );
+          })}
+        </div>
+
+        {(title || text) && (
+          <div className="mt-8 md:mt-10">
+            {title && (
+              <h2 className="font-display text-2xl font-bold leading-[1.35] text-white md:text-4xl">
+                {title}
+              </h2>
+            )}
+            {text && (
+              <div
+                className="mt-3 max-w-[520px] text-sm leading-[1.45] text-white md:text-base **:text-white [&_p]:mb-2.5 [&_strong]:font-semibold"
+                dangerouslySetInnerHTML={{ __html: text }}
+              />
+            )}
+          </div>
+        )}
+
+        <div className="mt-auto flex justify-center pt-8">
+          <LogoBadge />
+        </div>
+      </div>
+    </PageShell>
+  );
+}
+
+/** Slot 1 = left center · slots 2–3 = top/bottom right (199×284 cards) */
+function Tri3Page({ page, side, pastedSlotIds, ownedMap, onPaste, inFlipBook }: AlbumPageProps) {
+  const slots = [...page.album_slots].sort((a, b) => a.slot_number - b.slot_number);
+  const [left, topRight, bottomRight] = slots;
+
+  const cellClass = "w-[clamp(112px,34vw,199px)] shrink-0";
+
+  function renderSlot(slot: (typeof slots)[number] | undefined) {
+    if (!slot) return null;
+    const stickerId = slot.stickers?.id;
+    return (
+      <StickerSlot
+        key={slot.id}
+        slotId={slot.id}
+        slotNumber={slot.slot_number}
+        sticker={slot.stickers}
+        isPasted={pastedSlotIds.has(slot.id)}
+        owned={stickerId ? (ownedMap.get(stickerId) ?? 0) : 0}
+        onPaste={onPaste}
+        size="large"
+      />
+    );
+  }
+
+  return (
+    <PageShell side={side} inFlipBook={inFlipBook}>
+      <div className="flex flex-1 flex-col px-5 py-8 sm:px-[8%] sm:py-[10%]">
+        <div className="flex flex-1 items-center justify-center">
+          <div className="flex items-center gap-5 sm:gap-8 md:gap-10">
+            <div className={cellClass}>{renderSlot(left)}</div>
+            <div className="flex flex-col gap-5 sm:gap-6 md:gap-8">
+              <div className={cellClass}>{renderSlot(topRight)}</div>
+              <div className={cellClass}>{renderSlot(bottomRight)}</div>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-auto flex justify-center pt-6">
+          <LogoBadge />
+        </div>
+      </div>
+    </PageShell>
+  );
+}
+
 function Grid3x3Page({ page, side, pastedSlotIds, ownedMap, onPaste, inFlipBook }: AlbumPageProps) {
   const slots = [...page.album_slots].sort((a, b) => a.slot_number - b.slot_number);
 
@@ -241,6 +338,12 @@ export function AlbumPage(props: AlbumPageProps) {
   }
   if (props.page.layout_template === "title3") {
     return <Title3Page {...props} />;
+  }
+  if (props.page.layout_template === "grid6") {
+    return <Grid6Page {...props} />;
+  }
+  if (props.page.layout_template === "tri3") {
+    return <Tri3Page {...props} />;
   }
   return <Grid3x3Page {...props} />;
 }
