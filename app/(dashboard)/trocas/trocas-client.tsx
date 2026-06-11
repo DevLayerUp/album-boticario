@@ -513,15 +513,19 @@ function FulfillWishModal({
           </div>
         </div>
 
-        {/* O que você quer */}
+        {/* O que você quer em troca */}
         <p className="text-xs font-semibold uppercase tracking-wider text-muted">
-          O que você quer de {wish.user?.display_name}?
+          Qual repetida você quer de {wish.user?.display_name}?
+        </p>
+        <p className="text-[11px] leading-snug text-muted">
+          Não precisa ser uma figurinha que você esteja buscando — escolha qualquer
+          repetida que essa pessoa tenha.
         </p>
 
         {wish.user_stickers.length === 0 ? (
           <div className="flex flex-col items-center gap-2 rounded-2xl bg-amber-50 py-6 text-center text-sm text-amber-700">
             <PackageOpen size={24} className="text-amber-400" />
-            Esse usuário não tem figurinhas disponíveis.
+            Este usuário não tem repetidas disponíveis para trocar no momento.
           </div>
         ) : (
           <div className="grid max-h-44 grid-cols-4 gap-2 overflow-y-auto pr-1">
@@ -732,7 +736,8 @@ function ExploreTab() {
       <AnimatePresence>{toast && <Toast message={toast} />}</AnimatePresence>
 
       <p className="text-sm text-muted">
-        Pedidos abertos de outros colecionadores. Se você tiver a figurinha, pode oferecer!
+        Pedidos abertos de outros colecionadores. Se você tiver a figurinha, ofereça e
+        escolha qualquer repetida deles em troca — mesmo que não seja uma que você precise.
       </p>
 
       {loading ? (

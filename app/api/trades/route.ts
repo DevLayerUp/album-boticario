@@ -99,7 +99,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // 2. Receiver must have qty >= 1 of requested sticker
+  // 2. Receiver must have a duplicate (qty >= 2) of the requested sticker
   const { data: requestedOwned } = await supabase
     .from("user_stickers")
     .select("quantity")
@@ -107,9 +107,9 @@ export async function POST(request: NextRequest) {
     .eq("sticker_id", requested_sticker_id)
     .maybeSingle();
 
-  if (!requestedOwned || requestedOwned.quantity < 1) {
+  if (!requestedOwned || requestedOwned.quantity < 2) {
     return NextResponse.json(
-      { error: "Esse usuário não possui a figurinha solicitada" },
+      { error: "Esse usuário não tem repetida dessa figurinha para trocar" },
       { status: 400 }
     );
   }

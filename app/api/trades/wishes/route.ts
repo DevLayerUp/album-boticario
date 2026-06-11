@@ -33,7 +33,7 @@ export async function GET() {
     ),
   ];
 
-  // Figurinhas que cada dono do pedido tem (para B escolher o que quer em troca)
+  // Repetidas (qty >= 2) de cada dono do pedido — o ofertante escolhe qual quer em troca
   let tradeableByUser: Record<string, { sticker: unknown; quantity: number }[]> = {};
   if (ownerIds.length > 0) {
     const { data: rows } = await supabase
@@ -43,7 +43,7 @@ export async function GET() {
         stickers ( id, name, image_url, rarities ( name, slug, color_hex ) )
       `)
       .in("user_id", ownerIds)
-      .gte("quantity", 1);
+      .gte("quantity", 2);
 
     for (const row of rows ?? []) {
       const uid = row.user_id as string;

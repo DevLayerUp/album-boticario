@@ -97,13 +97,13 @@ export async function POST(request: NextRequest, { params }: Params) {
     );
   }
 
-  if (!receiverHas || receiverHas.quantity < 1) {
+  if (!receiverHas || receiverHas.quantity < 2) {
     await supabase
       .from("trade_requests")
       .update({ status: "cancelled", resolved_at: new Date().toISOString() })
       .eq("id", tradeId);
     return NextResponse.json(
-      { error: "Você não tem mais a figurinha solicitada" },
+      { error: "Você não tem mais repetida da figurinha solicitada" },
       { status: 409 }
     );
   }
