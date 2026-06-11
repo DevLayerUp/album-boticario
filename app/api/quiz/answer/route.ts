@@ -82,6 +82,14 @@ export async function POST(request: NextRequest) {
     await incrementMissionProgress(supabase, user.id, "quiz_streak");
   }
 
+  const today = new Date().toISOString().split("T")[0];
+  await supabase
+    .from("notifications")
+    .update({ read_at: new Date().toISOString() })
+    .eq("user_id", user.id)
+    .eq("dedupe_key", `quiz:${today}`)
+    .is("read_at", null);
+
   return NextResponse.json({
     is_correct:        isCorrect,
     correct_option_id: correctOpt?.id ?? null,

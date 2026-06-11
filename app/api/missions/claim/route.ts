@@ -47,5 +47,12 @@ export async function POST(request: NextRequest) {
     .update({ reward_claimed: true })
     .eq("id", (userMission as { id: number }).id);
 
+  await supabase
+    .from("notifications")
+    .update({ read_at: new Date().toISOString() })
+    .eq("user_id", user.id)
+    .eq("dedupe_key", `mission:${mission_id}`)
+    .is("read_at", null);
+
   return NextResponse.json({ success: true, packs_earned: rewardPacks });
 }

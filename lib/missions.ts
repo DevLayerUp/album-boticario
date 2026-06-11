@@ -3,6 +3,7 @@
  * Call this from the relevant API routes (pack open, quiz answer, paste sticker, etc.)
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { createNotification } from "@/lib/notifications";
 
 export async function incrementMissionProgress(
   supabase: SupabaseClient,
@@ -12,7 +13,7 @@ export async function incrementMissionProgress(
 ) {
   const { data: missions } = await supabase
     .from("missions")
-    .select("id, target_value")
+    .select("id, title, target_value")
     .eq("type", missionType)
     .eq("is_active", true)
     .or("expires_at.is.null,expires_at.gt.now()");
@@ -31,6 +32,8 @@ export async function incrementMissionProgress(
     const newProgress = Math.min(current + increment, mission.target_value as number);
     const isComplete  = newProgress >= (mission.target_value as number);
 
+    const wasComplete = !!userMission?.completed_at;
+
     await supabase.from("user_missions").upsert(
       {
         user_id:       userId,
@@ -41,5 +44,17 @@ export async function incrementMissionProgress(
       },
       { onConflict: "user_id,mission_id" }
     );
+
+    if (isComplete && !wasComplete) {
+      await createNotification({
+        userId,
+        type: "mission_complete",
+        title: "Conquista desbloqueada!",
+        body: `Você completou: ${mission.title as string}. Resgate sua recompensa.`,
+        href: "/missoes",
+        dedupeKey: `mission:${mission.id}`,
+        payload: { mission_id: mission.id },
+      });
+    }
   }
 }

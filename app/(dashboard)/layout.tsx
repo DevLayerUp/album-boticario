@@ -8,6 +8,7 @@ import { SignOutButton } from "@/components/auth/sign-out-button";
 import { Wordmark } from "@/components/brand/wordmark";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { ReferralClaimOnLoad } from "@/components/referral/referral-claim-on-load";
+import { NotificationBell } from "@/components/notifications/notification-bell";
 
 const NAV = [
   { href: "/dashboard",  label: "Início" },
@@ -55,6 +56,7 @@ export default async function DashboardLayout({
           </nav>
 
           <div className="flex shrink-0 items-center gap-1">
+            <NotificationBell />
             <Link
               href="/perfil"
               aria-label="Meu perfil"
