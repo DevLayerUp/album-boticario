@@ -14,17 +14,19 @@ import {
   Users,
   LogOut,
   ChevronRight,
+  ImageIcon,
 } from "lucide-react";
 
 const NAV = [
-  { href: "/admin",           label: "Visão Geral", icon: LayoutDashboard, exact: true },
-  { href: "/admin/categorias",label: "Categorias",  icon: Tag },
-  { href: "/admin/paginas",   label: "Páginas",     icon: BookOpen },
-  { href: "/admin/figurinhas",label: "Figurinhas",  icon: Image },
-  { href: "/admin/raridades", label: "Raridades",   icon: Layers },
-  { href: "/admin/quiz",      label: "Quiz",        icon: HelpCircle },
-  { href: "/admin/missoes",   label: "Missões",     icon: Target },
-  { href: "/admin/usuarios",  label: "Usuários",    icon: Users },
+  { href: "/admin",              label: "Visão Geral",   icon: LayoutDashboard, exact: true },
+  { href: "/admin/album-capa",   label: "Capa do Álbum", icon: ImageIcon },
+  { href: "/admin/categorias",   label: "Categorias",    icon: Tag },
+  { href: "/admin/paginas",      label: "Páginas",       icon: BookOpen },
+  { href: "/admin/figurinhas",   label: "Figurinhas",    icon: Image },
+  { href: "/admin/raridades",    label: "Raridades",     icon: Layers },
+  { href: "/admin/quiz",         label: "Quiz",          icon: HelpCircle },
+  { href: "/admin/missoes",      label: "Missões",       icon: Target },
+  { href: "/admin/usuarios",     label: "Usuários",      icon: Users },
 ];
 
 export function AdminSidebar({ adminName }: { adminName: string }) {

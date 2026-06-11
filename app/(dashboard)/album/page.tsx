@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { AlbumClient } from "./album-client";
 
 export const metadata: Metadata = { title: "Álbum" };
@@ -41,6 +42,14 @@ export default async function AlbumPage() {
     .from("album_slots")
     .select("*", { count: "exact", head: true });
 
+  // Album cover URL (read via service_role to bypass RLS on app_settings)
+  const adminSupabase = createAdminClient();
+  const { data: coverSetting } = await adminSupabase
+    .from("app_settings")
+    .select("value")
+    .eq("key", "album_cover_url")
+    .single();
+
   return (
     <AlbumClient
       categories={categories ?? []}
@@ -48,6 +57,7 @@ export default async function AlbumPage() {
       initialUserStickers={userStickers ?? []}
       totalSlots={totalSlots ?? 0}
       userStickerUrl={profile?.sticker_url ?? null}
+      coverUrl={coverSetting?.value ?? null}
     />
   );
 }

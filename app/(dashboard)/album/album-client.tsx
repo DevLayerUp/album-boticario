@@ -32,6 +32,7 @@ interface AlbumClientProps {
   initialUserStickers: UserSticker[];
   totalSlots: number;
   userStickerUrl?: string | null;
+  coverUrl?: string | null;
 }
 
 export function AlbumClient({
@@ -40,6 +41,7 @@ export function AlbumClient({
   initialUserStickers,
   totalSlots,
   userStickerUrl = null,
+  coverUrl = null,
 }: AlbumClientProps) {
   const [activeCatId, setActiveCatId] = useState<number | null>(
     categories[0]?.id ?? null
@@ -106,7 +108,7 @@ export function AlbumClient({
   const progressPct  = totalSlots > 0 ? Math.round((filledCount / totalSlots) * 100) : 0;
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-[60px]">
       {/* ── Header ─────────────────────────────────────────────────────── */}
       <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
         {/* Título + progresso */}
@@ -222,6 +224,7 @@ export function AlbumClient({
               ownedMap={ownedMap}
               onPaste={handlePaste}
               userStickerUrl={userStickerUrl}
+              coverUrl={coverUrl}
             />
           )}
         </>

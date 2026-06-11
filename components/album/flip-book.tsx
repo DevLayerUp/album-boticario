@@ -5,6 +5,7 @@ import { useRef, useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AlbumPage, type AlbumPageData } from "./album-page";
+import { AlbumCover } from "./album-cover";
 
 type HTMLFlipBookComponent = typeof import("react-pageflip").default;
 
@@ -35,6 +36,8 @@ interface FlipBookProps {
   ownedMap: Map<number, number>;
   onPaste: (slotId: number, stickerId: number) => Promise<void>;
   userStickerUrl?: string | null;
+  /** URL of the album cover image from Supabase storage (uploaded by admin) */
+  coverUrl?: string | null;
 }
 
 /* Shared style for the circular nav buttons */
@@ -68,10 +71,11 @@ export function FlipBook({
   ownedMap,
   onPaste,
   userStickerUrl,
+  coverUrl,
 }: FlipBookProps) {
   const bookRef = useRef<HTMLFlipBookHandle | null>(null);
 
-  // currentPage = left-page index of the currently visible spread (0, 2, 4 …)
+  // currentPage = index of the currently visible page (0 = cover, 1+ = content)
   const [currentPage, setCurrentPage] = useState(0);
 
   // Reset when category changes (pages[0] id changes)
@@ -90,8 +94,12 @@ export function FlipBook({
     );
   }
 
+  // With showCover=true: page 0 is the cover; content starts at page 1.
+  // Total children = 1 (cover) + pages.length (content pages).
+  const totalChildren = 1 + pages.length;
   const isFirst = currentPage === 0;
-  const isLast  = currentPage + 2 >= pages.length;
+  // On the last spread: current page is the second-to-last or last content page
+  const isLast = currentPage + 2 >= totalChildren;
 
   return (
     <div className="select-none">
@@ -112,9 +120,18 @@ export function FlipBook({
           <ChevronLeft size={22} strokeWidth={2.5} />
         </button>
 
-        {/* Book — full-width row 1 on mobile, flex-1 middle column on desktop.
-            flex justify-center keeps the book centred within the column. */}
-        <div className="order-1 flex w-full cursor-grab justify-center active:cursor-grabbing md:order-2 md:w-auto md:flex-1">
+        {/* Book — w-full is required so page-flip measures a wide enough block
+            for landscape (two-page) mode. Without it the wrapper shrink-wraps
+            and the library falls back to portrait (single tiny page).
+            On desktop with showCover, the closed cover sits on the RIGHT half;
+            -translate-x-1/4 centres that single visible page. */}
+        <div className="order-1 flex w-full min-w-0 cursor-grab justify-center active:cursor-grabbing md:order-2 md:min-w-[560px] md:flex-1">
+          <div
+            className={cn(
+              "w-full flex justify-center transition-transform duration-700 ease-out",
+              isFirst && "md:-translate-x-1/4",
+            )}
+          >
           <HTMLFlipBook
             ref={bookRef}
             key={firstPageId ?? "empty"}
@@ -131,7 +148,8 @@ export function FlipBook({
             startZIndex={0}
             autoSize
             maxShadowOpacity={0.4}
-            showCover={false}
+            /* showCover=true renders page 0 as a hard single-page cover */
+            showCover
             /* mobileScrollSupport=false lets the library own horizontal swipes
                so they drive the page flip instead of scrolling the page. */
             mobileScrollSupport={false}
@@ -152,6 +170,12 @@ export function FlipBook({
             style={{}}
             onFlip={(e: { data: number }) => setCurrentPage(e.data)}
           >
+            {/* ── Cover page (index 0) — hard page shown alone ── */}
+            <div key="cover" className="h-full overflow-hidden">
+              <AlbumCover coverUrl={coverUrl} />
+            </div>
+
+            {/* ── Content pages (index 1+) ── */}
             {pages.map((page, index) => (
               <div key={page.id} className="h-full overflow-hidden">
                 <AlbumPage
@@ -166,6 +190,7 @@ export function FlipBook({
               </div>
             ))}
           </HTMLFlipBook>
+          </div>
         </div>
 
         {/* → Next — always order-3 (right of prev on mobile, right column on desktop) */}
