@@ -1,10 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { Lock, Plus, Sparkles, ThumbsUp, Trophy, X } from "lucide-react";
+import { PasteFlight, type PasteFlightConfig } from "@/components/album/paste-flight";
+import { playPasteSound } from "@/lib/play-paste-sound";
 import { rarityColor, rarityTheme, type RarityTheme } from "@/lib/rarity";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -33,37 +35,23 @@ export interface StickerSlotProps {
   size?: "default" | "large";
 }
 
-// ─── Particle burst ───────────────────────────────────────────────────────────
-function PasteBurst({ color, slug }: { color: string; slug: string }) {
-  const count  = slug === "legendary" ? 22 : slug === "super_rare" ? 16 : 10;
-  const emojis = slug === "legendary"  ? ["⭐", "✨", "🌟", "💫"] :
-                 slug === "super_rare" ? ["✨", "💛", "✨"] : ["✨", "🟢"];
+// ─── Subtle landing ring (replaces emoji burst) ───────────────────────────────
+function PasteLandRing({ color }: { color: string }) {
   return (
-    <div className="pointer-events-none absolute inset-0 flex items-center justify-center overflow-visible">
-      {Array.from({ length: count }).map((_, i) => {
-        const angle = (i / count) * 360;
-        const dist  = 40 + Math.random() * 45;
-        const dx    = Math.cos((angle * Math.PI) / 180) * dist;
-        const dy    = Math.sin((angle * Math.PI) / 180) * dist;
-        return (
-          <motion.span key={i}
-            initial={{ opacity: 1, x: 0, y: 0, scale: 0.4 }}
-            animate={{ opacity: 0, x: dx, y: dy, scale: 1.3 }}
-            transition={{ duration: 0.65 + Math.random() * 0.3, ease: "easeOut" }}
-            className="absolute select-none text-xs"
-          >
-            {emojis[i % emojis.length]}
-          </motion.span>
-        );
-      })}
+    <motion.div
+      className="pointer-events-none absolute inset-0 flex items-center justify-center overflow-visible"
+      initial={{ opacity: 1 }}
+      animate={{ opacity: 0 }}
+      transition={{ duration: 0.5, delay: 0.1 }}
+    >
       <motion.div
-        initial={{ scale: 0.2, opacity: 0.9 }}
-        animate={{ scale: 2.8, opacity: 0 }}
+        initial={{ scale: 0.6, opacity: 0.7 }}
+        animate={{ scale: 1.8, opacity: 0 }}
         transition={{ duration: 0.55, ease: "easeOut" }}
-        className="absolute h-10 w-10 rounded-full"
+        className="absolute h-12 w-12 rounded-full"
         style={{ border: `2px solid ${color}` }}
       />
-    </div>
+    </motion.div>
   );
 }
 
@@ -286,8 +274,13 @@ export function StickerSlot({
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [pasting, setPasting]                 = useState(false);
   const [justPasted, setJustPasted]           = useState(false);
-  const [showBurst, setShowBurst]             = useState(false);
+  const [isFlying, setIsFlying]               = useState(false);
+  const [flightConfig, setFlightConfig]       = useState<PasteFlightConfig | null>(null);
+  const [showLandRing, setShowLandRing]       = useState(false);
   const [error, setError]                     = useState("");
+  const slotRef    = useRef<HTMLButtonElement>(null);
+  const previewRef = useRef<HTMLDivElement>(null);
+  const reducedMotion = useReducedMotion();
   // Guard: portals need the DOM — only render after mount (avoids SSR mismatch)
   const [mounted, setMounted]                 = useState(false);
   useEffect(() => { setMounted(true); }, []);
@@ -296,18 +289,47 @@ export function StickerSlot({
   const raritySlug  = sticker?.rarities?.slug ?? "common";
   const animation   = sticker?.rarities?.animation_type ?? "none";
   const isOwned     = owned > 0;
-  const canPaste    = isOwned && !isPasted && sticker !== null;
-  const isComplete  = isPasted || justPasted;
+  const canPaste    = isOwned && !isPasted && !isFlying && sticker !== null;
+  const isComplete  = (isPasted || justPasted) && !isFlying;
+  const isAwaitingLand = isFlying;
+
+  const onFlightComplete = useCallback(() => {
+    setIsFlying(false);
+    setFlightConfig(null);
+    setJustPasted(true);
+    setShowLandRing(true);
+    setTimeout(() => setShowLandRing(false), 700);
+  }, []);
 
   async function handlePaste() {
     if (!sticker || !onPaste) return;
+
+    const fromRect = previewRef.current?.getBoundingClientRect();
+
     setPasting(true);
     setError("");
     try {
       await onPaste(slotId, sticker.id);
-      setJustPasted(true);
       setShowPasteModal(false);
-      setTimeout(() => { setShowBurst(true); setTimeout(() => setShowBurst(false), 1400); }, 120);
+
+      const toRect = slotRef.current?.getBoundingClientRect();
+      const canFly =
+        !reducedMotion && fromRect && toRect && fromRect.width > 0 && toRect.width > 0;
+
+      if (canFly) {
+        setFlightConfig({
+          imageUrl: sticker.image_url,
+          borderColor: color,
+          from: fromRect,
+          to: toRect,
+        });
+        setIsFlying(true);
+      } else {
+        setJustPasted(true);
+        playPasteSound();
+        setShowLandRing(true);
+        setTimeout(() => setShowLandRing(false), 700);
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Erro ao colar figurinha");
     } finally {
@@ -323,12 +345,16 @@ export function StickerSlot({
            trigger a page flip. Inner content is pointer-events-none so the touch
            target is always the button itself, not a child img/div/span. */}
       <motion.button
+        ref={slotRef}
         type="button"
         layout
+        data-slot-id={slotId}
         className={[
           `relative block ${aspectClass} w-full overflow-hidden rounded-input border-[5px] text-left transition-colors duration-300`,
           isComplete
             ? "cursor-pointer"
+            : isAwaitingLand
+            ? "border-dashed bg-white/5"
             : canPaste
             ? "cursor-pointer border-dashed bg-white/10 hover:bg-white/20"
             : "border-white/15 bg-black/20",
@@ -336,7 +362,7 @@ export function StickerSlot({
         style={
           isComplete
             ? { borderColor: color }
-            : canPaste
+            : isAwaitingLand || canPaste
             ? { borderColor: `${color}b3` }
             : undefined
         }
@@ -351,10 +377,13 @@ export function StickerSlot({
         {isComplete ? (
           /* ── COLADA: imagem ocupa todo o card ─────────────────────── */
           <motion.div
-            initial={justPasted ? { scale: 0.55, opacity: 0, rotateY: -95 } : false}
-            animate={{ scale: 1, opacity: 1, rotateY: 0 }}
-            transition={{ type: "spring", stiffness: 210, damping: 20, delay: 0.05 }}
+            initial={justPasted ? { filter: "brightness(1.25)" } : false}
+            animate={{ filter: "brightness(1)" }}
+            transition={{ duration: 0.45, ease: "easeOut" }}
             className="pointer-events-none relative h-full w-full"
+            style={{
+              boxShadow: "0 1px 2px rgba(0,0,0,0.12), 0 3px 8px rgba(0,0,0,0.06)",
+            }}
           >
             {sticker && (
               <Image
@@ -387,11 +416,16 @@ export function StickerSlot({
             )}
 
             <AnimatePresence>
-              {showBurst && sticker && (
-                <PasteBurst color={color} slug={raritySlug} />
-              )}
+              {showLandRing && <PasteLandRing color={color} />}
             </AnimatePresence>
           </motion.div>
+        ) : isAwaitingLand ? (
+          /* ── AGUARDANDO POUSO (voo em andamento) ───────────────────── */
+          <div className="pointer-events-none relative h-full w-full">
+            <span className="absolute left-1.5 top-1.5 z-10 rounded-pill bg-black/25 px-1.5 py-0.5 text-[10px] font-bold text-white">
+              #{slotNumber}
+            </span>
+          </div>
         ) : (
           /* ── NÃO COLADA ─────────────────────────────────────────────── */
           <div className="pointer-events-none relative h-full w-full">
@@ -474,6 +508,7 @@ export function StickerSlot({
                 {/* Card preview with flip-in */}
                 <div className="mb-5 flex justify-center" style={{ perspective: "900px" }}>
                   <motion.div
+                    ref={previewRef}
                     initial={{ rotateY: -80, scale: 0.72, opacity: 0 }}
                     animate={{ rotateY: 0, scale: 1, opacity: 1 }}
                     transition={{ type: "spring", stiffness: 175, damping: 18, delay: 0.06 }}
@@ -555,8 +590,8 @@ export function StickerSlot({
                         Colando…
                       </span>
                     ) : (
-                      <span className="flex items-center justify-center gap-1.5">
-                        <Sparkles size={14} /> Colar!
+                      <span className="flex items-center justify-center gap-1.5"> 
+                        Colar!
                       </span>
                     )}
                   </motion.button>
@@ -567,6 +602,11 @@ export function StickerSlot({
         )}
         </AnimatePresence>,
         document.body
+      )}
+
+      {/* ── FLIP flight overlay (modal → slot) ─────────────────────────────────── */}
+      {mounted && flightConfig && isFlying && (
+        <PasteFlight config={flightConfig} onComplete={onFlightComplete} />
       )}
     </>
   );
