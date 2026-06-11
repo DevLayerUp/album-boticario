@@ -12,6 +12,7 @@ import {
   HelpCircle,
   Target,
   Users,
+  Megaphone,
   LogOut,
   ChevronRight,
   ImageIcon,
@@ -26,6 +27,7 @@ const NAV = [
   { href: "/admin/raridades",    label: "Raridades",     icon: Layers },
   { href: "/admin/quiz",         label: "Quiz",          icon: HelpCircle },
   { href: "/admin/missoes",      label: "Missões",       icon: Target },
+  { href: "/admin/avisos",       label: "Avisos",        icon: Megaphone },
   { href: "/admin/usuarios",     label: "Usuários",      icon: Users },
 ];
 

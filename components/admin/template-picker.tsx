@@ -41,6 +41,31 @@ function TemplatePreview({ id, selected }: { id: TemplateId; selected: boolean }
     );
   }
 
+  if (id === "grid6") {
+    return (
+      <div
+        className="grid gap-0.5"
+        style={{ gridTemplateColumns: "repeat(3, 1fr)", width: 52, height: 52 }}
+      >
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} className={`rounded-sm ${base}`} style={{ aspectRatio: "16/23" }} />
+        ))}
+      </div>
+    );
+  }
+
+  if (id === "tri3") {
+    return (
+      <div className="flex items-center gap-0.5" style={{ width: 52, height: 52 }}>
+        <div className={`w-[42%] self-center rounded-sm ${base}`} style={{ aspectRatio: "199/284" }} />
+        <div className="flex flex-1 flex-col justify-center gap-0.5">
+          <div className={`flex-1 rounded-sm ${base}`} />
+          <div className={`flex-1 rounded-sm ${base}`} />
+        </div>
+      </div>
+    );
+  }
+
   // "3x3"
   return (
     <div
@@ -56,7 +81,7 @@ function TemplatePreview({ id, selected }: { id: TemplateId; selected: boolean }
 
 export function TemplatePicker({ value, onChange }: TemplatePickerProps) {
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
       {ALBUM_TEMPLATES.map((tpl) => {
         const active = value === tpl.id;
         return (

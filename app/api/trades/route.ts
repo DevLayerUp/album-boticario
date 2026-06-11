@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { sanitizeId, sanitizeUuid, sanitizeText } from "@/lib/sanitize";
+import { createNotification } from "@/lib/notifications";
 
 const STICKER_SELECT = `
   id, name, image_url,
@@ -143,6 +144,29 @@ export async function POST(request: NextRequest) {
     .single();
 
   if (tradeErr) return NextResponse.json({ error: tradeErr.message }, { status: 500 });
+
+  const [{ data: requesterProfile }, { data: offeredSticker }] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("display_name")
+      .eq("id", user.id)
+      .maybeSingle(),
+    supabase
+      .from("stickers")
+      .select("name")
+      .eq("id", offered_sticker_id)
+      .maybeSingle(),
+  ]);
+
+  await createNotification({
+    userId: receiver_id,
+    type: "trade_request",
+    title: "Nova solicitação de troca",
+    body: `${requesterProfile?.display_name ?? "Um colecionador"} quer trocar ${offeredSticker?.name ?? "uma figurinha"} com você.`,
+    href: "/trocas",
+    dedupeKey: `trade_request:${trade.id}`,
+    payload: { trade_id: trade.id },
+  });
 
   return NextResponse.json({ trade_id: trade.id }, { status: 201 });
 }

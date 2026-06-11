@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { incrementMissionProgress } from "@/lib/missions";
+import { createNotification } from "@/lib/notifications";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -66,6 +67,17 @@ export async function POST(request: NextRequest, { params }: Params) {
       .from("trade_requests")
       .update({ status: "rejected", resolved_at: new Date().toISOString() })
       .eq("id", tradeId);
+
+    await createNotification({
+      userId: trade.requester_id,
+      type: "trade_rejected",
+      title: "Troca recusada",
+      body: "Sua solicitação de troca foi recusada.",
+      href: "/trocas",
+      dedupeKey: `trade_rejected:${tradeId}`,
+      payload: { trade_id: tradeId },
+    });
+
     return NextResponse.json({ success: true, status: "rejected" });
   }
 
@@ -175,6 +187,16 @@ export async function POST(request: NextRequest, { params }: Params) {
     incrementMissionProgress(supabase, user.id, "trade_count", 1),
     incrementMissionProgress(supabase, trade.requester_id, "trade_count", 1),
   ]);
+
+  await createNotification({
+    userId: trade.requester_id,
+    type: "trade_accepted",
+    title: "Troca aceita!",
+    body: "Sua solicitação de troca foi aceita. As figurinhas já foram trocadas.",
+    href: "/trocas",
+    dedupeKey: `trade_accepted:${tradeId}`,
+    payload: { trade_id: tradeId },
+  });
 
   return NextResponse.json({ success: true, status: "accepted" });
 }

@@ -3,6 +3,8 @@
  *
  * Templates:
  *   title3  → title + rich-text paragraph + optional image + 3 sticker slots
+ *   grid6   → 6 sticker slots (2 × 3) + title + rich-text paragraph below
+ *   tri3    → 3 sticker slots in a V layout (1 left + 2 stacked right), larger cards
  *   3x3     → 9 sticker slots in a 3 × 3 grid
  *   profile → single centered slot filled with the user's photo sticker (profiles.sticker_url)
  *
@@ -12,7 +14,7 @@
 
 // ─── Template registry ────────────────────────────────────────────────────────
 
-export type TemplateId = "title3" | "3x3" | "profile";
+export type TemplateId = "title3" | "grid6" | "tri3" | "3x3" | "profile";
 
 export interface AlbumTemplate {
   id: TemplateId;
@@ -24,6 +26,8 @@ export interface AlbumTemplate {
 
 export const ALBUM_TEMPLATES: AlbumTemplate[] = [
   { id: "title3",  label: "Título + 3",      cols: 3, rows: 1, total: 3 },
+  { id: "grid6",   label: "6 + Texto",       cols: 3, rows: 2, total: 6 },
+  { id: "tri3",    label: "3 em V",          cols: 2, rows: 2, total: 3 },
   { id: "3x3",     label: "3 × 3",           cols: 3, rows: 3, total: 9 },
   { id: "profile", label: "Minha Figurinha", cols: 1, rows: 1, total: 0 },
 ];
@@ -46,7 +50,13 @@ export interface Title3Data {
   image_url?: string;
 }
 
-/** Fields for the "3x3" template */
+/** Fields for the "grid6" template */
+export interface Grid6Data {
+  title?: string;
+  text?: string;
+}
+
+/** Fields for the "tri3" and "3x3" templates */
 export interface Grid3x3Data {
   title?: string;
 }
@@ -57,7 +67,12 @@ export interface ProfileData {
 }
 
 /** Union of all possible layout data shapes */
-export type LayoutData = Title3Data | Grid3x3Data | ProfileData;
+export type LayoutData = Title3Data | Grid6Data | Grid3x3Data | ProfileData;
+
+/** Templates with editable title + rich text in the content modal */
+export function hasRichTextContent(templateId: string): boolean {
+  return templateId === "title3" || templateId === "grid6";
+}
 
 /** Templates that do not use catalog sticker slots */
 export function isProfileTemplate(templateId: string): boolean {
