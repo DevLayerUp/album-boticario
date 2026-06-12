@@ -23,7 +23,6 @@ import type {
   CollectionRarity,
   CollectionSticker,
 } from "@/components/colecao/types";
-import { dashboardAssets } from "@/lib/dashboard-assets";
 import { rarityColor } from "@/lib/rarity";
 import { cn } from "@/lib/utils";
 
@@ -126,79 +125,69 @@ export function ColecaoClient({
   const selectedQty = selectedSticker ? (ownedMap[selectedSticker.id] ?? 0) : 0;
 
   return (
-    <div className="flex flex-col gap-8 md:gap-10">
+    <div className="flex flex-col gap-[60px]">
 
-      {/* ── Hero (tema gold — FeatureCard pattern) ───────────────────────── */}
-      <section className="overflow-hidden rounded-card shadow-card">
-        <div className="relative h-[140px] overflow-hidden bg-gold-500 md:h-[168px]">
-          <div
-            aria-hidden
-            className="absolute inset-0 bg-cover bg-center"
-            style={{ backgroundImage: `url(${dashboardAssets.cards.colecao})` }}
-          />
-          <div className="absolute inset-0 bg-linear-to-t from-gold-700/75 via-gold-700/20 to-transparent" />
-        </div>
+      {/* ── Header (mesmo padrão de /album) ─────────────────────────────── */}
+      <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+        <div className="min-w-0 flex-1">
+          <h1 className="font-display text-4xl font-bold leading-[1.4] text-verde-escuro-500 md:text-5xl">
+            Minha Coleção
+          </h1>
+          <p className="mt-2 text-lg text-black md:text-xl">
+            {ownedTotal} de {allStickers.length} figurinhas descobertas
+          </p>
 
-        <div className="bg-surface-gold px-6 py-5 md:px-8 md:py-7">
-          <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-            <div className="min-w-0 flex-1">
-              <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-gold-700/80">
-                Inventário
-              </p>
-              <h1 className="mt-1 font-display text-4xl font-bold leading-[1.2] text-verde-escuro-500 md:text-5xl">
-                Minha Coleção
-              </h1>
-              <p className="mt-2 text-base text-verde-escuro-capa/65 md:text-lg">
-                {ownedTotal} de {allStickers.length} figurinhas descobertas
-              </p>
-
-              <div className="mt-4 flex items-center gap-3">
-                <div
-                  className="relative h-2.5 w-full max-w-[280px] overflow-hidden rounded-pill bg-gold-500/25"
-                  role="progressbar"
-                  aria-valuenow={progressPct}
-                  aria-valuemin={0}
-                  aria-valuemax={100}
-                  aria-label={`${progressPct}% da coleção descoberta`}
-                >
-                  <motion.div
-                    className="h-full rounded-pill bg-gold-500"
-                    initial={{ width: 0 }}
-                    animate={{ width: `${progressPct}%` }}
-                    transition={{ duration: 1, ease: "easeOut", delay: 0.15 }}
-                  />
-                  <div
-                    aria-hidden
-                    className="pointer-events-none absolute inset-0 -translate-x-full animate-shimmer bg-linear-to-r from-transparent via-white/35 to-transparent"
-                  />
-                </div>
-                <span className="shrink-0 font-display text-xl font-bold text-gold-700">
-                  {progressPct}%
-                </span>
-              </div>
+          <div className="mt-4 flex items-center gap-4">
+            <div className="h-2 w-full max-w-[525px] overflow-hidden rounded-pill bg-verde-100">
+              <motion.div
+                className="h-full rounded-pill bg-verde-500"
+                initial={{ width: 0 }}
+                animate={{ width: `${progressPct}%` }}
+                transition={{ duration: 0.8, ease: "easeOut" }}
+                role="progressbar"
+                aria-valuenow={progressPct}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-label={`${progressPct}% da coleção descoberta`}
+              />
             </div>
-
-            <div className="flex shrink-0 flex-wrap gap-2">
-              <Link
-                href="/album"
-                className="inline-flex h-10 items-center gap-2 rounded-pill bg-verde-500 px-6 text-sm font-medium text-white transition-colors hover:bg-verde-escuro-500"
-              >
-                <BookOpen size={15} aria-hidden />
-                Ver álbum
-              </Link>
-              {duplicateTotal > 0 && (
-                <Link
-                  href="/trocas"
-                  className="inline-flex h-10 items-center gap-2 rounded-pill border border-gold-500/60 bg-surface px-5 text-sm font-medium text-verde-escuro-500 transition-colors hover:bg-gold-500/10"
-                >
-                  <ArrowLeftRight size={15} aria-hidden />
-                  Trocar repetidas
-                </Link>
-              )}
-            </div>
+            <span className="shrink-0 text-lg font-bold text-verde-escuro-500 md:text-xl">
+              {progressPct}% concluído
+            </span>
           </div>
         </div>
-      </section>
+
+        <div className="flex shrink-0 flex-col gap-3">
+          <p className="text-base font-medium text-[#3d3d3d]">
+            Continue sua coleção:
+          </p>
+          <div className="flex flex-wrap gap-4">
+            <Link
+              href="/album"
+              className="inline-flex h-10 items-center justify-center gap-2.5 rounded-pill bg-azul-500 px-10 py-2 text-base font-medium text-azul-100 transition-colors hover:bg-azul-escuro-500"
+            >
+              <BookOpen size={24} aria-hidden />
+              Ver álbum
+            </Link>
+            <Link
+              href="/pacotinhos"
+              className="inline-flex h-10 items-center justify-center gap-2.5 rounded-pill border border-azul-500 px-10 py-2 text-base font-medium text-azul-500 transition-colors hover:bg-azul-500/10"
+            >
+              <Package size={24} aria-hidden />
+              Pacotinhos
+            </Link>
+            {duplicateTotal > 0 && (
+              <Link
+                href="/trocas"
+                className="inline-flex h-10 items-center justify-center gap-2.5 rounded-pill border border-azul-500 px-10 py-2 text-base font-medium text-azul-500 transition-colors hover:bg-azul-500/10"
+              >
+                <ArrowLeftRight size={24} aria-hidden />
+                Trocar
+              </Link>
+            )}
+          </div>
+        </div>
+      </div>
 
       {/* ── Stats (Design System §4 Stat card — tema gold) ─────────────────── */}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
