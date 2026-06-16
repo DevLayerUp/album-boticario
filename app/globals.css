@@ -120,6 +120,37 @@
   }
 }
 
+/* ── Auth page — grid lines & particles ─────────────────────────────── */
+.auth-hline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.055);
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  animation: authDrawX 1.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.auth-vline {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: rgba(255, 255, 255, 0.055);
+  transform: scaleY(0);
+  transform-origin: 50% 0;
+  animation: authDrawY 1.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes authDrawX {
+  to { transform: scaleX(1); }
+}
+
+@keyframes authDrawY {
+  to { transform: scaleY(1); }
+}
+
 /* ── Animações customizadas ──────────────────────────────────────────── */
 @keyframes shimmer {
   0%   { transform: translateX(-100%); }
