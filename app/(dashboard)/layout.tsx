@@ -14,7 +14,6 @@ const NAV = [
   { href: "/dashboard",  label: "Início" },
   { href: "/pacotinhos", label: "Pacotinhos" },
   { href: "/album",      label: "Álbum" },
-  { href: "/colecao",    label: "Coleção" },
   { href: "/trocas",     label: "Trocas" },
   { href: "/quiz",       label: "Quizz" },
   { href: "/missoes",    label: "Missões" },
