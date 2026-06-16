@@ -29,10 +29,10 @@ export default async function AdminLayout({
     "Admin";
 
   return (
-    <div className="flex h-dvh overflow-hidden bg-gray-50">
+    <div className="fixed inset-0 flex overflow-hidden bg-gray-50">
       <AdminSidebar adminName={adminName} />
 
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         {/* topbar */}
         <header className="flex h-14 shrink-0 items-center border-b border-gray-200 bg-white px-6">
           <div className="ml-auto flex items-center gap-3">

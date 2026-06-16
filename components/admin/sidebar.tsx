@@ -16,10 +16,12 @@ import {
   LogOut,
   ChevronRight,
   ImageIcon,
+  Globe,
 } from "lucide-react";
 
 const NAV = [
   { href: "/admin",              label: "Visão Geral",   icon: LayoutDashboard, exact: true },
+  { href: "/admin/landing",      label: "Landing Page",  icon: Globe },
   { href: "/admin/album-capa",   label: "Capa do Álbum", icon: ImageIcon },
   { href: "/admin/categorias",   label: "Categorias",    icon: Tag },
   { href: "/admin/paginas",      label: "Páginas",       icon: BookOpen },

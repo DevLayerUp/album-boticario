@@ -1,10 +1,22 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { LandingNavbar } from "@/components/landing/navbar";
 import { LandingHero } from "@/components/landing/hero";
-import { LandingFeatures } from "@/components/landing/features";
-import { ThemesSection } from "@/components/landing/themes-section";
-import { LandingCta } from "@/components/landing/cta";
+import { LandingWelcome } from "@/components/landing/welcome-section";
+import { LandingHowItWorks } from "@/components/landing/how-it-works-section";
+import { LandingRegister } from "@/components/landing/register-section";
+import { LandingFandom } from "@/components/landing/fandom-section";
+import { LandingFaq } from "@/components/landing/faq-section";
+import { LandingFooter } from "@/components/landing/footer-section";
 import type { Metadata } from "next";
+import type { LandingNavbarProps } from "@/components/landing/navbar";
+import type { LandingHeroProps } from "@/components/landing/hero";
+import type { LandingWelcomeProps } from "@/components/landing/welcome-section";
+import type { LandingHowItWorksProps } from "@/components/landing/how-it-works-section";
+import type { LandingRegisterProps } from "@/components/landing/register-section";
+import type { LandingFandomProps } from "@/components/landing/fandom-section";
+import type { LandingFaqProps } from "@/components/landing/faq-section";
+import type { LandingFooterProps } from "@/components/landing/footer-section";
 
 export const metadata: Metadata = {
   title: "Álbum Digital de Figurinhas — Grupo Boticário",
@@ -12,21 +24,52 @@ export const metadata: Metadata = {
     "Crie sua figurinha personalizada, abra pacotinhos, complete coleções e troque figurinhas com outros fãs do Grupo Boticário.",
 };
 
+function safeParse<T>(raw: string | null, fallback: T): T {
+  if (!raw) return fallback;
+  try {
+    return JSON.parse(raw) as T;
+  } catch {
+    return fallback;
+  }
+}
+
 export default async function HomePage() {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Authenticated users go straight to the dashboard
   if (user) redirect("/dashboard");
+
+  // Fetch landing settings (public read — RLS allows)
+  const { data: rows } = await supabase
+    .from("app_settings")
+    .select("key, value")
+    .in("key", ["landing_navbar", "landing_hero", "landing_welcome", "landing_how_it_works", "landing_register", "landing_fandom", "landing_faq", "landing_footer"]);
+
+  const settingsMap = Object.fromEntries(
+    (rows ?? []).map((r: { key: string; value: string | null }) => [r.key, r.value]),
+  );
+
+  const navbarSettings  = safeParse<LandingNavbarProps>(settingsMap["landing_navbar"], {});
+  const heroSettings    = safeParse<LandingHeroProps>(settingsMap["landing_hero"], {});
+  const welcomeSettings    = safeParse<LandingWelcomeProps>(settingsMap["landing_welcome"], {});
+  const howItWorksSettings = safeParse<LandingHowItWorksProps>(settingsMap["landing_how_it_works"], {});
+  const registerSettings   = safeParse<LandingRegisterProps>(settingsMap["landing_register"], {});
+  const fandomSettings     = safeParse<LandingFandomProps>(settingsMap["landing_fandom"], {});
+  const faqSettings        = safeParse<LandingFaqProps>(settingsMap["landing_faq"], {});
+  const footerSettings     = safeParse<LandingFooterProps>(settingsMap["landing_footer"], {});
 
   return (
     <main id="main-content">
-      <LandingHero />
-      <LandingFeatures />
-      <ThemesSection />
-      <LandingCta />
+      <LandingNavbar     {...navbarSettings} />
+      <LandingHero       {...heroSettings} />
+      <LandingWelcome    {...welcomeSettings} />
+      <LandingHowItWorks {...howItWorksSettings} />
+      <LandingRegister   {...registerSettings} />
+      <LandingFandom     {...fandomSettings} />
+      <LandingFaq        {...faqSettings} />
+      <LandingFooter     {...footerSettings} />
     </main>
   );
 }
