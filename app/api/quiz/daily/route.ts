@@ -29,7 +29,16 @@ export async function GET() {
     });
   }
 
-  // 2. Try quiz with matching valid_date
+  const { data: answered } = await supabase
+    .from("user_quiz_answers")
+    .select("quiz_id")
+    .eq("user_id", user.id);
+
+  const answeredIds = new Set(
+    (answered ?? []).map((a) => a.quiz_id as number),
+  );
+
+  // 2. Try quiz with matching valid_date (skip if user already answered this quiz)
   const { data: dated } = await supabase
     .from("quizzes")
     .select("id, question, image_url, points, quiz_options(id, text)")
@@ -37,25 +46,19 @@ export async function GET() {
     .eq("is_active", true)
     .maybeSingle();
 
-  let quiz = dated;
+  let quiz =
+    dated && !answeredIds.has(dated.id as number) ? dated : null;
 
   if (!quiz) {
     // 3. Random active quiz the user hasn't answered yet
-    const { data: answered } = await supabase
-      .from("user_quiz_answers")
-      .select("quiz_id")
-      .eq("user_id", user.id);
-
-    const answeredIds = (answered ?? []).map((a) => a.quiz_id as number);
-
     let q = supabase
       .from("quizzes")
       .select("id, question, image_url, points, quiz_options(id, text)")
       .eq("is_active", true)
       .is("valid_date", null);
 
-    if (answeredIds.length > 0) {
-      q = q.not("id", "in", `(${answeredIds.join(",")})`);
+    if (answeredIds.size > 0) {
+      q = q.not("id", "in", `(${[...answeredIds].join(",")})`);
     }
 
     const { data: random } = await q.limit(1).maybeSingle();

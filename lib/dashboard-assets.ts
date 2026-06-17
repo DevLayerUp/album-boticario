@@ -29,6 +29,10 @@ export const dashboardAssets = {
   pacotinhos: {
     page: `${BASE}/pacotinhos/bg-pacotinhos.png`,
   },
+  /** Fundo do card de quiz (linhas topográficas, object-cover). */
+  quiz: {
+    background: `${BASE}/quiz/blob-lg.png`,
+  },
   /** Headers dos feature cards da seção "Explorar". */
   cards: {
     figurinha: `${BASE}/cards/figurinha.png`,
