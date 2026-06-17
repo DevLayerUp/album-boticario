@@ -1,0 +1,121 @@
+"use client";
+
+import {
+  missionCardButtonLabel,
+  missionIcon,
+  missionProgressLabel,
+  missionProgressPercent,
+  missionStatus,
+  missionTheme,
+} from "@/lib/mission-theme";
+import { cn } from "@/lib/utils";
+import { MissionRewardBadges } from "./mission-reward-badges";
+import type { Mission } from "./types";
+
+interface MissionCardProps {
+  mission: Mission;
+  onOpen: (mission: Mission) => void;
+}
+
+export function MissionCard({ mission, onOpen }: MissionCardProps) {
+  const theme = missionTheme(mission.theme);
+  const Icon = missionIcon(mission.title, mission.type);
+  const status = missionStatus(
+    mission.progress,
+    mission.target_value,
+    mission.completed_at,
+  );
+  const showProgress = status === "EM ANDAMENTO";
+  const percent = missionProgressPercent(mission.progress, mission.target_value);
+  const buttonLabel = missionCardButtonLabel(status, mission.reward_claimed);
+
+  return (
+    <article
+      className={cn(
+        "flex flex-col gap-8 rounded-block p-6 shadow-[0_4px_5px_rgba(0,0,0,0.1)]",
+        theme.surface,
+      )}
+    >
+      <div className="flex items-center justify-between gap-3">
+        <p className={cn("text-sm font-medium uppercase", theme.statusLabel)}>
+          Status da missão
+        </p>
+        <span className={cn("rounded-pill px-5 py-1.5 text-sm font-medium", theme.badge)}>
+          {status}
+        </span>
+      </div>
+
+      <button
+        type="button"
+        onClick={() => onOpen(mission)}
+        className="flex w-full items-center gap-8 text-left"
+      >
+        <div className="relative flex size-[105px] shrink-0 items-center justify-center">
+          <span
+            className={cn(
+              "absolute inset-0 rounded-full opacity-20",
+              theme.iconBg,
+            )}
+            aria-hidden
+          />
+          <span
+            className={cn(
+              "relative flex size-[105px] items-center justify-center rounded-full",
+              theme.iconBg,
+            )}
+          >
+            <Icon className="size-10 text-white sm:size-11" strokeWidth={1.8} aria-hidden />
+          </span>
+        </div>
+        <div className="min-w-0 flex-1 space-y-2.5">
+          <h3 className={cn("font-display text-2xl font-bold leading-tight sm:text-[32px]", theme.title)}>
+            {mission.title}
+          </h3>
+          {mission.description ? (
+            <p className="text-base text-black">{mission.description}</p>
+          ) : null}
+        </div>
+      </button>
+
+      {showProgress ? (
+        <div className="space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <span className={cn("rounded-pill px-5 py-1.5 text-sm font-medium", theme.badge)}>
+              EM ANDAMENTO
+            </span>
+            <div className={cn("flex flex-wrap items-center justify-end gap-4 text-base sm:text-xl", theme.progressText)}>
+              <span className="font-bold">{percent}% Concluída</span>
+              <span aria-hidden>•</span>
+              <span>
+                {missionProgressLabel(
+                  mission.progress,
+                  mission.target_value,
+                  mission.progress_unit,
+                )}
+              </span>
+            </div>
+          </div>
+          <div className="h-[23px] overflow-hidden rounded-pill bg-white">
+            <div
+              className={cn("h-full rounded-pill transition-[width] duration-700", theme.progressFill)}
+              style={{ width: `${percent}%` }}
+            />
+          </div>
+        </div>
+      ) : null}
+
+      <MissionRewardBadges packs={mission.reward_packs} points={mission.reward_points} />
+
+      <button
+        type="button"
+        onClick={() => onOpen(mission)}
+        className={cn(
+          "w-full rounded-pill px-10 py-2 text-lg font-medium text-white shadow-paper transition-all duration-200 active:scale-[0.98]",
+          theme.button,
+        )}
+      >
+        {buttonLabel}
+      </button>
+    </article>
+  );
+}

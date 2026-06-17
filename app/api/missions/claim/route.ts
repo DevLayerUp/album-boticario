@@ -5,11 +5,13 @@ import { createPacksForUser } from "@/lib/pack";
 /**
  * POST /api/missions/claim
  * Body: { mission_id }
- * Returns: { packs_earned }
+ * Returns: { packs_earned, points_earned }
  */
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await request.json().catch(() => ({}));
@@ -18,10 +20,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "mission_id obrigatório" }, { status: 400 });
   }
 
-  // 1. Verify mission is complete and reward not yet claimed
   const { data: userMission } = await supabase
     .from("user_missions")
-    .select("id, completed_at, reward_claimed, missions(reward_packs)")
+    .select("id, completed_at, reward_claimed, missions(reward_packs, reward_points)")
     .eq("user_id", user.id)
     .eq("mission_id", mission_id)
     .single();
@@ -29,23 +30,22 @@ export async function POST(request: NextRequest) {
   if (!userMission?.completed_at) {
     return NextResponse.json({ error: "Missão não concluída" }, { status: 400 });
   }
-  if ((userMission as { reward_claimed: boolean }).reward_claimed) {
+  if (userMission.reward_claimed) {
     return NextResponse.json({ error: "Recompensa já reivindicada" }, { status: 400 });
   }
 
   const missionData = Array.isArray(userMission.missions)
     ? userMission.missions[0]
     : userMission.missions;
-  const rewardPacks = (missionData as { reward_packs?: number } | null)?.reward_packs ?? 1;
+  const rewardPacks = missionData?.reward_packs ?? 1;
+  const rewardPoints = missionData?.reward_points ?? 100;
 
-  // 2. Create packs
   await createPacksForUser(supabase, user.id, "mission", String(mission_id), rewardPacks);
 
-  // 3. Mark reward as claimed
   await supabase
     .from("user_missions")
     .update({ reward_claimed: true })
-    .eq("id", (userMission as { id: number }).id);
+    .eq("id", userMission.id);
 
   await supabase
     .from("notifications")
@@ -54,5 +54,9 @@ export async function POST(request: NextRequest) {
     .eq("dedupe_key", `mission:${mission_id}`)
     .is("read_at", null);
 
-  return NextResponse.json({ success: true, packs_earned: rewardPacks });
+  return NextResponse.json({
+    success: true,
+    packs_earned: rewardPacks,
+    points_earned: rewardPoints,
+  });
 }
