@@ -2,6 +2,11 @@
 const nextConfig = {
   serverExternalPackages: ["sharp"],
 
+  // Middleware clona o body da request; padrão 10MB trunca GIFs grandes no upload admin.
+  experimental: {
+    middlewareClientMaxBodySize: "40mb",
+  },
+
   images: {
     remotePatterns: [
       {

@@ -118,6 +118,25 @@
     outline-offset: 2px;
     border-radius: 4px;
   }
+
+  /* Cursor de pointer em elementos clicáveis */
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  a[href],
+  label[for],
+  summary,
+  select:not(:disabled),
+  input[type="checkbox"]:not(:disabled),
+  input[type="radio"]:not(:disabled),
+  input[type="file"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  button:disabled,
+  [role="button"][aria-disabled="true"],
+  select:disabled {
+    cursor: not-allowed;
+  }
 }
 
 /* ── Auth page — grid lines & particles ─────────────────────────────── */

@@ -58,8 +58,20 @@ export function ImageUploader({
       form.append("bucket", bucket);
       form.append("folder", folder);
 
-      const res  = await fetch("/api/admin/upload", { method: "POST", body: form });
-      const data = (await res.json()) as { url?: string; error?: string };
+      const res = await fetch("/api/admin/upload", { method: "POST", body: form });
+      const raw = await res.text();
+      let data: { url?: string; error?: string } = {};
+      if (raw) {
+        try {
+          data = JSON.parse(raw) as { url?: string; error?: string };
+        } catch {
+          throw new Error(
+            res.ok
+              ? "Resposta inválida do servidor."
+              : `Erro ao enviar imagem (${res.status}).`,
+          );
+        }
+      }
 
       if (!res.ok) throw new Error(data.error ?? "Erro ao enviar imagem");
       onChange(data.url ?? null);

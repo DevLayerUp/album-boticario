@@ -6,7 +6,18 @@ export async function POST(request: NextRequest) {
   const guard = await adminGuard();
   if (guard) return guard;
 
-  const form = await request.formData();
+  let form: FormData;
+  try {
+    form = await request.formData();
+  } catch {
+    return NextResponse.json(
+      {
+        error:
+          "Não foi possível ler o arquivo enviado. Se o GIF for grande, reinicie o servidor após atualizar o limite de upload.",
+      },
+      { status: 400 },
+    );
+  }
   const file = form.get("file") as File | null;
   const bucket = (form.get("bucket") as string) || "assets";
   const folder = (form.get("folder") as string) || "misc";
@@ -27,7 +38,12 @@ export async function POST(request: NextRequest) {
   }
 
   const isVideo = videoTypes.includes(file.type);
-  const maxBytes = isVideo ? 50 * 1024 * 1024 : 10 * 1024 * 1024;
+  const isGif = file.type === "image/gif";
+  const maxBytes = isVideo
+    ? 50 * 1024 * 1024
+    : isGif
+      ? 30 * 1024 * 1024
+      : 10 * 1024 * 1024;
   if (file.size > maxBytes) {
     const maxMb = Math.round(maxBytes / (1024 * 1024));
     return NextResponse.json(

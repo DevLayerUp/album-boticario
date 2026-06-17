@@ -36,38 +36,51 @@ export function MobileNav() {
   return (
     <nav
       aria-label="Navegação"
-      className="sticky bottom-0 z-20 flex items-center gap-0.5 overflow-x-auto border-t border-border bg-surface/95 px-1 pb-[env(safe-area-inset-bottom)] pt-1 backdrop-blur [-ms-overflow-style:none] [scrollbar-width:none] md:hidden [&::-webkit-scrollbar]:hidden"
+      className="sticky bottom-0 z-20 border-t border-border bg-surface/95 backdrop-blur-md md:hidden"
     >
-      {NAV.map(({ href, label, icon: Icon }) => {
-        const isActive =
-          href === "/dashboard"
-            ? pathname === href
-            : pathname.startsWith(href);
+      <ul className="grid grid-cols-7 px-2 pt-1.5 pb-[max(0.375rem,env(safe-area-inset-bottom))]">
+        {NAV.map(({ href, label, icon: Icon }) => {
+          const isActive =
+            href === "/dashboard"
+              ? pathname === href
+              : pathname.startsWith(href);
 
-        return (
-          <Link
-            key={href}
-            href={href}
-            aria-current={isActive ? "page" : undefined}
-            className={cn(
-              "flex min-h-[44px] shrink-0 flex-col items-center justify-center gap-0.5 px-2 text-[10px] font-medium transition-colors duration-200",
-              isActive
-                ? "font-bold text-verde-500"
-                : "text-verde-escuro-500/60",
-            )}
-          >
-            <Icon
-              aria-hidden
-              className={cn(
-                "size-[22px] transition-transform duration-200",
-                isActive && "scale-110",
-              )}
-              strokeWidth={isActive ? 2.4 : 1.8}
-            />
-            {label}
-          </Link>
-        );
-      })}
+          return (
+            <li key={href} className="min-w-0">
+              <Link
+                href={href}
+                aria-current={isActive ? "page" : undefined}
+                className={cn(
+                  "relative flex min-h-11 touch-manipulation flex-col items-center justify-center gap-1 rounded-lg px-0.5 py-1 transition-colors duration-200",
+                  isActive
+                    ? "text-verde-500"
+                    : "text-verde-escuro-500/60 active:text-verde-escuro-500/80",
+                )}
+              >
+                {isActive ? (
+                  <span
+                    className="absolute inset-x-1 top-0 h-0.5 rounded-full bg-verde-500"
+                    aria-hidden
+                  />
+                ) : null}
+                <Icon
+                  aria-hidden
+                  className="size-5 shrink-0"
+                  strokeWidth={isActive ? 2.25 : 1.75}
+                />
+                <span
+                  className={cn(
+                    "block w-full truncate text-center text-[9px] font-medium leading-none tracking-tight xs:text-[10px]",
+                    isActive && "font-bold",
+                  )}
+                >
+                  {label}
+                </span>
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
     </nav>
   );
 }

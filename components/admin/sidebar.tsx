@@ -17,12 +17,14 @@ import {
   ChevronRight,
   ImageIcon,
   Globe,
+  Package,
 } from "lucide-react";
 
 const NAV = [
   { href: "/admin",              label: "Visão Geral",   icon: LayoutDashboard, exact: true },
   { href: "/admin/landing",      label: "Landing Page",  icon: Globe },
   { href: "/admin/album-capa",   label: "Capa do Álbum", icon: ImageIcon },
+  { href: "/admin/pacotinhos",   label: "Pacotinhos",    icon: Package },
   { href: "/admin/categorias",   label: "Categorias",    icon: Tag },
   { href: "/admin/paginas",      label: "Páginas",       icon: BookOpen },
   { href: "/admin/figurinhas",   label: "Figurinhas",    icon: Image },
