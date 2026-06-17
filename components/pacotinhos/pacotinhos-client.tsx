@@ -208,7 +208,7 @@ export function PacotinhosClient({
               <button
                 type="button"
                 onClick={openAllInSequence}
-                className="text-left text-sm font-medium uppercase tracking-[0.12em] text-verde-escuro-500 transition-colors hover:text-verde-500 sm:text-2xl sm:tracking-[1.92px]"
+                className="rounded-lg px-1 py-0.5 text-left text-sm font-medium uppercase tracking-[0.12em] text-verde-escuro-500 transition-all duration-200 hover:bg-verde-500/10 hover:text-verde-500 sm:px-2 sm:text-2xl sm:tracking-[1.92px]"
               >
                 Abrir todas em sequência
               </button>
@@ -251,7 +251,7 @@ export function PacotinhosClient({
                 type="button"
                 onClick={() => void loadMoreHistory()}
                 disabled={loadingMoreHistory}
-                className="rounded-pill border border-verde-400 px-8 py-2.5 text-base font-medium text-verde-escuro-500 transition-colors hover:border-verde-500 hover:text-verde-500 disabled:cursor-not-allowed disabled:opacity-60"
+                className="rounded-pill border border-verde-400 px-8 py-2.5 text-base font-medium text-verde-escuro-500 transition-all duration-200 hover:border-verde-500 hover:bg-verde-500/10 hover:text-verde-500 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:border-verde-400 disabled:hover:bg-transparent disabled:hover:text-verde-escuro-500"
               >
                 {loadingMoreHistory ? "Carregando…" : "Carregar mais"}
               </button>

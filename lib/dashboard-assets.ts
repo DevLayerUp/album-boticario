@@ -25,6 +25,10 @@ export const dashboardAssets = {
     /** Imagem decorativa do fundo geral da página /album (position bottom). */
     page:  `${BASE}/album/bg-page.png`,
   },
+  /** Fundo geral da página /pacotinhos (position bottom). */
+  pacotinhos: {
+    page: `${BASE}/pacotinhos/bg-pacotinhos.png`,
+  },
   /** Headers dos feature cards da seção "Explorar". */
   cards: {
     figurinha: `${BASE}/cards/figurinha.png`,

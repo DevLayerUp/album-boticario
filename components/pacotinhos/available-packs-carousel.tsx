@@ -16,7 +16,7 @@ interface AvailablePacksCarouselProps {
   onOpen: (pack: Pack) => void;
 }
 
-const DESKTOP_CAROUSEL_MIN = 4;
+const DESKTOP_CAROUSEL_MIN = 5;
 
 export function AvailablePacksCarousel({
   packs,
@@ -45,13 +45,13 @@ export function AvailablePacksCarousel({
 
   if (!mounted) {
     return (
-      <div className="h-[min(48vh,560px)] w-full max-w-[484px] animate-pulse rounded-[32px] bg-verde-100 lg:max-w-none" />
+      <div className="h-[min(36vh,360px)] w-full max-w-[315px] animate-pulse rounded-[24px] bg-verde-100 lg:max-w-none" />
     );
   }
 
   if (!useCarousel) {
     return (
-      <div className="hidden gap-[25px] lg:grid lg:grid-cols-3">
+      <div className="hidden gap-3 lg:grid lg:grid-cols-4 lg:gap-3">
         {packs.map((pack, i) => (
           <AvailablePackCard
             key={pack.id}
@@ -75,15 +75,15 @@ export function AvailablePacksCarousel({
             onSlideChange={syncSwiper}
             onResize={syncSwiper}
             onProgress={handleProgress}
-            spaceBetween={16}
-            slidesPerView={1.05}
+            spaceBetween={10}
+            slidesPerView={1.35}
             breakpoints={{
-              480: { slidesPerView: 1.12, spaceBetween: 16 },
-              640: { slidesPerView: 1.25, spaceBetween: 20 },
-              768: { slidesPerView: 1.4, spaceBetween: 20 },
-              1024: { slidesPerView: 2.1, spaceBetween: 22 },
-              1280: { slidesPerView: 2.65, spaceBetween: 25 },
-              1536: { slidesPerView: 3, spaceBetween: 25 },
+              480: { slidesPerView: 1.55, spaceBetween: 10 },
+              640: { slidesPerView: 1.85, spaceBetween: 12 },
+              768: { slidesPerView: 2.2, spaceBetween: 12 },
+              1024: { slidesPerView: 3.15, spaceBetween: 14 },
+              1280: { slidesPerView: 3.85, spaceBetween: 14 },
+              1536: { slidesPerView: 4.25, spaceBetween: 16 },
             }}
           >
             {packs.map((pack, i) => (
@@ -110,7 +110,7 @@ export function AvailablePacksCarousel({
             onClick={() => swiperRef.current?.slideNext()}
             disabled={!canAdvance}
             aria-label="Próximo pacotinho"
-            className="absolute right-0 top-1/2 z-20 flex size-10 -translate-y-1/2 items-center justify-center text-verde-escuro-500 transition-opacity disabled:cursor-not-allowed disabled:opacity-30 sm:right-1 sm:size-11"
+            className="absolute right-0 top-1/2 z-20 flex size-10 -translate-y-1/2 items-center justify-center rounded-full text-verde-escuro-500 transition-all duration-200 hover:bg-verde-100 hover:text-verde-500 enabled:hover:scale-110 disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:scale-100 sm:right-1 sm:size-11"
           >
             <ChevronRight className="size-7 sm:size-8" strokeWidth={2} />
           </button>

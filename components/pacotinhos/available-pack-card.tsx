@@ -23,32 +23,32 @@ export function AvailablePackCard({
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05, duration: 0.3 }}
-      className="mx-auto flex w-full max-w-[min(100%,400px)] flex-col items-center gap-4 rounded-[24px] border border-verde-400 bg-verde-100 px-5 pb-6 pt-5 sm:max-w-[440px] sm:gap-5 sm:rounded-[28px] sm:px-8 sm:pb-8 sm:pt-6 lg:max-w-[484px] lg:gap-6 lg:rounded-[32px] lg:px-10 lg:pb-9 lg:pt-7"
+      className="mx-auto flex w-full max-w-[min(100%,260px)] flex-col items-center gap-2.5 rounded-[20px] border border-verde-400 bg-verde-100 px-4 pb-4 pt-3.5 sm:max-w-[285px] sm:gap-3 sm:rounded-[22px] sm:px-5 sm:pb-5 sm:pt-4 lg:max-w-[315px] lg:gap-3.5 lg:rounded-[24px] lg:px-6 lg:pb-5 lg:pt-4"
     >
-      <div className="relative aspect-[392/560] w-full max-w-[min(88vw,280px)] overflow-hidden rounded-2xl border-[5px] border-white shadow-sm xs:max-w-[300px] sm:max-w-[320px] md:max-w-[340px] lg:max-w-[360px] xl:max-w-[392px]">
+      <div className="relative aspect-[392/560] w-full max-w-[min(72vw,180px)] overflow-hidden rounded-xl border-4 border-white shadow-sm xs:max-w-[195px] sm:max-w-[210px] md:max-w-[220px] lg:max-w-[235px] xl:max-w-[255px]">
         <Image
           src={packImageUrl}
           alt="Pacotinho"
           fill
           className="object-cover"
-          sizes="(max-width: 640px) 72vw, (max-width: 1024px) 320px, 392px"
+          sizes="(max-width: 640px) 55vw, (max-width: 1024px) 210px, 255px"
           priority={index === 0}
           unoptimized={packImageUrl.endsWith(".gif")}
         />
       </div>
 
-      <span className="rounded-pill border border-verde-400 px-5 py-1.5 text-base font-medium text-verde-400 sm:px-6 sm:py-2 sm:text-lg lg:px-[30px] lg:text-xl">
+      <span className="rounded-pill border border-verde-400 px-4 py-1 text-sm font-medium text-verde-400 sm:px-5 sm:py-1.5 sm:text-base lg:px-6 lg:text-lg">
         {SOURCE_LABEL[pack.source] ?? pack.source}
       </span>
 
-      <p className="text-center text-base leading-snug text-verde-escuro-500 sm:text-lg lg:text-[22px]">
+      <p className="text-center text-sm leading-snug text-verde-escuro-500 sm:text-base lg:text-lg">
         Recebida em {formatPackDate(pack.created_at)}
       </p>
 
       <button
         type="button"
         onClick={onOpen}
-        className="w-full max-w-[min(88vw,280px)] rounded-pill bg-verde-500 px-8 py-2 text-base font-medium text-white transition-colors hover:bg-verde-600 sm:max-w-[320px] sm:px-10 sm:py-2.5 sm:text-lg lg:max-w-[392px] lg:text-xl"
+        className="w-full max-w-[min(72vw,180px)] rounded-pill bg-verde-500 px-6 py-1.5 text-sm font-medium text-white shadow-paper transition-all duration-200 hover:bg-verde-600 hover:shadow-md hover:shadow-verde-500/20 active:scale-[0.98] sm:max-w-[210px] sm:px-8 sm:py-2 sm:text-base lg:max-w-[255px] lg:text-lg"
       >
         Abrir pacotinho
       </button>
