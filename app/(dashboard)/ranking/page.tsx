@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { RankingClient } from "./ranking-client";
+import { RankingClient } from "@/components/ranking/ranking-client";
 
 export const metadata: Metadata = { title: "Ranking" };
 
