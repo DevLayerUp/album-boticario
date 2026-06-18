@@ -143,6 +143,7 @@ export function MissoesClient({ packImageUrl }: MissoesClientProps) {
               {missions.map((mission, index) => (
                 <motion.div
                   key={mission.id}
+                  className="h-full"
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.05 }}
@@ -163,6 +164,7 @@ export function MissoesClient({ packImageUrl }: MissoesClientProps) {
             claiming={claiming}
             onClose={() => setSelectedMission(null)}
             onClaim={handleClaim}
+            onShareComplete={loadMissions}
           />
         ) : null}
       </AnimatePresence>

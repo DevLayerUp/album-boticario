@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { validarMissoes } from "@/lib/missions";
 import { NextRequest, NextResponse } from "next/server";
 import sharp from "sharp";
 import { checkRateLimit } from "@/lib/rate-limit";
@@ -156,6 +157,8 @@ export async function POST(request: NextRequest) {
     .from("profiles")
     .update({ sticker_url: publicUrl })
     .eq("id", user.id);
+
+  await validarMissoes(supabase, user.id);
 
   return NextResponse.json({ sticker_url: publicUrl });
 }

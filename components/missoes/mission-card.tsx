@@ -32,7 +32,7 @@ export function MissionCard({ mission, onOpen }: MissionCardProps) {
   return (
     <article
       className={cn(
-        "flex flex-col gap-8 rounded-block p-6 shadow-[0_4px_5px_rgba(0,0,0,0.1)]",
+        "flex h-full flex-col gap-8 rounded-block p-6 shadow-[0_4px_5px_rgba(0,0,0,0.1)]",
         theme.surface,
       )}
     >
@@ -48,7 +48,7 @@ export function MissionCard({ mission, onOpen }: MissionCardProps) {
       <button
         type="button"
         onClick={() => onOpen(mission)}
-        className="flex w-full items-center gap-8 text-left"
+        className="flex w-full flex-1 items-center gap-8 text-left"
       >
         <div className="relative flex size-[105px] shrink-0 items-center justify-center">
           <span
@@ -77,45 +77,48 @@ export function MissionCard({ mission, onOpen }: MissionCardProps) {
         </div>
       </button>
 
-      {showProgress ? (
-        <div className="space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <span className={cn("rounded-pill px-5 py-1.5 text-sm font-medium", theme.badge)}>
-              EM ANDAMENTO
+      <div
+        className={cn("space-y-4", !showProgress && "invisible")}
+        aria-hidden={!showProgress}
+      >
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <span className={cn("rounded-pill px-5 py-1.5 text-sm font-medium", theme.badge)}>
+            EM ANDAMENTO
+          </span>
+          <div className={cn("flex flex-wrap items-center justify-end gap-4 text-base sm:text-xl", theme.progressText)}>
+            <span className="font-bold">{percent}% Concluída</span>
+            <span aria-hidden>•</span>
+            <span>
+              {missionProgressLabel(
+                mission.progress,
+                mission.target_value,
+                mission.progress_unit,
+              )}
             </span>
-            <div className={cn("flex flex-wrap items-center justify-end gap-4 text-base sm:text-xl", theme.progressText)}>
-              <span className="font-bold">{percent}% Concluída</span>
-              <span aria-hidden>•</span>
-              <span>
-                {missionProgressLabel(
-                  mission.progress,
-                  mission.target_value,
-                  mission.progress_unit,
-                )}
-              </span>
-            </div>
-          </div>
-          <div className="h-[23px] overflow-hidden rounded-pill bg-white">
-            <div
-              className={cn("h-full rounded-pill transition-[width] duration-700", theme.progressFill)}
-              style={{ width: `${percent}%` }}
-            />
           </div>
         </div>
-      ) : null}
+        <div className="h-[23px] overflow-hidden rounded-pill bg-white">
+          <div
+            className={cn("h-full rounded-pill transition-[width] duration-700", theme.progressFill)}
+            style={{ width: `${percent}%` }}
+          />
+        </div>
+      </div>
 
-      <MissionRewardBadges packs={mission.reward_packs} points={mission.reward_points} />
+      <div className="mt-auto space-y-8">
+        <MissionRewardBadges packs={mission.reward_packs} points={mission.reward_points} />
 
-      <button
-        type="button"
-        onClick={() => onOpen(mission)}
-        className={cn(
-          "w-full rounded-pill px-10 py-2 text-lg font-medium text-white shadow-paper transition-all duration-200 active:scale-[0.98]",
-          theme.button,
-        )}
-      >
-        {buttonLabel}
-      </button>
+        <button
+          type="button"
+          onClick={() => onOpen(mission)}
+          className={cn(
+            "w-full rounded-pill px-10 py-2 text-lg font-medium text-white shadow-paper transition-all duration-200 active:scale-[0.98]",
+            theme.button,
+          )}
+        >
+          {buttonLabel}
+        </button>
+      </div>
     </article>
   );
 }
