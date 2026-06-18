@@ -32,7 +32,7 @@ export function MissoesClient({ packImageUrl }: MissoesClientProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedMission, setSelectedMission] = useState<Mission | null>(null);
-  const [claiming, setClaiming] = useState(false);
+  const [claimingMissionId, setClaimingMissionId] = useState<number | null>(null);
   const [completedReward, setCompletedReward] = useState<CompletedReward | null>(null);
 
   const loadMissions = useCallback(async () => {
@@ -60,7 +60,8 @@ export function MissoesClient({ packImageUrl }: MissoesClientProps) {
   }, [loadMissions]);
 
   async function handleClaim(missionId: number) {
-    setClaiming(true);
+    setClaimingMissionId(missionId);
+    setError(null);
     try {
       const res = await fetch("/api/missions/claim", {
         method: "POST",
@@ -86,7 +87,7 @@ export function MissoesClient({ packImageUrl }: MissoesClientProps) {
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao resgatar recompensa");
     } finally {
-      setClaiming(false);
+      setClaimingMissionId(null);
     }
   }
 
@@ -148,7 +149,12 @@ export function MissoesClient({ packImageUrl }: MissoesClientProps) {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.05 }}
                 >
-                  <MissionCard mission={mission} onOpen={setSelectedMission} />
+                  <MissionCard
+                    mission={mission}
+                    claiming={claimingMissionId === mission.id}
+                    onOpen={setSelectedMission}
+                    onClaim={handleClaim}
+                  />
                 </motion.div>
               ))}
             </div>
@@ -161,7 +167,7 @@ export function MissoesClient({ packImageUrl }: MissoesClientProps) {
           <MissionDetailModal
             key={selectedMission.id}
             mission={selectedMission}
-            claiming={claiming}
+            claiming={claimingMissionId === selectedMission.id}
             onClose={() => setSelectedMission(null)}
             onClaim={handleClaim}
             onShareComplete={loadMissions}

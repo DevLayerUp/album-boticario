@@ -1,5 +1,6 @@
 "use client";
 
+import { Loader2 } from "lucide-react";
 import {
   missionCardButtonLabel,
   missionIcon,
@@ -14,10 +15,17 @@ import type { Mission } from "./types";
 
 interface MissionCardProps {
   mission: Mission;
+  claiming?: boolean;
   onOpen: (mission: Mission) => void;
+  onClaim: (missionId: number) => void;
 }
 
-export function MissionCard({ mission, onOpen }: MissionCardProps) {
+export function MissionCard({
+  mission,
+  claiming = false,
+  onOpen,
+  onClaim,
+}: MissionCardProps) {
   const theme = missionTheme(mission.theme);
   const Icon = missionIcon(mission.title, mission.type);
   const status = missionStatus(
@@ -27,7 +35,17 @@ export function MissionCard({ mission, onOpen }: MissionCardProps) {
   );
   const showProgress = status === "EM ANDAMENTO";
   const percent = missionProgressPercent(mission.progress, mission.target_value);
+  const canClaim = status === "COMPLETA" && !mission.reward_claimed;
+  const isClaimed = status === "COMPLETA" && mission.reward_claimed;
   const buttonLabel = missionCardButtonLabel(status, mission.reward_claimed);
+
+  function handleActionClick() {
+    if (canClaim) {
+      onClaim(mission.id);
+      return;
+    }
+    onOpen(mission);
+  }
 
   return (
     <article
@@ -110,13 +128,22 @@ export function MissionCard({ mission, onOpen }: MissionCardProps) {
 
         <button
           type="button"
-          onClick={() => onOpen(mission)}
+          onClick={handleActionClick}
+          disabled={claiming || isClaimed}
           className={cn(
-            "w-full rounded-pill px-10 py-2 text-lg font-medium text-white shadow-paper transition-all duration-200 active:scale-[0.98]",
+            "w-full rounded-pill px-10 py-2 text-lg font-medium text-white shadow-paper transition-all duration-200 active:scale-[0.98] disabled:cursor-default disabled:opacity-70",
             theme.button,
+            isClaimed && "opacity-80",
           )}
         >
-          {buttonLabel}
+          {claiming ? (
+            <span className="inline-flex items-center justify-center gap-2">
+              <Loader2 className="size-5 animate-spin" aria-hidden />
+              Resgatando…
+            </span>
+          ) : (
+            buttonLabel
+          )}
         </button>
       </div>
     </article>

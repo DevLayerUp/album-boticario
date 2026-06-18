@@ -39,6 +39,7 @@ export function MissionDetailModal({
   );
   const percent = missionProgressPercent(mission.progress, mission.target_value);
   const canClaim = Boolean(mission.completed_at) && !mission.reward_claimed;
+  const isClaimed = Boolean(mission.completed_at) && mission.reward_claimed;
   const showProgress = status === "EM ANDAMENTO";
 
   const actionLabel =
@@ -215,6 +216,17 @@ export function MissionDetailModal({
             ) : (
               actionLabel
             )}
+          </button>
+        ) : isClaimed ? (
+          <button
+            type="button"
+            disabled
+            className={cn(
+              "flex w-full max-w-[500px] cursor-default items-center justify-center rounded-pill px-10 py-2 text-lg font-medium text-white opacity-80 sm:text-xl",
+              theme.button,
+            )}
+          >
+            Recompensa Resgatada
           </button>
         ) : (
           isShareMission ? (
