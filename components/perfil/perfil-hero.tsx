@@ -1,0 +1,151 @@
+import {
+  ArrowLeftRight,
+  Calendar,
+  Camera,
+  Package,
+  Star,
+} from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { dashboardAssets } from "@/lib/dashboard-assets";
+import {
+  formatMemberSince,
+  formatShortDisplayName,
+  type ProfilePageData,
+} from "@/lib/profile";
+import { cn } from "@/lib/utils";
+
+interface PerfilStatCardProps {
+  icon: typeof Package;
+  label: string;
+  value: number;
+}
+
+function PerfilStatCard({ icon: Icon, label, value }: PerfilStatCardProps) {
+  return (
+    <div className="flex min-w-0 flex-col justify-between rounded-block bg-verde-100 p-3 sm:min-h-[120px] sm:p-4 2xl:min-h-[145px] 2xl:min-w-[257px] 2xl:flex-1">
+      <div className="flex items-start gap-2 sm:gap-3 2xl:gap-4">
+        <Icon
+          className="size-5 shrink-0 text-verde-escuro-500 sm:size-6 2xl:size-7"
+          aria-hidden
+        />
+        <p className="text-[10px] font-medium uppercase leading-tight text-verde-escuro-500 sm:text-xs md:text-sm 2xl:text-xl">
+          {label}
+        </p>
+      </div>
+      <p className="mt-2 font-display text-xl font-bold leading-none text-verde-escuro-500 sm:mt-3 sm:text-3xl 2xl:text-5xl">
+        {value.toLocaleString("pt-BR")}
+      </p>
+    </div>
+  );
+}
+
+interface PerfilHeroProps {
+  data: ProfilePageData;
+}
+
+export function PerfilHero({ data }: PerfilHeroProps) {
+  const { profile, stats } = data;
+  const displayName =
+    profile.display_name?.trim() ||
+    profile.email.split("@")[0] ||
+    "Colecionador";
+  const shortName = formatShortDisplayName(displayName);
+  const avatarSrc = profile.sticker_url || profile.avatar_url;
+  const memberSince = formatMemberSince(profile.created_at);
+
+  return (
+    <section className="@container/hero relative w-full overflow-hidden bg-verde-500 2xl:min-h-[428px]">
+      <div className="pointer-events-none absolute inset-0" aria-hidden>
+        <Image
+          src={dashboardAssets.quiz.background}
+          alt=""
+          fill
+          className="object-cover opacity-20"
+          unoptimized
+        />
+      </div>
+
+      {/*
+        Layout por faixa:
+        - até 2xl: coluna (perfil em cima, stats em grid 3 colunas embaixo)
+        - 2xl+: linha Figma (perfil à esquerda, stats à direita)
+      */}
+      <div className="relative z-10 mx-auto flex w-full max-w-[1680px] flex-col gap-5 px-6 py-6 sm:gap-6 sm:py-8 lg:gap-7 lg:py-10 2xl:flex-row 2xl:items-end 2xl:gap-10 2xl:px-[120px] 2xl:pb-12 2xl:pt-16">
+        <div className="flex min-w-0 items-center gap-4 sm:items-end sm:gap-5 md:gap-6 2xl:flex-1">
+          <div className="relative shrink-0">
+            <div
+              className={cn(
+                "relative overflow-hidden rounded-full border-[3px] border-white sm:border-4 2xl:border-[5px]",
+                "size-24 xs:size-28 sm:size-32 md:size-36 lg:size-40 xl:size-44 2xl:size-[275px]",
+              )}
+            >
+              {avatarSrc ? (
+                <Image
+                  src={avatarSrc}
+                  alt=""
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 1536px) 176px, 275px"
+                  priority
+                />
+              ) : (
+                <div className="flex size-full items-center justify-center bg-verde-escuro-500 text-3xl font-bold text-white sm:text-4xl 2xl:text-5xl">
+                  {displayName.charAt(0).toUpperCase()}
+                </div>
+              )}
+            </div>
+            <Link
+              href="/figurinha"
+              aria-label="Atualizar figurinha do perfil"
+              className="absolute -bottom-0.5 -right-0.5 flex size-9 items-center justify-center rounded-full border border-[#c9c9c9] bg-white shadow-sm transition-transform hover:scale-105 sm:size-10 md:size-11 2xl:bottom-1 2xl:right-0 2xl:size-[61px]"
+            >
+              <Camera
+                className="size-4 text-verde-escuro-500 sm:size-5 2xl:size-8"
+                aria-hidden
+              />
+            </Link>
+          </div>
+
+          <div className="min-w-0 flex-1 space-y-1 sm:space-y-1.5 sm:pb-0.5 2xl:max-w-md">
+            <p className="text-[10px] uppercase tracking-[0.12em] text-verde-100 sm:text-xs 2xl:text-sm">
+              MEU PERFIL
+            </p>
+            <h1
+              className="font-display text-xl font-bold leading-tight text-white sm:text-2xl md:text-3xl lg:text-[32px] 2xl:text-[40px]"
+              title={shortName}
+            >
+              {shortName}
+            </h1>
+            <p
+              className="max-w-full break-all text-[10px] uppercase tracking-[0.04em] text-verde-100 sm:text-xs 2xl:text-sm"
+              title={profile.email}
+            >
+              {profile.email}
+            </p>
+            <div className="flex items-start gap-1.5 pt-0.5 text-verde-100 sm:gap-2 sm:pt-1">
+              <Calendar className="mt-0.5 size-3 shrink-0 sm:size-3.5" aria-hidden />
+              <p className="text-[10px] leading-snug sm:text-xs 2xl:text-sm">
+                Membro desde {memberSince}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid w-full min-w-0 grid-cols-3 gap-2 sm:gap-3 2xl:flex 2xl:w-auto 2xl:shrink-0 2xl:gap-2.5">
+          <PerfilStatCard
+            icon={Package}
+            label="Pacotinhos abertos"
+            value={stats.packs_opened}
+          />
+          <PerfilStatCard
+            icon={ArrowLeftRight}
+            label="Figurinhas"
+            value={stats.stickers_count}
+          />
+          <PerfilStatCard icon={Star} label="Pontos" value={stats.score} />
+        </div>
+      </div>
+    </section>
+  );
+}

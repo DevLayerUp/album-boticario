@@ -7,6 +7,7 @@ import { MobileNav } from "@/components/navigation/mobile-nav";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { Wordmark } from "@/components/brand/wordmark";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
+import { DashboardMain } from "@/components/dashboard/dashboard-main";
 import { ReferralClaimOnLoad } from "@/components/referral/referral-claim-on-load";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 
@@ -69,13 +70,7 @@ export default async function DashboardLayout({
         </div>
       </header>
 
-      <main
-        id="main-content"
-        className="mx-auto w-full max-w-[1680px] flex-1 px-6 py-8 pb-24 md:px-12 md:pb-8 2xl:px-[120px]"
-        tabIndex={-1}
-      >
-        {children}
-      </main>
+      <DashboardMain>{children}</DashboardMain>
 
       <MobileNav />
     </DashboardShell>

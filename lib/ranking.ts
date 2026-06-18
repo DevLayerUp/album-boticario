@@ -86,7 +86,9 @@ export async function buildLeaderboard(
     await Promise.all([
       admin
         .from("profiles")
-        .select("id, display_name, username, sticker_url, avatar_url"),
+        .select(
+          "id, display_name, username, sticker_url, avatar_url, show_in_ranking",
+        ),
       admin.from("album_slots").select("id", { count: "exact", head: true }),
       admin.from("user_album").select("user_id"),
       admin.from("packs").select("user_id, opened_at"),
@@ -141,7 +143,9 @@ export async function buildLeaderboard(
     );
   }
 
-  const entries = (profilesRes.data ?? []).map((profile) => {
+  const entries = (profilesRes.data ?? [])
+    .filter((profile) => profile.show_in_ranking !== false)
+    .map((profile) => {
     const filled_slots = filledByUser.get(profile.id) ?? 0;
     const album_pct = Math.round((filled_slots / totalSlots) * 100);
     const packs_opened = openedByUser.get(profile.id) ?? 0;
