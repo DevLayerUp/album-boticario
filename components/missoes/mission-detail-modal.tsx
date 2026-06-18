@@ -20,6 +20,7 @@ interface MissionDetailModalProps {
   claiming: boolean;
   onClose: () => void;
   onClaim: (missionId: number) => void;
+  onShareComplete?: () => void;
 }
 
 export function MissionDetailModal({
@@ -27,6 +28,7 @@ export function MissionDetailModal({
   claiming,
   onClose,
   onClaim,
+  onShareComplete,
 }: MissionDetailModalProps) {
   const theme = missionTheme(mission.theme);
   const Icon = missionIcon(mission.title, mission.type);
@@ -43,6 +45,7 @@ export function MissionDetailModal({
     mission.action_label ??
     (canClaim ? "Resgatar Recompensa" : "Completar Missão");
   const actionHref = mission.action_href ?? "/missoes";
+  const isShareMission = mission.title === "Compartilhar nas redes";
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -60,9 +63,39 @@ export function MissionDetailModal({
     };
   }, []);
 
+  async function handleShareMission() {
+    const shareUrl =
+      typeof window !== "undefined"
+        ? `${window.location.origin}/album`
+        : "/album";
+    const shareText = "Confira meu álbum de figurinhas Fãs da Natureza!";
+
+    if (typeof navigator.share === "function") {
+      try {
+        await navigator.share({
+          title: "Meu Álbum — Fãs da Natureza",
+          text: shareText,
+          url: shareUrl,
+        });
+      } catch (err) {
+        if (err instanceof DOMException && err.name === "AbortError") return;
+      }
+    }
+
+    const res = await fetch("/api/missions/share", { method: "POST" });
+    if (!res.ok) return;
+
+    onShareComplete?.();
+    onClose();
+  }
+
   function handlePrimaryAction() {
     if (canClaim) {
       onClaim(mission.id);
+      return;
+    }
+    if (isShareMission) {
+      void handleShareMission();
       return;
     }
     if (actionHref.startsWith("http")) {
@@ -184,6 +217,18 @@ export function MissionDetailModal({
             )}
           </button>
         ) : (
+          isShareMission ? (
+            <button
+              type="button"
+              onClick={handlePrimaryAction}
+              className={cn(
+                "flex w-full max-w-[500px] items-center justify-center rounded-pill px-10 py-2 text-lg font-medium text-white transition-all duration-200 hover:opacity-95 active:scale-[0.98] sm:text-xl",
+                theme.button,
+              )}
+            >
+              {actionLabel}
+            </button>
+          ) : (
           <Link
             href={actionHref}
             onClick={onClose}
@@ -194,6 +239,7 @@ export function MissionDetailModal({
           >
             {actionLabel}
           </Link>
+          )
         )}
       </motion.div>
     </motion.div>

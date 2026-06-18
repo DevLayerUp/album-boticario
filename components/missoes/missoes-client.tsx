@@ -163,6 +163,7 @@ export function MissoesClient({ packImageUrl }: MissoesClientProps) {
             claiming={claiming}
             onClose={() => setSelectedMission(null)}
             onClaim={handleClaim}
+            onShareComplete={loadMissions}
           />
         ) : null}
       </AnimatePresence>
