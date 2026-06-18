@@ -2,9 +2,11 @@
  * Server-side utilities for mission progress.
  * - incrementMissionProgress: called from event handlers (pack open, quiz, trade, etc.)
  * - validarMissoes: reconciles stored progress with actual user activity
+ * - claimMissionReward: resgata pacotinhos e pontos de missão concluída
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createNotification } from "@/lib/notifications";
+import { createPacksForUser } from "@/lib/pack";
 
 interface MissionRow {
   id: number;
@@ -308,4 +310,106 @@ export async function markSocialShareMission(
     .eq("id", userId);
 
   await validarMissoes(supabase, userId);
+}
+
+export interface ClaimMissionRewardResult {
+  packs_earned: number;
+  points_earned: number;
+  mission_title: string;
+}
+
+/**
+ * Resgata a recompensa de uma missão concluída: gera pacotinhos e marca como resgatada.
+ */
+export async function claimMissionReward(
+  supabase: SupabaseClient,
+  userId: string,
+  missionId: number,
+): Promise<ClaimMissionRewardResult> {
+  await validarMissoes(supabase, userId);
+
+  const { data: userMission, error: fetchError } = await supabase
+    .from("user_missions")
+    .select(
+      "id, completed_at, reward_claimed, missions(title, reward_packs, reward_points)",
+    )
+    .eq("user_id", userId)
+    .eq("mission_id", missionId)
+    .maybeSingle();
+
+  if (fetchError) {
+    throw new Error(fetchError.message);
+  }
+
+  if (!userMission?.completed_at) {
+    throw new MissionClaimError("Missão não concluída", 400);
+  }
+
+  if (userMission.reward_claimed) {
+    throw new MissionClaimError("Recompensa já resgatada", 400);
+  }
+
+  const missionData = Array.isArray(userMission.missions)
+    ? userMission.missions[0]
+    : userMission.missions;
+  const rewardPacks = (missionData?.reward_packs as number | undefined) ?? 1;
+  const rewardPoints = (missionData?.reward_points as number | undefined) ?? 100;
+  const missionTitle = (missionData?.title as string | undefined) ?? "Missão";
+
+  if (rewardPacks > 0) {
+    const { success, packsCreated } = await createPacksForUser(
+      supabase,
+      userId,
+      "mission",
+      String(missionId),
+      rewardPacks,
+    );
+
+    if (!success || packsCreated < rewardPacks) {
+      throw new MissionClaimError(
+        "Não foi possível gerar os pacotinhos. Tente novamente.",
+        500,
+      );
+    }
+  }
+
+  const { data: updated, error: updateError } = await supabase
+    .from("user_missions")
+    .update({ reward_claimed: true })
+    .eq("id", userMission.id)
+    .eq("user_id", userId)
+    .eq("reward_claimed", false)
+    .select("id")
+    .maybeSingle();
+
+  if (updateError) {
+    throw new Error(updateError.message);
+  }
+
+  if (!updated) {
+    throw new MissionClaimError("Recompensa já resgatada", 400);
+  }
+
+  await supabase
+    .from("notifications")
+    .update({ read_at: new Date().toISOString() })
+    .eq("user_id", userId)
+    .eq("dedupe_key", `mission:${missionId}`)
+    .is("read_at", null);
+
+  return {
+    packs_earned: rewardPacks,
+    points_earned: rewardPoints,
+    mission_title: missionTitle,
+  };
+}
+
+export class MissionClaimError extends Error {
+  constructor(
+    message: string,
+    readonly status: number,
+  ) {
+    super(message);
+    this.name = "MissionClaimError";
+  }
 }

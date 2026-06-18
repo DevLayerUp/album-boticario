@@ -119,6 +119,7 @@ export function missionCardButtonLabel(
   status: MissionStatus,
   rewardClaimed: boolean,
 ) {
+  if (status === "COMPLETA" && rewardClaimed) return "Recompensa Resgatada";
   if (status === "COMPLETA" && !rewardClaimed) return "Resgatar Recompensa";
   return "Completar Missão";
 }
