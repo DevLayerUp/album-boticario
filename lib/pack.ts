@@ -7,6 +7,7 @@
  *     policy for regular users, by design).
  */
 import { createAdminClient } from "@/lib/supabase/admin";
+import { STICKERS_PER_PACK } from "@/lib/pack-settings";
 
 interface Rarity { id: number; slug: string; drop_percentage: number }
 interface StickerRow { id: number; rarity_id: number | null }
@@ -92,7 +93,7 @@ export async function createPacksForUser(
 
     if (packErr || !pack) continue;
 
-    const packStickers = Array.from({ length: 5 }, (_, pos) => ({
+    const packStickers = Array.from({ length: STICKERS_PER_PACK }, (_, pos) => ({
       pack_id: pack.id,
       sticker_id: drawSticker(rarityList, stickerList),
       position: pos + 1,

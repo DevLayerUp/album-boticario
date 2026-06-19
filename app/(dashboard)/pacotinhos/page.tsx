@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { resolvePackVisualSettings } from "@/lib/pack-settings";
+import { resolvePackVisualSettings, STICKERS_PER_PACK } from "@/lib/pack-settings";
 import { mapOpenedPackHistory, OPENED_HISTORY_PAGE_SIZE } from "@/lib/pack-opened-history";
 import { PacotinhosClient } from "@/components/pacotinhos/pacotinhos-client";
 import type { OpenedPackHistory, Pack } from "@/components/pacotinhos/types";
@@ -80,7 +80,7 @@ export default async function PacotinhosPage() {
     source_ref: row.source_ref,
     opened_at: row.opened_at,
     created_at: row.created_at,
-    sticker_count: row.pack_stickers?.length ?? 5,
+    sticker_count: row.pack_stickers?.length ?? STICKERS_PER_PACK,
   }));
 
   const openedHistory: OpenedPackHistory[] = mapOpenedPackHistory(

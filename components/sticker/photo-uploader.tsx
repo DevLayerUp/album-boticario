@@ -1,25 +1,34 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
-import Image from "next/image";
+import { useCallback, useState } from "react";
+import { Camera, Loader2, Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { STICKER_UPLOAD_ZONE, type StickerPhotoTransform } from "@/lib/sticker-card";
+import { assertCutoutHasTransparency } from "@/lib/validate-cutout-client";
+import { FigurinhaPanel } from "./figurinha-panel";
+import { PhotoEditor } from "./photo-editor";
+import { StickerCard, stickerUploadZonePosition } from "./sticker-card";
 
 interface PhotoUploaderProps {
-  onUpload: (file: File) => void;
+  onGenerate: (cutoutBlob: Blob, transform: StickerPhotoTransform) => void;
+  generating?: boolean;
   error?: string | null;
 }
 
 const ALLOWED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 const MAX_MB = 10;
 
-export function PhotoUploader({ onUpload, error: externalError }: PhotoUploaderProps) {
-  const cameraInputRef = useRef<HTMLInputElement>(null);
-  const [preview, setPreview] = useState<string | null>(null);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+type Phase = "pick" | "removing-bg" | "edit";
+
+export function PhotoUploader({ onGenerate, generating = false, error: externalError }: PhotoUploaderProps) {
+  const [phase, setPhase] = useState<Phase>("pick");
+  const [cutoutSrc, setCutoutSrc] = useState<string | null>(null);
+  const [cutoutBlob, setCutoutBlob] = useState<Blob | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
 
   const error = externalError ?? localError;
+  const slot = stickerUploadZonePosition();
 
   const validate = (file: File): string | null => {
     if (!ALLOWED_TYPES.includes(file.type)) return "Use uma foto JPG, PNG ou WebP.";
@@ -27,93 +36,115 @@ export function PhotoUploader({ onUpload, error: externalError }: PhotoUploaderP
     return null;
   };
 
-  const processFile = useCallback(
-    (file: File) => {
-      setLocalError(null);
-      const err = validate(file);
-      if (err) { setLocalError(err); return; }
-      setSelectedFile(file);
-      setPreview(URL.createObjectURL(file));
-    },
-    [], // eslint-disable-line react-hooks/exhaustive-deps
-  );
+  const reset = useCallback(() => {
+    if (cutoutSrc?.startsWith("blob:")) {
+      URL.revokeObjectURL(cutoutSrc);
+    }
+    setCutoutSrc(null);
+    setCutoutBlob(null);
+    setPhase("pick");
+    setLocalError(null);
+  }, [cutoutSrc]);
+
+  const processFile = useCallback(async (file: File) => {
+    setLocalError(null);
+    const err = validate(file);
+    if (err) {
+      setLocalError(err);
+      return;
+    }
+
+    setPhase("removing-bg");
+
+    const formData = new FormData();
+    formData.append("photo", file);
+
+    try {
+      const res = await fetch("/api/sticker/remove-bg", { method: "POST", body: formData });
+
+      if (!res.ok) {
+        const contentType = res.headers.get("content-type") ?? "";
+        if (contentType.includes("application/json")) {
+          const json = (await res.json()) as { error?: string };
+          throw new Error(json.error ?? "Não foi possível remover o fundo.");
+        }
+        throw new Error("Não foi possível remover o fundo.");
+      }
+
+      const contentType = res.headers.get("content-type") ?? "";
+      if (!contentType.includes("image/png")) {
+        throw new Error("Recorte inválido retornado pelo servidor.");
+      }
+
+      const blob = await res.blob();
+      if (!blob.size) {
+        throw new Error("Resposta vazia do servidor.");
+      }
+
+      await assertCutoutHasTransparency(blob);
+
+      setCutoutBlob(blob);
+      setCutoutSrc(URL.createObjectURL(blob));
+      setPhase("edit");
+    } catch (err) {
+      const message =
+        err instanceof TypeError
+          ? "Falha de conexão ao enviar a imagem. Verifique sua internet ou use uma foto menor."
+          : err instanceof Error
+            ? err.message
+            : "Erro ao processar a foto.";
+      setLocalError(message);
+      setPhase("pick");
+    }
+  }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) processFile(file);
-    // Resetar o value para permitir selecionar o mesmo arquivo novamente
+    if (file) void processFile(file);
     e.target.value = "";
   };
 
-  const handleDrop = (e: React.DragEvent<HTMLLabelElement>) => {
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setDragOver(false);
     const file = e.dataTransfer.files?.[0];
-    if (file) processFile(file);
+    if (file) void processFile(file);
   };
 
-  const reset = () => {
-    setPreview(null);
-    setSelectedFile(null);
-    setLocalError(null);
-  };
-
-  /* ── Preview selecionado ─────────────────────────────────────────── */
-  if (preview && selectedFile) {
+  if (phase === "edit" && cutoutSrc && cutoutBlob) {
     return (
-      <div className="flex w-full max-w-sm flex-col items-center gap-6">
-        <div className="text-center">
-          <h1 className="font-display text-3xl font-semibold text-white">Ficou boa?</h1>
-          <p className="mt-2 text-sm text-white/60">Confirme ou escolha outra foto.</p>
-        </div>
-
-        <div className="relative h-72 w-52 overflow-hidden rounded-2xl border-2 border-gb-gold/40 shadow-xl shadow-black/30">
-          <Image
-            src={preview}
-            alt="Pré-visualização da sua foto"
-            fill
-            className="object-cover"
-            unoptimized
-          />
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-gb-green-deep/60 to-transparent" />
-        </div>
-
-        <div className="flex w-full flex-col gap-2">
-          <button
-            type="button"
-            onClick={() => onUpload(selectedFile)}
-            className="w-full rounded-full bg-gb-gold px-6 py-3.5 font-semibold text-gb-green-deep shadow-lg shadow-gb-gold/25 transition-all duration-200 hover:brightness-110 active:scale-95"
-          >
-            Usar esta foto
-          </button>
-          <button
-            type="button"
-            onClick={reset}
-            className="w-full rounded-full border border-white/20 px-6 py-3 text-sm font-semibold text-white/70 transition-all duration-200 hover:border-white/40 hover:text-white"
-          >
-            Escolher outra
-          </button>
-        </div>
-      </div>
+      <PhotoEditor
+        cutoutSrc={cutoutSrc}
+        confirming={generating}
+        error={error}
+        onBack={reset}
+        onConfirm={(transform) => onGenerate(cutoutBlob, transform)}
+      />
     );
   }
 
-  /* ── Tela de upload ──────────────────────────────────────────────── */
-  return (
-    <div className="flex w-full max-w-sm flex-col items-center gap-5">
-      {/* Heading */}
-      <div className="text-center">
-        <h1 className="font-display text-3xl font-semibold text-white md:text-4xl">
-          Sua figurinha
-        </h1>
-        <p className="mt-2 text-sm leading-relaxed text-white/60">
-          Envie uma foto com boa iluminação e rosto visível.
-          <br />
-          O fundo será removido automaticamente.
-        </p>
-      </div>
+  if (phase === "removing-bg") {
+    return (
+      <FigurinhaPanel
+        title="Removendo fundo"
+        description="Estamos preparando sua foto para o ajuste no card."
+      >
+        <div className="relative">
+          <StickerCard />
+          <div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-3 rounded-2xl bg-white/60">
+            <Loader2 className="size-10 animate-spin text-verde-500" aria-hidden />
+            <p className="text-sm font-medium text-verde-escuro-500">Removendo fundo…</p>
+          </div>
+        </div>
+      </FigurinhaPanel>
+    );
+  }
 
-      {/* ── Input de arquivo (galeria) — trigger via <label> ──────── */}
+  return (
+    <FigurinhaPanel
+      title="Enviar foto"
+      description="Toque na área amarela do card ou arraste uma imagem. Formatos: JPG, PNG ou WebP até 10 MB."
+    >
       <input
         id="photo-gallery"
         type="file"
@@ -122,9 +153,7 @@ export function PhotoUploader({ onUpload, error: externalError }: PhotoUploaderP
         onChange={handleFileChange}
       />
 
-      {/* ── Input de câmera — trigger por ref (precisa de JS p/ capture) */}
       <input
-        ref={cameraInputRef}
         id="photo-camera"
         type="file"
         accept="image/jpeg,image/png,image/webp"
@@ -133,74 +162,69 @@ export function PhotoUploader({ onUpload, error: externalError }: PhotoUploaderP
         onChange={handleFileChange}
       />
 
-      {/* Zona de drop / clique — usa <label> para trigger nativo */}
-      <label
-        htmlFor="photo-gallery"
+      <div
         onDrop={handleDrop}
-        onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+        onDragOver={(e) => {
+          e.preventDefault();
+          setDragOver(true);
+        }}
         onDragLeave={() => setDragOver(false)}
-        className={cn(
-          "flex h-56 w-full cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed transition-all duration-200",
-          dragOver
-            ? "border-gb-gold bg-gb-gold/10 scale-[1.02]"
-            : "border-white/25 bg-white/5 hover:border-white/40 hover:bg-white/8",
-        )}
+        className="group/card relative"
       >
-        <UploadIcon />
-        <div className="text-center">
-          <p className="text-sm font-semibold text-white">Arraste sua foto aqui</p>
-          <p className="mt-0.5 text-xs text-white/50">
-            ou clique para selecionar • JPG, PNG, WebP até 10 MB
-          </p>
-        </div>
-      </label>
+        <StickerCard />
 
-      {/* Botão câmera (selfie) — usa <label> diretamente */}
+        <label
+          htmlFor="photo-gallery"
+          className="absolute z-20 cursor-pointer"
+          style={{
+            top: slot.top,
+            left: slot.left,
+            width: STICKER_UPLOAD_ZONE.width,
+            height: STICKER_UPLOAD_ZONE.height,
+          }}
+        >
+          <div className="flex h-full w-full items-center justify-center">
+            <div
+              className={cn(
+                "flex h-full w-full flex-col items-center justify-center gap-2 rounded-2xl transition-all duration-200",
+                dragOver
+                  ? "scale-[1.03] bg-white/25 ring-2 ring-inset ring-white/90"
+                  : "bg-transparent ring-2 ring-inset ring-white/0 group-hover/card:scale-[1.02] group-hover/card:bg-white/15 group-hover/card:ring-white/70",
+              )}
+            >
+              <Upload
+                className={cn(
+                  "size-8 text-verde-escuro-500 drop-shadow-sm transition-opacity duration-200 sm:size-9",
+                  dragOver ? "opacity-100" : "opacity-70 group-hover/card:opacity-100",
+                )}
+                aria-hidden
+              />
+              <span
+                className={cn(
+                  "max-w-[130px] text-center text-xs font-bold uppercase tracking-wide text-verde-escuro-500 drop-shadow-sm transition-opacity duration-200",
+                  dragOver ? "opacity-100" : "opacity-0 group-hover/card:opacity-100",
+                )}
+              >
+                Enviar foto
+              </span>
+            </div>
+          </div>
+        </label>
+      </div>
+
       <label
         htmlFor="photo-camera"
-        className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-white/10 px-6 py-3 text-sm font-semibold text-white transition-all duration-200 hover:bg-white/15 active:scale-95"
+        className="inline-flex h-12 cursor-pointer items-center justify-center gap-2 rounded-pill border border-verde-500 px-8 font-medium text-verde-500 transition-colors hover:bg-verde-500/10 active:scale-[0.98]"
       >
-        <CameraIcon />
+        <Camera className="size-4" aria-hidden />
         Tirar selfie
       </label>
 
-      {/* Erro */}
-      {error && (
-        <p role="alert" className="text-center text-sm font-semibold text-red-400">
+      {error ? (
+        <p role="alert" className="text-center text-sm font-medium text-red-600">
           {error}
         </p>
-      )}
-    </div>
-  );
-}
-
-/* ─── Ícones ───────────────────────────────────────────────────────── */
-
-function UploadIcon() {
-  return (
-    <svg
-      width="40" height="40" viewBox="0 0 24 24"
-      fill="none" stroke="currentColor" strokeWidth="1.4"
-      strokeLinecap="round" strokeLinejoin="round"
-      className="text-gb-gold" aria-hidden
-    >
-      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-      <polyline points="17 8 12 3 7 8" />
-      <line x1="12" y1="3" x2="12" y2="15" />
-    </svg>
-  );
-}
-
-function CameraIcon() {
-  return (
-    <svg
-      width="18" height="18" viewBox="0 0 24 24"
-      fill="none" stroke="currentColor" strokeWidth="1.8"
-      strokeLinecap="round" strokeLinejoin="round"
-      aria-hidden
-    >
-      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-      <circle cx="12" cy="13" r="4" />
-    </svg>
+      ) : null}
+    </FigurinhaPanel>
   );
 }

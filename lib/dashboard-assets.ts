@@ -33,6 +33,8 @@ export const dashboardAssets = {
   quiz: {
     background: `${BASE}/quiz/blob-lg.png`,
   },
+  /** Card de criação de figurinha personalizada. */
+  figurinhaCard: `${BASE}/bg-minha-figurinha.png`,
   /** Headers dos feature cards da seção "Explorar". */
   cards: {
     figurinha: `${BASE}/cards/figurinha.png`,

@@ -15,6 +15,7 @@ import {
   unlockPackOpeningGifSound,
 } from "@/lib/play-pack-open-sound";
 import type { PackSticker } from "@/components/pacotinhos/types";
+import { STICKERS_PER_PACK } from "@/lib/pack-settings";
 
 type Phase = "ready" | "opening" | "results";
 
@@ -166,7 +167,7 @@ export function PackOpener({
   }
 
   const sourceLabel = SOURCE_LABEL[source] ?? source;
-  const count = stickerCount || stickers.length || 5;
+  const count = stickerCount || stickers.length || STICKERS_PER_PACK;
   const canClose = phase !== "opening";
   const compactResults = stickers.length > 3;
 

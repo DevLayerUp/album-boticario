@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { incrementMissionProgress } from "@/lib/missions";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { STICKERS_PER_PACK } from "@/lib/pack-settings";
 
 // Inline sticker draw for retrocompat when pack has no pack_stickers.
 // Uses admin client to bypass the RLS SELECT-only policy on pack_stickers.
@@ -38,7 +39,7 @@ async function generateStickersForPack(packId: number): Promise<boolean> {
     return src[Math.floor(Math.random() * src.length)].id;
   }
 
-  const rows = Array.from({ length: 5 }, (_, i) => ({
+  const rows = Array.from({ length: STICKERS_PER_PACK }, (_, i) => ({
     pack_id: packId,
     sticker_id: draw(),
     position: i + 1,

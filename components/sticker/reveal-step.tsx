@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import confetti from "canvas-confetti";
+import { StickerCard } from "./sticker-card";
+import { STICKER_CARD } from "@/lib/sticker-card";
 
 interface RevealStepProps {
   stickerUrl: string;
@@ -15,7 +16,6 @@ export function RevealStep({ stickerUrl, onRecreate }: RevealStepProps) {
   const [revealed, setRevealed] = useState(false);
   const hasLaunched = useRef(false);
 
-  // Sequência: aguarda montagem → vira o card → lança confetti
   useEffect(() => {
     const t1 = setTimeout(() => setFlipped(true), 600);
     const t2 = setTimeout(() => setRevealed(true), 1500);
@@ -29,7 +29,6 @@ export function RevealStep({ stickerUrl, onRecreate }: RevealStepProps) {
     if (!revealed || hasLaunched.current) return;
     hasLaunched.current = true;
 
-    // Confetti em cores Grupo Boticário
     const colors = ["#00A859", "#D9A441", "#006341", "#FFFFFF"];
     const fire = (particleRatio: number, opts: confetti.Options) => {
       confetti({
@@ -47,130 +46,121 @@ export function RevealStep({ stickerUrl, onRecreate }: RevealStepProps) {
     fire(0.1, { spread: 120, startVelocity: 45 });
   }, [revealed]);
 
+  const { width, height } = STICKER_CARD;
+
   return (
-    <div className="flex w-full max-w-sm flex-col items-center gap-8">
-      {/* Título */}
+    <div className="mx-auto flex w-full max-w-3xl flex-col items-center gap-8">
       <div
-        className="text-center"
+        className="w-full space-y-2 text-center sm:text-left"
         style={{
           opacity: revealed ? 1 : 0,
           transform: revealed ? "translateY(0)" : "translateY(8px)",
           transition: "opacity 0.5s ease, transform 0.5s ease",
         }}
       >
-        <p className="font-display text-xs font-semibold uppercase tracking-[0.25em] text-gb-gold">
-          Sua figurinha
+        <h2 className="font-display text-xl font-bold text-verde-escuro-500 sm:text-2xl lg:text-[34px]">
+          Figurinha pronta!
+        </h2>
+        <p className="text-sm text-verde-escuro-500/80 sm:text-base">
+          Sua figurinha personalizada foi criada com sucesso.
         </p>
-        <h1 className="mt-1 font-display text-3xl font-semibold text-white">
-          Está pronta! ✨
-        </h1>
       </div>
 
-      {/* Card flip — 3D reveal */}
-      <div
-        className="relative"
-        style={{ perspective: "900px" }}
-        aria-live="polite"
-        aria-label={flipped ? "Figurinha revelada" : "Revelando figurinha…"}
-      >
-        {/* Container com transformação */}
+      <div className="flex w-full flex-col items-center gap-8 rounded-block bg-verde-100 p-6 sm:p-10">
         <div
-          style={{
-            width: 200,
-            height: 275,
-            position: "relative",
-            transformStyle: "preserve-3d",
-            transform: flipped ? "rotateY(180deg)" : "rotateY(0deg)",
-            transition: "transform 0.9s cubic-bezier(0.4, 0, 0.2, 1)",
-          }}
+          className="relative"
+          style={{ perspective: "900px" }}
+          aria-live="polite"
+          aria-label={flipped ? "Figurinha revelada" : "Revelando figurinha…"}
         >
-          {/* Verso do card (visível antes do flip) */}
           <div
             style={{
-              position: "absolute",
-              inset: 0,
-              backfaceVisibility: "hidden",
-              WebkitBackfaceVisibility: "hidden",
+              width,
+              height,
+              position: "relative",
+              transformStyle: "preserve-3d",
+              transform: flipped ? "rotateY(180deg)" : "rotateY(0deg)",
+              transition: "transform 0.9s cubic-bezier(0.4, 0, 0.2, 1)",
             }}
           >
-            <CardBack />
-          </div>
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                backfaceVisibility: "hidden",
+                WebkitBackfaceVisibility: "hidden",
+              }}
+            >
+              <CardBack />
+            </div>
 
-          {/* Frente do card (a figurinha) */}
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              backfaceVisibility: "hidden",
-              WebkitBackfaceVisibility: "hidden",
-              transform: "rotateY(180deg)",
-            }}
-          >
-            <div className="relative h-full w-full overflow-hidden rounded-2xl border-2 border-gb-gold/50 shadow-2xl shadow-gb-gold/20">
-              <Image
-                src={stickerUrl}
-                alt="Sua figurinha personalizada"
-                fill
-                className="object-cover"
-                sizes="200px"
-                priority
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                backfaceVisibility: "hidden",
+                WebkitBackfaceVisibility: "hidden",
+                transform: "rotateY(180deg)",
+              }}
+            >
+              <StickerCard
+                stickerSrc={stickerUrl}
+                photoAlt="Sua figurinha personalizada"
+                className={revealed ? "ring-2 ring-verde-500/40" : undefined}
               />
-              {/* Brilho dourado ao redor */}
-              {revealed && (
-                <div className="pointer-events-none absolute inset-0 rounded-2xl ring-2 ring-gb-gold/60" />
-              )}
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Ações */}
-      <div
-        className="flex w-full flex-col gap-3"
-        style={{
-          opacity: revealed ? 1 : 0,
-          transform: revealed ? "translateY(0)" : "translateY(12px)",
-          transition: "opacity 0.6s ease 0.3s, transform 0.6s ease 0.3s",
-        }}
-      >
-        <Link
-          href="/dashboard"
-          className="w-full rounded-full bg-gb-gold px-6 py-3.5 text-center font-semibold text-gb-green-deep shadow-lg shadow-gb-gold/25 transition-all duration-200 hover:brightness-110 active:scale-95"
+        <div
+          className="flex w-full max-w-md flex-col gap-3 sm:flex-row"
+          style={{
+            opacity: revealed ? 1 : 0,
+            transform: revealed ? "translateY(0)" : "translateY(12px)",
+            transition: "opacity 0.6s ease 0.3s, transform 0.6s ease 0.3s",
+          }}
         >
-          Entrar no álbum! 🚀
-        </Link>
-
-        {onRecreate && (
-          <button
-            type="button"
-            onClick={onRecreate}
-            className="w-full rounded-full border border-white/20 px-6 py-3 text-sm font-semibold text-white/60 transition-all duration-200 hover:border-white/40 hover:text-white"
+          <Link
+            href="/dashboard"
+            className="inline-flex h-12 flex-1 items-center justify-center rounded-pill bg-amarelo px-6 font-medium text-verde-escuro-500 transition-all hover:brightness-95 active:scale-[0.98]"
           >
-            Recriar figurinha
-          </button>
-        )}
+            Entrar no álbum
+          </Link>
+
+          {onRecreate ? (
+            <button
+              type="button"
+              onClick={onRecreate}
+              className="inline-flex h-12 flex-1 items-center justify-center rounded-pill border border-verde-500 px-6 font-medium text-verde-500 transition-colors hover:bg-verde-500/10 active:scale-[0.98]"
+            >
+              Recriar figurinha
+            </button>
+          ) : null}
+        </div>
       </div>
     </div>
   );
 }
 
-/* ─── Verso do card ─────────────────────────────────────────────────── */
-
 function CardBack() {
+  const { width, height, borderRadius } = STICKER_CARD;
+
   return (
-    <div className="relative flex h-full w-full flex-col overflow-hidden rounded-2xl bg-gb-green-deep shadow-xl shadow-black/40 border border-gb-gold/25">
-      {/* Padrão de pontos */}
+    <div
+      className="relative flex flex-col overflow-hidden border border-verde-500/20 bg-verde-escuro-500 shadow-lg"
+      style={{ width, height, borderRadius }}
+    >
       <svg
         className="absolute inset-0 h-full w-full opacity-10"
-        viewBox="0 0 200 275"
+        viewBox={`0 0 ${width} ${height}`}
         aria-hidden
       >
-        {Array.from({ length: 10 }, (_, row) =>
-          Array.from({ length: 8 }, (_, col) => (
+        {Array.from({ length: 12 }, (_, row) =>
+          Array.from({ length: 10 }, (_, col) => (
             <circle
               key={`${row}-${col}`}
-              cx={col * 26 + 8}
-              cy={row * 30 + 10}
+              cx={col * 36 + 8}
+              cy={row * 42 + 10}
               r="3"
               fill="#D9A441"
             />
@@ -178,47 +168,21 @@ function CardBack() {
         )}
       </svg>
 
-      {/* Logo central */}
       <div className="absolute inset-0 flex items-center justify-center">
         <div className="flex flex-col items-center gap-2">
-          {/* Losango GB */}
-          <svg width="52" height="52" viewBox="0 0 52 52" fill="none" aria-hidden>
-            <polygon
-              points="26,3 49,26 26,49 3,26"
-              fill="none"
-              stroke="#D9A441"
-              strokeWidth="1.5"
-            />
-            <polygon
-              points="26,10 42,26 26,42 10,26"
-              fill="#D9A441"
-              fillOpacity="0.2"
-              stroke="#D9A441"
-              strokeWidth="1"
-            />
-            <text
-              x="26"
-              y="30"
-              textAnchor="middle"
-              fontSize="12"
-              fontWeight="700"
-              fill="#D9A441"
-              fontFamily="serif"
-            >
-              GB
-            </text>
-          </svg>
-          <span className="font-display text-[9px] font-bold uppercase tracking-[0.25em] text-gb-gold">
+          <span className="font-display text-sm font-bold uppercase tracking-[0.25em] text-amarelo">
             Grupo Boticário
           </span>
-          <span className="text-[8px] tracking-[0.1em] text-white/40 uppercase">
+          <span className="text-[10px] uppercase tracking-[0.1em] text-white/50">
             Álbum de Figurinhas
           </span>
         </div>
       </div>
 
-      {/* Borda decorativa interna */}
-      <div className="absolute inset-2 rounded-xl border border-gb-gold/20" />
+      <div
+        className="absolute inset-2 border border-amarelo/20"
+        style={{ borderRadius: borderRadius - 4 }}
+      />
     </div>
   );
 }
