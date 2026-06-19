@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { FormEvent, useState } from "react";
 import { Loader2 } from "lucide-react";
+import { saveLandingSignupDraft } from "@/lib/landing-signup";
 
 export interface LandingRegisterProps {
   backgroundUrl?: string | null;
@@ -119,14 +120,19 @@ function RegisterForm({ formTitle, ctaLabel, privacyUrl }: RegisterFormProps) {
 
     setLoading(true);
 
-    const params = new URLSearchParams({
-      email:      email.trim(),
-      name:       nome.trim(),
-      ...(cidade.trim() && { cidade: cidade.trim() }),
-      ...(idade.trim()  && { idade:  idade.trim() }),
-    });
-
-    router.push(`/register?${params.toString()}`);
+    try {
+      saveLandingSignupDraft({
+        email: email.trim(),
+        name: nome.trim(),
+        cidade: cidade.trim() || undefined,
+        idade: idade.trim() || undefined,
+        newsletter,
+      });
+      router.push("/register/senha");
+    } catch {
+      setError("Não foi possível continuar. Tente novamente.");
+      setLoading(false);
+    }
   }
 
   return (

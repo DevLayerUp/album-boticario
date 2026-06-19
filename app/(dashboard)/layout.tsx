@@ -9,6 +9,7 @@ import { Wordmark } from "@/components/brand/wordmark";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { DashboardMain } from "@/components/dashboard/dashboard-main";
 import { ReferralClaimOnLoad } from "@/components/referral/referral-claim-on-load";
+import { FirstStepsOnLoad } from "@/components/first-steps/first-steps-on-load";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 
 const NAV = [
@@ -36,6 +37,7 @@ export default async function DashboardLayout({
   return (
     <DashboardShell>
       <ReferralClaimOnLoad />
+      <FirstStepsOnLoad />
       <header className="sticky top-0 z-20 border-b border-border bg-surface/90 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-[1680px] items-center justify-between gap-6 px-6 md:px-12 2xl:px-[120px]">
           <Link

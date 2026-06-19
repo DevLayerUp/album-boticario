@@ -116,8 +116,13 @@ export async function updateSession(request: NextRequest) {
   }
 
   // Autenticado em rota de auth → dashboard
-  if (user && (pathname === "/login" || pathname === "/register")) {
-    console.log(`[MIDDLEWARE] usuário autenticado em /login → redirect /dashboard`);
+  if (
+    user &&
+    (pathname === "/login" ||
+      pathname === "/register" ||
+      pathname.startsWith("/register/"))
+  ) {
+    console.log(`[MIDDLEWARE] usuário autenticado em rota de auth → redirect /dashboard`);
     const url = request.nextUrl.clone();
     url.pathname = "/dashboard";
     return NextResponse.redirect(url);
