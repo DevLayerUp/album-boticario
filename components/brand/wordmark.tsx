@@ -9,6 +9,8 @@ interface WordmarkProps {
   subtitle?: string;
   /** Classes extras no logotipo (ex.: tamanho na página de login). */
   logoClassName?: string;
+  /** Esconde o logotipo abaixo de `lg` (ex.: header mobile já exibe as marcas). */
+  hideLogoBelowLg?: boolean;
   /** "light" = texto claro (fundo escuro) · "dark" = texto escuro (fundo claro). */
   tone?: "light" | "dark";
   /** Tenta exibir o logotipo; cai para o texto se a imagem não existir. */
@@ -25,6 +27,7 @@ export function Wordmark({
   className,
   subtitle,
   logoClassName,
+  hideLogoBelowLg = false,
   tone = "light",
   showLogo = true,
 }: WordmarkProps) {
@@ -42,7 +45,11 @@ export function Wordmark({
         <img
           src={dashboardAssets.logo}
           alt="Fãs da Natureza"
-          className={cn("h-10 w-auto", logoClassName)}
+          className={cn(
+            "h-10 w-auto",
+            hideLogoBelowLg && "max-lg:hidden",
+            logoClassName,
+          )}
           onError={() => setLogoOk(false)}
         />
       ) : (
@@ -67,7 +74,19 @@ export function Wordmark({
       )}
 
       {subtitle && (
-        <p className={cn("mt-4 text-base", subtitleColor)}>{subtitle}</p>
+        <p
+          className={cn(
+            "text-base",
+            hideLogoBelowLg
+              ? "mt-0 lg:mt-4"
+              : showLogo && logoOk
+                ? "mt-4"
+                : "mt-0",
+            subtitleColor,
+          )}
+        >
+          {subtitle}
+        </p>
       )}
     </div>
   );
