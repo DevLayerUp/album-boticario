@@ -71,17 +71,19 @@ export function FeatureCard({
       </div>
 
       {/* Corpo */}
-      <div className={cn("flex flex-1 flex-col p-6", t.body)}>
-        <h3 className={cn("font-display text-2xl font-bold", t.title)}>
-          {title}
-        </h3>
-        <p className="mt-2 flex-1 text-sm leading-relaxed text-verde-escuro-capa/70">
-          {description}
-        </p>
+      <div className={cn("flex flex-1 flex-col gap-6 p-6", t.body)}>
+        <div>
+          <h3 className={cn("font-display text-2xl font-bold", t.title)}>
+            {title}
+          </h3>
+          <p className="mt-2 text-sm leading-relaxed text-verde-escuro-capa/70">
+            {description}
+          </p>
+        </div>
 
         <span
           className={cn(
-            "mt-5 inline-flex h-11 w-full items-center justify-center gap-2 rounded-pill font-medium transition-colors duration-200",
+            "inline-flex h-11 w-full items-center justify-center gap-2 rounded-pill font-medium transition-colors duration-200",
             t.button,
           )}
         >

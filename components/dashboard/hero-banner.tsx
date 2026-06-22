@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 
 interface HeroBannerProps {
-  /** Texto pequeno acima do título (uppercase). */
+  /** Texto pequeno acima do título. */
   eyebrow?: string;
   title: string;
   subtitle?: string;
@@ -44,7 +44,7 @@ export function HeroBanner({
 
       <div className="relative max-w-xl">
         {eyebrow && (
-          <p className="text-xs font-bold uppercase tracking-[0.22em] text-verde-200">
+          <p className="text-lg leading-snug text-verde-200 md:text-2xl">
             {eyebrow}
           </p>
         )}
@@ -52,7 +52,7 @@ export function HeroBanner({
           {title}
         </h1>
         {subtitle && (
-          <p className="mt-3 max-w-md text-base leading-relaxed text-verde-100/90">
+          <p className="mt-3 max-w-md text-base leading-relaxed text-white md:text-lg">
             {subtitle}
           </p>
         )}

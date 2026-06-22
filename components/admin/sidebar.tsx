@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import {
   LayoutDashboard,
+  LayoutGrid,
   Image,
   Tag,
   Layers,
@@ -25,6 +26,7 @@ const NAV = [
   { href: "/admin",              label: "Visão Geral",   icon: LayoutDashboard, exact: true },
   { href: "/admin/landing",      label: "Landing Page",  icon: Globe },
   { href: "/admin/first-steps",  label: "Primeiros Passos", icon: Sparkles },
+  { href: "/admin/dashboard-cards", label: "Cards Dashboard", icon: LayoutGrid },
   { href: "/admin/album-capa",   label: "Capa do Álbum", icon: ImageIcon },
   { href: "/admin/pacotinhos",   label: "Pacotinhos",    icon: Package },
   { href: "/admin/categorias",   label: "Categorias",    icon: Tag },

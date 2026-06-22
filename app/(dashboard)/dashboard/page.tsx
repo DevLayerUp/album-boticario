@@ -8,12 +8,21 @@ import {
   ShieldCheck,
   ChevronRight,
   Layers,
+  Trophy,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { buildLeaderboard } from "@/lib/ranking";
 import { HeroBanner } from "@/components/dashboard/hero-banner";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { FeatureCard } from "@/components/dashboard/feature-card";
 import { dashboardAssets } from "@/lib/dashboard-assets";
+import {
+  DASHBOARD_FEATURE_CARDS_KEY,
+  DEFAULT_DASHBOARD_FEATURE_CARDS,
+  getFeatureCardBackground,
+  parseDashboardFeatureCards,
+} from "@/lib/dashboard-feature-cards";
 import { InviteCard } from "@/components/dashboard/invite-card";
 import { buildInviteUrl } from "@/lib/referrals";
 import { headers } from "next/headers";
@@ -38,10 +47,11 @@ export default async function DashboardPage() {
     slotsRes,
     filledRes,
     tradesRes,
+    featureCardsRes,
   ] = await Promise.all([
     supabase
       .from("profiles")
-      .select("sticker_url, display_name, referral_code")
+      .select("display_name, referral_code")
       .eq("id", user.id)
       .single(),
     supabase.rpc("ensure_referral_code", { p_user_id: user.id }),
@@ -71,6 +81,11 @@ export default async function DashboardPage() {
       .select("*", { count: "exact", head: true })
       .eq("status", "accepted")
       .or(`requester_id.eq.${user.id},receiver_id.eq.${user.id}`),
+    supabase
+      .from("app_settings")
+      .select("value")
+      .eq("key", DASHBOARD_FEATURE_CARDS_KEY)
+      .maybeSingle(),
   ]);
 
   const nome =
@@ -80,9 +95,13 @@ export default async function DashboardPage() {
     "colecionador";
 
   const primeiroNome = nome.split(" ")[0];
-  const hasFigurinhaUrl = profileRes.data?.sticker_url ?? null;
   const isAdmin =
     (user?.app_metadata?.role ?? user?.user_metadata?.role) === "admin";
+
+  const admin = createAdminClient();
+  const leaderboard = await buildLeaderboard(admin, user.id);
+  const userRank = leaderboard.entries.find((e) => e.user_id === user.id)?.rank;
+  const rankDisplay = userRank ? `${userRank}º` : "—";
 
   const totalStickers = stickersRes.count ?? 0;
   const availPacks = packsRes.count ?? 0;
@@ -100,6 +119,10 @@ export default async function DashboardPage() {
     referralCodeRes.data ??
     profileRes.data?.referral_code ??
     null;
+  const featureCards = featureCardsRes.data?.value
+    ? parseDashboardFeatureCards(featureCardsRes.data.value)
+    : DEFAULT_DASHBOARD_FEATURE_CARDS;
+
   const referralData = referralCode
     ? {
         referral_code: referralCode,
@@ -110,12 +133,12 @@ export default async function DashboardPage() {
     : null;
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col">
       {/* ── Banner admin ──────────────────────────────────────────────── */}
       {isAdmin && (
         <Link
           href="/admin"
-          className="group flex items-center justify-between rounded-block border border-verde-500/25 bg-verde-100/40 px-5 py-3.5 transition-colors duration-200 hover:bg-verde-100/70"
+          className="group mb-8 flex items-center justify-between rounded-block border border-verde-500/25 bg-verde-100/40 px-5 py-3.5 transition-colors duration-200 hover:bg-verde-100/70"
         >
           <div className="flex items-center gap-3">
             <span className="flex size-9 items-center justify-center rounded-chip bg-verde-500 text-white">
@@ -139,13 +162,9 @@ export default async function DashboardPage() {
 
       {/* ── Hero ─────────────────────────────────────────────────────── */}
       <HeroBanner
-        eyebrow="Bem-vindo ao álbum"
+        eyebrow="Conheça o álbum oficial dos fãs por natureza"
         title={`Olá, ${primeiroNome}!`}
-        subtitle={
-          hasFigurinhaUrl
-            ? "Sua figurinha está pronta. Responda o quizz, cumpra missões e continue colecionando!"
-            : "Crie sua figurinha, abra pacotinhos e complete o álbum Fãs da Natureza."
-        }
+        subtitle="Teste seus conhecimentos no quiz, complete desafios e junte figurinhas para completar seu álbum."
         backgroundImage={dashboardAssets.hero}
       >
         <Link
@@ -163,12 +182,13 @@ export default async function DashboardPage() {
       </HeroBanner>
 
       {/* ── Estatísticas ─────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-5 lg:grid-cols-5 lg:gap-6">
         <StatCard
           label="Figurinhas"
           value={totalStickers}
           href="/colecao"
           icon={Layers}
+          variant="solid"
         />
         <StatCard
           label="Pacotinhos"
@@ -188,92 +208,96 @@ export default async function DashboardPage() {
           href="/trocas"
           icon={ArrowLeftRight}
         />
+        <StatCard
+          label="Ranking"
+          value={rankDisplay}
+          href="/ranking"
+          icon={Trophy}
+        />
       </div>
 
-      {referralData && (
-        <InviteCard
-          data={referralData}
-          inviterName={profileRes.data?.display_name ?? primeiroNome}
-        />
-      )}
-
       {/* ── Explorar ─────────────────────────────────────────────────── */}
-      <section>
-        <div className="mb-5 flex items-baseline gap-3">
-          <h2 className="font-display text-3xl font-bold text-verde-escuro-500">
-            Explorar
-          </h2>
-          <span className="text-sm text-verde-escuro-capa/60">
-            8 áreas disponíveis
-          </span>
-        </div>
+      <section className="mt-28">
+        <h2 className="mb-10 font-display text-3xl font-bold text-verde-escuro-500 md:text-4xl">
+          Explorar
+        </h2>
 
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-x-6 gap-y-16 sm:grid-cols-2 lg:grid-cols-3 lg:gap-y-20">
           <FeatureCard
             title="Minha figurinha"
-            description="Envie sua foto, remova o fundo e ganhe uma figurinha personalizada com a moldura Fãs da Natureza."
+            description="Personalize a sua própria figurinha e faça parte do álbum também! Coloque uma foto sua e entre oficialmente para o time."
             href="/figurinha"
             cta="Criar"
             theme="green"
-            backgroundImage={dashboardAssets.cards.figurinha}
+            backgroundImage={getFeatureCardBackground("figurinha", featureCards)}
           />
           <FeatureCard
             title="Meu Álbum"
-            description="Cole suas figurinhas nos slots, vire as páginas e conclua o álbum completo."
+            description="Conheça mais sobre a biodiversidade, abra as páginas para colar suas figurinhas e explorar as nossas florestas e o nosso oceano."
             href="/album"
             cta="Visualizar"
             theme="blue"
-            backgroundImage={dashboardAssets.cards.album}
+            backgroundImage={getFeatureCardBackground("album", featureCards)}
           />
           <FeatureCard
-            title="Coleção"
-            description="Veja todas as figurinhas que você possui, com filtros por raridade e categoria."
+            title="Minha Coleção"
+            description="Confira suas figurinhas e gerencie as repetidas."
             href="/colecao"
             cta="Explorar"
             theme="gold"
-            backgroundImage={dashboardAssets.cards.colecao}
+            backgroundImage={getFeatureCardBackground("colecao", featureCards)}
           />
           <FeatureCard
             title="Pacotinhos"
-            description="Abra pacotinhos e descubra figurinhas com efeitos especiais por raridade."
+            description="Acesse seus pacotes disponíveis e abra para descobrir novas figurinhas"
             href="/pacotinhos"
             cta="Abrir"
             theme="gold"
-            backgroundImage={dashboardAssets.cards.pacotinhos}
+            backgroundImage={getFeatureCardBackground("pacotinhos", featureCards)}
           />
           <FeatureCard
-            title="Quizz"
-            description="Responda uma pergunta por dia sobre o Grupo Boticário e ganhe pacotinhos extras."
+            title="Quiz Diário"
+            description="Pacotes novos todos os dias! Responda ao quiz e ganhe mais figurinhas para completar o álbum."
             href="/quiz"
             cta="Jogar"
             theme="green"
-            backgroundImage={dashboardAssets.cards.quiz}
+            backgroundImage={getFeatureCardBackground("quiz", featureCards)}
           />
           <FeatureCard
-            title="Missões"
-            description="Complete desafios do programa para acumular recompensas e figurinhas raras."
+            title="Missões do Dia"
+            description="Cumpra as tarefas do dia para multiplicar seus pontos e garantir pacotes extras."
             href="/missoes"
             cta="Cumprir"
             theme="blue"
-            backgroundImage={dashboardAssets.cards.missoes}
+            backgroundImage={getFeatureCardBackground("missoes", featureCards)}
           />
           <FeatureCard
-            title="Trocas"
-            description="Troque figurinhas duplicadas com outros colecionadores e complete seu álbum mais rápido."
+            title="Central de Trocas"
+            description="Negocie suas figurinhas repetidas com a galera e encontre as que falta na sua coleção."
             href="/trocas"
             cta="Trocar"
             theme="green"
-            backgroundImage={dashboardAssets.cards.trocas}
+            backgroundImage={getFeatureCardBackground("trocas", featureCards)}
           />
           <FeatureCard
-            title="Ranking"
-            description="Veja quem lidera a coleção: álbum completo, missões cumpridas e trocas feitas."
+            title="Ranking dos Fãs"
+            description="Quem lidera o placar? Acompanhe a pontuação geral, compare seu score com amigos e dispute o topo da tabela para ganhar recompensas."
             href="/ranking"
-            cta="Ver ranking"
+            cta="Visualizar"
             theme="gold"
+            backgroundImage={getFeatureCardBackground("ranking", featureCards)}
           />
         </div>
       </section>
+
+      {referralData && (
+        <div className="mt-16 lg:mt-20">
+          <InviteCard
+            data={referralData}
+            inviterName={profileRes.data?.display_name ?? primeiroNome}
+          />
+        </div>
+      )}
     </div>
   );
 }

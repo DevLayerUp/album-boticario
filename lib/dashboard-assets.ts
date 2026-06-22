@@ -44,6 +44,7 @@ export const dashboardAssets = {
     quiz: `${BASE}/cards/quiz.png`,
     missoes: `${BASE}/cards/missoes.png`,
     trocas: `${BASE}/cards/trocas.png`,
+    ranking: `${BASE}/cards/ranking.png`,
   },
 } as const;
 
