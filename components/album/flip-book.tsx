@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useRef, useState, useEffect, type KeyboardEvent, type PointerEvent } from "react";
+import { useRef, useState, useEffect, type KeyboardEvent, type ReactNode } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AlbumPage, type AlbumPageData } from "./album-page";
@@ -70,15 +70,17 @@ function useFlipBookSize() {
     height: 780,
     minHeight: 480,
     maxHeight: 920,
+    isMobile: false,
   });
 
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 767px)");
     const apply = () => {
+      const mobile = mq.matches;
       setSize(
-        mq.matches
-          ? { height: 900, minHeight: 520, maxHeight: 980 }
-          : { height: 780, minHeight: 480, maxHeight: 920 },
+        mobile
+          ? { height: 900, minHeight: 520, maxHeight: 980, isMobile: true }
+          : { height: 780, minHeight: 480, maxHeight: 920, isMobile: false },
       );
     };
     apply();
@@ -89,29 +91,27 @@ function useFlipBookSize() {
   return size;
 }
 
-/** Freeze document scroll while page-flip animates (prevents mobile viewport jump). */
+/** Freeze document scroll during page-flip on mobile only. */
 function useScrollLock() {
   const lockedY = useRef(0);
-  const depth = useRef(0);
+  const isLocked = useRef(false);
 
   const lock = () => {
-    if (depth.current === 0) {
-      lockedY.current = window.scrollY;
-      const { style } = document.body;
-      style.position = "fixed";
-      style.top = `-${lockedY.current}px`;
-      style.left = "0";
-      style.right = "0";
-      style.width = "100%";
-      style.overflow = "hidden";
-    }
-    depth.current += 1;
+    if (isLocked.current) return;
+    isLocked.current = true;
+    lockedY.current = window.scrollY;
+    const { style } = document.body;
+    style.position = "fixed";
+    style.top = `-${lockedY.current}px`;
+    style.left = "0";
+    style.right = "0";
+    style.width = "100%";
+    style.overflow = "hidden";
   };
 
-  const unlock = () => {
-    depth.current = Math.max(0, depth.current - 1);
-    if (depth.current > 0) return;
-
+  const forceUnlock = () => {
+    if (!isLocked.current) return;
+    isLocked.current = false;
     const y = lockedY.current;
     const { style } = document.body;
     style.position = "";
@@ -125,7 +125,7 @@ function useScrollLock() {
 
   useEffect(() => {
     return () => {
-      depth.current = 0;
+      isLocked.current = false;
       const { style } = document.body;
       style.position = "";
       style.top = "";
@@ -136,10 +136,67 @@ function useScrollLock() {
     };
   }, []);
 
-  return { lock, unlock };
+  return { lock, forceUnlock };
 }
 
 const FLIP_DURATION_MS = 720;
+
+interface FlipNavControlProps {
+  direction: "prev" | "next";
+  disabled: boolean;
+  label: string;
+  className: string;
+  isMobile: boolean;
+  onFlip: (direction: "prev" | "next") => void;
+  children: ReactNode;
+}
+
+function FlipNavControl({
+  direction,
+  disabled,
+  label,
+  className,
+  isMobile,
+  onFlip,
+  children,
+}: FlipNavControlProps) {
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (disabled) return;
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      onFlip(direction);
+    }
+  };
+
+  if (isMobile) {
+    return (
+      <div
+        role="button"
+        tabIndex={disabled ? -1 : 0}
+        aria-disabled={disabled}
+        aria-label={label}
+        onPointerDown={(e) => e.preventDefault()}
+        onClick={() => !disabled && onFlip(direction)}
+        onKeyDown={handleKeyDown}
+        className={cn(className, "touch-manipulation")}
+      >
+        {children}
+      </div>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      aria-label={label}
+      onClick={() => onFlip(direction)}
+      className={className}
+    >
+      {children}
+    </button>
+  );
+}
 
 export function FlipBook({
   pages,
@@ -150,9 +207,9 @@ export function FlipBook({
   coverUrl,
 }: FlipBookProps) {
   const bookRef = useRef<HTMLFlipBookHandle | null>(null);
-  const unlockTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const flipBookSize = useFlipBookSize();
-  const { lock: lockScroll, unlock: unlockScroll } = useScrollLock();
+  const unlockFallbackRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const { height, minHeight, maxHeight, isMobile } = useFlipBookSize();
+  const { lock: lockScroll, forceUnlock } = useScrollLock();
 
   // currentPage = index of the currently visible page (0 = cover, 1+ = content)
   const [currentPage, setCurrentPage] = useState(0);
@@ -163,39 +220,39 @@ export function FlipBook({
     setCurrentPage(0);
   }, [firstPageId]);
 
-  const scheduleScrollUnlock = () => {
-    if (unlockTimerRef.current) clearTimeout(unlockTimerRef.current);
-    unlockTimerRef.current = setTimeout(() => {
-      unlockScroll();
-      unlockTimerRef.current = null;
-    }, FLIP_DURATION_MS);
+  const clearUnlockFallback = () => {
+    if (unlockFallbackRef.current) {
+      clearTimeout(unlockFallbackRef.current);
+      unlockFallbackRef.current = null;
+    }
+  };
+
+  useEffect(
+    () => () => {
+      if (unlockFallbackRef.current) clearTimeout(unlockFallbackRef.current);
+    },
+    [],
+  );
+
+  const releaseMobileScroll = () => {
+    if (!isMobile) return;
+    clearUnlockFallback();
+    forceUnlock();
   };
 
   const flipPage = (direction: "prev" | "next") => {
     const api = bookRef.current?.pageFlip();
     if (!api) return;
 
-    lockScroll();
+    if (isMobile) {
+      lockScroll();
+      clearUnlockFallback();
+      // Safety net if onFlip never fires (e.g. interrupted animation).
+      unlockFallbackRef.current = setTimeout(releaseMobileScroll, FLIP_DURATION_MS + 150);
+    }
+
     if (direction === "prev") api.flipPrev();
     else api.flipNext();
-    scheduleScrollUnlock();
-  };
-
-  const handleNavPointerDown = (e: PointerEvent) => {
-    // Prevent focus + iOS scroll-into-view on tap (root cause of viewport jump).
-    e.preventDefault();
-  };
-
-  const handleNavKeyDown = (
-    e: KeyboardEvent,
-    direction: "prev" | "next",
-    disabled: boolean,
-  ) => {
-    if (disabled) return;
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      flipPage(direction);
-    }
   };
 
   if (pages.length === 0) {
@@ -225,28 +282,23 @@ export function FlipBook({
       <div className="mx-auto flex w-full max-w-[1340px] flex-wrap items-center justify-center gap-4 md:flex-nowrap md:gap-3">
 
         {/* ← Previous — row 2 on mobile (below book), left column on desktop */}
-        <div
-          role="button"
-          tabIndex={isFirst ? -1 : 0}
-          aria-disabled={isFirst}
-          aria-label="Página anterior"
-          onPointerDown={handleNavPointerDown}
-          onClick={() => !isFirst && flipPage("prev")}
-          onKeyDown={(e) => handleNavKeyDown(e, "prev", isFirst)}
-          className={cn(
-            "order-2 touch-manipulation md:order-1",
-            navBtn(isFirst),
-          )}
+        <FlipNavControl
+          direction="prev"
+          disabled={isFirst}
+          label="Página anterior"
+          isMobile={isMobile}
+          onFlip={flipPage}
+          className={cn("order-2 md:order-1", navBtn(isFirst))}
         >
           <ChevronLeft size={22} strokeWidth={2.5} />
-        </div>
+        </FlipNavControl>
 
         {/* Book — w-full is required so page-flip measures a wide enough block
             for landscape (two-page) mode. Without it the wrapper shrink-wraps
             and the library falls back to portrait (single tiny page).
             On desktop with showCover, the closed cover sits on the RIGHT half;
             -translate-x-1/4 centres that single visible page. */}
-        <div className="order-1 flex w-full min-w-0 cursor-grab justify-center [overflow-anchor:none] active:cursor-grabbing md:order-2 md:min-w-[560px] md:flex-1">
+        <div className="order-1 flex w-full min-w-0 cursor-grab justify-center max-md:[overflow-anchor:none] active:cursor-grabbing md:order-2 md:min-w-[560px] md:flex-1">
           <div
             className={cn(
               "flex w-full justify-center transition-transform duration-700 ease-out",
@@ -257,12 +309,12 @@ export function FlipBook({
             ref={bookRef}
             key={firstPageId ?? "empty"}
             width={560}
-            height={flipBookSize.height}
+            height={height}
             size="stretch"
             minWidth={280}
             maxWidth={560}
-            minHeight={flipBookSize.minHeight}
-            maxHeight={flipBookSize.maxHeight}
+            minHeight={minHeight}
+            maxHeight={maxHeight}
             drawShadow
             flippingTime={700}
             usePortrait
@@ -289,7 +341,10 @@ export function FlipBook({
             startPage={0}
             className=""
             style={{}}
-            onFlip={(e: { data: number }) => setCurrentPage(e.data)}
+            onFlip={(e: { data: number }) => {
+              setCurrentPage(e.data);
+              releaseMobileScroll();
+            }}
           >
             {/* ── Cover page (index 0) — hard page shown alone ── */}
             <div key="cover" className="h-full overflow-hidden">
@@ -315,18 +370,16 @@ export function FlipBook({
         </div>
 
         {/* → Next — always order-3 (right of prev on mobile, right column on desktop) */}
-        <div
-          role="button"
-          tabIndex={isLast ? -1 : 0}
-          aria-disabled={isLast}
-          aria-label="Próxima página"
-          onPointerDown={handleNavPointerDown}
-          onClick={() => !isLast && flipPage("next")}
-          onKeyDown={(e) => handleNavKeyDown(e, "next", isLast)}
-          className={cn("order-3 touch-manipulation", navBtn(isLast))}
+        <FlipNavControl
+          direction="next"
+          disabled={isLast}
+          label="Próxima página"
+          isMobile={isMobile}
+          onFlip={flipPage}
+          className={cn("order-3", navBtn(isLast))}
         >
           <ChevronRight size={22} strokeWidth={2.5} />
-        </div>
+        </FlipNavControl>
       </div>
     </div>
   );
