@@ -18,6 +18,12 @@ export const dashboardAssets = {
   hero: `${BASE}/hero.png`,
   /** Logotipo "Fãs da Natureza" usado no header. */
   logo: `${BASE}/logo.png`,
+  /** Páginas de autenticação (login / cadastro). */
+  auth: {
+    loginBackground: `${BASE}/bg-login.jpg`,
+    logoFgb: `${BASE}/logo-fgb.png`,
+    logoBranco: `${BASE}/logo-branco.png`,
+  },
   /** Elementos decorativos das páginas do álbum (blobs sobre o verde escuro). */
   album: {
     left:  `${BASE}/album/bg-esquerdo.png`,

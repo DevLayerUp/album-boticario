@@ -7,6 +7,8 @@ import { dashboardAssets } from "@/lib/dashboard-assets";
 interface WordmarkProps {
   className?: string;
   subtitle?: string;
+  /** Classes extras no logotipo (ex.: tamanho na página de login). */
+  logoClassName?: string;
   /** "light" = texto claro (fundo escuro) · "dark" = texto escuro (fundo claro). */
   tone?: "light" | "dark";
   /** Tenta exibir o logotipo; cai para o texto se a imagem não existir. */
@@ -22,6 +24,7 @@ interface WordmarkProps {
 export function Wordmark({
   className,
   subtitle,
+  logoClassName,
   tone = "light",
   showLogo = true,
 }: WordmarkProps) {
@@ -39,7 +42,7 @@ export function Wordmark({
         <img
           src={dashboardAssets.logo}
           alt="Fãs da Natureza"
-          className="h-10 w-auto"
+          className={cn("h-10 w-auto", logoClassName)}
           onError={() => setLogoOk(false)}
         />
       ) : (
@@ -64,7 +67,7 @@ export function Wordmark({
       )}
 
       {subtitle && (
-        <p className={cn("mt-3 text-sm", subtitleColor)}>{subtitle}</p>
+        <p className={cn("mt-4 text-base", subtitleColor)}>{subtitle}</p>
       )}
     </div>
   );

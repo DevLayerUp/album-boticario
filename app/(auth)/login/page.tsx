@@ -7,11 +7,12 @@ export const metadata: Metadata = { title: "Entrar" };
 
 export default function LoginPage() {
   return (
-    <div className="w-full max-w-[400px]">
+    <div className="w-full max-w-[420px]">
       <Wordmark
         tone="dark"
         subtitle="Entre para continuar sua coleção"
-        className="mb-8 flex flex-col items-center justify-center"
+        className="mb-10 flex flex-col items-center justify-center"
+        logoClassName="h-14 w-auto"
       />
       <Suspense fallback={<FormSkeleton />}>
         <AuthForm mode="login" />

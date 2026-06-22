@@ -24,7 +24,7 @@ import {
 } from "@/lib/referrals";
 
 const INPUT_BASE =
-  "h-12 w-full rounded-xl border border-border bg-surface text-base text-gb-ink placeholder:text-muted/70 transition-colors duration-200 focus:border-gb-green focus:outline-none focus-visible:outline-2 focus-visible:outline-gb-green";
+  "h-12 w-full rounded-xl border border-transparent bg-verde-100 text-base text-gb-ink placeholder:text-muted/70 transition-colors duration-200 focus:border-verde-500 focus:bg-surface focus:outline-none focus-visible:outline-2 focus-visible:outline-verde-500";
 
 type Mode = "login" | "register";
 
@@ -453,7 +453,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
           onClick={handleGoogle}
           disabled={oauthLoading}
           aria-busy={oauthLoading}
-          className="flex h-12 w-full cursor-pointer items-center justify-center gap-3 rounded-xl border border-border bg-surface font-medium text-gb-ink transition-all duration-200 hover:border-verde-500/50 hover:bg-verde-500/5 disabled:cursor-not-allowed disabled:opacity-60"
+          className="flex h-12 w-full cursor-pointer items-center justify-center gap-3 rounded-pill border border-border bg-surface font-medium text-gb-ink transition-all duration-200 hover:border-verde-500/50 hover:bg-verde-500/5 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {oauthLoading ? (
             <span className="size-4 animate-spin rounded-full border-2 border-verde-escuro-500 border-t-transparent" />
@@ -478,7 +478,10 @@ export function AuthForm({ mode }: { mode: Mode }) {
                 : "/register"
               : "/login"
           }
-          className="font-semibold text-verde-escuro-500 underline-offset-2 hover:underline"
+          className={cn(
+            "font-semibold underline-offset-2 hover:underline",
+            isLogin ? "text-verde-genz" : "text-verde-escuro-500",
+          )}
         >
           {isLogin ? "Cadastre-se" : "Entrar"}
         </Link>

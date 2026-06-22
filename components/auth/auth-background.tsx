@@ -1,70 +1,75 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { motion } from "framer-motion";
+import { dashboardAssets } from "@/lib/dashboard-assets";
 
 const BRAND_ENTER = {
   hidden: { opacity: 0, y: 28 },
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.9, delay: 0.5, ease: [0.22, 1, 0.36, 1] },
+    transition: { duration: 0.9, delay: 0.35, ease: [0.22, 1, 0.36, 1] },
   },
 };
 
 const LOGO_ENTER = {
   hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { duration: 0.6, delay: 0.2 } },
+  visible: { opacity: 1, transition: { duration: 0.6, delay: 0.15 } },
 };
+
+const FGB_URL = "https://fundacaogrupoboticario.org.br/";
 
 interface AuthBackgroundProps {
   children: React.ReactNode;
 }
 
 export function AuthBackground({ children }: AuthBackgroundProps) {
+  const year = new Date().getFullYear();
+
   return (
     <div className="flex min-h-dvh">
-      {/* ── Left brand panel (lg+) ─────────────────────────────── */}
-      <aside className="relative hidden flex-col justify-between overflow-hidden bg-verde-escuro-capa px-10 py-10 lg:flex lg:w-[44%] xl:w-[480px]">
-        {/* Animated grid lines */}
+      {/* ── Left brand panel (lg+) — Figma node 735:197 ─────────── */}
+      <aside className="relative hidden min-h-dvh shrink-0 flex-col justify-between overflow-hidden lg:flex lg:w-[min(681px,42vw)] xl:w-[681px]">
         <div
-          className="pointer-events-none absolute inset-0"
-          aria-hidden="true"
-        >
-          <span className="auth-hline" style={{ top: "22%", animationDelay: "0.15s" }} />
-          <span className="auth-hline" style={{ top: "50%", animationDelay: "0.4s" }} />
-          <span className="auth-hline" style={{ top: "78%", animationDelay: "0.65s" }} />
-          <span className="auth-vline" style={{ left: "38%", animationDelay: "0.3s" }} />
-          <span className="auth-vline" style={{ left: "72%", animationDelay: "0.55s" }} />
-        </div>
-
-        {/* Decorative blobs */}
-        <div
-          className="pointer-events-none absolute -left-24 -top-24 h-80 w-80 rounded-full bg-verde-500/20 blur-3xl"
-          aria-hidden="true"
-        />
-        <div
-          className="pointer-events-none absolute -bottom-16 -right-16 h-96 w-96 rounded-full bg-verde-escuro-500/50 blur-3xl"
-          aria-hidden="true"
-        />
-        <div
-          className="pointer-events-none absolute left-1/2 top-2/5 h-56 w-56 -translate-x-1/2 rounded-full bg-verde-genz/10 blur-2xl"
-          aria-hidden="true"
+          aria-hidden
+          className="absolute inset-0 bg-verde-escuro-500 bg-cover bg-center"
+          style={{
+            backgroundImage: `url(${dashboardAssets.auth.loginBackground})`,
+          }}
         />
 
-        {/* Logo */}
+        {/* Logos */}
         <motion.div
           variants={LOGO_ENTER}
           initial="hidden"
           animate="visible"
-          className="relative z-10 shrink-0"
+          className="relative z-10 flex items-center gap-[46px] px-[55px] pt-[63px]"
         >
-          <Link href="/" aria-label="Voltar ao início">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/images/dashboard/logo-branco.png"
+          <a
+            href={FGB_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Fundação Grupo Boticário — site oficial"
+          >
+            <Image
+              src={dashboardAssets.auth.logoFgb}
+              alt="Fundação Grupo Boticário"
+              width={182}
+              height={66}
+              className="h-[66px] w-auto object-contain"
+              priority
+            />
+          </a>
+          <Link href="/" aria-label="Fãs da Natureza — página inicial">
+            <Image
+              src={dashboardAssets.auth.logoBranco}
               alt="Fãs da Natureza"
-              className="h-12 w-auto object-contain"
+              width={108}
+              height={53}
+              className="h-[53px] w-auto object-contain"
+              priority
             />
           </Link>
         </motion.div>
@@ -74,48 +79,58 @@ export function AuthBackground({ children }: AuthBackgroundProps) {
           variants={BRAND_ENTER}
           initial="hidden"
           animate="visible"
-          className="relative z-10"
+          className="relative z-10 px-[55px]"
         >
-          <p className="font-display text-[2.6rem] font-bold leading-[1.18] text-white">
-            Cuide da
+          <h1 className="max-w-[550px] font-display text-[2.75rem] leading-[1.11] text-white xl:text-[3.375rem] xl:leading-[60px]">
+            <span className="font-normal">Cuide da natureza,</span>
             <br />
-            natureza,{" "}
-            <span className="text-verde-genz">colecione</span>
-            <br />
-            momentos.
+            <span className="font-bold text-verde-genz">colecione</span>{" "}
+            <span className="font-normal">momentos.</span>
+          </h1>
+          <p className="mt-6 max-w-[509px] text-lg leading-tight text-white xl:text-2xl xl:leading-[30px]">
+            Descubra a biodiversidade brasileira e complete seu álbum digital dos
+            Fãs por Natureza.
           </p>
-          <p className="mt-5 text-sm leading-relaxed text-verde-escuro-200">
-            Descubra a biodiversidade brasileira e complete seu álbum digital dos Fãs por Natureza.
-          </p>
-
-          {/* Decorative accent pill */}
-          <div className="mt-8 flex items-center gap-3">
-            <span className="h-px w-8 bg-verde-500" />
-            <span className="text-xs font-semibold uppercase tracking-[0.18em] text-verde-escuro-300">
-              Grupo Boticário
-            </span>
-          </div>
         </motion.div>
 
         {/* Footer */}
-        <p className="relative z-10 text-xs text-verde-escuro-300">
-          © {new Date().getFullYear()} Grupo Boticário · Fãs da Natureza
+        <p className="relative z-10 px-[55px] pb-10 text-base text-verde-300">
+          © {year} Grupo Boticário · Fãs da Natureza
         </p>
       </aside>
 
       {/* ── Right form area ────────────────────────────────────── */}
       <main
         id="main-content"
-        className="flex flex-1 flex-col items-center justify-center bg-background px-5 py-10 sm:px-8"
+        className="flex flex-1 flex-col items-center justify-center bg-surface px-5 py-10 sm:px-8"
       >
-        {/* Mobile logo (hidden on lg+) */}
-        <div className="mb-8 flex flex-col items-center justify-center lg:hidden" aria-hidden="true">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/images/dashboard/logo.png"
-            alt="Fãs da Natureza"
-            className="mx-auto h-10 w-auto object-contain"
-          />
+        {/* Mobile header (hidden on lg+) */}
+        <div className="mb-8 flex flex-col items-center gap-4 lg:hidden">
+          <a
+            href={FGB_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Fundação Grupo Boticário — site oficial"
+          >
+            <Image
+              src={dashboardAssets.auth.logoFgb}
+              alt="Fundação Grupo Boticário"
+              width={182}
+              height={66}
+              className="h-12 w-auto object-contain"
+              priority
+            />
+          </a>
+          <Link href="/" aria-label="Fãs da Natureza — página inicial">
+            <Image
+              src={dashboardAssets.logo}
+              alt="Fãs da Natureza"
+              width={140}
+              height={40}
+              className="h-10 w-auto object-contain"
+              priority
+            />
+          </Link>
         </div>
 
         {children}
