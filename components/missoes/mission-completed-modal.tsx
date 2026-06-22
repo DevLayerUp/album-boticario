@@ -81,12 +81,12 @@ export function MissionCompletedModal({
           </div>
 
           <div className="flex flex-col items-center justify-center gap-10 sm:flex-row sm:gap-16">
-            <div className="relative h-[min(42vh,320px)] w-[min(70vw,266px)] overflow-hidden rounded-2xl border-[5px] border-white shadow-md">
+            <div className="relative aspect-[392/560] w-[min(70vw,266px)] shrink-0">
               <Image
                 src={packImageUrl}
                 alt="Pacotinho conquistado"
                 fill
-                className="object-cover"
+                className="object-contain"
                 sizes="266px"
                 unoptimized={packImageUrl.endsWith(".gif")}
               />

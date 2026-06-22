@@ -65,24 +65,28 @@ export function FirstStepsModal({ config, onComplete }: FirstStepsModalProps) {
 
   return (
     <div
-      className="fixed inset-0 z-[70] flex flex-col bg-[#f9f8f7]"
+      className="fixed inset-0 z-[70] flex h-dvh flex-col overflow-hidden bg-[#f9f8f7]"
       role="dialog"
       aria-modal="true"
       aria-labelledby="first-steps-title"
     >
-      <div className="mx-auto flex w-full max-w-[1680px] items-center justify-between px-6 py-4 sm:px-12 sm:py-5 2xl:px-[120px]">
-        <Wordmark tone="dark" className="text-left" />
+      <header className="mx-auto flex w-full max-w-[1680px] shrink-0 items-center justify-between px-4 py-3 sm:px-8 sm:py-4 lg:px-12 xl:px-[120px] xl:py-5">
+        <Wordmark
+          tone="dark"
+          className="text-left"
+          logoClassName="h-9 sm:h-11 lg:h-16 xl:h-20"
+        />
         <button
           type="button"
           onClick={() => void markComplete()}
           disabled={completing}
-          className="text-base font-medium text-verde-escuro-500 transition-opacity hover:opacity-80 disabled:opacity-50 sm:text-2xl"
+          className="shrink-0 text-sm font-medium text-verde-escuro-500 transition-opacity hover:opacity-80 disabled:opacity-50 sm:text-base lg:text-xl xl:text-2xl"
         >
           {config.skipLabel}
         </button>
-      </div>
+      </header>
 
-      <div className="flex flex-1 flex-col items-center justify-center px-4 pb-4 sm:px-6">
+      <div className="flex min-h-0 flex-1 flex-col items-center justify-center overflow-y-auto px-3 py-2 sm:overflow-hidden sm:px-6 sm:py-3">
         <AnimatePresence mode="wait">
           <motion.div
             key={stepIndex}
@@ -90,7 +94,7 @@ export function FirstStepsModal({ config, onComplete }: FirstStepsModalProps) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.22 }}
-            className="flex w-full max-w-[1200px] flex-col overflow-hidden rounded-card bg-white shadow-[0_4px_20px_rgba(0,0,0,0.15)] sm:min-h-[600px] sm:flex-row"
+            className="flex w-full max-w-[1200px] shrink-0 flex-col overflow-hidden rounded-card bg-white shadow-[0_4px_20px_rgba(0,0,0,0.15)] sm:h-full sm:max-h-[min(600px,calc(100dvh-7.5rem))] sm:flex-row"
           >
             <FirstStepsStepVisual
               stepIndex={stepIndex}
@@ -109,7 +113,7 @@ export function FirstStepsModal({ config, onComplete }: FirstStepsModalProps) {
         </AnimatePresence>
       </div>
 
-      <p className="pb-6 text-center text-sm font-medium text-verde-escuro-500 sm:text-lg">
+      <p className="shrink-0 px-4 pb-3 pt-1 text-center text-xs font-medium text-verde-escuro-500 sm:pb-4 sm:text-sm lg:pb-5 lg:text-base xl:pb-6 xl:text-[18px]">
         {config.footerText}
       </p>
 

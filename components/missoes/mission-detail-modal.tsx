@@ -11,6 +11,7 @@ import {
   missionStatus,
   missionTheme,
 } from "@/lib/mission-theme";
+import { resolveMissionAction } from "@/lib/mission-actions";
 import { cn } from "@/lib/utils";
 import { MissionRewardBadges } from "./mission-reward-badges";
 import type { Mission } from "./types";
@@ -38,14 +39,11 @@ export function MissionDetailModal({
     mission.completed_at,
   );
   const percent = missionProgressPercent(mission.progress, mission.target_value);
+  const { label: actionLabel, href: actionHref } = resolveMissionAction(mission);
   const canClaim = Boolean(mission.completed_at) && !mission.reward_claimed;
   const isClaimed = Boolean(mission.completed_at) && mission.reward_claimed;
   const showProgress = status === "EM ANDAMENTO";
 
-  const actionLabel =
-    mission.action_label ??
-    (canClaim ? "Resgatar Recompensa" : "Completar Missão");
-  const actionHref = mission.action_href ?? "/missoes";
   const isShareMission = mission.title === "Compartilhar nas redes";
 
   useEffect(() => {
@@ -214,7 +212,7 @@ export function MissionDetailModal({
                 Resgatando…
               </span>
             ) : (
-              actionLabel
+              "Resgatar Recompensa"
             )}
           </button>
         ) : isClaimed ? (

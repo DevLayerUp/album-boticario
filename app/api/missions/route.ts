@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { buildLeaderboard } from "@/lib/ranking";
+import { resolveMissionAction } from "@/lib/mission-actions";
 import { validarMissoes } from "@/lib/missions";
 
 /**
@@ -42,6 +43,7 @@ export async function GET() {
 
   const missions = (missionsRes.data ?? []).map((mission) => {
     const um = progressByMission.get(mission.id);
+    const action = resolveMissionAction(mission);
     return {
       id: mission.id,
       title: mission.title,
@@ -52,8 +54,8 @@ export async function GET() {
       reward_points: mission.reward_points ?? 100,
       theme: mission.theme ?? "green",
       instructions: mission.instructions,
-      action_label: mission.action_label,
-      action_href: mission.action_href,
+      action_label: action.label,
+      action_href: action.href,
       progress_unit: mission.progress_unit,
       progress: um?.progress ?? 0,
       completed_at: um?.completed_at ?? null,

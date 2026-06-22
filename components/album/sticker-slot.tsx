@@ -551,7 +551,6 @@ export function StickerSlot({
                       {sticker.rarities.name}
                     </motion.span>
                   )}
-                  <p className="text-sm text-verde-escuro-300">Slot #{slotNumber}</p>
                   {sticker.description && (
                     <p className="mx-auto mt-1.5 max-w-xs text-sm leading-relaxed text-verde-escuro-400">
                       {sticker.description}

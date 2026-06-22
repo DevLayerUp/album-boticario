@@ -39,7 +39,7 @@ interface MissionMetrics {
   completedAlbumPages: number;
 }
 
-const CUSTOM_MISSION_TITLES = {
+export const CUSTOM_MISSION_TITLES = {
   createSticker: "Criar figurinha personalizada",
   completeProfile: "Completar perfil",
   inviteFriends: "Convidar amigos",

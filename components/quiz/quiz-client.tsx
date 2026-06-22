@@ -73,6 +73,13 @@ function rewardLabel(points: number) {
   return `Acerte e Ganhe ${n} pacotinho${n > 1 ? "s" : ""}`;
 }
 
+/** Largura responsiva dos pacotinhos na tela de recompensa (proporção 392×560). */
+function packRewardSizeClass(count: number) {
+  if (count <= 1) return "w-[min(70vw,266px)]";
+  if (count === 2) return "w-[min(42vw,220px)]";
+  return "w-[min(32vw,180px)] sm:w-[min(22vw,200px)]";
+}
+
 export function QuizClient({ packImageUrl }: QuizClientProps) {
   const [state, setState] = useState<PageState>({ type: "loading" });
   const [selected, setSelected] = useState<number | null>(null);
@@ -324,21 +331,25 @@ export function QuizClient({ packImageUrl }: QuizClientProps) {
                 </div>
 
                 <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-16">
-                  {Array.from({ length: Math.min(state.packs_earned, 4) }).map((_, i) => (
-                    <div
-                      key={i}
-                      className="relative h-[min(42vh,320px)] w-[min(42vw,266px)] overflow-hidden rounded-2xl border-[5px] border-white shadow-md"
-                    >
-                      <Image
-                        src={packImageUrl}
-                        alt={`Pacotinho ${i + 1}`}
-                        fill
-                        className="object-cover"
-                        sizes="266px"
-                        unoptimized={packImageUrl.endsWith(".gif")}
-                      />
-                    </div>
-                  ))}
+                  {(() => {
+                    const visiblePacks = Math.min(state.packs_earned, 4);
+                    const sizeClass = packRewardSizeClass(visiblePacks);
+                    return Array.from({ length: visiblePacks }, (_, i) => (
+                      <div
+                        key={i}
+                        className={`relative aspect-[392/560] shrink-0 ${sizeClass}`}
+                      >
+                        <Image
+                          src={packImageUrl}
+                          alt={`Pacotinho ${i + 1}`}
+                          fill
+                          className="object-contain"
+                          sizes="266px"
+                          unoptimized={packImageUrl.endsWith(".gif")}
+                        />
+                      </div>
+                    ));
+                  })()}
                 </div>
 
                 <Link

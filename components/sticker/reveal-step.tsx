@@ -121,7 +121,7 @@ export function RevealStep({ stickerUrl, onRecreate }: RevealStepProps) {
           }}
         >
           <Link
-            href="/dashboard"
+            href="/album"
             className="inline-flex h-12 flex-1 items-center justify-center rounded-pill bg-amarelo px-6 font-medium text-verde-escuro-500 transition-all hover:brightness-95 active:scale-[0.98]"
           >
             Entrar no álbum

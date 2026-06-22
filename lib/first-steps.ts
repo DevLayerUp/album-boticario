@@ -22,8 +22,6 @@ interface LegacyFirstStepsStepImages {
 export interface FirstStepsStepConfig {
   title: string;
   description: string;
-  bullet1: string;
-  bullet2: string;
   panelTheme: FirstStepsPanelTheme;
   badgeVariant: FirstStepsBadgeVariant;
   backgroundImage: string | null;
@@ -46,15 +44,13 @@ export const DEFAULT_FIRST_STEPS_CONFIG: FirstStepsConfig = {
   skipLabel: "Pular introdução",
   footerText: "© 2026 Grupo Boticário · Fãs da Natureza",
   backLabel: "Voltar",
-  nextLabel: "Próximo",
+  nextLabel: "Avançar",
   finishLabel: "Começar a colecionar",
   steps: [
     {
-      title: "Abra seus pacotinhos",
+      title: "Início",
       description:
-        "Toda semana você recebe pacotinhos com figurinhas da fauna e flora brasileiras. Abra para descobrir espécies comuns, raras e super raras.",
-      bullet1: "Notificação quando novos pacotinhos chegarem",
-      bullet2: "Responda quiz e cumpra missões",
+        "Que bom te ver por aqui! Aqui você joga junto com a nossa comunidade para colecionar espécies incríveis e completar o seu álbum digital.",
       panelTheme: "verde-escuro",
       badgeVariant: "light",
       backgroundImage: DEFAULT_BG,
@@ -63,8 +59,6 @@ export const DEFAULT_FIRST_STEPS_CONFIG: FirstStepsConfig = {
       title: "Cole no seu álbum",
       description:
         "Organize as figurinhas nos slots do álbum digital, vire as páginas e acompanhe seu progresso até completar 100% da coleção 2026.",
-      bullet1: "Gere sua própria figurinha personalizada",
-      bullet2: "Acompanhe seu progresso",
       panelTheme: "amarelo",
       badgeVariant: "dark",
       backgroundImage: DEFAULT_BG,
@@ -73,8 +67,6 @@ export const DEFAULT_FIRST_STEPS_CONFIG: FirstStepsConfig = {
       title: "Troque com a comunidade",
       description:
         "Repetidas? Troque com outros colecionadores, participe do quizz diário e suba no ranking dos maiores fãs por natureza.",
-      bullet1: "Troca segura com outros usuários",
-      bullet2: "Ranking semanal de colecionadores",
       panelTheme: "verde",
       badgeVariant: "light",
       backgroundImage: DEFAULT_BG,
@@ -90,8 +82,6 @@ export function createEmptyFirstStep(index: number): FirstStepsStepConfig {
   return {
     title: `Novo passo ${index + 1}`,
     description: "",
-    bullet1: "",
-    bullet2: "",
     panelTheme,
     badgeVariant: panelTheme === "amarelo" ? "dark" : "light",
     backgroundImage: DEFAULT_BG,
@@ -127,8 +117,6 @@ function mergeStep(
   return {
     title: partial.title?.trim() || fallback.title,
     description: partial.description?.trim() || fallback.description,
-    bullet1: partial.bullet1?.trim() || fallback.bullet1,
-    bullet2: partial.bullet2?.trim() || fallback.bullet2,
     panelTheme: partial.panelTheme ?? fallback.panelTheme,
     badgeVariant: partial.badgeVariant ?? fallback.badgeVariant,
     backgroundImage,

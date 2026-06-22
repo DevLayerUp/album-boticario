@@ -128,19 +128,6 @@ function StepEditor({
         multiline
       />
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <TextField
-          label="Item da lista 1"
-          value={step.bullet1}
-          onChange={(bullet1) => onChange({ ...step, bullet1 })}
-        />
-        <TextField
-          label="Item da lista 2"
-          value={step.bullet2}
-          onChange={(bullet2) => onChange({ ...step, bullet2 })}
-        />
-      </div>
-
       <label className="block space-y-1.5">
         <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">
           Badge do passo
@@ -266,7 +253,7 @@ export function FirstStepsAdminClient({ initial }: FirstStepsAdminClientProps) {
             onChange={(backLabel) => setConfig({ ...config, backLabel })}
           />
           <TextField
-            label="Botão próximo"
+            label="Botão avançar"
             value={config.nextLabel}
             onChange={(nextLabel) => setConfig({ ...config, nextLabel })}
           />

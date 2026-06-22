@@ -21,14 +21,15 @@ function ProgressBars({
   totalSteps: number;
 }) {
   return (
-    <div className="absolute bottom-8 left-0 right-0 z-10 flex justify-center gap-3 px-8 sm:bottom-10 sm:gap-4">
+    <div className="absolute bottom-4 left-4 right-4 z-10 flex justify-start gap-1 sm:bottom-6 sm:left-6 sm:gap-1.5 lg:bottom-8 xl:bottom-[31px]">
       {Array.from({ length: totalSteps }, (_, i) => (
         <div
           key={i}
           className={cn(
-            "h-[7px] max-w-[142px] flex-1 rounded-pill sm:h-[11px]",
+            "h-1.5 min-w-0 flex-1 rounded-pill sm:h-2 lg:h-[11px]",
             i === activeIndex ? "bg-white" : "bg-white/60",
           )}
+          style={{ maxWidth: "70px" }}
           aria-hidden
         />
       ))}
@@ -46,7 +47,7 @@ export function FirstStepsStepVisual({
   return (
     <div
       className={cn(
-        "relative min-h-[220px] w-full overflow-hidden sm:min-h-0 sm:w-[44%] sm:shrink-0",
+        "relative aspect-[5/3] w-full shrink-0 overflow-hidden sm:aspect-auto sm:h-auto sm:min-h-0 sm:flex-[0_0_42%] sm:max-w-[499px]",
         panelThemeClass(step.panelTheme),
       )}
     >
@@ -56,7 +57,7 @@ export function FirstStepsStepVisual({
           alt=""
           fill
           className="object-cover"
-          sizes="(max-width: 768px) 100vw, 530px"
+          sizes="(max-width: 768px) 100vw, 499px"
           priority={stepIndex === 0}
           unoptimized={step.backgroundImage.endsWith(".gif")}
         />
@@ -64,7 +65,7 @@ export function FirstStepsStepVisual({
 
       <div
         className={cn(
-          "absolute left-4 top-4 z-10 rounded-pill border px-4 py-1.5 text-xs font-medium tracking-[0.06em]",
+          "absolute left-4 top-4 z-10 rounded-pill border px-3 py-1.5 text-[10px] font-medium tracking-[0.06em] sm:left-5 sm:top-5 sm:px-5 sm:py-2 sm:text-xs",
           badgeLight
             ? "border-verde-100 text-verde-100"
             : "border-verde-escuro-500 text-verde-escuro-500",
@@ -74,9 +75,7 @@ export function FirstStepsStepVisual({
         <span className="font-bold">{totalSteps}</span>
       </div>
 
-      <div className="relative min-h-[220px] w-full sm:min-h-[600px]">
-        <ProgressBars activeIndex={stepIndex} totalSteps={totalSteps} />
-      </div>
+      <ProgressBars activeIndex={stepIndex} totalSteps={totalSteps} />
     </div>
   );
 }
