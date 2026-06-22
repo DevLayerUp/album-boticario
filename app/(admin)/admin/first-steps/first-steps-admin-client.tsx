@@ -1,10 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { AlertCircle, Check, Loader2 } from "lucide-react";
+import { AlertCircle, Check, Loader2, Plus, Trash2 } from "lucide-react";
 import { ImageUploader } from "@/components/admin/image-uploader";
 import {
+  createEmptyFirstStep,
   DEFAULT_FIRST_STEPS_CONFIG,
+  FIRST_STEPS_MAX,
+  FIRST_STEPS_MIN,
   type FirstStepsBadgeVariant,
   type FirstStepsConfig,
   type FirstStepsPanelTheme,
@@ -70,14 +73,29 @@ function StepEditor({
   index,
   step,
   onChange,
+  onRemove,
 }: {
   index: number;
   step: FirstStepsStepConfig;
   onChange: (step: FirstStepsStepConfig) => void;
+  onRemove?: () => void;
 }) {
   return (
     <section className="space-y-5 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-      <h2 className="text-lg font-semibold text-gray-900">Passo {index + 1}</h2>
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="text-lg font-semibold text-gray-900">Passo {index + 1}</h2>
+        {onRemove ? (
+          <button
+            type="button"
+            onClick={onRemove}
+            className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm font-medium text-gray-500 transition-colors hover:bg-red-50 hover:text-red-600"
+            aria-label={`Remover passo ${index + 1}`}
+          >
+            <Trash2 size={16} aria-hidden />
+            Remover
+          </button>
+        ) : null}
+      </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <TextField
@@ -158,11 +176,31 @@ export function FirstStepsAdminClient({ initial }: FirstStepsAdminClientProps) {
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  function updateStep(index: 0 | 1 | 2, step: FirstStepsStepConfig) {
+  function updateStep(index: number, step: FirstStepsStepConfig) {
     setConfig((current) => {
-      const steps = [...current.steps] as FirstStepsConfig["steps"];
+      const steps = [...current.steps];
       steps[index] = step;
       return { ...current, steps };
+    });
+  }
+
+  function addStep() {
+    setConfig((current) => {
+      if (current.steps.length >= FIRST_STEPS_MAX) return current;
+      return {
+        ...current,
+        steps: [...current.steps, createEmptyFirstStep(current.steps.length)],
+      };
+    });
+  }
+
+  function removeStep(index: number) {
+    setConfig((current) => {
+      if (current.steps.length <= FIRST_STEPS_MIN) return current;
+      return {
+        ...current,
+        steps: current.steps.filter((_, i) => i !== index),
+      };
     });
   }
 
@@ -240,9 +278,41 @@ export function FirstStepsAdminClient({ initial }: FirstStepsAdminClientProps) {
         </div>
       </section>
 
-      <StepEditor index={0} step={config.steps[0]} onChange={(s) => updateStep(0, s)} />
-      <StepEditor index={1} step={config.steps[1]} onChange={(s) => updateStep(1, s)} />
-      <StepEditor index={2} step={config.steps[2]} onChange={(s) => updateStep(2, s)} />
+      <section className="space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
+            Passos do modal
+          </h2>
+          <span className="text-xs text-gray-400">
+            {config.steps.length} de {FIRST_STEPS_MAX}
+          </span>
+        </div>
+
+        {config.steps.map((step, index) => (
+          <StepEditor
+            key={index}
+            index={index}
+            step={step}
+            onChange={(s) => updateStep(index, s)}
+            onRemove={
+              config.steps.length > FIRST_STEPS_MIN
+                ? () => removeStep(index)
+                : undefined
+            }
+          />
+        ))}
+
+        {config.steps.length < FIRST_STEPS_MAX ? (
+          <button
+            type="button"
+            onClick={addStep}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-gray-300 px-4 py-3 text-sm font-medium text-gb-green transition-colors hover:border-gb-green hover:bg-gb-green/5"
+          >
+            <Plus size={16} aria-hidden />
+            Adicionar passo
+          </button>
+        ) : null}
+      </section>
 
       {error ? (
         <p className="flex items-center gap-2 text-sm text-red-600">

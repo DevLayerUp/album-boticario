@@ -2,7 +2,6 @@
 
 import { ArrowLeft, ArrowRight, CheckCircle2 } from "lucide-react";
 import {
-  FIRST_STEPS_TOTAL,
   type FirstStepsConfig,
   type FirstStepsStepConfig,
 } from "@/lib/first-steps";
@@ -26,7 +25,7 @@ export function FirstStepsStepContent({
   completing,
 }: FirstStepsStepContentProps) {
   const isFirst = stepIndex === 0;
-  const isLast = stepIndex === FIRST_STEPS_TOTAL - 1;
+  const isLast = stepIndex === config.steps.length - 1;
 
   return (
     <div className="flex w-full flex-1 flex-col justify-between gap-8 p-6 sm:gap-10 sm:p-10 lg:p-12">

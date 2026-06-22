@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import {
-  FIRST_STEPS_TOTAL,
   panelThemeClass,
   type FirstStepsStepConfig,
 } from "@/lib/first-steps";
@@ -11,12 +10,19 @@ import { cn } from "@/lib/utils";
 interface FirstStepsStepVisualProps {
   stepIndex: number;
   step: FirstStepsStepConfig;
+  totalSteps: number;
 }
 
-function ProgressBars({ activeIndex }: { activeIndex: number }) {
+function ProgressBars({
+  activeIndex,
+  totalSteps,
+}: {
+  activeIndex: number;
+  totalSteps: number;
+}) {
   return (
     <div className="absolute bottom-8 left-0 right-0 z-10 flex justify-center gap-3 px-8 sm:bottom-10 sm:gap-4">
-      {Array.from({ length: FIRST_STEPS_TOTAL }, (_, i) => (
+      {Array.from({ length: totalSteps }, (_, i) => (
         <div
           key={i}
           className={cn(
@@ -30,7 +36,11 @@ function ProgressBars({ activeIndex }: { activeIndex: number }) {
   );
 }
 
-export function FirstStepsStepVisual({ stepIndex, step }: FirstStepsStepVisualProps) {
+export function FirstStepsStepVisual({
+  stepIndex,
+  step,
+  totalSteps,
+}: FirstStepsStepVisualProps) {
   const badgeLight = step.badgeVariant === "light";
 
   return (
@@ -61,11 +71,11 @@ export function FirstStepsStepVisual({ stepIndex, step }: FirstStepsStepVisualPr
         )}
       >
         PASSO <span className="font-bold">{stepIndex + 1}</span> DE{" "}
-        <span className="font-bold">{FIRST_STEPS_TOTAL}</span>
+        <span className="font-bold">{totalSteps}</span>
       </div>
 
       <div className="relative min-h-[220px] w-full sm:min-h-[600px]">
-        <ProgressBars activeIndex={stepIndex} />
+        <ProgressBars activeIndex={stepIndex} totalSteps={totalSteps} />
       </div>
     </div>
   );

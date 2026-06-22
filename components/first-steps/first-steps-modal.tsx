@@ -92,7 +92,11 @@ export function FirstStepsModal({ config, onComplete }: FirstStepsModalProps) {
             transition={{ duration: 0.22 }}
             className="flex w-full max-w-[1200px] flex-col overflow-hidden rounded-card bg-white shadow-[0_4px_20px_rgba(0,0,0,0.15)] sm:min-h-[600px] sm:flex-row"
           >
-            <FirstStepsStepVisual stepIndex={stepIndex} step={step} />
+            <FirstStepsStepVisual
+              stepIndex={stepIndex}
+              step={step}
+              totalSteps={config.steps.length}
+            />
             <FirstStepsStepContent
               stepIndex={stepIndex}
               step={step}

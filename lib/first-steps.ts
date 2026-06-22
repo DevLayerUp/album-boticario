@@ -1,7 +1,11 @@
 import { dashboardAssets } from "@/lib/dashboard-assets";
 
 export const FIRST_STEPS_CONFIG_KEY = "first_steps_config";
-export const FIRST_STEPS_TOTAL = 3;
+export const FIRST_STEPS_MIN = 1;
+export const FIRST_STEPS_MAX = 10;
+
+/** Número de passos no config padrão (referência histórica). */
+export const DEFAULT_FIRST_STEPS_COUNT = 3;
 
 export type FirstStepsPanelTheme = "verde-escuro" | "amarelo" | "verde";
 export type FirstStepsBadgeVariant = "light" | "dark";
@@ -32,7 +36,7 @@ export interface FirstStepsConfig {
   backLabel: string;
   nextLabel: string;
   finishLabel: string;
-  steps: [FirstStepsStepConfig, FirstStepsStepConfig, FirstStepsStepConfig];
+  steps: FirstStepsStepConfig[];
 }
 
 const DEFAULT_BG = dashboardAssets.quiz.background;
@@ -77,6 +81,22 @@ export const DEFAULT_FIRST_STEPS_CONFIG: FirstStepsConfig = {
     },
   ],
 };
+
+const PANEL_THEMES: FirstStepsPanelTheme[] = ["verde-escuro", "amarelo", "verde"];
+
+/** Passo em branco para adicionar no admin. */
+export function createEmptyFirstStep(index: number): FirstStepsStepConfig {
+  const panelTheme = PANEL_THEMES[index % PANEL_THEMES.length];
+  return {
+    title: `Novo passo ${index + 1}`,
+    description: "",
+    bullet1: "",
+    bullet2: "",
+    panelTheme,
+    badgeVariant: panelTheme === "amarelo" ? "dark" : "light",
+    backgroundImage: DEFAULT_BG,
+  };
+}
 
 function pickLegacyBackground(
   legacy?: LegacyFirstStepsStepImages,
@@ -127,7 +147,24 @@ export function parseFirstStepsConfig(raw: string | null | undefined): FirstStep
 
 export function mergeFirstStepsConfig(partial: Partial<FirstStepsConfig>): FirstStepsConfig {
   const base = DEFAULT_FIRST_STEPS_CONFIG;
-  const steps = partial.steps ?? base.steps;
+  const partialSteps = partial.steps;
+
+  let steps: FirstStepsStepConfig[];
+  if (!partialSteps?.length) {
+    steps = [...base.steps];
+  } else {
+    steps = partialSteps.map((step, index) =>
+      mergeStep(base.steps[index] ?? createEmptyFirstStep(index), step),
+    );
+  }
+
+  if (steps.length < FIRST_STEPS_MIN) {
+    steps = [...base.steps].slice(0, FIRST_STEPS_MIN);
+  }
+  if (steps.length > FIRST_STEPS_MAX) {
+    steps = steps.slice(0, FIRST_STEPS_MAX);
+  }
+
   return {
     enabled: partial.enabled ?? base.enabled,
     skipLabel: partial.skipLabel?.trim() || base.skipLabel,
@@ -135,11 +172,7 @@ export function mergeFirstStepsConfig(partial: Partial<FirstStepsConfig>): First
     backLabel: partial.backLabel?.trim() || base.backLabel,
     nextLabel: partial.nextLabel?.trim() || base.nextLabel,
     finishLabel: partial.finishLabel?.trim() || base.finishLabel,
-    steps: [
-      mergeStep(base.steps[0], steps[0]),
-      mergeStep(base.steps[1], steps[1]),
-      mergeStep(base.steps[2], steps[2]),
-    ],
+    steps,
   };
 }
 

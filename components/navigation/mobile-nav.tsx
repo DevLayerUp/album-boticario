@@ -10,6 +10,7 @@ import {
   HelpCircle,
   Target,
   Trophy,
+  User,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -28,6 +29,7 @@ const NAV: MobileNavLink[] = [
   { href: "/quiz", label: "Quizz", icon: HelpCircle },
   { href: "/missoes", label: "Missões", icon: Target },
   { href: "/ranking", label: "Ranking", icon: Trophy },
+  { href: "/perfil", label: "Perfil", icon: User },
 ];
 
 export function MobileNav() {
@@ -38,7 +40,7 @@ export function MobileNav() {
       aria-label="Navegação"
       className="sticky bottom-0 z-20 border-t border-border bg-surface/95 backdrop-blur-md md:hidden"
     >
-      <ul className="grid grid-cols-7 px-2 pt-1.5 pb-[max(0.375rem,env(safe-area-inset-bottom))]">
+      <ul className="grid grid-cols-8 px-1 pt-1.5 pb-[max(0.375rem,env(safe-area-inset-bottom))] sm:px-2">
         {NAV.map(({ href, label, icon: Icon }) => {
           const isActive =
             href === "/dashboard"
@@ -70,7 +72,7 @@ export function MobileNav() {
                 />
                 <span
                   className={cn(
-                    "block w-full truncate text-center text-[9px] font-medium leading-none tracking-tight xs:text-[10px]",
+                    "block w-full truncate text-center text-[8px] font-medium leading-none tracking-tight xs:text-[9px]",
                     isActive && "font-bold",
                   )}
                 >
