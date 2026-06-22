@@ -71,7 +71,8 @@ export function RankingRow({ entry, isCurrentUser, className }: RankingRowProps)
             </span>
             <span className="inline-flex items-center gap-1.5 sm:gap-2">
               <Flag className="size-4 shrink-0 sm:size-5" aria-hidden />
-              {entry.missions_completed} missão{entry.missions_completed !== 1 ? "ões" : ""}
+              {entry.missions_completed}{" "}
+              {entry.missions_completed === 1 ? "missão" : "missões"}
             </span>
             <span className="inline-flex items-center gap-1.5 sm:gap-2">
               <ArrowLeftRight className="size-4 shrink-0 sm:size-5" aria-hidden />
