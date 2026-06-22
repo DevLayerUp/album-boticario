@@ -240,14 +240,6 @@ export default async function DashboardPage() {
             backgroundImage={getFeatureCardBackground("album", featureCards)}
           />
           <FeatureCard
-            title="Minha Coleção"
-            description="Confira suas figurinhas e gerencie as repetidas."
-            href="/colecao"
-            cta="Explorar"
-            theme="gold"
-            backgroundImage={getFeatureCardBackground("colecao", featureCards)}
-          />
-          <FeatureCard
             title="Pacotinhos"
             description="Acesse seus pacotes disponíveis e abra para descobrir novas figurinhas"
             href="/pacotinhos"
