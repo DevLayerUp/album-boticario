@@ -74,3 +74,18 @@ O fluxo usa **Supabase Auth** (`resetPasswordForEmail` + `updateUser`). Não há
    - Usuário define nova senha com `auth.updateUser({ password })`
 
 Em desenvolvimento local, use `http://localhost:3000` como Site URL ou inclua localhost nas Redirect URLs.
+
+---
+
+## Templates de e-mail (Auth)
+
+HTML prontos em `supabase/email-templates/`:
+
+| Template | Arquivo | Onde colar no Dashboard |
+|---|---|---|
+| Confirmação de conta | `confirm-signup.html` | Email Templates → **Confirm signup** |
+| Redefinir senha | `reset-password.html` | Email Templates → **Reset password** |
+
+Detalhes, assuntos sugeridos e variáveis: `supabase/email-templates/README.md`.
+
+Os templates incluem os logotipos da Fundação e do Fãs da Natureza via `{{ .SiteURL }}/images/dashboard/`.
