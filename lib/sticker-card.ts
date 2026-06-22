@@ -71,6 +71,15 @@ export const STICKER_EXPORT = {
   height: 1034,
 } as const;
 
+/**
+ * Ajuste de crop para exibir a figurinha (card retrato) em avatares circulares.
+ * A foto fica na zona central do card; sem zoom aparecem margens vazias nas laterais.
+ */
+export const STICKER_AVATAR_CROP = {
+  scale: 1.08,
+  objectPosition: "50% 42%",
+} as const;
+
 /** Dimensões da foto no preview/editor (contain — recorte inteiro visível). */
 export function getPhotoDisplayDimensions(
   imageWidth: number,

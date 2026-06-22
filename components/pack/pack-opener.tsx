@@ -251,28 +251,30 @@ export function PackOpener({
             <p className="font-display text-2xl font-bold text-verde-escuro-500 sm:text-3xl">
               Abrindo pacotinho…
             </p>
-            <div className="relative h-[390px] w-[273px] overflow-hidden rounded-2xl border-[5px] border-white shadow-lg">
+            <div className="relative h-[390px] w-[273px]">
               {openingGifUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   ref={openingGifRef}
                   src={openingGifUrl}
                   alt="Animação de abertura do pacotinho"
-                  className="size-full object-cover"
+                  className="size-full object-contain"
                   onLoad={() => {
                     openingSync.current.mediaReady = true;
                     tryPlayOpeningGifSound();
                   }}
                 />
               ) : (
-                <Image
-                  src={packImageUrl}
-                  alt="Pacotinho"
-                  fill
-                  className="animate-pulse object-cover"
-                  sizes="273px"
-                  unoptimized={packImageUrl.endsWith(".gif")}
-                />
+                <div className="relative size-full overflow-hidden rounded-2xl border-[5px] border-white">
+                  <Image
+                    src={packImageUrl}
+                    alt="Pacotinho"
+                    fill
+                    className="animate-pulse object-cover"
+                    sizes="273px"
+                    unoptimized={packImageUrl.endsWith(".gif")}
+                  />
+                </div>
               )}
             </div>
           </motion.div>

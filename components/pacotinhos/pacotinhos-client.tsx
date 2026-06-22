@@ -208,7 +208,7 @@ export function PacotinhosClient({
               <button
                 type="button"
                 onClick={openAllInSequence}
-                className="rounded-lg px-1 py-0.5 text-left text-sm font-medium uppercase tracking-[0.12em] text-verde-escuro-500 transition-all duration-200 hover:bg-verde-500/10 hover:text-verde-500 sm:px-2 sm:text-2xl sm:tracking-[1.92px]"
+                className="rounded-lg px-1 py-0.5 text-left text-sm font-medium uppercase tracking-[0.12em] text-verde-escuro-500 transition-all duration-200 hover:bg-verde-500/10 hover:text-verde-500 sm:px-2 sm:text-2xl sm:tracking-[1.92px] hidden"
               >
                 Abrir todas em sequência
               </button>

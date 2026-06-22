@@ -1,6 +1,6 @@
-import Image from "next/image";
 import { cn } from "@/lib/utils";
 import type { RankingEntry } from "@/lib/ranking";
+import { ProfileAvatarImage } from "@/components/profile/profile-avatar-image";
 import { rankingDisplayName } from "./ranking-utils";
 
 interface RankingAvatarProps {
@@ -19,6 +19,7 @@ export function RankingAvatar({
   className,
 }: RankingAvatarProps) {
   const src = entry.sticker_url || entry.avatar_url;
+  const variant = entry.sticker_url ? "sticker" : "photo";
   const initials = rankingDisplayName(entry).slice(0, 1).toUpperCase();
   const dimensionStyle = sizeClassName ? undefined : { width: size, height: size };
 
@@ -33,11 +34,9 @@ export function RankingAvatar({
       style={dimensionStyle}
     >
       {src ? (
-        <Image
+        <ProfileAvatarImage
           src={src}
-          alt=""
-          fill
-          className="object-cover"
+          variant={variant}
           sizes={size ? `${size}px` : "257px"}
         />
       ) : (

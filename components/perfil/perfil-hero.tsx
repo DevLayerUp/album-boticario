@@ -11,8 +11,10 @@ import { dashboardAssets } from "@/lib/dashboard-assets";
 import {
   formatMemberSince,
   formatShortDisplayName,
+  resolveProfileAvatar,
   type ProfilePageData,
 } from "@/lib/profile";
+import { ProfileAvatarImage } from "@/components/profile/profile-avatar-image";
 import { cn } from "@/lib/utils";
 
 interface PerfilStatCardProps {
@@ -51,7 +53,7 @@ export function PerfilHero({ data }: PerfilHeroProps) {
     profile.email.split("@")[0] ||
     "Colecionador";
   const shortName = formatShortDisplayName(displayName);
-  const avatarSrc = profile.sticker_url || profile.avatar_url;
+  const avatar = resolveProfileAvatar(profile);
   const memberSince = formatMemberSince(profile.created_at);
 
   return (
@@ -80,12 +82,10 @@ export function PerfilHero({ data }: PerfilHeroProps) {
                 "size-24 xs:size-28 sm:size-32 md:size-36 lg:size-40 xl:size-44 2xl:size-[275px]",
               )}
             >
-              {avatarSrc ? (
-                <Image
-                  src={avatarSrc}
-                  alt=""
-                  fill
-                  className="object-cover"
+              {avatar ? (
+                <ProfileAvatarImage
+                  src={avatar.src}
+                  variant={avatar.variant}
                   sizes="(max-width: 1536px) 176px, 275px"
                   priority
                 />

@@ -41,6 +41,21 @@ export function formatMemberSince(dateIso: string): string {
   );
 }
 
+export type ProfileAvatarVariant = "sticker" | "photo";
+
+export function resolveProfileAvatar(profile: {
+  sticker_url: string | null;
+  avatar_url: string | null;
+}): { src: string; variant: ProfileAvatarVariant } | null {
+  if (profile.sticker_url) {
+    return { src: profile.sticker_url, variant: "sticker" };
+  }
+  if (profile.avatar_url) {
+    return { src: profile.avatar_url, variant: "photo" };
+  }
+  return null;
+}
+
 export async function fetchProfilePageData(
   supabase: SupabaseClient,
   userId: string,

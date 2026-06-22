@@ -15,6 +15,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { rarityColor } from "@/lib/rarity";
+import { ProfileAvatarImage } from "@/components/profile/profile-avatar-image";
 import type { Profile, Sticker, Trade, TradeableEntry, Wish } from "./types";
 
 export const STATUS_META: Record<string, { label: string; bg: string; text: string }> = {
@@ -38,11 +39,10 @@ export function Avatar({ profile, size = 36 }: { profile: Profile | null; size?:
       className="relative shrink-0 overflow-hidden rounded-full ring-2 ring-verde-500/25"
       style={{ width: size, height: size }}
     >
-      <Image
+      <ProfileAvatarImage
         src={profile.sticker_url}
+        variant="sticker"
         alt={profile.display_name}
-        fill
-        className="object-cover"
         sizes={`${size}px`}
       />
     </div>
