@@ -4,7 +4,13 @@ import { NextResponse, type NextRequest } from "next/server";
 type CookieToSet = { name: string; value: string; options?: CookieOptions };
 
 /** Rotas públicas que não exigem sessão */
-const PUBLIC_ROUTES = ["/login", "/register", "/auth"];
+const PUBLIC_ROUTES = [
+  "/login",
+  "/register",
+  "/auth",
+  "/esqueci-senha",
+  "/redefinir-senha",
+];
 const ADMIN_PREFIX = "/admin";
 
 /** Rotas que nunca precisam de autenticação (recursos do sistema/browser) */
@@ -115,11 +121,12 @@ export async function updateSession(request: NextRequest) {
     }
   }
 
-  // Autenticado em rota de auth → dashboard
+  // Autenticado em rota de auth → dashboard (exceto redefinição de senha)
   if (
     user &&
     (pathname === "/login" ||
       pathname === "/register" ||
+      pathname === "/esqueci-senha" ||
       pathname.startsWith("/register/"))
   ) {
     console.log(`[MIDDLEWARE] usuário autenticado em rota de auth → redirect /dashboard`);

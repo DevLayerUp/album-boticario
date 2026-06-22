@@ -50,3 +50,27 @@ supabase db reset
   ignora RLS por design — as policies protegem o acesso direto via anon key.
 - **`pack_stickers`** é legível apenas pelo dono do pack (via `exists` em `packs`).
 - **Storage**: usuário só envia para `stickers/{uid}/...`; `assets` é escrita por admin.
+
+---
+
+## Recuperação de senha (Auth)
+
+O fluxo usa **Supabase Auth** (`resetPasswordForEmail` + `updateUser`). Não há migration SQL — configure no Dashboard:
+
+1. **Authentication → URL Configuration**
+   - **Site URL**: URL de produção (ex.: `https://seu-dominio.com`)
+   - **Redirect URLs** (adicione todas as origens usadas):
+     - `http://localhost:3000/auth/callback`
+     - `https://seu-dominio.com/auth/callback`
+     - (opcional) `http://localhost:3000/redefinir-senha` e produção equivalente
+
+2. **Authentication → Providers → Email**
+   - Mantenha **Email** habilitado.
+   - Em **Email Templates → Reset Password**, o link deve apontar para `{{ .ConfirmationURL }}` (padrão).
+
+3. **Fluxo no app**
+   - `/esqueci-senha` → envia e-mail com redirect para `/auth/callback?next=/redefinir-senha`
+   - Callback troca o `code` por sessão e redireciona para `/redefinir-senha`
+   - Usuário define nova senha com `auth.updateUser({ password })`
+
+Em desenvolvimento local, use `http://localhost:3000` como Site URL ou inclua localhost nas Redirect URLs.

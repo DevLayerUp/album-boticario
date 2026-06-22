@@ -16,6 +16,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { traduzErroAuth } from "@/lib/auth-errors";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -272,7 +273,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
     } catch (err) {
       setError(
         err instanceof Error
-          ? traduzErro(err.message)
+          ? traduzErroAuth(err.message)
           : "Algo deu errado. Tente novamente.",
       );
     } finally {
@@ -299,7 +300,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
       },
     });
     if (error) {
-      setError(traduzErro(error.message));
+      setError(traduzErroAuth(error.message));
       setOauthLoading(false);
     }
   }
@@ -397,6 +398,17 @@ export function AuthForm({ mode }: { mode: Mode }) {
             onChange={(e) => setPassword(e.target.value)}
           />
         </motion.div>
+
+        {isLogin && (
+          <motion.div variants={item} className="-mt-1 flex justify-end">
+            <Link
+              href="/esqueci-senha"
+              className="text-sm font-semibold text-verde-escuro-500 underline-offset-2 transition-colors hover:text-verde-genz hover:underline"
+            >
+              Esqueci minha senha
+            </Link>
+          </motion.div>
+        )}
 
         {/* Error / success */}
         <AnimatePresence mode="wait">
@@ -503,16 +515,6 @@ function isMaiorIdadeValida(birthDate: string) {
   if (data > hoje) return false;
   const anoMin = hoje.getFullYear() - 120;
   return data.getFullYear() >= anoMin;
-}
-
-function traduzErro(message: string) {
-  if (message.includes("Invalid login credentials"))
-    return "E-mail ou senha incorretos.";
-  if (message.includes("already registered"))
-    return "Este e-mail já está cadastrado.";
-  if (message.includes("Email not confirmed"))
-    return "Confirme seu e-mail antes de entrar.";
-  return message;
 }
 
 function GoogleIcon() {
