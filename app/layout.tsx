@@ -38,9 +38,9 @@ export const metadata: Metadata = {
   },
 
   icons: {
-    icon: "/favicon.svg",
-    shortcut: "/favicon.svg",
-    apple: "/favicon.svg",
+    icon: [{ url: "/images/favicon.png", type: "image/png" }],
+    shortcut: "/images/favicon.png",
+    apple: "/images/favicon.png",
   },
 
   // Skip indexing admin / api routes
