@@ -116,21 +116,41 @@ function Title3Page({ page, side, pastedSlotIds, ownedMap, onPaste, inFlipBook }
 
   return (
     <PageShell side={side} inFlipBook={inFlipBook}>
-      <div className="flex flex-1 flex-col px-6 pb-8 pt-10 sm:px-[10%] sm:pt-[14%]">
+      <div
+        className={cn(
+          "flex flex-1 flex-col",
+          inFlipBook
+            ? "px-4 pb-4 pt-5 sm:px-[10%] sm:pb-8 sm:pt-[14%]"
+            : "px-6 pb-8 pt-10 sm:px-[10%] sm:pt-[14%]",
+        )}
+      >
         {title && (
-          <h2 className="font-display text-3xl font-bold leading-[1.4] text-white md:text-5xl">
+          <h2
+            className={cn(
+              "font-display font-bold leading-[1.35] text-white",
+              inFlipBook ? "text-xl sm:text-3xl md:text-5xl" : "text-3xl md:text-5xl",
+            )}
+          >
             {title}
           </h2>
         )}
 
         {text && (
           <div
-            className="mt-4 max-w-[450px] text-base leading-[1.4] text-white **:text-white [&_p]:mb-3 [&_strong]:font-semibold"
+            className={cn(
+              "max-w-[450px] leading-[1.4] text-white **:text-white [&_p]:mb-3 [&_strong]:font-semibold",
+              inFlipBook ? "mt-2 text-sm sm:mt-4 sm:text-base" : "mt-4 text-base",
+            )}
             dangerouslySetInnerHTML={{ __html: text }}
           />
         )}
 
-        <div className="mt-8 grid grid-cols-3 gap-4 md:gap-7">
+        <div
+          className={cn(
+            "grid grid-cols-3",
+            inFlipBook ? "mt-3 gap-2 sm:mt-8 sm:gap-4 md:gap-7" : "mt-8 gap-4 md:gap-7",
+          )}
+        >
           {slots.slice(0, 3).map((slot) => {
             const stickerId = slot.stickers?.id;
             return (
@@ -147,7 +167,12 @@ function Title3Page({ page, side, pastedSlotIds, ownedMap, onPaste, inFlipBook }
           })}
         </div>
 
-        <div className="mt-auto flex justify-center pt-10">
+        <div
+          className={cn(
+            "mt-auto flex justify-center",
+            inFlipBook ? "pt-3 max-md:hidden sm:pt-10" : "pt-10",
+          )}
+        >
           <LogoBadge />
         </div>
       </div>
@@ -162,9 +187,21 @@ function ProfilePage({ page, side, userStickerUrl, inFlipBook }: AlbumPageProps)
 
   return (
     <PageShell side={side} inFlipBook={inFlipBook}>
-      <div className="flex flex-1 flex-col items-center justify-center px-6 py-8 sm:px-[10%]">
+      <div
+        className={cn(
+          "flex flex-1 flex-col items-center justify-center",
+          inFlipBook
+            ? "px-4 py-5 sm:px-[10%] sm:py-8"
+            : "px-6 py-8 sm:px-[10%]",
+        )}
+      >
         {title && (
-          <h2 className="mb-8 text-center font-display text-3xl font-bold leading-[1.4] text-white md:text-4xl">
+          <h2
+            className={cn(
+              "text-center font-display font-bold leading-[1.4] text-white",
+              inFlipBook ? "mb-4 text-2xl sm:mb-8 sm:text-3xl md:text-4xl" : "mb-8 text-3xl md:text-4xl",
+            )}
+          >
             {title}
           </h2>
         )}
@@ -201,7 +238,12 @@ function ProfilePage({ page, side, userStickerUrl, inFlipBook }: AlbumPageProps)
           </div>
         )}
 
-        <div className="mt-auto flex justify-center pt-10">
+        <div
+          className={cn(
+            "mt-auto flex justify-center",
+            inFlipBook ? "pt-4 max-md:hidden sm:pt-10" : "pt-10",
+          )}
+        >
           <LogoBadge />
         </div>
       </div>
@@ -218,8 +260,15 @@ function Grid6Page({ page, side, pastedSlotIds, ownedMap, onPaste, inFlipBook }:
 
   return (
     <PageShell side={side} inFlipBook={inFlipBook}>
-      <div className="flex flex-1 flex-col px-6 pb-8 pt-8 sm:px-[10%] sm:pt-[10%]">
-        <div className="grid grid-cols-3 gap-3 md:gap-5">
+      <div
+        className={cn(
+          "flex flex-1 flex-col",
+          inFlipBook
+            ? "px-4 pb-4 pt-5 sm:px-[10%] sm:pb-8 sm:pt-[10%]"
+            : "px-6 pb-8 pt-8 sm:px-[10%] sm:pt-[10%]",
+        )}
+      >
+        <div className={cn("grid grid-cols-3", inFlipBook ? "gap-2 sm:gap-3 md:gap-5" : "gap-3 md:gap-5")}>
           {slots.slice(0, 6).map((slot) => {
             const stickerId = slot.stickers?.id;
             return (
@@ -237,7 +286,7 @@ function Grid6Page({ page, side, pastedSlotIds, ownedMap, onPaste, inFlipBook }:
         </div>
 
         {(title || text) && (
-          <div className="mt-8 md:mt-10">
+          <div className={cn(inFlipBook ? "mt-4 sm:mt-8 md:mt-10" : "mt-8 md:mt-10")}>
             {title && (
               <h2 className="font-display text-2xl font-bold leading-[1.35] text-white md:text-4xl">
                 {title}
@@ -252,7 +301,12 @@ function Grid6Page({ page, side, pastedSlotIds, ownedMap, onPaste, inFlipBook }:
           </div>
         )}
 
-        <div className="mt-auto flex justify-center pt-8">
+        <div
+          className={cn(
+            "mt-auto flex justify-center",
+            inFlipBook ? "pt-4 max-md:hidden sm:pt-8" : "pt-8",
+          )}
+        >
           <LogoBadge />
         </div>
       </div>
@@ -286,7 +340,12 @@ function Tri3Page({ page, side, pastedSlotIds, ownedMap, onPaste, inFlipBook }: 
 
   return (
     <PageShell side={side} inFlipBook={inFlipBook}>
-      <div className="flex flex-1 flex-col px-5 py-8 sm:px-[8%] sm:py-[10%]">
+      <div
+        className={cn(
+          "flex flex-1 flex-col",
+          inFlipBook ? "px-4 py-5 sm:px-[8%] sm:py-[10%]" : "px-5 py-8 sm:px-[8%] sm:py-[10%]",
+        )}
+      >
         <div className="flex flex-1 items-center justify-center">
           <div className="flex items-center gap-5 sm:gap-8 md:gap-10">
             <div className={cellClass}>{renderSlot(left)}</div>
@@ -297,7 +356,12 @@ function Tri3Page({ page, side, pastedSlotIds, ownedMap, onPaste, inFlipBook }: 
           </div>
         </div>
 
-        <div className="mt-auto flex justify-center pt-6">
+        <div
+          className={cn(
+            "mt-auto flex justify-center",
+            inFlipBook ? "pt-3 max-md:hidden sm:pt-6" : "pt-6",
+          )}
+        >
           <LogoBadge />
         </div>
       </div>

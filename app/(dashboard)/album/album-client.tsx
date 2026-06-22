@@ -108,7 +108,7 @@ export function AlbumClient({
   const progressPct  = totalSlots > 0 ? Math.round((filledCount / totalSlots) * 100) : 0;
 
   return (
-    <div className="flex flex-col gap-[60px]">
+    <div className="flex flex-col gap-10 md:gap-[60px]">
       {/* ── Header ─────────────────────────────────────────────────────── */}
       <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
         {/* Título + progresso */}

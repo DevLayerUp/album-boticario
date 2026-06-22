@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, type KeyboardEvent, type PointerEvent } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AlbumPage, type AlbumPageData } from "./album-page";
@@ -65,6 +65,82 @@ const navBtn = (disabled: boolean) =>
  *    with figurinhas near the page edges never reach the flip engine.
  *  - Arrow buttons call flipPrev/flipNext programmatically.
  */
+function useFlipBookSize() {
+  const [size, setSize] = useState({
+    height: 780,
+    minHeight: 480,
+    maxHeight: 920,
+  });
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)");
+    const apply = () => {
+      setSize(
+        mq.matches
+          ? { height: 900, minHeight: 520, maxHeight: 980 }
+          : { height: 780, minHeight: 480, maxHeight: 920 },
+      );
+    };
+    apply();
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }, []);
+
+  return size;
+}
+
+/** Freeze document scroll while page-flip animates (prevents mobile viewport jump). */
+function useScrollLock() {
+  const lockedY = useRef(0);
+  const depth = useRef(0);
+
+  const lock = () => {
+    if (depth.current === 0) {
+      lockedY.current = window.scrollY;
+      const { style } = document.body;
+      style.position = "fixed";
+      style.top = `-${lockedY.current}px`;
+      style.left = "0";
+      style.right = "0";
+      style.width = "100%";
+      style.overflow = "hidden";
+    }
+    depth.current += 1;
+  };
+
+  const unlock = () => {
+    depth.current = Math.max(0, depth.current - 1);
+    if (depth.current > 0) return;
+
+    const y = lockedY.current;
+    const { style } = document.body;
+    style.position = "";
+    style.top = "";
+    style.left = "";
+    style.right = "";
+    style.width = "";
+    style.overflow = "";
+    window.scrollTo({ top: y, left: 0, behavior: "instant" });
+  };
+
+  useEffect(() => {
+    return () => {
+      depth.current = 0;
+      const { style } = document.body;
+      style.position = "";
+      style.top = "";
+      style.left = "";
+      style.right = "";
+      style.width = "";
+      style.overflow = "";
+    };
+  }, []);
+
+  return { lock, unlock };
+}
+
+const FLIP_DURATION_MS = 720;
+
 export function FlipBook({
   pages,
   pastedSlotIds,
@@ -74,6 +150,9 @@ export function FlipBook({
   coverUrl,
 }: FlipBookProps) {
   const bookRef = useRef<HTMLFlipBookHandle | null>(null);
+  const unlockTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const flipBookSize = useFlipBookSize();
+  const { lock: lockScroll, unlock: unlockScroll } = useScrollLock();
 
   // currentPage = index of the currently visible page (0 = cover, 1+ = content)
   const [currentPage, setCurrentPage] = useState(0);
@@ -83,6 +162,41 @@ export function FlipBook({
   useEffect(() => {
     setCurrentPage(0);
   }, [firstPageId]);
+
+  const scheduleScrollUnlock = () => {
+    if (unlockTimerRef.current) clearTimeout(unlockTimerRef.current);
+    unlockTimerRef.current = setTimeout(() => {
+      unlockScroll();
+      unlockTimerRef.current = null;
+    }, FLIP_DURATION_MS);
+  };
+
+  const flipPage = (direction: "prev" | "next") => {
+    const api = bookRef.current?.pageFlip();
+    if (!api) return;
+
+    lockScroll();
+    if (direction === "prev") api.flipPrev();
+    else api.flipNext();
+    scheduleScrollUnlock();
+  };
+
+  const handleNavPointerDown = (e: PointerEvent) => {
+    // Prevent focus + iOS scroll-into-view on tap (root cause of viewport jump).
+    e.preventDefault();
+  };
+
+  const handleNavKeyDown = (
+    e: KeyboardEvent,
+    direction: "prev" | "next",
+    disabled: boolean,
+  ) => {
+    if (disabled) return;
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      flipPage(direction);
+    }
+  };
 
   if (pages.length === 0) {
     return (
@@ -111,24 +225,31 @@ export function FlipBook({
       <div className="mx-auto flex w-full max-w-[1340px] flex-wrap items-center justify-center gap-4 md:flex-nowrap md:gap-3">
 
         {/* ← Previous — row 2 on mobile (below book), left column on desktop */}
-        <button
-          onClick={() => bookRef.current?.pageFlip()?.flipPrev()}
-          disabled={isFirst}
+        <div
+          role="button"
+          tabIndex={isFirst ? -1 : 0}
+          aria-disabled={isFirst}
           aria-label="Página anterior"
-          className={cn("order-2 md:order-1", navBtn(isFirst))}
+          onPointerDown={handleNavPointerDown}
+          onClick={() => !isFirst && flipPage("prev")}
+          onKeyDown={(e) => handleNavKeyDown(e, "prev", isFirst)}
+          className={cn(
+            "order-2 touch-manipulation md:order-1",
+            navBtn(isFirst),
+          )}
         >
           <ChevronLeft size={22} strokeWidth={2.5} />
-        </button>
+        </div>
 
         {/* Book — w-full is required so page-flip measures a wide enough block
             for landscape (two-page) mode. Without it the wrapper shrink-wraps
             and the library falls back to portrait (single tiny page).
             On desktop with showCover, the closed cover sits on the RIGHT half;
             -translate-x-1/4 centres that single visible page. */}
-        <div className="order-1 flex w-full min-w-0 cursor-grab justify-center active:cursor-grabbing md:order-2 md:min-w-[560px] md:flex-1">
+        <div className="order-1 flex w-full min-w-0 cursor-grab justify-center [overflow-anchor:none] active:cursor-grabbing md:order-2 md:min-w-[560px] md:flex-1">
           <div
             className={cn(
-              "w-full flex justify-center transition-transform duration-700 ease-out",
+              "flex w-full justify-center transition-transform duration-700 ease-out",
               isFirst && "md:-translate-x-1/4",
             )}
           >
@@ -136,12 +257,12 @@ export function FlipBook({
             ref={bookRef}
             key={firstPageId ?? "empty"}
             width={560}
-            height={780}
+            height={flipBookSize.height}
             size="stretch"
             minWidth={280}
             maxWidth={560}
-            minHeight={480}
-            maxHeight={920}
+            minHeight={flipBookSize.minHeight}
+            maxHeight={flipBookSize.maxHeight}
             drawShadow
             flippingTime={700}
             usePortrait
@@ -194,14 +315,18 @@ export function FlipBook({
         </div>
 
         {/* → Next — always order-3 (right of prev on mobile, right column on desktop) */}
-        <button
-          onClick={() => bookRef.current?.pageFlip()?.flipNext()}
-          disabled={isLast}
+        <div
+          role="button"
+          tabIndex={isLast ? -1 : 0}
+          aria-disabled={isLast}
           aria-label="Próxima página"
-          className={cn("order-3", navBtn(isLast))}
+          onPointerDown={handleNavPointerDown}
+          onClick={() => !isLast && flipPage("next")}
+          onKeyDown={(e) => handleNavKeyDown(e, "next", isLast)}
+          className={cn("order-3 touch-manipulation", navBtn(isLast))}
         >
           <ChevronRight size={22} strokeWidth={2.5} />
-        </button>
+        </div>
       </div>
     </div>
   );
