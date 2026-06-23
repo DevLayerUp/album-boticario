@@ -24,6 +24,9 @@ const DEFAULT_LINKS: NavLink[] = [
   { label: "FAQ", href: "#faq" },
 ];
 
+const FGB_URL = "https://fundacaogrupoboticario.org.br/";
+const FGB_LOGO = "/images/landing/footer/logo.png";
+
 const EASE_OUT = [0.22, 1, 0.36, 1] as const;
 
 const backdropVariants = {
@@ -261,23 +264,47 @@ export function LandingNavbar({
         className="mx-auto flex h-[72px] max-w-[1680px] items-center justify-between px-6 md:px-10 lg:px-16"
         aria-label="Navegação principal"
       >
-        {/* Logo */}
-        <Link href="/" className="shrink-0" aria-label="Início">
-          {logoUrl ? (
+        {/* Logos — Fãs por Natureza + Fundação Grupo Boticário (mesmo padrão do dashboard) */}
+        <div className="flex min-w-0 shrink-0 items-center gap-2.5 sm:gap-4">
+          <Link href="/" className="flex shrink-0 items-center" aria-label="Fãs por Natureza — início">
+            {logoUrl ? (
+              <LandingImage
+                src={logoUrl}
+                alt="Fãs por Natureza"
+                width={145}
+                height={73}
+                className="h-10 w-auto object-contain md:h-[48px]"
+                priority
+              />
+            ) : (
+              <span className="font-display text-xl font-bold text-verde-escuro-500">
+                Fãs por <span className="text-verde-500">Natureza</span>
+              </span>
+            )}
+          </Link>
+
+          <span
+            className="h-8 w-px shrink-0 bg-border sm:h-10"
+            aria-hidden
+          />
+
+          <a
+            href={FGB_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Fundação Grupo Boticário — site oficial"
+            className="shrink-0"
+          >
             <LandingImage
-              src={logoUrl}
-              alt="Fãs por Natureza"
-              width={145}
-              height={73}
-              className="h-10 w-auto object-contain md:h-[48px]"
+              src={FGB_LOGO}
+              alt="Fundação Grupo Boticário"
+              width={182}
+              height={66}
+              className="h-9 w-auto max-w-[120px] object-contain sm:h-11 sm:max-w-none"
               priority
             />
-          ) : (
-            <span className="font-display text-xl font-bold text-verde-escuro-500">
-              Fãs por <span className="text-verde-500">Natureza</span>
-            </span>
-          )}
-        </Link>
+          </a>
+        </div>
 
         {/* Desktop nav links */}
         <ul className="hidden items-center gap-1 lg:flex" role="list">
