@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { buildAppPageMetadata } from "@/lib/seo-metadata";
 import { PerfilClient } from "@/components/perfil/perfil-client";
 import { fetchProfilePageData } from "@/lib/profile";
 import { createClient } from "@/lib/supabase/server";
 
-export const metadata: Metadata = { title: "Meu Perfil" };
+export async function generateMetadata(): Promise<Metadata> {
+  return buildAppPageMetadata("perfil");
+}
 
 export default async function PerfilPage() {
   const supabase = await createClient();

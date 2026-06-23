@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { buildAppPageMetadata } from "@/lib/seo-metadata";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { AlbumClient } from "./album-client";
 
-export const metadata: Metadata = { title: "Álbum" };
+export async function generateMetadata(): Promise<Metadata> {
+  return buildAppPageMetadata("album");
+}
 
 export default async function AlbumPage() {
   const supabase = await createClient();

@@ -9,6 +9,7 @@ import { LandingFandom } from "@/components/landing/fandom-section";
 import { LandingFaq } from "@/components/landing/faq-section";
 import { LandingFooter } from "@/components/landing/footer-section";
 import type { Metadata } from "next";
+import { buildRouteMetadata, fetchSeoSettings } from "@/lib/seo-metadata";
 import type { LandingNavbarProps } from "@/components/landing/navbar";
 import type { LandingHeroProps } from "@/components/landing/hero";
 import type { LandingWelcomeProps } from "@/components/landing/welcome-section";
@@ -18,11 +19,10 @@ import type { LandingFandomProps } from "@/components/landing/fandom-section";
 import type { LandingFaqProps } from "@/components/landing/faq-section";
 import type { LandingFooterProps } from "@/components/landing/footer-section";
 
-export const metadata: Metadata = {
-  title: "Álbum Digital de Figurinhas — Grupo Boticário",
-  description:
-    "Crie sua figurinha personalizada, abra pacotinhos, complete coleções e troque figurinhas com outros fãs do Grupo Boticário.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await fetchSeoSettings();
+  return buildRouteMetadata(settings, "home", "/");
+}
 
 function safeParse<T>(raw: string | null, fallback: T): T {
   if (!raw) return fallback;

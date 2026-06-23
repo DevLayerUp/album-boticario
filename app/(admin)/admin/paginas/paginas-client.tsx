@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
+import { AdminStorageImage } from "@/components/admin/admin-storage-image";
 import {
   Plus, Trash2, BookOpen, Layers, Settings2, Save, X,
   Loader2, CheckCircle2, FileText, ImageIcon, Upload, PenLine, Hash,
@@ -375,7 +376,7 @@ function InfoPageEditorModal({
                   {imageUrl ? (
                     <div className="relative">
                       <div className="relative h-40 w-full">
-                        <Image src={imageUrl} alt="Imagem da página" fill className="object-cover rounded-xl" sizes="700px" />
+                        <AdminStorageImage src={imageUrl} alt="Imagem da página" fill className="object-contain rounded-xl" sizes="700px" />
                       </div>
                       <button
                         onClick={() => { setImageUrl(""); setSaved(false); }}
@@ -446,7 +447,7 @@ function InfoPageEditorModal({
               <div className="relative">
                 {imageUrl && (
                   <div className="relative h-48 w-full">
-                    <Image src={imageUrl} alt={title || "Imagem"} fill className="object-cover" sizes="700px" />
+                    <AdminStorageImage src={imageUrl} alt={title || "Imagem"} fill className="object-contain" sizes="700px" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                     {title && (
                       <div className="absolute bottom-0 left-0 right-0 p-4">

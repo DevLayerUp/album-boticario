@@ -89,7 +89,7 @@ export function LandingHowItWorks({
             transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
             className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
           >
-            <h2 className="font-display text-[22px] font-bold leading-[1.3] text-verde-escuro-500 xs:text-2xl sm:text-[26px] lg:text-[28px] xl:text-[32px] xl:leading-[1.4]">
+            <h2 className="font-display text-[22px] font-bold leading-[1.3] text-verde-escuro-500 xs:text-2xl sm:text-[24px] md:text-[26px] lg:text-[26px] xl:text-[32px] xl:leading-[1.4]">
               {title}
             </h2>
 
@@ -213,9 +213,9 @@ function StepCard({ step }: { step: HowItWorksStep }) {
         <h3
           className={[
             "text-balance font-display font-bold leading-snug text-verde-escuro-500",
-            "text-[15px] xs:text-base md:text-lg",
-            "lg:text-lg lg:leading-tight",
-            "xl:text-xl xl:leading-snug",
+            "text-[15px] xs:text-base md:text-base",
+            "lg:text-base lg:leading-tight",
+            "xl:text-lg xl:leading-snug",
             "2xl:text-[32px] 2xl:leading-[40px]",
           ].join(" ")}
         >
@@ -225,7 +225,7 @@ function StepCard({ step }: { step: HowItWorksStep }) {
           className={[
             "text-pretty leading-relaxed text-[#444444]",
             "text-xs xs:text-[13px] md:text-sm",
-            "lg:text-[13px] lg:leading-normal",
+            "lg:text-sm lg:leading-normal",
             "xl:text-sm xl:leading-relaxed",
             "2xl:text-[22px] 2xl:leading-[31px]",
           ].join(" ")}

@@ -1,8 +1,12 @@
 import type { Metadata } from "next";
+import { buildRouteMetadata, fetchSeoSettings } from "@/lib/seo-metadata";
 import { ResetPasswordForm } from "@/components/auth/reset-password-form";
 import { Wordmark } from "@/components/brand/wordmark";
 
-export const metadata: Metadata = { title: "Redefinir senha" };
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await fetchSeoSettings();
+  return buildRouteMetadata(settings, "redefinirSenha", "/redefinir-senha");
+}
 
 export default function RedefinirSenhaPage() {
   return (

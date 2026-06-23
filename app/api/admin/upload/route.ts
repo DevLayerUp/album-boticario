@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminGuard } from "@/lib/admin-guard";
+import { prepareAdminImageUpload } from "@/lib/admin-image-upload";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function POST(request: NextRequest) {
@@ -56,10 +57,27 @@ export async function POST(request: NextRequest) {
   const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 
   const supabase = createAdminClient();
+  const rawBuffer = await file.arrayBuffer();
+
+  let uploadBody: ArrayBuffer | Buffer = rawBuffer;
+  let uploadContentType = file.type;
+  let uploadPath = path;
+
+  if (!isVideo) {
+    try {
+      const prepared = await prepareAdminImageUpload(rawBuffer, file.type, ext);
+      uploadBody = prepared.buffer;
+      uploadContentType = prepared.contentType;
+      uploadPath = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2)}.${prepared.ext}`;
+    } catch {
+      // Mantém bytes originais se o sharp não conseguir processar.
+    }
+  }
+
   const { error } = await supabase.storage
     .from(bucket)
-    .upload(path, await file.arrayBuffer(), {
-      contentType: file.type,
+    .upload(uploadPath, uploadBody, {
+      contentType: uploadContentType,
       upsert: false,
     });
 
@@ -67,6 +85,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  const { data } = supabase.storage.from(bucket).getPublicUrl(path);
+  const { data } = supabase.storage.from(bucket).getPublicUrl(uploadPath);
   return NextResponse.json({ url: data.publicUrl });
 }

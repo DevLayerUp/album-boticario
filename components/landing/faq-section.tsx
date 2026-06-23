@@ -72,10 +72,10 @@ export function LandingFaq({
           transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
           className="flex max-w-[581px] flex-col items-center gap-2.5 text-center"
         >
-          <p className="w-full text-[20px] font-medium uppercase leading-7 tracking-[2px] text-verde-400">
+          <p className="w-full text-sm font-medium uppercase leading-7 tracking-[2px] text-verde-400 sm:text-base lg:text-[20px]">
             {eyebrow}
           </p>
-          <h2 className="w-full font-display text-[36px] font-bold leading-[1.4] text-verde-escuro-500 md:text-[48px]">
+          <h2 className="w-full font-display text-[28px] font-bold leading-[1.4] text-verde-escuro-500 sm:text-[32px] md:text-[36px] lg:text-[40px] xl:text-[48px]">
             {title}
           </h2>
         </motion.header>
@@ -114,7 +114,7 @@ export function LandingFaq({
                     onClick={() => toggle(index)}
                     className="flex w-full items-start justify-between gap-4 text-left"
                   >
-                    <span className="flex-1 text-[22px] font-bold leading-9 text-[#2e2e2e]">
+                    <span className="flex-1 text-lg font-bold leading-snug text-[#2e2e2e] sm:text-xl lg:text-[22px] lg:leading-9">
                       {item.question}
                     </span>
                     <ChevronDown
@@ -135,7 +135,7 @@ export function LandingFaq({
                     hidden={!isOpen}
                     className={isOpen ? "mt-2 block" : "hidden"}
                   >
-                    <p className="text-base leading-6 text-[#2e2e2e]">
+                    <p className="text-sm leading-6 text-[#2e2e2e] sm:text-base">
                       {item.answer}
                     </p>
                   </div>

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { prepareAdminImageUpload } from "@/lib/admin-image-upload";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { adminGuard } from "@/lib/admin-guard";
 
@@ -33,14 +34,28 @@ export async function POST(request: NextRequest) {
   }
 
   const ext  = file.name.split(".").pop() ?? "jpg";
-  const path = `pages/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 
   const supabase = createAdminClient();
-  const arrayBuffer = await file.arrayBuffer();
+  const rawBuffer = await file.arrayBuffer();
+
+  let uploadBody: ArrayBuffer | Buffer = rawBuffer;
+  let uploadContentType = file.type;
+  let uploadExt = ext;
+
+  try {
+    const prepared = await prepareAdminImageUpload(rawBuffer, file.type, ext);
+    uploadBody = prepared.buffer;
+    uploadContentType = prepared.contentType;
+    uploadExt = prepared.ext;
+  } catch {
+    // Mantém bytes originais se o sharp não conseguir processar.
+  }
+
+  const path = `pages/${Date.now()}-${Math.random().toString(36).slice(2)}.${uploadExt}`;
 
   const { error: upErr } = await supabase.storage
     .from("assets")
-    .upload(path, arrayBuffer, { contentType: file.type, upsert: false });
+    .upload(path, uploadBody, { contentType: uploadContentType, upsert: false });
 
   if (upErr) return NextResponse.json({ error: upErr.message }, { status: 500 });
 

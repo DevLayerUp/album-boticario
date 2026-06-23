@@ -169,11 +169,11 @@ export function LandingFandom({
             transition={{ duration: 0.65, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
             className="col-span-12 flex flex-col gap-10 lg:col-span-5 lg:col-start-8"
           >
-            <h2 className="font-display text-[36px] font-bold leading-tight text-verde-escuro-500 md:text-[40px]">
+            <h2 className="font-display text-[28px] font-bold leading-tight text-verde-escuro-500 sm:text-[32px] md:text-[34px] lg:text-[36px] xl:text-[40px]">
               {heading}
             </h2>
 
-            <div className="space-y-5 text-[18px] leading-[30px] text-foreground md:text-[22px]">
+            <div className="space-y-5 text-base leading-[1.6] text-foreground sm:text-lg md:text-lg lg:text-xl xl:text-[22px] xl:leading-[30px]">
               {paragraph1 && <p>{paragraph1}</p>}
               {paragraph2 && (
                 <p>
@@ -185,7 +185,7 @@ export function LandingFandom({
 
             <Link
               href={ctaHref ?? "/register"}
-              className="inline-flex w-fit items-center rounded-pill bg-verde-escuro-500 px-8 py-3 text-[20px] font-medium leading-[1.4] text-verde-100 transition-opacity hover:opacity-90"
+              className="inline-flex w-fit items-center rounded-pill bg-verde-escuro-500 px-8 py-3 text-base font-medium leading-[1.4] text-verde-100 transition-opacity hover:opacity-90 sm:text-lg lg:text-xl"
             >
               {ctaLabel}
             </Link>

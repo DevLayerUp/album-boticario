@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import { Check, Loader2, AlertCircle, Package, Trash2 } from "lucide-react";
+import { AdminStorageImage } from "@/components/admin/admin-storage-image";
 import { ImageUploader } from "@/components/admin/image-uploader";
 import { DEFAULT_PACK_IMAGE } from "@/lib/pack-settings";
 
@@ -72,13 +72,12 @@ export function PacotinhosAdminClient({
 
         <div className="flex flex-col gap-6 sm:flex-row sm:items-start">
           <div className="relative h-[280px] w-[196px] shrink-0 overflow-hidden rounded-2xl border-4 border-white shadow-lg">
-            <Image
+            <AdminStorageImage
               src={previewImage}
               alt="Prévia do pacotinho"
               fill
               className="object-cover"
               sizes="196px"
-              unoptimized={previewImage.endsWith(".gif")}
             />
           </div>
           <div className="flex-1 space-y-4">

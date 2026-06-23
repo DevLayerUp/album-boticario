@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { buildAppPageMetadata } from "@/lib/seo-metadata";
 import { createClient } from "@/lib/supabase/server";
 import { ColecaoClient } from "./colecao-client";
 
-export const metadata: Metadata = { title: "Coleção" };
+export async function generateMetadata(): Promise<Metadata> {
+  return buildAppPageMetadata("colecao");
+}
 
 export default async function ColecaoPage() {
   const supabase = await createClient();

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { buildAppPageMetadata } from "@/lib/seo-metadata";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { resolvePackVisualSettings, STICKERS_PER_PACK } from "@/lib/pack-settings";
@@ -7,7 +8,9 @@ import { mapOpenedPackHistory, OPENED_HISTORY_PAGE_SIZE } from "@/lib/pack-opene
 import { PacotinhosClient } from "@/components/pacotinhos/pacotinhos-client";
 import type { OpenedPackHistory, Pack } from "@/components/pacotinhos/types";
 
-export const metadata: Metadata = { title: "Pacotinhos" };
+export async function generateMetadata(): Promise<Metadata> {
+  return buildAppPageMetadata("pacotinhos");
+}
 
 type PackRow = {
   id: number;

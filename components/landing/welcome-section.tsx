@@ -41,18 +41,18 @@ export function LandingWelcome({
               transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
               className="flex min-w-0 flex-1 flex-col items-start gap-8 lg:gap-10"
             >
-          <h2 className="font-display text-4xl font-bold leading-[1.14] text-verde-500 md:text-5xl lg:text-[58px] lg:leading-[66px]">
+          <h2 className="font-display text-3xl font-bold leading-[1.14] text-verde-500 sm:text-4xl md:text-[40px] lg:text-[44px] xl:text-[58px] xl:leading-[66px]">
             {title}
           </h2>
 
-          <div className="space-y-4 text-lg leading-[30px] text-black md:text-[22px]">
+          <div className="space-y-4 text-base leading-[1.6] text-black sm:text-lg md:text-lg lg:text-xl xl:text-[22px] xl:leading-[30px]">
             {paragraph1 && <p>{paragraph1}</p>}
             {paragraph2 && <p>{paragraph2}</p>}
           </div>
 
           <Link
             href={ctaHref}
-            className="inline-flex rounded-pill bg-verde-500 px-8 py-3 text-lg font-bold text-verde-100 transition-colors hover:bg-verde-400"
+            className="inline-flex rounded-pill bg-verde-500 px-8 py-3 text-base font-bold text-verde-100 transition-colors hover:bg-verde-400 sm:text-lg"
           >
             {ctaLabel}
           </Link>

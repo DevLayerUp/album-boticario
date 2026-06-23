@@ -57,10 +57,10 @@ export function LandingRegister({
             transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
             className="col-span-12 flex flex-col gap-6 lg:col-span-6"
           >
-            <h2 className="font-display text-[40px] font-bold leading-tight text-white md:text-[48px] md:leading-[1.4]">
+            <h2 className="font-display text-[32px] font-bold leading-tight text-white sm:text-[36px] md:text-[40px] lg:text-[44px] xl:text-[48px] xl:leading-[1.4]">
               {heading}
             </h2>
-            <div className="space-y-4 text-[18px] leading-[30px] text-white/85 md:text-[22px]">
+            <div className="space-y-4 text-base leading-[1.6] text-white/85 sm:text-lg md:text-lg lg:text-xl xl:text-[22px] xl:leading-[30px]">
               {paragraph1 && <p>{paragraph1}</p>}
               {paragraph2 && <p>{paragraph2}</p>}
             </div>
@@ -138,7 +138,7 @@ function RegisterForm({ formTitle, ctaLabel, privacyUrl }: RegisterFormProps) {
   return (
     <div className="rounded-card bg-verde-100 px-6 py-10 md:px-8 md:py-10">
       {/* Form heading */}
-      <h3 className="mb-8 text-center font-display text-2xl font-bold leading-tight text-verde-escuro-500">
+      <h3 className="mb-8 text-center font-display text-xl font-bold leading-tight text-verde-escuro-500 sm:text-2xl md:text-[26px] lg:text-2xl">
         {formTitle}
       </h3>
 
@@ -187,7 +187,7 @@ function RegisterForm({ formTitle, ctaLabel, privacyUrl }: RegisterFormProps) {
 
         {/* Checkboxes */}
         <div className="flex flex-col gap-4 px-1">
-          <label className="flex cursor-pointer items-center gap-4 text-base text-foreground">
+          <label className="flex cursor-pointer items-center gap-4 text-sm text-foreground sm:text-base">
             <input
               type="checkbox"
               checked={privacy}
@@ -207,7 +207,7 @@ function RegisterForm({ formTitle, ctaLabel, privacyUrl }: RegisterFormProps) {
             </span>
           </label>
 
-          <label className="flex cursor-pointer items-center gap-4 text-base text-foreground">
+          <label className="flex cursor-pointer items-center gap-4 text-sm text-foreground sm:text-base">
             <input
               type="checkbox"
               checked={newsletter}
@@ -229,7 +229,7 @@ function RegisterForm({ formTitle, ctaLabel, privacyUrl }: RegisterFormProps) {
         <button
           type="submit"
           disabled={loading}
-          className="flex w-full items-center justify-center gap-2 rounded-pill bg-verde-500 px-8 py-3 text-xl font-bold text-verde-100 transition-colors hover:bg-verde-400 disabled:cursor-not-allowed disabled:opacity-70"
+          className="flex w-full items-center justify-center gap-2 rounded-pill bg-verde-500 px-8 py-3 text-lg font-bold text-verde-100 transition-colors hover:bg-verde-400 disabled:cursor-not-allowed disabled:opacity-70 sm:text-xl"
         >
           {loading && <Loader2 size={18} className="animate-spin" />}
           {ctaLabel}
@@ -259,7 +259,7 @@ function FormField({
     <div className="flex flex-col gap-2">
       <label
         htmlFor={id}
-        className="px-4 text-[20px] font-medium leading-[1.4] text-verde-escuro-500"
+        className="px-4 text-base font-medium leading-[1.4] text-verde-escuro-500 sm:text-lg lg:text-[20px]"
       >
         {label}
       </label>
@@ -272,7 +272,7 @@ function FormField({
         autoComplete={autoComplete}
         required={required}
         inputMode={inputMode}
-        className="rounded-pill border border-verde-500 bg-[#f3fff0] px-6 py-[10px] text-[22px] leading-[30px] text-verde-escuro-500 outline-none transition placeholder:text-verde-300 focus:ring-2 focus:ring-verde-500/30"
+        className="rounded-pill border border-verde-500 bg-[#f3fff0] px-6 py-[10px] text-base leading-[1.4] text-verde-escuro-500 outline-none transition placeholder:text-verde-300 focus:ring-2 focus:ring-verde-500/30 sm:text-lg lg:text-xl lg:leading-[30px]"
       />
     </div>
   );

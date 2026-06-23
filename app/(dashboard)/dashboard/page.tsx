@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { buildAppPageMetadata } from "@/lib/seo-metadata";
 import {
   Package,
   BookOpen,
@@ -27,7 +28,9 @@ import { InviteCard } from "@/components/dashboard/invite-card";
 import { buildInviteUrl } from "@/lib/referrals";
 import { headers } from "next/headers";
 
-export const metadata: Metadata = { title: "Início" };
+export async function generateMetadata(): Promise<Metadata> {
+  return buildAppPageMetadata("dashboard");
+}
 
 export default async function DashboardPage() {
   const supabase = await createClient();

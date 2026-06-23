@@ -166,7 +166,7 @@ function isExternal(href: string) {
 }
 
 function FooterNavLinkItem({ link }: { link: FooterNavLink }) {
-  const className = "text-base leading-[22.4px] text-[#027235] transition-opacity hover:opacity-75";
+  const className = "text-sm leading-[22.4px] text-[#027235] transition-opacity hover:opacity-75 sm:text-base";
 
   if (link.showChevron) {
     return (
@@ -213,7 +213,7 @@ function NavGroup({
   titleHref?: string;
   links:     FooterNavLink[];
 }) {
-  const titleClass = "pb-[1.41px] text-base font-bold leading-[22.4px] text-[#027235]";
+  const titleClass = "pb-[1.41px] text-sm font-bold leading-[22.4px] text-[#027235] sm:text-base";
 
   return (
     <div className="flex flex-col gap-0 pt-[13px]">
@@ -239,7 +239,7 @@ function NavGroup({
 }
 
 function NavStandaloneLink({ label, href }: { label: string; href: string }) {
-  const className = "pt-3 text-base font-bold leading-[22.4px] text-[#027235] transition-opacity hover:opacity-75";
+  const className = "pt-3 text-sm font-bold leading-[22.4px] text-[#027235] transition-opacity hover:opacity-75 sm:text-base";
 
   if (isExternal(href)) {
     return (

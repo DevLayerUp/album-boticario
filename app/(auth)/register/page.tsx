@@ -1,10 +1,14 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
+import { buildRouteMetadata, fetchSeoSettings } from "@/lib/seo-metadata";
 import { AuthForm } from "@/components/auth/auth-form";
 import { ReferralCapture } from "@/components/referral/referral-capture";
 import { Wordmark } from "@/components/brand/wordmark";
 
-export const metadata: Metadata = { title: "Criar conta" };
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await fetchSeoSettings();
+  return buildRouteMetadata(settings, "register", "/register");
+}
 
 export default function RegisterPage() {
   return (

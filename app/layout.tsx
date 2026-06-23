@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Barlow } from "next/font/google";
+import { buildRootMetadata, fetchSeoSettings } from "@/lib/seo-metadata";
 import "./globals.css";
 
 const barlow = Barlow({
@@ -9,55 +10,21 @@ const barlow = Barlow({
   weight: ["400", "500", "700", "800"],
 });
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await fetchSeoSettings();
+  return buildRootMetadata(settings);
+}
 
-export const metadata: Metadata = {
-  metadataBase: new URL(siteUrl),
-
-  title: {
-    default: "Álbum de Figurinhas — Grupo Boticário",
-    template: "%s · Álbum Grupo Boticário",
-  },
-  description:
-    "Crie sua figurinha personalizada, abra pacotinhos e complete o álbum digital do Grupo Boticário.",
-
-  openGraph: {
-    title: "Álbum de Figurinhas — Grupo Boticário",
-    description:
-      "Crie sua figurinha, abra pacotinhos e complete a coleção.",
-    type: "website",
-    locale: "pt_BR",
-    siteName: "Álbum GB",
-    url: siteUrl,
-  },
-
-  twitter: {
-    card: "summary_large_image",
-    title: "Álbum de Figurinhas — Grupo Boticário",
-    description: "Crie sua figurinha, abra pacotinhos e complete a coleção.",
-  },
-
-  icons: {
-    icon: [{ url: "/images/favicon.png", type: "image/png" }],
-    shortcut: "/images/favicon.png",
-    apple: "/images/favicon.png",
-  },
-
-  // Skip indexing admin / api routes
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: { index: true, follow: true },
-  },
-};
-
-export const viewport: Viewport = {
-  themeColor: "#0d6632",
-  colorScheme: "light",
-  width: "device-width",
-  initialScale: 1,
-  viewportFit: "cover", // needed for safe-area-inset on iOS
-};
+export async function generateViewport(): Promise<Viewport> {
+  const settings = await fetchSeoSettings();
+  return {
+    themeColor: settings.themeColor,
+    colorScheme: "light",
+    width: "device-width",
+    initialScale: 1,
+    viewportFit: "cover", // needed for safe-area-inset on iOS
+  };
+}
 
 export default function RootLayout({
   children,

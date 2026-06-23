@@ -312,7 +312,7 @@ export function LandingNavbar({
             <li key={link.href}>
               <Link
                 href={link.href}
-                className="rounded-pill px-6 py-2 text-base font-medium text-verde-escuro-500 transition-colors hover:bg-verde-escuro-500/8 hover:text-verde-500"
+                className="rounded-pill px-5 py-2 text-sm font-medium text-verde-escuro-500 transition-colors hover:bg-verde-escuro-500/8 hover:text-verde-500 sm:px-6 sm:text-base"
               >
                 {link.label}
               </Link>
@@ -324,7 +324,7 @@ export function LandingNavbar({
         <div className="flex items-center gap-3">
           <Link
             href={ctaHref}
-            className="hidden rounded-pill bg-verde-escuro-500 px-7 py-2 text-base font-medium text-verde-100 transition-colors hover:bg-verde-500 sm:inline-flex"
+            className="hidden rounded-pill bg-verde-escuro-500 px-6 py-2 text-sm font-medium text-verde-100 transition-colors hover:bg-verde-500 sm:inline-flex sm:px-7 sm:text-base"
           >
             {ctaLabel}
           </Link>

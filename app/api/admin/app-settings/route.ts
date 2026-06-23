@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { adminGuard } from "@/lib/admin-guard";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { SEO_SETTINGS_KEY } from "@/lib/seo-settings";
 
 /**
  * GET /api/admin/app-settings?key=album_cover_url
@@ -52,6 +54,29 @@ export async function PUT(request: NextRequest) {
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  if (body.key === SEO_SETTINGS_KEY) {
+    const paths = [
+      "/",
+      "/login",
+      "/register",
+      "/register/senha",
+      "/esqueci-senha",
+      "/redefinir-senha",
+      "/dashboard",
+      "/album",
+      "/colecao",
+      "/pacotinhos",
+      "/quiz",
+      "/missoes",
+      "/ranking",
+      "/trocas",
+      "/figurinha",
+      "/perfil",
+    ];
+    revalidatePath("/", "layout");
+    for (const path of paths) revalidatePath(path);
   }
 
   return NextResponse.json({ ok: true });

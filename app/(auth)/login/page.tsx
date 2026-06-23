@@ -1,9 +1,13 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
+import { buildRouteMetadata, fetchSeoSettings } from "@/lib/seo-metadata";
 import { AuthForm } from "@/components/auth/auth-form";
 import { Wordmark } from "@/components/brand/wordmark";
 
-export const metadata: Metadata = { title: "Entrar" };
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await fetchSeoSettings();
+  return buildRouteMetadata(settings, "login", "/login");
+}
 
 export default function LoginPage() {
   return (

@@ -1,11 +1,15 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { buildAppPageMetadata } from "@/lib/seo-metadata";
 import { createClient } from "@/lib/supabase/server";
 import { FigurinhaHero } from "@/components/sticker/figurinha-hero";
 import { StickerOnboarding } from "@/components/sticker/sticker-onboarding";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "Minha Figurinha" };
+
+export async function generateMetadata(): Promise<Metadata> {
+  return buildAppPageMetadata("figurinha");
+}
 
 export default async function FigurinhaPage() {
   const supabase = await createClient();

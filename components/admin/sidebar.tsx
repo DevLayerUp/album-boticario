@@ -20,11 +20,13 @@ import {
   Globe,
   Package,
   Sparkles,
+  Search,
 } from "lucide-react";
 
 const NAV = [
   { href: "/admin",              label: "Visão Geral",   icon: LayoutDashboard, exact: true },
   { href: "/admin/landing",      label: "Landing Page",  icon: Globe },
+  { href: "/admin/seo",          label: "SEO",           icon: Search },
   { href: "/admin/first-steps",  label: "Primeiros Passos", icon: Sparkles },
   { href: "/admin/dashboard-cards", label: "Cards Dashboard", icon: LayoutGrid },
   { href: "/admin/album-capa",   label: "Capa do Álbum", icon: ImageIcon },

@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import { Check, Loader2, AlertCircle, BookOpen, Trash2 } from "lucide-react";
+import { AdminStorageImage } from "@/components/admin/admin-storage-image";
 import { ImageUploader } from "@/components/admin/image-uploader";
 
 interface AlbumCapaClientProps {
@@ -62,7 +62,7 @@ export function AlbumCapaClient({ currentUrl }: AlbumCapaClientProps) {
             style={{ background: "#0d6632" }}
           >
             {coverUrl ? (
-              <Image
+              <AdminStorageImage
                 src={coverUrl}
                 alt="Capa do álbum"
                 fill

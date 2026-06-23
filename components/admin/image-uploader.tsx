@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useRef } from "react";
-import Image from "next/image";
 import { Upload, X, Loader2 } from "lucide-react";
+import { AdminStorageImage } from "@/components/admin/admin-storage-image";
 
 interface ImageUploaderProps {
   value:         string | null;
@@ -98,14 +98,13 @@ export function ImageUploader({
 
       {value ? (
         <div className="relative h-40 w-40 overflow-hidden rounded-xl border border-gray-200 bg-gray-50">
-          <Image
+          <AdminStorageImage
             src={value}
             alt="Preview"
             fill
             sizes="160px"
-            unoptimized
             priority={priority}
-            className="object-cover"
+            className="object-contain"
           />
           <button
             type="button"

@@ -41,8 +41,6 @@ export function LandingHero({
             priority
             sizes="100vw"
           />
-          {/* Overlay for legibility */}
-          <div className="absolute inset-0 bg-verde-escuro-capa/50" />
         </>
       )}
 
@@ -61,7 +59,7 @@ export function LandingHero({
               alt="Fãs por Natureza"
               width={205}
               height={103}
-              className="h-20 w-auto object-contain md:h-[103px]"
+              className="h-16 w-auto object-contain sm:h-20 md:h-24 lg:h-[103px]"
               priority
             />
           </motion.div>
@@ -72,7 +70,7 @@ export function LandingHero({
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
-          className="font-display text-4xl font-bold leading-[1.2] text-white md:text-5xl lg:text-[56px]"
+          className="font-display text-3xl font-bold leading-[1.2] text-white sm:text-4xl md:text-[38px] lg:text-[44px] xl:text-[56px]"
         >
           <span className="font-medium">{headingWhite} </span>
           <br />
@@ -84,7 +82,7 @@ export function LandingHero({
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          className="max-w-[605px] text-base leading-relaxed text-white/85 md:text-xl"
+          className="max-w-[605px] text-sm leading-relaxed text-white/85 sm:text-base md:text-lg lg:text-xl"
         >
           {subtitle}
         </motion.p>
@@ -97,7 +95,7 @@ export function LandingHero({
         >
           <Link
             href={ctaHref}
-            className="inline-flex rounded-pill bg-verde-500 px-8 py-3 text-lg font-medium text-verde-100 transition-colors hover:bg-verde-400"
+            className="inline-flex rounded-pill bg-verde-500 px-8 py-3 text-base font-medium text-verde-100 transition-colors hover:bg-verde-400 sm:text-lg"
           >
             {ctaLabel}
           </Link>
