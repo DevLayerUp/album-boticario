@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminGuard } from "@/lib/admin-guard";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { resolveQuizValidDate } from "@/lib/quiz-schedule";
 
 export async function GET(
   _req: NextRequest,
@@ -47,12 +48,24 @@ export async function PUT(
 
   const supabase = createAdminClient();
 
+  let resolvedDate: string | null = valid_date || null;
+  if (is_active !== false) {
+    try {
+      resolvedDate = valid_date?.trim()
+        ? valid_date.trim()
+        : await resolveQuizValidDate(supabase, valid_date);
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Erro ao agendar data";
+      return NextResponse.json({ error: message }, { status: 500 });
+    }
+  }
+
   const { data: quiz, error: qErr } = await supabase
     .from("quizzes")
     .update({
       question: question.trim(),
       image_url: image_url || null,
-      valid_date: valid_date || null,
+      valid_date: resolvedDate,
       points: points ?? 1,
       is_active: is_active ?? true,
     })

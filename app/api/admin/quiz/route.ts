@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminGuard } from "@/lib/admin-guard";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { ensureQuizCoverage, resolveQuizValidDate } from "@/lib/quiz-schedule";
 
 export async function GET() {
   const guard = await adminGuard();
@@ -41,12 +42,20 @@ export async function POST(request: NextRequest) {
 
   const supabase = createAdminClient();
 
+  let resolvedDate: string | null;
+  try {
+    resolvedDate = await resolveQuizValidDate(supabase, valid_date);
+  } catch (e) {
+    const message = e instanceof Error ? e.message : "Erro ao agendar data";
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+
   const { data: quiz, error: qErr } = await supabase
     .from("quizzes")
     .insert({
       question: question.trim(),
       image_url: image_url || null,
-      valid_date: valid_date || null,
+      valid_date: resolvedDate,
       points: points ?? 1,
       is_active: is_active ?? true,
     })
@@ -64,6 +73,12 @@ export async function POST(request: NextRequest) {
   );
 
   if (optsErr) return NextResponse.json({ error: optsErr.message }, { status: 500 });
+
+  try {
+    await ensureQuizCoverage(supabase, 60);
+  } catch {
+    // Quiz was created; scheduling extension is best-effort.
+  }
 
   return NextResponse.json(quiz, { status: 201 });
 }

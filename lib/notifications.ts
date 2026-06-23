@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getQuizToday } from "@/lib/quiz-schedule";
 
 export type NotificationType =
   | "trade_request"
@@ -91,7 +92,7 @@ export async function syncQuizNotification(
   supabase: SupabaseClient,
   userId: string
 ) {
-  const today = new Date().toISOString().split("T")[0];
+  const today = getQuizToday();
 
   const { data: todayAnswer } = await supabase
     .from("user_quiz_answers")

@@ -11,6 +11,7 @@ export default async function QuizPage() {
   const { data } = await supabase
     .from("quizzes")
     .select(`*, quiz_options(*)`)
+    .order("valid_date", { ascending: true, nullsFirst: false })
     .order("created_at", { ascending: false });
 
   const quizzes = data ?? [];

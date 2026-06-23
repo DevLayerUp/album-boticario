@@ -165,6 +165,9 @@ export function QuizForm({ quizId, initial }: QuizFormProps) {
                 onChange={(e) => setForm((f) => ({ ...f, valid_date: e.target.value }))}
                 className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gb-green focus:ring-1 focus:ring-gb-green"
               />
+              <p className="mt-1 text-xs text-gray-400">
+                Deixe em branco para agendar automaticamente no próximo dia livre.
+              </p>
             </div>
             <div className="flex items-end">
               <label className="flex items-center gap-2 text-sm text-gray-700">

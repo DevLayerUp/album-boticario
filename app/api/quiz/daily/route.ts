@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { getQuizToday } from "@/lib/quiz-schedule";
 
 /**
  * GET /api/quiz/daily
@@ -11,7 +12,7 @@ export async function GET() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+  const today = getQuizToday();
 
   // 1. Check if user already answered today
   const { data: todayAnswer } = await supabase
