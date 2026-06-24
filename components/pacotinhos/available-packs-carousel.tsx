@@ -45,13 +45,13 @@ export function AvailablePacksCarousel({
 
   if (!mounted) {
     return (
-      <div className="h-[min(36vh,360px)] w-full max-w-[315px] animate-pulse rounded-[24px] bg-verde-100 lg:max-w-none" />
+      <div className="h-[min(28vh,240px)] w-full max-w-[240px] animate-pulse rounded-[20px] bg-verde-100 lg:max-w-none 2xl:h-[min(36vh,360px)] 2xl:max-w-[315px] 2xl:rounded-[24px]" />
     );
   }
 
   if (!useCarousel) {
     return (
-      <div className="hidden gap-3 lg:grid lg:grid-cols-4 lg:gap-3">
+      <div className="hidden gap-2 lg:grid lg:grid-cols-4 lg:gap-2 2xl:gap-3">
         {packs.map((pack, i) => (
           <AvailablePackCard
             key={pack.id}
@@ -66,7 +66,7 @@ export function AvailablePacksCarousel({
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <div className="space-y-3 sm:space-y-4 2xl:space-y-6">
       <div className="relative overflow-hidden">
         <div className="-mx-6 px-6 lg:mx-0 lg:px-0">
           <Swiper
@@ -75,15 +75,15 @@ export function AvailablePacksCarousel({
             onSlideChange={syncSwiper}
             onResize={syncSwiper}
             onProgress={handleProgress}
-            spaceBetween={10}
-            slidesPerView={1.35}
+            spaceBetween={6}
+            slidesPerView={1.6}
             breakpoints={{
-              480: { slidesPerView: 1.55, spaceBetween: 10 },
-              640: { slidesPerView: 1.85, spaceBetween: 12 },
-              768: { slidesPerView: 2.2, spaceBetween: 12 },
-              1024: { slidesPerView: 3.15, spaceBetween: 14 },
-              1280: { slidesPerView: 3.85, spaceBetween: 14 },
-              1536: { slidesPerView: 4.25, spaceBetween: 16 },
+              480: { slidesPerView: 2, spaceBetween: 6 },
+              640: { slidesPerView: 2.4, spaceBetween: 8 },
+              768: { slidesPerView: 3, spaceBetween: 8 },
+              1024: { slidesPerView: 4, spaceBetween: 8 },
+              1280: { slidesPerView: 5, spaceBetween: 10 },
+              1536: { slidesPerView: 6, spaceBetween: 12 },
             }}
           >
             {packs.map((pack, i) => (
@@ -92,6 +92,7 @@ export function AvailablePacksCarousel({
                   pack={pack}
                   packImageUrl={packImageUrl}
                   index={i}
+                  layout="carousel"
                   onOpen={() => onOpen(pack)}
                 />
               </SwiperSlide>

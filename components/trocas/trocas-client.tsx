@@ -27,12 +27,12 @@ export default function TrocasClient() {
   }, [refreshPendingCount]);
 
   return (
-    <div className="w-full space-y-8 lg:space-y-10">
+    <div className="w-full space-y-5 sm:space-y-6 lg:space-y-8 2xl:space-y-10">
       <header>
-        <h1 className="font-display text-3xl font-bold text-verde-escuro-500 sm:text-4xl lg:text-5xl">
+        <h1 className="font-display text-2xl font-bold text-verde-escuro-500 sm:text-3xl lg:text-4xl 2xl:text-5xl">
           Trocas
         </h1>
-        <p className="mt-2 max-w-3xl text-sm leading-relaxed text-verde-escuro-400 sm:text-base lg:text-lg">
+        <p className="mt-1.5 max-w-3xl text-sm leading-relaxed text-verde-escuro-400 sm:mt-2 sm:text-base 2xl:text-lg">
           Solicite figurinhas e troque por suas figurinhas duplicadas com outros colecionadores.
         </p>
       </header>

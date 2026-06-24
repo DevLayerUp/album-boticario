@@ -48,8 +48,8 @@ export function RankingClient() {
 
   if (loading) {
     return (
-      <div className="flex justify-center py-24">
-        <Loader2 className="size-10 animate-spin text-verde-500" aria-label="Carregando ranking" />
+      <div className="flex justify-center py-12 2xl:py-24">
+        <Loader2 className="size-8 animate-spin text-verde-500 sm:size-9 2xl:size-10" aria-label="Carregando ranking" />
       </div>
     );
   }
@@ -70,12 +70,12 @@ export function RankingClient() {
   }
 
   return (
-    <div className="w-full space-y-8 sm:space-y-10">
-      <header className="max-w-[1005px] space-y-4 sm:space-y-6">
-        <h1 className="font-display text-3xl font-bold text-verde-escuro-500 sm:text-5xl lg:text-[48px]">
+    <div className="w-full space-y-5 sm:space-y-6 lg:space-y-8 2xl:space-y-10">
+      <header className="max-w-[1005px] space-y-2 sm:space-y-3 2xl:space-y-6">
+        <h1 className="font-display text-2xl font-bold text-verde-escuro-500 sm:text-3xl lg:text-4xl 2xl:text-[48px]">
           Ranking dos Colecionadores
         </h1>
-        <p className="text-base leading-relaxed text-black sm:text-xl lg:text-[26px]">
+        <p className="text-sm leading-relaxed text-black sm:text-base lg:text-lg 2xl:text-[26px]">
           <span className="font-bold text-verde-400">
             {participantCount} participante{participantCount !== 1 ? "s" : ""}
           </span>
@@ -84,11 +84,11 @@ export function RankingClient() {
       </header>
 
       {participantCount === 0 ? (
-        <div className="rounded-card border border-verde-200 bg-surface-green px-6 py-16 text-center">
-          <p className="font-display text-2xl font-bold text-verde-escuro-500">
+        <div className="rounded-card border border-verde-200 bg-surface-green px-4 py-10 text-center sm:px-6 sm:py-12 2xl:py-16">
+          <p className="font-display text-xl font-bold text-verde-escuro-500 sm:text-2xl 2xl:text-[32px]">
             Nenhum colecionador no ranking ainda
           </p>
-          <p className="mt-2 text-base text-verde-escuro-500">
+          <p className="mt-1.5 text-sm text-verde-escuro-500 sm:mt-2 sm:text-base 2xl:text-lg">
             Complete seu álbum e apareça aqui.
           </p>
         </div>
@@ -96,26 +96,26 @@ export function RankingClient() {
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="space-y-8 sm:space-y-10"
+          className="space-y-5 sm:space-y-6 lg:space-y-8 2xl:space-y-10"
         >
-          <div className="grid grid-cols-1 gap-6 2xl:grid-cols-[minmax(0,1099fr)_minmax(0,557fr)]">
+          <div className="grid grid-cols-1 gap-4 lg:gap-5 2xl:grid-cols-[minmax(0,1099fr)_minmax(0,557fr)] 2xl:gap-6">
             {topThree.length > 0 ? (
               <RankingTopThree entries={topThree} updatedLabel={updatedLabel} />
             ) : null}
 
-            <div className="flex min-w-0 flex-col gap-6 2xl:max-w-[557px] 2xl:justify-self-end">
+            <div className="flex min-w-0 flex-col gap-4 lg:gap-5 2xl:max-w-[557px] 2xl:justify-self-end 2xl:gap-6">
               {currentUser ? <RankingUserPosition entry={currentUser} /> : null}
               <RankingScoringInfo />
             </div>
           </div>
 
           {rest.length > 0 ? (
-            <section className="space-y-6">
-              <h2 className="font-display text-2xl font-bold text-verde-escuro-500 sm:text-4xl lg:text-[48px]">
+            <section className="space-y-4 sm:space-y-5 2xl:space-y-6">
+              <h2 className="font-display text-xl font-bold text-verde-escuro-500 sm:text-2xl lg:text-3xl 2xl:text-[48px]">
                 Demais posições
               </h2>
 
-              <div className="overflow-hidden rounded-card border border-verde-200 bg-surface-green px-3 sm:px-8">
+              <div className="overflow-hidden rounded-card border border-verde-200 bg-surface-green px-2 sm:px-4 lg:px-6 2xl:px-8">
                 <div className="divide-y divide-verde-200">
                   {rest.map((entry) => (
                     <RankingRow

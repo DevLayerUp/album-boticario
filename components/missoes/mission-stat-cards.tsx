@@ -31,7 +31,7 @@ function StatCard({
   value: string | number;
 }) {
   return (
-    <div className="relative flex min-h-[140px] flex-col justify-between overflow-hidden rounded-block bg-verde-escuro-500 p-6 sm:min-h-[160px]">
+    <div className="relative flex min-h-[100px] flex-col justify-between overflow-hidden rounded-block bg-verde-escuro-500 p-4 sm:min-h-[110px] sm:p-5 lg:min-h-[120px] 2xl:min-h-[160px] 2xl:p-6">
       <div className="pointer-events-none absolute inset-0" aria-hidden>
         <Image
           src={dashboardAssets.quiz.background}
@@ -41,13 +41,13 @@ function StatCard({
           unoptimized
         />
       </div>
-      <div className="relative z-10 flex items-center gap-4">
-        <Icon className="size-6 shrink-0 text-verde-200" aria-hidden />
-        <span className="text-sm font-medium uppercase tracking-wide text-verde-200 sm:text-xl">
+      <div className="relative z-10 flex items-center gap-2.5 sm:gap-3 2xl:gap-4">
+        <Icon className="size-5 shrink-0 text-verde-200 sm:size-5 2xl:size-6" aria-hidden />
+        <span className="text-xs font-medium uppercase tracking-wide text-verde-200 sm:text-sm 2xl:text-xl">
           {label}
         </span>
       </div>
-      <p className="relative z-10 text-right font-display text-5xl font-bold leading-none text-verde-100 sm:text-[80px]">
+      <p className="relative z-10 text-right font-display text-3xl font-bold leading-none text-verde-100 sm:text-4xl lg:text-5xl 2xl:text-[80px]">
         {value}
       </p>
     </div>
@@ -68,7 +68,7 @@ export function MissionStatCards({
   };
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-4 2xl:gap-4">
       {STATS.map(({ key, label, icon }) => (
         <StatCard key={key} label={label} icon={icon} value={values[key]} />
       ))}

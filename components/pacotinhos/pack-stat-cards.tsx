@@ -36,17 +36,19 @@ function StatCard({
   return (
     <div
       className={cn(
-        "flex h-36 min-w-0 flex-col justify-between rounded-block bg-verde-100 p-4 text-verde-escuro-500 sm:h-40 lg:min-w-[272px]",
+        "flex h-24 min-w-0 flex-col justify-between rounded-block bg-verde-100 p-3 text-verde-escuro-500 sm:h-28 sm:p-3.5 lg:h-32 lg:min-w-[200px] 2xl:h-40 2xl:min-w-[272px] 2xl:p-4",
         className,
       )}
     >
-      <div className="flex items-center gap-3 sm:gap-4">
-        <Icon aria-hidden className="size-7 shrink-0 sm:size-[30px]" strokeWidth={1.8} />
-        <span className="text-sm font-medium uppercase tracking-wide lg:text-xl lg:leading-7">
+      <div className="flex items-center gap-2 sm:gap-2.5 2xl:gap-4">
+        <Icon aria-hidden className="size-5 shrink-0 sm:size-6 2xl:size-[30px]" strokeWidth={1.8} />
+        <span className="text-[11px] font-medium uppercase tracking-wide sm:text-xs lg:text-sm 2xl:text-xl 2xl:leading-7">
           {label}
         </span>
       </div>
-      <p className="font-display text-4xl font-bold leading-none lg:text-[48px]">{value}</p>
+      <p className="font-display text-2xl font-bold leading-none sm:text-3xl lg:text-4xl 2xl:text-[48px]">
+        {value}
+      </p>
     </div>
   );
 }
@@ -67,10 +69,10 @@ export function PackStatCards({ available, opened, totalStickers }: PackStatCard
   if (!mounted) {
     return (
       <div className="w-full min-w-0 lg:max-w-[848px] lg:justify-self-end">
-        <div className="h-36 animate-pulse rounded-block bg-verde-100 sm:hidden" />
-        <div className="hidden gap-3 sm:grid sm:grid-cols-3 sm:gap-4">
+        <div className="h-24 animate-pulse rounded-block bg-verde-100 sm:hidden 2xl:h-36" />
+        <div className="hidden gap-2 sm:grid sm:grid-cols-3 sm:gap-3 2xl:gap-4">
           {STATS.map(({ key }) => (
-            <div key={key} className="h-40 animate-pulse rounded-block bg-verde-100" />
+            <div key={key} className="h-28 animate-pulse rounded-block bg-verde-100 2xl:h-40" />
           ))}
         </div>
       </div>
@@ -79,7 +81,7 @@ export function PackStatCards({ available, opened, totalStickers }: PackStatCard
 
   if (isSmUp) {
     return (
-      <div className="grid w-full min-w-0 grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4 lg:max-w-[848px] lg:justify-self-end">
+      <div className="grid w-full min-w-0 grid-cols-1 gap-2 sm:grid-cols-3 sm:gap-3 lg:max-w-[640px] lg:justify-self-end 2xl:max-w-[848px] 2xl:gap-4">
         {STATS.map(({ key, label, icon }) => (
           <StatCard key={key} label={label} icon={icon} value={values[key]} />
         ))}

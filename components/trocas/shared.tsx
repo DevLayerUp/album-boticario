@@ -15,6 +15,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { rarityColor } from "@/lib/rarity";
+import { cn } from "@/lib/utils";
 import { ProfileAvatarImage } from "@/components/profile/profile-avatar-image";
 import type { Profile, Sticker, Trade, TradeableEntry, Wish } from "./types";
 
@@ -25,18 +26,29 @@ export const STATUS_META: Record<string, { label: string; bg: string; text: stri
   cancelled: { label: "Cancelada", bg: "bg-gray-100", text: "text-gray-500" },
 };
 
-export function Avatar({ profile, size = 36 }: { profile: Profile | null; size?: number }) {
+export function Avatar({
+  profile,
+  size = 36,
+  className,
+}: {
+  profile: Profile | null;
+  size?: number;
+  className?: string;
+}) {
   if (!profile) {
     return (
       <div
-        className="shrink-0 rounded-full bg-verde-100"
+        className={cn("shrink-0 rounded-full bg-verde-100", className)}
         style={{ width: size, height: size }}
       />
     );
   }
   return profile.sticker_url ? (
     <div
-      className="relative shrink-0 overflow-hidden rounded-full ring-2 ring-verde-500/25"
+      className={cn(
+        "relative shrink-0 overflow-hidden rounded-full ring-2 ring-verde-500/25",
+        className,
+      )}
       style={{ width: size, height: size }}
     >
       <ProfileAvatarImage
@@ -48,7 +60,10 @@ export function Avatar({ profile, size = 36 }: { profile: Profile | null; size?:
     </div>
   ) : (
     <div
-      className="flex shrink-0 items-center justify-center rounded-full bg-verde-100"
+      className={cn(
+        "flex shrink-0 items-center justify-center rounded-full bg-verde-100",
+        className,
+      )}
       style={{ width: size, height: size }}
     >
       <User size={size * 0.44} className="text-verde-escuro-400" />
@@ -83,7 +98,7 @@ export function StickerThumb({
 
   return (
     <div
-      className={`relative shrink-0 overflow-hidden rounded-block border-[5px] transition-all duration-200 ${className ?? ""}`}
+      className={`relative shrink-0 overflow-hidden rounded-block border-[3px] transition-all duration-200 sm:border-4 2xl:border-[5px] ${className ?? ""}`}
       style={{
         width,
         height,
@@ -120,8 +135,8 @@ export function EmptyState({
   icon?: React.ElementType;
 }) {
   return (
-    <div className="flex flex-col items-center gap-3 py-16 text-center">
-      <Icon size={36} className="text-verde-200" aria-hidden />
+    <div className="flex flex-col items-center gap-2 py-10 text-center sm:gap-3 sm:py-12 2xl:py-16">
+      <Icon size={32} className="text-verde-200 sm:size-9 2xl:size-[36px]" aria-hidden />
       <p className="max-w-sm text-sm text-verde-escuro-300">{message}</p>
     </div>
   );
@@ -145,7 +160,7 @@ export function Toast({ message }: { message: string }) {
 export function Modal({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center"
+      className="fixed inset-0 z-50 flex items-end justify-center p-3 sm:items-center sm:p-4"
       onClick={onClose}
       role="presentation"
     >
@@ -155,7 +170,7 @@ export function Modal({ children, onClose }: { children: React.ReactNode; onClos
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 48 }}
         transition={{ type: "spring", stiffness: 400, damping: 32 }}
-        className="relative w-full max-w-md rounded-card bg-surface shadow-2xl"
+        className="relative flex max-h-[min(92dvh,640px)] w-full max-w-md flex-col overflow-hidden rounded-card bg-surface shadow-2xl sm:max-h-[min(90dvh,720px)] 2xl:max-h-none"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
@@ -339,9 +354,9 @@ export function AddWishModal({
 
   return (
     <Modal onClose={onClose}>
-      <div className="flex items-center gap-3 border-b border-verde-100 px-5 py-4">
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-verde-100 text-verde-escuro-500">
-          <BookmarkPlus size={18} />
+      <div className="flex items-center gap-2.5 border-b border-verde-100 px-4 py-3 sm:gap-3 sm:px-5 sm:py-4">
+        <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-verde-100 text-verde-escuro-500 sm:h-9 sm:w-9">
+          <BookmarkPlus size={16} className="sm:size-[18px]" />
         </div>
         <div>
           <p className="text-sm font-bold text-verde-escuro-capa">Nova busca</p>
@@ -349,7 +364,7 @@ export function AddWishModal({
         </div>
       </div>
 
-      <div className="space-y-4 px-5 py-4">
+      <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-3 sm:space-y-4 sm:px-5 sm:py-4">
         <input
           placeholder="Buscar figurinha…"
           value={search}
@@ -361,7 +376,7 @@ export function AddWishModal({
             <Loader2 size={24} className="animate-spin text-verde-300" />
           </div>
         ) : (
-          <div className="grid max-h-48 grid-cols-4 gap-2 overflow-y-auto pr-1">
+          <div className="grid max-h-40 grid-cols-4 gap-1.5 overflow-y-auto pr-1 sm:max-h-48 sm:gap-2">
             {filtered.map((s) => (
               <button
                 key={s.id}
@@ -396,7 +411,7 @@ export function AddWishModal({
         )}
       </div>
 
-      <div className="flex gap-3 border-t border-verde-100 px-5 py-4">
+      <div className="flex shrink-0 gap-2 border-t border-verde-100 px-4 py-3 sm:gap-3 sm:px-5 sm:py-4">
         <button
           type="button"
           onClick={onClose}
@@ -470,15 +485,15 @@ export function FulfillWishModal({
 
   return (
     <Modal onClose={onClose}>
-      <div className="flex items-center gap-3 border-b border-verde-100 px-5 py-4">
-        <Avatar profile={wish.user} size={36} />
+      <div className="flex shrink-0 items-center gap-2.5 border-b border-verde-100 px-4 py-3 sm:gap-3 sm:px-5 sm:py-4">
+        <Avatar profile={wish.user} size={32} className="sm:!w-9 sm:!h-9" />
         <div>
           <p className="text-sm font-bold text-verde-escuro-capa">Oferecer figurinha</p>
           <p className="text-xs text-verde-escuro-300">para {wish.user?.display_name}</p>
         </div>
       </div>
 
-      <div className="space-y-4 px-5 py-4">
+      <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-3 sm:space-y-4 sm:px-5 sm:py-4">
         <div className="flex items-center gap-3 rounded-card border border-verde-200 bg-verde-100/50 px-3 py-2.5">
           <StickerThumb sticker={wish.sticker} width={48} height={69} />
           <div>
@@ -514,7 +529,7 @@ export function FulfillWishModal({
             Este usuário não tem repetidas disponíveis para trocar no momento.
           </div>
         ) : (
-          <div className="grid max-h-44 grid-cols-4 gap-2 overflow-y-auto pr-1">
+          <div className="grid max-h-36 grid-cols-4 gap-1.5 overflow-y-auto pr-1 sm:max-h-44 sm:gap-2">
             {wish.user_stickers.map(({ sticker: st, quantity }) => {
               if (!st) return null;
               return (
@@ -558,7 +573,7 @@ export function FulfillWishModal({
         )}
       </div>
 
-      <div className="flex gap-3 border-t border-verde-100 px-5 py-4">
+      <div className="flex shrink-0 gap-2 border-t border-verde-100 px-4 py-3 sm:gap-3 sm:px-5 sm:py-4">
         <button
           type="button"
           onClick={onClose}

@@ -132,13 +132,13 @@ export function PacotinhosClient({
   ]);
 
   return (
-    <div className="relative mx-auto w-full max-w-[1672px] space-y-10 pb-16 lg:space-y-14">
-      <header className="grid gap-8 lg:grid-cols-[1fr_auto] lg:items-start lg:gap-12">
-        <div className="space-y-6">
-          <h1 className="font-display text-3xl font-bold text-verde-escuro-500 sm:text-4xl lg:text-[48px] lg:leading-tight">
+    <div className="relative mx-auto w-full max-w-[1672px] space-y-5 pb-10 sm:space-y-6 lg:space-y-8 2xl:space-y-14 2xl:pb-16">
+      <header className="grid gap-4 sm:gap-5 lg:grid-cols-[1fr_auto] lg:items-start lg:gap-6 2xl:gap-12">
+        <div className="space-y-2 sm:space-y-3 lg:space-y-4 2xl:space-y-6">
+          <h1 className="font-display text-2xl font-bold text-verde-escuro-500 sm:text-3xl lg:text-4xl 2xl:text-[48px] 2xl:leading-tight">
             Meus Pacotinhos
           </h1>
-          <p className="max-w-[562px] text-lg leading-relaxed text-black sm:text-xl lg:text-[26px] lg:leading-snug">
+          <p className="max-w-[562px] text-sm leading-relaxed text-black sm:text-base lg:text-lg 2xl:text-[26px] 2xl:leading-snug">
             {available.length > 0 ? (
               <>
                 Você tem{" "}
@@ -166,7 +166,7 @@ export function PacotinhosClient({
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 z-[60] flex min-h-dvh items-center justify-center p-4"
+                className="fixed inset-0 z-[60] flex min-h-dvh items-center justify-center p-2 sm:p-3 lg:p-4"
               >
                 <div
                   className="absolute inset-0 min-h-dvh bg-verde-500/35 backdrop-blur-[2px]"
@@ -177,7 +177,7 @@ export function PacotinhosClient({
                   initial={{ scale: 0.96, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   exit={{ scale: 0.96, opacity: 0 }}
-                  className="relative z-10 mx-auto flex max-h-[min(92dvh,840px)] w-full max-w-[897px] flex-col overflow-hidden rounded-[40px] bg-white px-6 py-8 shadow-2xl sm:px-10 sm:py-10 lg:px-16 lg:py-12"
+                  className="relative z-10 mx-auto flex max-h-[min(92dvh,720px)] w-full max-w-[min(100%,520px)] flex-col overflow-hidden rounded-[24px] bg-white px-4 py-5 shadow-2xl sm:max-w-[580px] sm:rounded-[32px] sm:px-6 sm:py-6 md:max-w-[640px] lg:max-w-[720px] lg:px-8 lg:py-7 2xl:max-w-[897px] 2xl:rounded-[40px] 2xl:px-16 2xl:py-12"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pr-1 [-ms-overflow-style:none] [scrollbar-width:thin]">
@@ -199,9 +199,9 @@ export function PacotinhosClient({
         )}
 
       {available.length > 0 ? (
-        <section className="space-y-6">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <h2 className="font-display text-2xl font-bold text-verde-escuro-500 sm:text-[34px]">
+        <section className="space-y-3 sm:space-y-4 lg:space-y-5 2xl:space-y-6">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <h2 className="font-display text-xl font-bold text-verde-escuro-500 sm:text-2xl lg:text-[28px] 2xl:text-[34px]">
               Disponíveis ({available.length})
             </h2>
             {available.length > 1 && (
@@ -222,13 +222,13 @@ export function PacotinhosClient({
           />
         </section>
       ) : (
-        <div className="flex flex-col items-center gap-4 rounded-[32px] border border-dashed border-verde-400/40 bg-verde-100/50 py-16 text-center">
-          <Gift className="text-verde-300" size={48} />
+        <div className="flex flex-col items-center gap-3 rounded-[24px] border border-dashed border-verde-400/40 bg-verde-100/50 py-10 text-center sm:rounded-[28px] sm:py-12 2xl:rounded-[32px] 2xl:py-16">
+          <Gift className="text-verde-300" size={36} />
           <div>
-            <p className="text-lg font-medium text-verde-escuro-500">
+            <p className="text-base font-medium text-verde-escuro-500 sm:text-lg">
               Sem pacotinhos disponíveis
             </p>
-            <p className="mt-1 text-base text-verde-escuro-300">
+            <p className="mt-1 text-sm text-verde-escuro-300 sm:text-base">
               Responda o quiz diário ou conclua missões para ganhar pacotinhos
             </p>
           </div>
@@ -236,11 +236,11 @@ export function PacotinhosClient({
       )}
 
       {history.length > 0 && (
-        <section className="space-y-5">
-          <h2 className="font-display text-2xl font-bold text-verde-escuro-500 sm:text-[34px]">
+        <section className="space-y-3 sm:space-y-4 2xl:space-y-5">
+          <h2 className="font-display text-xl font-bold text-verde-escuro-500 sm:text-2xl lg:text-[28px] 2xl:text-[34px]">
             Já abertos ({stats.opened})
           </h2>
-          <div className="space-y-3">
+          <div className="space-y-2 sm:space-y-2.5 2xl:space-y-3">
             {visibleHistory.map((pack) => (
               <OpenedPackRow key={pack.id} pack={pack} />
             ))}
@@ -251,7 +251,7 @@ export function PacotinhosClient({
                 type="button"
                 onClick={() => void loadMoreHistory()}
                 disabled={loadingMoreHistory}
-                className="rounded-pill border border-verde-400 px-8 py-2.5 text-base font-medium text-verde-escuro-500 transition-all duration-200 hover:border-verde-500 hover:bg-verde-500/10 hover:text-verde-500 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:border-verde-400 disabled:hover:bg-transparent disabled:hover:text-verde-escuro-500"
+                className="rounded-pill border border-verde-400 px-5 py-2 text-sm font-medium text-verde-escuro-500 transition-all duration-200 hover:border-verde-500 hover:bg-verde-500/10 hover:text-verde-500 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:border-verde-400 disabled:hover:bg-transparent disabled:hover:text-verde-escuro-500 sm:px-6 sm:text-base 2xl:px-8 2xl:py-2.5"
               >
                 {loadingMoreHistory ? "Carregando…" : "Carregar mais"}
               </button>

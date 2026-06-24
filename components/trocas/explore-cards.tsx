@@ -60,10 +60,10 @@ export function ExploreUserCard({ wish, eligible, onOffer }: ExploreUserCardProp
         theme.surface,
       )}
     >
-      <div className="flex flex-col items-center px-5 pb-4 pt-6">
-        <Avatar profile={wish.user} size={88} />
-        <p className={cn("mt-3 font-display text-lg font-bold", theme.accent)}>{displayName}</p>
-        <div className="mt-3">
+      <div className="flex flex-col items-center px-3 pb-3 pt-4 sm:px-4 sm:pb-4 sm:pt-5 2xl:px-5 2xl:pb-4 2xl:pt-6">
+        <Avatar profile={wish.user} size={72} className="2xl:!w-[88px] 2xl:!h-[88px]" />
+        <p className={cn("mt-2 font-display text-base font-bold sm:mt-2.5 2xl:mt-3 2xl:text-lg", theme.accent)}>{displayName}</p>
+        <div className="mt-2 2xl:mt-3">
           <RarityBadge
             name={wish.sticker.rarities?.name ?? "Comum"}
             slug={slug}
@@ -72,28 +72,28 @@ export function ExploreUserCard({ wish, eligible, onOffer }: ExploreUserCardProp
         </div>
       </div>
 
-      <div className={cn("mx-5 border-t", theme.divider)} />
+      <div className={cn("mx-3 border-t sm:mx-4 2xl:mx-5", theme.divider)} />
 
-      <div className="flex flex-1 flex-col items-center gap-3 px-5 py-5">
-        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-verde-escuro-300">
+      <div className="flex flex-1 flex-col items-center gap-2 px-3 py-3 sm:gap-2.5 sm:px-4 sm:py-4 2xl:gap-3 2xl:px-5 2xl:py-5">
+        <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-verde-escuro-300 sm:text-[10px] sm:tracking-[0.2em]">
           Está procurando
         </p>
-        <StickerThumb sticker={wish.sticker} width={72} height={103} />
+        <StickerThumb sticker={wish.sticker} width={60} height={86} className="sm:w-[68px] sm:h-[97px] 2xl:!w-[72px] 2xl:!h-[103px]" />
         <p
-          className="line-clamp-2 text-center font-display text-base font-bold leading-tight text-verde-escuro-capa sm:text-lg"
+          className="line-clamp-2 text-center font-display text-sm font-bold leading-tight text-verde-escuro-capa sm:text-base 2xl:text-lg"
           style={{ color: rarityColor(slug, wish.sticker.rarities?.color_hex) }}
         >
           {wish.sticker.name}
         </p>
       </div>
 
-      <div className="px-5 pb-5">
+      <div className="px-3 pb-3 sm:px-4 sm:pb-4 2xl:px-5 2xl:pb-5">
         {eligible ? (
           <button
             type="button"
             onClick={onOffer}
             className={cn(
-              "flex w-full cursor-pointer items-center justify-center gap-2 rounded-pill py-3 text-sm font-bold text-white transition-colors",
+              "flex w-full cursor-pointer items-center justify-center gap-2 rounded-pill py-2.5 text-xs font-bold text-white transition-colors sm:py-3 sm:text-sm",
               theme.cta,
               theme.ctaHover,
               slug === "super_rare" && "text-[#71410a]",
@@ -104,7 +104,7 @@ export function ExploreUserCard({ wish, eligible, onOffer }: ExploreUserCardProp
             Eu tenho essa
           </button>
         ) : (
-          <div className="flex items-center justify-center rounded-pill border border-dashed border-verde-200 bg-white/50 py-3 text-xs text-verde-escuro-300">
+          <div className="flex items-center justify-center rounded-pill border border-dashed border-verde-200 bg-white/50 py-2.5 text-[11px] text-verde-escuro-300 sm:py-3 sm:text-xs">
             Você não possui esta figurinha
           </div>
         )}
@@ -132,9 +132,9 @@ export function WishRequestCard({
   const borderColor = rarityColor(slug, sticker.rarities?.color_hex);
 
   return (
-    <div className="flex items-center gap-4 rounded-[32px] border border-verde-200 bg-[#f7f9f7] p-4 sm:gap-5 sm:p-5">
-      <StickerThumb sticker={sticker} width={88} height={126} className="hidden xs:block sm:w-[104px] sm:h-[149px]" />
-      <StickerThumb sticker={sticker} width={72} height={103} className="xs:hidden" />
+    <div className="flex items-center gap-3 rounded-[20px] border border-verde-200 bg-[#f7f9f7] p-3 sm:gap-4 sm:rounded-[24px] sm:p-4 2xl:gap-5 2xl:rounded-[32px] 2xl:p-5">
+      <StickerThumb sticker={sticker} width={72} height={103} className="hidden xs:block sm:w-[88px] sm:h-[126px] 2xl:!w-[104px] 2xl:!h-[149px]" />
+      <StickerThumb sticker={sticker} width={60} height={86} className="xs:hidden" />
 
       <div className="min-w-0 flex-1">
         {offerCount > 0 ? (
@@ -147,7 +147,7 @@ export function WishRequestCard({
           </span>
         )}
         <p
-          className="mt-2 font-display text-xl font-bold leading-tight text-verde-escuro-capa sm:text-2xl lg:text-[32px]"
+          className="mt-1.5 font-display text-lg font-bold leading-tight text-verde-escuro-capa sm:mt-2 sm:text-xl lg:text-2xl 2xl:text-[32px]"
           style={{ color: borderColor }}
         >
           {sticker.name}

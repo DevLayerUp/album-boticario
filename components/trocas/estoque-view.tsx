@@ -100,21 +100,21 @@ export function EstoqueView() {
   return (
     <section
       aria-labelledby="estoque-heading"
-      className="rounded-[32px] border border-verde-400 bg-verde-100 p-5 sm:p-6 lg:p-8"
+      className="rounded-[20px] border border-verde-400 bg-verde-100 p-4 sm:rounded-[24px] sm:p-5 lg:p-6 2xl:rounded-[32px] 2xl:p-8"
     >
       <p
         id="estoque-heading"
-        className="max-w-4xl text-sm leading-relaxed text-verde-escuro-500 sm:text-base lg:text-xl lg:leading-[33px]"
+        className="max-w-4xl text-sm leading-relaxed text-verde-escuro-500 sm:text-base lg:text-base lg:leading-relaxed 2xl:text-xl 2xl:leading-[33px]"
       >
         Visualize suas figurinhas repetidas disponíveis para troca. As bloqueadas estão em
         negociações ativas.
       </p>
 
-      <div className="mt-6 overflow-x-auto pb-1">
+      <div className="mt-4 overflow-x-auto pb-1 sm:mt-5 2xl:mt-6">
         <StockFilterBar active={filter} onChange={setFilter} counts={counts} />
       </div>
 
-      <div className="mt-8">
+      <div className="mt-5 sm:mt-6 2xl:mt-8">
         {loading ? (
           <div className="flex h-48 items-center justify-center">
             <Loader2 size={28} className="animate-spin text-verde-300" />
@@ -139,7 +139,7 @@ export function EstoqueView() {
             Nenhuma figurinha neste filtro.
           </p>
         ) : (
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-3.5 md:grid-cols-4 lg:grid-cols-5 lg:gap-3.5 xl:grid-cols-6 2xl:gap-4">
             <AnimatePresence>
               {filtered.map(({ sticker, quantity }, index) => (
                 <StockStickerCard

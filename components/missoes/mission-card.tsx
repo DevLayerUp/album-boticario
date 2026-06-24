@@ -60,15 +60,15 @@ export function MissionCard({
   return (
     <article
       className={cn(
-        "flex h-full flex-col gap-8 rounded-block p-6 shadow-[0_4px_5px_rgba(0,0,0,0.1)]",
+        "flex h-full flex-col gap-4 rounded-block p-4 shadow-[0_4px_5px_rgba(0,0,0,0.1)] sm:gap-5 sm:p-5 2xl:gap-8 2xl:p-6",
         theme.surface,
       )}
     >
-      <div className="flex items-center justify-between gap-3">
-        <p className={cn("text-sm font-medium uppercase", theme.statusLabel)}>
+      <div className="flex items-center justify-between gap-2 sm:gap-3">
+        <p className={cn("text-xs font-medium uppercase sm:text-sm", theme.statusLabel)}>
           Status da missão
         </p>
-        <span className={cn("rounded-pill px-5 py-1.5 text-sm font-medium", theme.badge)}>
+        <span className={cn("rounded-pill px-3 py-1 text-xs font-medium sm:px-4 sm:py-1.5 sm:text-sm 2xl:px-5", theme.badge)}>
           {status}
         </span>
       </div>
@@ -76,9 +76,9 @@ export function MissionCard({
       <button
         type="button"
         onClick={() => onOpen(mission)}
-        className="flex w-full flex-1 items-center gap-8 text-left"
+        className="flex w-full flex-1 items-center gap-4 text-left sm:gap-5 2xl:gap-8"
       >
-        <div className="relative flex size-[105px] shrink-0 items-center justify-center">
+        <div className="relative flex size-[72px] shrink-0 items-center justify-center sm:size-[84px] lg:size-[92px] 2xl:size-[105px]">
           <span
             className={cn(
               "absolute inset-0 rounded-full opacity-20",
@@ -88,32 +88,32 @@ export function MissionCard({
           />
           <span
             className={cn(
-              "relative flex size-[105px] items-center justify-center rounded-full",
+              "relative flex size-full items-center justify-center rounded-full",
               theme.iconBg,
             )}
           >
-            <Icon className="size-10 text-white sm:size-11" strokeWidth={1.8} aria-hidden />
+            <Icon className="size-7 text-white sm:size-8 2xl:size-11" strokeWidth={1.8} aria-hidden />
           </span>
         </div>
-        <div className="min-w-0 flex-1 space-y-2.5">
-          <h3 className={cn("font-display text-2xl font-bold leading-tight sm:text-[32px]", theme.title)}>
+        <div className="min-w-0 flex-1 space-y-1.5 sm:space-y-2 2xl:space-y-2.5">
+          <h3 className={cn("font-display text-lg font-bold leading-tight sm:text-xl lg:text-2xl 2xl:text-[32px]", theme.title)}>
             {mission.title}
           </h3>
           {mission.description ? (
-            <p className="text-base text-black">{mission.description}</p>
+            <p className="text-sm text-black 2xl:text-base">{mission.description}</p>
           ) : null}
         </div>
       </button>
 
       <div
-        className={cn("space-y-4", !showProgress && "invisible")}
+        className={cn("space-y-2.5 sm:space-y-3 2xl:space-y-4", !showProgress && "invisible")}
         aria-hidden={!showProgress}
       >
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <span className={cn("rounded-pill px-5 py-1.5 text-sm font-medium", theme.badge)}>
+        <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3">
+          <span className={cn("rounded-pill px-3 py-1 text-xs font-medium sm:px-4 sm:py-1.5 sm:text-sm 2xl:px-5", theme.badge)}>
             EM ANDAMENTO
           </span>
-          <div className={cn("flex flex-wrap items-center justify-end gap-4 text-base sm:text-xl", theme.progressText)}>
+          <div className={cn("flex flex-wrap items-center justify-end gap-2 text-sm sm:gap-3 sm:text-base lg:text-lg 2xl:gap-4 2xl:text-xl", theme.progressText)}>
             <span className="font-bold">{percent}% Concluída</span>
             <span aria-hidden>•</span>
             <span>
@@ -125,7 +125,7 @@ export function MissionCard({
             </span>
           </div>
         </div>
-        <div className="h-[23px] overflow-hidden rounded-pill bg-white">
+        <div className="h-4 overflow-hidden rounded-pill bg-white sm:h-5 2xl:h-[23px]">
           <div
             className={cn("h-full rounded-pill transition-[width] duration-700", theme.progressFill)}
             style={{ width: `${percent}%` }}
@@ -133,7 +133,7 @@ export function MissionCard({
         </div>
       </div>
 
-      <div className="mt-auto space-y-8">
+      <div className="mt-auto space-y-4 2xl:space-y-8">
         <MissionRewardBadges packs={mission.reward_packs} points={mission.reward_points} />
 
         <button
@@ -141,7 +141,7 @@ export function MissionCard({
           onClick={handleActionClick}
           disabled={claiming || isClaimed}
           className={cn(
-            "w-full rounded-pill px-10 py-2 text-lg font-medium text-white shadow-paper transition-all duration-200 active:scale-[0.98] disabled:cursor-default disabled:opacity-70",
+            "w-full rounded-pill px-6 py-1.5 text-sm font-medium text-white shadow-paper transition-all duration-200 active:scale-[0.98] disabled:cursor-default disabled:opacity-70 sm:px-8 sm:py-2 sm:text-base 2xl:px-10 2xl:text-lg",
             theme.button,
             isClaimed && "opacity-80",
           )}

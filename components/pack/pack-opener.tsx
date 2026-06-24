@@ -177,10 +177,10 @@ export function PackOpener({
         type="button"
         onClick={canClose ? onClose : undefined}
         disabled={!canClose}
-        className="absolute right-0 top-0 z-10 flex size-10 items-center justify-center rounded-full text-verde-escuro-300 transition-colors hover:bg-verde-100 hover:text-verde-escuro-500 disabled:pointer-events-none"
+        className="absolute right-0 top-0 z-10 flex size-8 items-center justify-center rounded-full text-verde-escuro-300 transition-colors hover:bg-verde-100 hover:text-verde-escuro-500 disabled:pointer-events-none 2xl:size-10"
         aria-label="Fechar"
       >
-        <X size={22} />
+        <X className="size-5 2xl:size-[22px]" />
       </button>
 
       <AnimatePresence mode="wait">
@@ -190,28 +190,28 @@ export function PackOpener({
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
-            className="mx-auto flex max-w-[387px] flex-col items-center gap-10 pt-2"
+            className="mx-auto flex max-w-[320px] flex-col items-center gap-5 pt-1 sm:max-w-[340px] sm:gap-6 2xl:max-w-[387px] 2xl:gap-10 2xl:pt-2"
           >
-            <span className="rounded-pill border border-verde-400 px-[30px] py-2 text-xl font-medium text-verde-400">
+            <span className="rounded-pill border border-verde-400 px-4 py-1 text-sm font-medium text-verde-400 sm:text-base 2xl:px-[30px] 2xl:py-2 2xl:text-xl">
               {sourceLabel}
             </span>
 
             <div className="text-center">
-              <h2 className="font-display text-3xl font-bold text-verde-escuro-500 sm:text-[48px] sm:leading-tight">
+              <h2 className="font-display text-xl font-bold text-verde-escuro-500 sm:text-2xl lg:text-3xl 2xl:text-[48px] 2xl:leading-tight">
                 Pacotinho pronto!
               </h2>
-              <p className="mt-3 text-[22px] text-verde-escuro-500">
+              <p className="mt-2 text-sm text-verde-escuro-500 sm:text-base lg:text-lg 2xl:mt-3 2xl:text-[22px]">
                 {count} figurinha{count !== 1 ? "s" : ""} esperando por você.
               </p>
             </div>
 
-            <div className="relative h-[390px] w-[273px] shrink-0 overflow-hidden rounded-2xl border-[5px] border-white shadow-md">
+            <div className="relative h-[200px] w-[140px] shrink-0 overflow-hidden rounded-xl border-[3px] border-white shadow-md sm:h-[240px] sm:w-[168px] lg:h-[280px] lg:w-[196px] 2xl:h-[390px] 2xl:w-[273px] 2xl:rounded-2xl 2xl:border-[5px]">
               <Image
                 src={packImageUrl}
                 alt="Pacotinho"
                 fill
                 className="object-cover"
-                sizes="273px"
+                sizes="(max-width: 1024px) 196px, 273px"
                 priority
                 unoptimized={packImageUrl.endsWith(".gif")}
               />
@@ -227,7 +227,7 @@ export function PackOpener({
               type="button"
               onClick={handleOpen}
               disabled={loading}
-              className="h-11 w-full rounded-pill bg-verde-escuro-500 px-10 text-xl font-medium text-white transition-colors hover:bg-verde-escuro-600 disabled:opacity-60"
+              className="h-10 w-full rounded-pill bg-verde-escuro-500 px-6 text-sm font-medium text-white transition-colors hover:bg-verde-escuro-600 disabled:opacity-60 sm:text-base 2xl:h-11 2xl:px-10 2xl:text-xl"
             >
               {loading ? "Abrindo…" : "Abrir pacotinho"}
             </button>
@@ -246,12 +246,12 @@ export function PackOpener({
               openingSync.current.entered = true;
               tryPlayOpeningGifSound();
             }}
-            className="mx-auto flex max-w-[387px] flex-col items-center gap-8 py-4"
+            className="mx-auto flex max-w-[320px] flex-col items-center gap-4 py-2 sm:max-w-[340px] sm:gap-5 2xl:max-w-[387px] 2xl:gap-8 2xl:py-4"
           >
-            <p className="font-display text-2xl font-bold text-verde-escuro-500 sm:text-3xl">
+            <p className="font-display text-lg font-bold text-verde-escuro-500 sm:text-xl lg:text-2xl 2xl:text-3xl">
               Abrindo pacotinho…
             </p>
-            <div className="relative h-[390px] w-[273px]">
+            <div className="relative h-[200px] w-[140px] sm:h-[240px] sm:w-[168px] lg:h-[280px] lg:w-[196px] 2xl:h-[390px] 2xl:w-[273px]">
               {openingGifUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -265,13 +265,13 @@ export function PackOpener({
                   }}
                 />
               ) : (
-                <div className="relative size-full overflow-hidden rounded-2xl border-[5px] border-white">
+                <div className="relative size-full overflow-hidden rounded-xl border-[3px] border-white 2xl:rounded-2xl 2xl:border-[5px]">
                   <Image
                     src={packImageUrl}
                     alt="Pacotinho"
                     fill
                     className="animate-pulse object-cover"
-                    sizes="273px"
+                    sizes="(max-width: 1024px) 196px, 273px"
                     unoptimized={packImageUrl.endsWith(".gif")}
                   />
                 </div>
@@ -285,18 +285,18 @@ export function PackOpener({
             key="results"
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col items-center gap-5 pt-2 sm:gap-6"
+            className="flex flex-col items-center gap-3 pt-1 sm:gap-4 2xl:gap-6 2xl:pt-2"
           >
-            <span className="rounded-pill border border-verde-400 px-[30px] py-2 text-xl font-medium text-verde-400">
+            <span className="rounded-pill border border-verde-400 px-4 py-1 text-sm font-medium text-verde-400 sm:text-base 2xl:px-[30px] 2xl:py-2 2xl:text-xl">
               {sourceLabel}
             </span>
 
-            <h2 className="text-center font-display text-2xl font-bold text-verde-escuro-500 sm:text-4xl lg:text-[48px] lg:leading-tight">
+            <h2 className="text-center font-display text-lg font-bold text-verde-escuro-500 sm:text-xl lg:text-2xl 2xl:text-[48px] 2xl:leading-tight">
               {stickers.length} nova{stickers.length !== 1 ? "s" : ""} figurinha
               {stickers.length !== 1 ? "s" : ""}
             </h2>
 
-            <div className="flex w-full max-w-[744px] flex-wrap justify-center gap-x-4 gap-y-6 sm:gap-x-[30px] sm:gap-y-8">
+            <div className="flex w-full max-w-[744px] flex-wrap justify-center gap-x-3 gap-y-4 sm:gap-x-4 sm:gap-y-5 2xl:gap-x-[30px] 2xl:gap-y-8">
               {stickers.map((item) => (
                 <PackResultSticker
                   key={item.position}
@@ -309,7 +309,7 @@ export function PackOpener({
             <button
               type="button"
               onClick={() => onComplete(stickers)}
-              className="h-11 w-full max-w-[387px] rounded-pill border border-verde-300 px-10 text-xl font-medium text-verde-300 transition-colors hover:border-verde-400 hover:text-verde-400"
+              className="h-10 w-full max-w-[320px] rounded-pill border border-verde-300 px-6 text-sm font-medium text-verde-300 transition-colors hover:border-verde-400 hover:text-verde-400 sm:max-w-[340px] sm:text-base 2xl:h-11 2xl:max-w-[387px] 2xl:px-10 2xl:text-xl"
             >
               Fechar
             </button>

@@ -22,25 +22,25 @@ const RULES = [
 
 export function RankingScoringInfo() {
   return (
-    <section className="rounded-card border border-verde-200 bg-surface-green py-6 pl-4 pr-3 sm:py-8 sm:pl-[26px] sm:pr-3">
-      <div className="space-y-1 text-verde-escuro-500">
-        <p className="text-sm font-medium sm:text-base">Quer subir no ranking dos Fãs por Natureza?</p>
-        <p className="font-display text-lg font-bold sm:text-xl lg:text-2xl">
+    <section className="rounded-card border border-verde-200 bg-surface-green py-4 pl-3 pr-2 sm:py-5 sm:pl-4 sm:pr-3 lg:pl-5 2xl:py-8 2xl:pl-[26px]">
+      <div className="space-y-0.5 text-verde-escuro-500 sm:space-y-1">
+        <p className="text-xs font-medium sm:text-sm 2xl:text-base">Quer subir no ranking dos Fãs por Natureza?</p>
+        <p className="font-display text-base font-bold sm:text-lg lg:text-xl 2xl:text-2xl">
           Olha como funciona a pontuação:
         </p>
       </div>
 
-      <ul className="mt-4 space-y-4">
+      <ul className="mt-3 space-y-3 sm:mt-4 2xl:space-y-4">
         {RULES.map(({ icon: Icon, title, description }) => (
-          <li key={title} className="flex gap-3 sm:gap-4">
+          <li key={title} className="flex gap-2.5 sm:gap-3 2xl:gap-4">
             <Icon
-              className="mt-0.5 size-6 shrink-0 text-verde-escuro-500 sm:size-7"
+              className="mt-0.5 size-5 shrink-0 text-verde-escuro-500 sm:size-6 2xl:size-7"
               strokeWidth={1.8}
               aria-hidden
             />
             <div className="min-w-0 text-verde-escuro-500">
-              <p className="text-base font-semibold sm:text-lg">{title}</p>
-              <p className="text-sm leading-relaxed sm:text-sm">{description}</p>
+              <p className="text-sm font-semibold sm:text-base 2xl:text-lg">{title}</p>
+              <p className="text-xs leading-relaxed sm:text-sm">{description}</p>
             </div>
           </li>
         ))}

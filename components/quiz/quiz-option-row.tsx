@@ -19,16 +19,16 @@ interface QuizOptionRowProps {
 function RadioMark({ visual }: { visual: QuizOptionVisual }) {
   if (visual === "correct" || visual === "correct-selected") {
     return (
-      <span className="flex size-[27px] shrink-0 items-center justify-center rounded-full bg-white">
-        <span className="size-3.5 rounded-full bg-verde-escuro-500" />
+      <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-white sm:size-[22px] 2xl:size-[27px]">
+        <span className="size-2.5 rounded-full bg-verde-escuro-500 2xl:size-3.5" />
       </span>
     );
   }
 
   if (visual === "wrong-selected") {
     return (
-      <span className="flex size-[27px] shrink-0 items-center justify-center rounded-full bg-white">
-        <span className="size-3.5 rounded-full bg-red-600" />
+      <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-white sm:size-[22px] 2xl:size-[27px]">
+        <span className="size-2.5 rounded-full bg-red-600 2xl:size-3.5" />
       </span>
     );
   }
@@ -40,15 +40,23 @@ function RadioMark({ visual }: { visual: QuizOptionVisual }) {
         ? "border-verde-500 bg-verde-500"
         : "border-neutral-300";
 
-  return <span className={cn("size-[27px] shrink-0 rounded-full border-2", borderClass)} />;
+  return (
+    <span
+      className={cn(
+        "size-5 shrink-0 rounded-full border-2 sm:size-[22px] 2xl:size-[27px]",
+        borderClass,
+      )}
+    />
+  );
 }
 
 function ResultBadge({ visual }: { visual: QuizOptionVisual }) {
   if (visual === "correct" || visual === "correct-selected") {
     return (
-      <span className="inline-flex shrink-0 items-center gap-2 rounded-pill border border-verde-100 px-4 py-1.5 text-sm font-medium text-verde-100 sm:px-10 sm:text-base">
-        <CheckCircle2 className="size-4 sm:size-[18px]" aria-hidden />
-        Resposta Correta
+      <span className="inline-flex shrink-0 items-center gap-1 rounded-pill border border-verde-100 px-2 py-0.5 text-[10px] font-medium text-verde-100 sm:gap-1.5 sm:px-3 sm:py-1 sm:text-xs lg:text-sm 2xl:gap-2 2xl:px-10 2xl:py-1.5 2xl:text-base">
+        <CheckCircle2 className="size-3 sm:size-3.5 2xl:size-[18px]" aria-hidden />
+        <span className="sm:hidden">Correta</span>
+        <span className="hidden sm:inline">Resposta Correta</span>
       </span>
     );
   }
@@ -58,14 +66,15 @@ function ResultBadge({ visual }: { visual: QuizOptionVisual }) {
     return (
       <span
         className={cn(
-          "inline-flex shrink-0 items-center gap-2 rounded-pill border px-4 py-1.5 text-sm font-medium sm:px-10 sm:text-base",
+          "inline-flex shrink-0 items-center gap-1 rounded-pill border px-2 py-0.5 text-[10px] font-medium sm:gap-1.5 sm:px-3 sm:py-1 sm:text-xs lg:text-sm 2xl:gap-2 2xl:px-10 2xl:py-1.5 2xl:text-base",
           inverted
             ? "border-[#ffeaea] text-[#ffeaea]"
             : "border-red-500 text-red-500",
         )}
       >
-        <OctagonX className="size-4 sm:size-5" aria-hidden />
-        Resposta Errada
+        <OctagonX className="size-3 sm:size-3.5 2xl:size-5" aria-hidden />
+        <span className="hidden sm:inline">Resposta Errada</span>
+        <span className="sm:hidden">Errada</span>
       </span>
     );
   }
@@ -87,7 +96,7 @@ export function QuizOptionRow({
     visual === "wrong-selected";
 
   const rowClass = cn(
-    "flex w-full min-h-[64px] items-center gap-4 rounded-[10px] px-4 py-4 text-left transition-all sm:min-h-[86px] sm:gap-6 sm:px-6",
+    "flex w-full min-h-[44px] items-center gap-2.5 rounded-[10px] px-3 py-2 text-left transition-all sm:min-h-[50px] sm:gap-3 sm:px-4 sm:py-2.5 lg:min-h-[56px] 2xl:min-h-[86px] 2xl:gap-6 2xl:px-6 2xl:py-4",
     visual === "idle" && "bg-white",
     visual === "selected" && "border border-verde-500 bg-verde-100",
     visual === "correct" && "border border-verde-100 bg-verde-500",
@@ -100,7 +109,7 @@ export function QuizOptionRow({
   );
 
   const textClass = cn(
-    "min-w-0 flex-1 text-base sm:text-2xl",
+    "min-w-0 flex-1 text-sm leading-snug sm:text-base lg:text-lg 2xl:text-2xl",
     visual === "idle" || visual === "selected" ? "text-[#515151]" : "",
     visual === "correct" || visual === "correct-selected" ? "text-white" : "",
     visual === "wrong" ? "text-red-500" : "",

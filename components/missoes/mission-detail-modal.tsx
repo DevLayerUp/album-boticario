@@ -97,7 +97,7 @@ export function MissionDetailModal({
         exit={{ scale: 0.94, opacity: 0, y: 12 }}
         transition={{ type: "spring", stiffness: 320, damping: 28 }}
         className={cn(
-          "relative flex w-full max-w-[min(100%,480px)] flex-col items-center gap-3 overflow-hidden rounded-block px-4 py-4 shadow-[0_4px_5px_rgba(0,0,0,0.1)] sm:max-w-[520px] sm:gap-4 sm:px-5 sm:py-5 md:max-w-[560px] lg:max-w-[600px] lg:gap-5 xl:max-w-[680px] xl:gap-6 xl:px-7 xl:py-6",
+          "relative flex w-full max-w-[min(100%,440px)] flex-col items-center gap-2.5 overflow-hidden rounded-block px-4 py-3 shadow-[0_4px_5px_rgba(0,0,0,0.1)] sm:max-w-[480px] sm:gap-3 sm:px-4 sm:py-4 md:max-w-[500px] lg:max-w-[520px] lg:gap-3.5 lg:px-5 lg:py-4 2xl:max-w-[680px] 2xl:gap-6 2xl:px-7 2xl:py-6",
           theme.modalSurface,
         )}
         onClick={(e) => e.stopPropagation()}
@@ -108,11 +108,11 @@ export function MissionDetailModal({
           className="absolute right-3 top-3 text-verde-escuro-500 transition-opacity hover:opacity-70 sm:right-4 sm:top-4"
           aria-label="Fechar"
         >
-          <X className="size-6 sm:size-7 xl:size-8" />
+          <X className="size-5 sm:size-6 2xl:size-8" />
         </button>
 
-        <div className="flex w-full flex-col items-center gap-3 sm:gap-4 lg:gap-5 xl:gap-6">
-          <div className="relative flex size-12 items-center justify-center sm:size-14 md:size-16 lg:size-[72px] xl:size-20">
+        <div className="flex w-full flex-col items-center gap-2.5 sm:gap-3 lg:gap-3.5 2xl:gap-6">
+          <div className="relative flex size-11 items-center justify-center sm:size-12 md:size-14 lg:size-16 2xl:size-20">
             <span className={cn("absolute inset-0 rounded-full opacity-20", theme.iconBg)} />
             <span
               className={cn(
@@ -120,7 +120,7 @@ export function MissionDetailModal({
                 theme.iconBg,
               )}
             >
-              <Icon className="size-5 text-white sm:size-6 md:size-7 lg:size-8 xl:size-9" strokeWidth={1.8} aria-hidden />
+              <Icon className="size-4 text-white sm:size-5 md:size-6 lg:size-7 2xl:size-9" strokeWidth={1.8} aria-hidden />
             </span>
           </div>
 
@@ -128,24 +128,24 @@ export function MissionDetailModal({
             <h2
               id="mission-modal-title"
               className={cn(
-                "font-display text-lg font-bold sm:text-xl md:text-[22px] lg:text-2xl xl:text-[28px]",
+                "font-display text-base font-bold sm:text-lg md:text-xl lg:text-xl 2xl:text-[28px]",
                 theme.title,
               )}
             >
               {mission.title}
             </h2>
-            <p className="text-xs leading-snug text-black sm:text-sm md:text-base lg:leading-normal xl:text-lg">
+            <p className="text-[11px] leading-snug text-black sm:text-xs md:text-sm lg:leading-normal 2xl:text-lg">
               <span className="font-bold">Instruções</span>{" "}
               {mission.instructions ?? mission.description}
             </p>
           </div>
 
           {showProgress ? (
-            <div className="w-full space-y-2">
-              <div className="flex flex-wrap items-start justify-between gap-1.5 sm:gap-2">
+            <div className="w-full space-y-1.5 sm:space-y-2">
+              <div className="flex flex-wrap items-start justify-between gap-1 sm:gap-1.5">
                 <span
                   className={cn(
-                    "rounded-pill px-2.5 py-0.5 text-[11px] font-medium sm:px-3 sm:py-1 sm:text-xs",
+                    "rounded-pill px-2 py-0.5 text-[10px] font-medium sm:px-2.5 sm:py-0.5 sm:text-[11px] 2xl:px-3 2xl:py-1 2xl:text-xs",
                     theme.badge,
                   )}
                 >
@@ -153,7 +153,7 @@ export function MissionDetailModal({
                 </span>
                 <div
                   className={cn(
-                    "flex flex-wrap items-center justify-end gap-1.5 text-xs sm:gap-2 sm:text-sm lg:text-base",
+                    "flex flex-wrap items-center justify-end gap-1 text-[11px] sm:gap-1.5 sm:text-xs lg:text-sm 2xl:gap-2 2xl:text-base",
                     theme.progressText,
                   )}
                 >
@@ -168,7 +168,7 @@ export function MissionDetailModal({
                   </span>
                 </div>
               </div>
-              <div className="h-3 overflow-hidden rounded-pill bg-white sm:h-3.5 lg:h-4">
+              <div className="h-2.5 overflow-hidden rounded-pill bg-white sm:h-3 2xl:h-4">
                 <div
                   className={cn("h-full rounded-pill", theme.progressFill)}
                   style={{ width: `${percent}%` }}
@@ -200,7 +200,7 @@ export function MissionDetailModal({
             onClick={handlePrimaryAction}
             disabled={claiming}
             className={cn(
-              "flex w-full max-w-[min(100%,360px)] items-center justify-center rounded-pill px-5 py-1.5 text-xs font-medium text-white transition-all duration-200 active:scale-[0.98] disabled:opacity-60 sm:max-w-[380px] sm:px-6 sm:py-2 sm:text-sm lg:text-base xl:max-w-[420px]",
+              "flex w-full max-w-[min(100%,320px)] items-center justify-center rounded-pill px-4 py-1.5 text-[11px] font-medium text-white transition-all duration-200 active:scale-[0.98] disabled:opacity-60 sm:max-w-[360px] sm:px-5 sm:py-2 sm:text-sm lg:text-base 2xl:max-w-[420px]",
               theme.button,
             )}
           >
@@ -218,7 +218,7 @@ export function MissionDetailModal({
             type="button"
             disabled
             className={cn(
-              "flex w-full max-w-[min(100%,360px)] cursor-default items-center justify-center rounded-pill px-5 py-1.5 text-xs font-medium text-white opacity-80 sm:max-w-[380px] sm:px-6 sm:py-2 sm:text-sm lg:text-base xl:max-w-[420px]",
+              "flex w-full max-w-[min(100%,320px)] cursor-default items-center justify-center rounded-pill px-4 py-1.5 text-[11px] font-medium text-white opacity-80 sm:max-w-[360px] sm:px-5 sm:py-2 sm:text-sm lg:text-base 2xl:max-w-[420px]",
               theme.button,
             )}
           >
@@ -229,7 +229,7 @@ export function MissionDetailModal({
             href={actionHref}
             onClick={onClose}
             className={cn(
-              "flex w-full max-w-[min(100%,360px)] items-center justify-center rounded-pill px-5 py-1.5 text-xs font-medium text-white transition-all duration-200 hover:opacity-95 active:scale-[0.98] sm:max-w-[380px] sm:px-6 sm:py-2 sm:text-sm lg:text-base xl:max-w-[420px]",
+              "flex w-full max-w-[min(100%,320px)] items-center justify-center rounded-pill px-4 py-1.5 text-[11px] font-medium text-white transition-all duration-200 hover:opacity-95 active:scale-[0.98] sm:max-w-[360px] sm:px-5 sm:py-2 sm:text-sm lg:text-base 2xl:max-w-[420px]",
               theme.button,
             )}
           >

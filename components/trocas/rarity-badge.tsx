@@ -9,14 +9,14 @@ interface RarityBadgeProps {
   className?: string;
 }
 
-function RarityIcon({ slug }: { slug: string }) {
+function RarityIcon({ slug, className }: { slug: string; className?: string }) {
   if (slug === "super_rare") {
-    return <Trophy size={20} strokeWidth={2} aria-hidden />;
+    return <Trophy className={className} size={16} strokeWidth={2} aria-hidden />;
   }
   if (slug === "rare") {
-    return <Star size={13} strokeWidth={2} aria-hidden />;
+    return <Star className={className} size={11} strokeWidth={2} aria-hidden />;
   }
-  return <ThumbsUp size={12} strokeWidth={2} aria-hidden />;
+  return <ThumbsUp className={className} size={10} strokeWidth={2} aria-hidden />;
 }
 
 export function RarityBadge({ name, slug, colorHex, className }: RarityBadgeProps) {
@@ -28,7 +28,7 @@ export function RarityBadge({ name, slug, colorHex, className }: RarityBadgeProp
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-2.5 rounded-pill px-4 py-1 text-xs font-semibold uppercase tracking-wide",
+        "inline-flex items-center gap-1.5 rounded-pill px-3 py-0.5 text-[10px] font-semibold uppercase tracking-wide sm:gap-2 sm:px-3.5 sm:text-[11px] 2xl:gap-2.5 2xl:px-4 2xl:py-1 2xl:text-xs",
         className,
       )}
       style={{
@@ -40,7 +40,7 @@ export function RarityBadge({ name, slug, colorHex, className }: RarityBadgeProp
         boxShadow: badge.shadow,
       }}
     >
-      <RarityIcon slug={slug} />
+      <RarityIcon slug={slug} className="2xl:scale-110" />
       {label}
     </span>
   );

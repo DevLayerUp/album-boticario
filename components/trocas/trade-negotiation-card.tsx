@@ -50,18 +50,18 @@ export function TradeNegotiationCard({
   }
 
   return (
-    <article className="rounded-[32px] border border-verde-300 bg-[#f7f9f7] p-4 sm:p-5 lg:p-6">
-      <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:gap-6">
+    <article className="rounded-[20px] border border-verde-300 bg-[#f7f9f7] p-3 sm:rounded-[24px] sm:p-4 lg:p-4 2xl:rounded-[32px] 2xl:p-6">
+      <div className="flex flex-col gap-3 sm:gap-4 lg:flex-row lg:items-center lg:gap-4 2xl:gap-6">
         {/* Stickers + swap */}
-        <div className="flex min-w-0 flex-1 flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex min-w-0 flex-1 items-center gap-3 sm:gap-4">
-            <StickerThumb sticker={gainSticker} width={72} height={103} className="sm:w-[95px] sm:h-[136px]" />
+        <div className="flex min-w-0 flex-1 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+          <div className="flex min-w-0 flex-1 items-center gap-2.5 sm:gap-3">
+            <StickerThumb sticker={gainSticker} width={60} height={86} className="sm:w-[72px] sm:h-[103px] 2xl:!w-[95px] 2xl:!h-[136px]" />
             <div className="min-w-0">
-              <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-verde-500 sm:text-xs">
+              <p className="text-[9px] font-medium uppercase tracking-[0.18em] text-verde-500 sm:text-[10px] sm:tracking-[0.2em] 2xl:text-xs">
                 {gainLabel}
               </p>
               <p
-                className="mt-1 font-display text-lg font-bold leading-tight text-verde-escuro-500 sm:text-2xl lg:text-[32px]"
+                className="mt-0.5 font-display text-base font-bold leading-tight text-verde-escuro-500 sm:mt-1 sm:text-lg lg:text-xl 2xl:text-[32px]"
                 style={{
                   color: rarityColor(
                     gainSticker?.rarities?.slug,
@@ -75,19 +75,19 @@ export function TradeNegotiationCard({
           </div>
 
           <div
-            className="mx-auto flex size-10 shrink-0 items-center justify-center rounded-full shadow-sm sm:mx-0 sm:size-12"
+            className="mx-auto flex size-8 shrink-0 items-center justify-center rounded-full shadow-sm sm:mx-0 sm:size-10 2xl:size-12"
             aria-hidden
           >
             <img src="/images/trocas/vector-trade.png" alt="Arrow left right" className="w-full h-full object-contain" />
           </div>
 
-          <div className="flex min-w-0 flex-1 items-center gap-3 sm:gap-4 sm:justify-end">
+          <div className="flex min-w-0 flex-1 items-center gap-2.5 sm:gap-3 sm:justify-end">
             <div className="min-w-0 sm:text-right">
-              <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-verde-500 sm:text-xs">
+              <p className="text-[9px] font-medium uppercase tracking-[0.18em] text-verde-500 sm:text-[10px] sm:tracking-[0.2em] 2xl:text-xs">
                 {giveLabel}
               </p>
               <p
-                className="mt-1 font-display text-lg font-bold leading-tight text-verde-escuro-500 sm:text-2xl lg:text-[32px]"
+                className="mt-0.5 font-display text-base font-bold leading-tight text-verde-escuro-500 sm:mt-1 sm:text-lg lg:text-xl 2xl:text-[32px]"
                 style={{
                   color: rarityColor(
                     giveSticker?.rarities?.slug,
@@ -98,13 +98,13 @@ export function TradeNegotiationCard({
                 {giveSticker?.name ?? "—"}
               </p>
             </div>
-            <StickerThumb sticker={giveSticker} width={72} height={103} className="sm:w-[94px] sm:h-[134px]" />
+            <StickerThumb sticker={giveSticker} width={60} height={86} className="sm:w-[72px] sm:h-[103px] 2xl:!w-[94px] 2xl:!h-[134px]" />
           </div>
         </div>
 
         {/* Actions */}
-        <div className="flex w-full shrink-0 flex-col gap-2 border-t border-verde-200 pt-4 lg:w-[236px] lg:border-t-0 lg:pt-0">
-          <p className="text-center text-sm text-verde-escuro-500 lg:text-left">
+        <div className="flex w-full shrink-0 flex-col gap-2 border-t border-verde-200 pt-3 lg:w-[200px] lg:border-t-0 lg:pt-0 2xl:w-[236px] 2xl:pt-0">
+          <p className="text-center text-xs text-verde-escuro-500 sm:text-sm lg:text-left">
             {mode === "received" ? (
               <>
                 Oferta recebida de{" "}
@@ -124,7 +124,7 @@ export function TradeNegotiationCard({
                 type="button"
                 disabled={busy !== null}
                 onClick={() => run("accept")}
-                className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-pill bg-verde-500 px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-verde-400 disabled:opacity-60"
+                className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-pill bg-verde-500 px-4 py-2 text-xs font-medium text-white transition-colors hover:bg-verde-400 disabled:opacity-60 sm:px-6 sm:py-2.5 sm:text-sm"
               >
                 {busy === "accept" ? (
                   <Loader2 size={16} className="animate-spin" />
@@ -135,7 +135,7 @@ export function TradeNegotiationCard({
                 type="button"
                 disabled={busy !== null}
                 onClick={() => run("reject")}
-                className="flex w-full cursor-pointer items-center justify-center rounded-pill border border-verde-300 px-6 py-2.5 text-sm font-medium text-verde-300 transition-colors hover:border-verde-400 hover:text-verde-400 disabled:opacity-60"
+                className="flex w-full cursor-pointer items-center justify-center rounded-pill border border-verde-300 px-4 py-2 text-xs font-medium text-verde-300 transition-colors hover:border-verde-400 hover:text-verde-400 disabled:opacity-60 sm:px-6 sm:py-2.5 sm:text-sm"
               >
                 {busy === "reject" ? <Loader2 size={16} className="animate-spin" /> : null}
                 Recusar
@@ -147,7 +147,7 @@ export function TradeNegotiationCard({
               disabled={busy !== null}
               onClick={() => run("cancel")}
               className={cn(
-                "flex w-full cursor-pointer items-center justify-center rounded-pill border border-verde-300 px-6 py-2.5 text-sm font-medium text-verde-escuro-400 transition-colors hover:bg-verde-100/80 disabled:opacity-60",
+                "flex w-full cursor-pointer items-center justify-center rounded-pill border border-verde-300 px-4 py-2 text-xs font-medium text-verde-escuro-400 transition-colors hover:bg-verde-100/80 disabled:opacity-60 sm:px-6 sm:py-2.5 sm:text-sm",
               )}
             >
               {busy === "cancel" ? <Loader2 size={16} className="animate-spin" /> : null}
@@ -175,7 +175,7 @@ export function NegotiationSubTabs({
 }: NegotiationSubTabsProps) {
   return (
     <div
-      className="inline-flex max-w-full flex-wrap gap-2 rounded-pill bg-white p-1.5 sm:gap-3 sm:p-2"
+      className="inline-flex max-w-full flex-wrap gap-1.5 rounded-pill bg-white p-1 sm:gap-2 sm:p-1.5 2xl:gap-3 2xl:p-2"
       role="tablist"
       aria-label="Tipo de negociação"
     >
@@ -213,7 +213,7 @@ function SubTabPill({
       aria-selected={active}
       onClick={onClick}
       className={cn(
-        "flex cursor-pointer items-center gap-3 rounded-pill py-2 pl-6 pr-3 text-sm font-medium transition-colors sm:pl-10 sm:text-base",
+        "flex cursor-pointer items-center gap-2 rounded-pill py-1.5 pl-4 pr-2 text-xs font-medium transition-colors sm:gap-2.5 sm:py-2 sm:pl-6 sm:pr-3 sm:text-sm 2xl:gap-3 2xl:pl-10 2xl:text-base",
         active
           ? "bg-verde-escuro-500 text-white"
           : "border border-verde-200 text-verde-200 hover:border-verde-300 hover:text-verde-300",
@@ -222,7 +222,7 @@ function SubTabPill({
       {label}
       <span
         className={cn(
-          "flex h-7 min-w-7 items-center justify-center rounded-full px-1.5 text-xs font-bold",
+          "flex h-6 min-w-6 items-center justify-center rounded-full px-1 text-[10px] font-bold sm:h-7 sm:min-w-7 sm:text-xs",
           active ? "bg-amarelo text-verde-escuro-500" : "bg-verde-100 text-verde-escuro-500",
         )}
       >

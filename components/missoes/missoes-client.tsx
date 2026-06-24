@@ -108,12 +108,12 @@ export function MissoesClient({ packImageUrl }: MissoesClientProps) {
   const completedForLevel = missions.filter((m) => m.completed_at).length;
 
   return (
-    <div className="mx-auto w-full max-w-[1112px] space-y-8 sm:space-y-10">
-      <header className="max-w-[686px] space-y-4 sm:space-y-6">
-        <h1 className="font-display text-3xl font-bold text-verde-escuro-500 sm:text-5xl lg:text-[48px]">
+    <div className="mx-auto w-full max-w-[1112px] space-y-5 sm:space-y-6 lg:space-y-8 2xl:space-y-10">
+      <header className="max-w-[686px] space-y-2 sm:space-y-3 2xl:space-y-6">
+        <h1 className="font-display text-2xl font-bold text-verde-escuro-500 sm:text-3xl lg:text-4xl 2xl:text-[48px]">
           Missões
         </h1>
-        <p className="text-lg leading-relaxed text-black sm:text-[26px]">
+        <p className="text-sm leading-relaxed text-black sm:text-base lg:text-lg 2xl:text-[26px]">
           Complete missões, suba de nível e ganhe pacotinhos e pontos para o ranking.
         </p>
       </header>
@@ -125,14 +125,14 @@ export function MissoesClient({ packImageUrl }: MissoesClientProps) {
       ) : null}
 
       {loading ? (
-        <div className="flex justify-center py-20">
-          <Loader2 className="size-10 animate-spin text-verde-500" aria-label="Carregando missões" />
+        <div className="flex justify-center py-12 2xl:py-20">
+          <Loader2 className="size-8 animate-spin text-verde-500 sm:size-9 2xl:size-10" aria-label="Carregando missões" />
         </div>
       ) : (
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="space-y-8 sm:space-y-10"
+          className="space-y-5 sm:space-y-6 lg:space-y-8 2xl:space-y-10"
         >
           <MissionStatCards
             completed={summary.completed_count}
@@ -144,16 +144,16 @@ export function MissoesClient({ packImageUrl }: MissoesClientProps) {
           <MissionLevelProgress completed={completedForLevel} total={totalMissions} />
 
           {missions.length === 0 ? (
-            <div className="rounded-card bg-verde-100 px-6 py-16 text-center">
-              <p className="font-display text-2xl font-bold text-verde-escuro-500">
+            <div className="rounded-card bg-verde-100 px-4 py-10 text-center sm:px-6 sm:py-12 2xl:py-16">
+              <p className="font-display text-xl font-bold text-verde-escuro-500 sm:text-2xl 2xl:text-[32px]">
                 Nenhuma missão disponível
               </p>
-              <p className="mt-2 text-base text-verde-escuro-500">
+              <p className="mt-1.5 text-sm text-verde-escuro-500 sm:mt-2 sm:text-base 2xl:text-lg">
                 Volte em breve — novas missões serão adicionadas em breve.
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 2xl:gap-6">
               {missions.map((mission, index) => (
                 <motion.div
                   key={mission.id}

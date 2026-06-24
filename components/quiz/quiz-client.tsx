@@ -75,10 +75,23 @@ function rewardLabel(points: number) {
 
 /** Largura responsiva dos pacotinhos na tela de recompensa (proporção 392×560). */
 function packRewardSizeClass(count: number) {
-  if (count <= 1) return "w-[min(70vw,266px)]";
-  if (count === 2) return "w-[min(42vw,220px)]";
-  return "w-[min(32vw,180px)] sm:w-[min(22vw,200px)]";
+  if (count <= 1) {
+    return "w-[72px] sm:w-[88px] lg:w-[100px] xl:w-[110px] 2xl:w-[266px]";
+  }
+  if (count === 2) {
+    return "w-[64px] sm:w-[76px] lg:w-[88px] 2xl:w-[220px]";
+  }
+  return "w-[56px] sm:w-[64px] lg:w-[72px] 2xl:w-[180px]";
 }
+
+const QUIZ_BTN =
+  "rounded-pill bg-verde-500 px-5 py-1.5 text-sm font-medium text-white shadow-paper transition-all duration-200 hover:bg-verde-600 active:scale-[0.98] sm:px-6 sm:py-2 sm:text-base lg:text-lg 2xl:px-10 2xl:text-2xl";
+
+const QUIZ_SECTION_GAP = "space-y-4 sm:space-y-5 lg:space-y-6 2xl:space-y-10";
+const QUIZ_QUESTION_TEXT =
+  "text-center text-base leading-snug text-white sm:text-lg md:text-xl lg:text-2xl 2xl:text-[40px]";
+const QUIZ_RESULT_TITLE = "text-lg sm:text-xl md:text-2xl lg:text-[28px] 2xl:text-[40px]";
+const QUIZ_RESULT_SUBTITLE = "text-sm sm:text-base md:text-lg lg:text-xl 2xl:text-[32px]";
 
 export function QuizClient({ packImageUrl }: QuizClientProps) {
   const [state, setState] = useState<PageState>({ type: "loading" });
@@ -164,12 +177,12 @@ export function QuizClient({ packImageUrl }: QuizClientProps) {
   }
 
   return (
-    <div className="mx-auto w-full max-w-[1112px] space-y-8 sm:space-y-10">
-      <header className="max-w-[686px] space-y-4 sm:space-y-6">
-        <h1 className="font-display text-3xl font-bold text-verde-escuro-500 sm:text-5xl lg:text-[48px]">
+    <div className="mx-auto w-full max-w-[1112px] space-y-4 sm:space-y-5 lg:space-y-6 2xl:space-y-10">
+      <header className="max-w-[686px] space-y-2 sm:space-y-3 lg:space-y-4 2xl:space-y-6">
+        <h1 className="font-display text-2xl font-bold text-verde-escuro-500 sm:text-3xl lg:text-4xl 2xl:text-[48px]">
           Quiz do Dia
         </h1>
-        <p className="text-lg leading-relaxed text-black sm:text-[26px]">
+        <p className="text-sm leading-relaxed text-black sm:text-base lg:text-lg 2xl:text-[26px]">
           Responda 1 pergunta por dia e ganhe pacotinhos de figurinhas para
           completar seu álbum ou trocar.
         </p>
@@ -197,27 +210,25 @@ export function QuizClient({ packImageUrl }: QuizClientProps) {
         {state.type === "available" && (
           <motion.div key="quiz" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
             <QuizCardShell rewardLabel={rewardLabel(state.quiz.points)}>
-              <div className="space-y-8 sm:space-y-10">
+              <div className={QUIZ_SECTION_GAP}>
                 {state.quiz.image_url ? (
-                  <div className="mx-auto max-w-md overflow-hidden rounded-2xl border-4 border-white">
+                  <div className="mx-auto max-w-[180px] overflow-hidden rounded-xl border-2 border-white sm:max-w-[220px] lg:max-w-[260px] 2xl:max-w-md 2xl:rounded-2xl 2xl:border-4">
                     <Image
                       src={state.quiz.image_url}
                       alt="Imagem da pergunta"
                       width={500}
                       height={280}
-                      className="h-auto w-full object-cover"
+                      className="h-auto max-h-[120px] w-full object-cover sm:max-h-[140px] lg:max-h-[160px] 2xl:max-h-none"
                     />
                   </div>
                 ) : null}
 
-                <p className="text-center text-2xl leading-snug text-white sm:text-[40px]">
-                  {state.quiz.question}
-                </p>
+                <p className={QUIZ_QUESTION_TEXT}>{state.quiz.question}</p>
 
                 <div
                   role="radiogroup"
                   aria-label="Escolha uma opção"
-                  className="mx-auto flex w-full max-w-[780px] flex-col gap-2 px-0 sm:gap-2 sm:px-6"
+                  className="mx-auto flex w-full max-w-[780px] flex-col gap-1.5 px-0 sm:gap-2 sm:px-4 lg:px-6"
                 >
                   {state.quiz.options.map((opt) => (
                     <QuizOptionRow
@@ -237,12 +248,12 @@ export function QuizClient({ packImageUrl }: QuizClientProps) {
                   ))}
                 </div>
 
-                <div className="flex justify-center pt-2">
+                <div className="flex flex-col items-center justify-center pt-1">
                   <button
                     type="button"
                     onClick={() => void handleSubmit()}
                     disabled={!selected || submitting}
-                    className="rounded-pill bg-verde-500 px-8 py-2 text-lg font-medium text-white shadow-paper transition-all duration-200 hover:bg-verde-600 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 sm:px-10 sm:text-2xl"
+                    className={`${QUIZ_BTN} disabled:cursor-not-allowed disabled:opacity-50`}
                   >
                     {submitting ? (
                       <span className="inline-flex items-center gap-2">
@@ -254,7 +265,7 @@ export function QuizClient({ packImageUrl }: QuizClientProps) {
                     )}
                   </button>
                   {submitError ? (
-                    <p className="mt-3 text-center text-sm text-red-200 sm:text-base" role="alert">
+                    <p className="mt-2 text-center text-xs text-red-200 sm:text-sm" role="alert">
                       {submitError}
                     </p>
                   ) : null}
@@ -267,13 +278,13 @@ export function QuizClient({ packImageUrl }: QuizClientProps) {
         {state.type === "result" && state.is_correct && !state.redeemed && (
           <motion.div key="result-correct" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
             <QuizCardShell rewardLabel={rewardLabel(state.quiz.points)}>
-              <div className="space-y-8 sm:space-y-10">
-                <div className="space-y-2 text-center text-white">
-                  <p className="text-2xl sm:text-[40px]">
+              <div className={QUIZ_SECTION_GAP}>
+                <div className="space-y-1 text-center text-white sm:space-y-1.5 2xl:space-y-2">
+                  <p className={QUIZ_RESULT_TITLE}>
                     <span aria-hidden>🎉 </span>
                     <span className="font-bold">Resposta correta!</span>
                   </p>
-                  <p className="text-xl sm:text-[32px]">
+                  <p className={QUIZ_RESULT_SUBTITLE}>
                     Você ganhou{" "}
                     <span className="font-bold">
                       {state.packs_earned} pacotinho
@@ -283,16 +294,12 @@ export function QuizClient({ packImageUrl }: QuizClientProps) {
                 </div>
 
                 <div className="flex justify-center">
-                  <button
-                    type="button"
-                    onClick={handleRedeem}
-                    className="rounded-pill bg-verde-500 px-8 py-2 text-lg font-medium text-white shadow-paper transition-all duration-200 hover:bg-verde-600 active:scale-[0.98] sm:px-10 sm:text-2xl"
-                  >
+                  <button type="button" onClick={handleRedeem} className={QUIZ_BTN}>
                     Resgatar Pacotinhos
                   </button>
                 </div>
 
-                <div className="mx-auto flex w-full max-w-[780px] flex-col gap-2 px-0 sm:gap-2 sm:px-6" role="list">
+                <div className="mx-auto flex w-full max-w-[780px] flex-col gap-1.5 px-0 sm:gap-2 sm:px-4 lg:px-6" role="list">
                   {state.quiz.options.map((opt) => (
                     <QuizOptionRow
                       key={opt.id}
@@ -315,13 +322,13 @@ export function QuizClient({ packImageUrl }: QuizClientProps) {
         {state.type === "result" && state.is_correct && state.redeemed && (
           <motion.div key="result-redeemed" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
             <QuizCardShell rewardLabel={rewardLabel(state.quiz.points)}>
-              <div className="flex flex-col items-center gap-8 sm:gap-16">
-                <div className="space-y-2 text-center text-white">
-                  <p className="text-2xl sm:text-[40px]">
+              <div className="flex flex-col items-center gap-4 sm:gap-5 lg:gap-6 2xl:gap-16">
+                <div className="space-y-1 text-center text-white sm:space-y-1.5 2xl:space-y-2">
+                  <p className={QUIZ_RESULT_TITLE}>
                     <span aria-hidden>🎉 </span>
                     <span className="font-bold">Resposta correta!</span>
                   </p>
-                  <p className="text-xl sm:text-[32px]">
+                  <p className={QUIZ_RESULT_SUBTITLE}>
                     Você ganhou{" "}
                     <span className="font-bold">
                       {state.packs_earned} pacotinho
@@ -330,7 +337,7 @@ export function QuizClient({ packImageUrl }: QuizClientProps) {
                   </p>
                 </div>
 
-                <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-16">
+                <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 lg:gap-5 2xl:gap-16">
                   {(() => {
                     const visiblePacks = Math.min(state.packs_earned, 4);
                     const sizeClass = packRewardSizeClass(visiblePacks);
@@ -344,7 +351,7 @@ export function QuizClient({ packImageUrl }: QuizClientProps) {
                           alt={`Pacotinho ${i + 1}`}
                           fill
                           className="object-contain"
-                          sizes="266px"
+                          sizes="(max-width: 1024px) 110px, 266px"
                           unoptimized={packImageUrl.endsWith(".gif")}
                         />
                       </div>
@@ -352,10 +359,7 @@ export function QuizClient({ packImageUrl }: QuizClientProps) {
                   })()}
                 </div>
 
-                <Link
-                  href="/pacotinhos"
-                  className="rounded-pill bg-verde-500 px-8 py-2 text-lg font-medium text-white shadow-paper transition-all duration-200 hover:bg-verde-600 active:scale-[0.98] sm:px-10 sm:text-2xl"
-                >
+                <Link href="/pacotinhos" className={QUIZ_BTN}>
                   Ver meus Pacotinhos
                 </Link>
               </div>
@@ -366,19 +370,19 @@ export function QuizClient({ packImageUrl }: QuizClientProps) {
         {state.type === "result" && !state.is_correct && (
           <motion.div key="result-wrong" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
             <QuizCardShell rewardLabel={rewardLabel(state.quiz.points)}>
-              <div className="space-y-8 sm:space-y-10">
-                <div className="space-y-2 text-center text-white">
-                  <p className="text-2xl sm:text-[40px]">
+              <div className={QUIZ_SECTION_GAP}>
+                <div className="space-y-1 text-center text-white sm:space-y-1.5 2xl:space-y-2">
+                  <p className={QUIZ_RESULT_TITLE}>
                     <span aria-hidden>❌ </span>
                     <span className="font-bold">Resposta errada!</span>
                   </p>
-                  <p className="text-lg sm:text-[32px]">
+                  <p className="text-sm sm:text-base md:text-lg lg:text-xl 2xl:text-[32px]">
                     Aguarde o próximo Quiz para conquistar pacotinhos e completar
                     seu álbum.
                   </p>
                 </div>
 
-                <div className="mx-auto flex w-full max-w-[780px] flex-col gap-2 px-0 sm:gap-2 sm:px-6" role="list">
+                <div className="mx-auto flex w-full max-w-[780px] flex-col gap-1.5 px-0 sm:gap-2 sm:px-4 lg:px-6" role="list">
                   {state.quiz.options.map((opt) => (
                     <QuizOptionRow
                       key={opt.id}
@@ -395,11 +399,7 @@ export function QuizClient({ packImageUrl }: QuizClientProps) {
                 </div>
 
                 <div className="flex justify-center">
-                  <button
-                    type="button"
-                    onClick={handleCloseWrong}
-                    className="rounded-pill bg-verde-500 px-8 py-2 text-lg font-medium text-white shadow-paper transition-all duration-200 hover:bg-verde-600 active:scale-[0.98] sm:px-10 sm:text-2xl"
-                  >
+                  <button type="button" onClick={handleCloseWrong} className={QUIZ_BTN}>
                     Fechar Quiz
                   </button>
                 </div>

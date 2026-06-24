@@ -94,18 +94,18 @@ export function SolicitarView({ onTradeActivity }: SolicitarViewProps) {
   }
 
   return (
-    <div className="space-y-10 lg:space-y-14">
+    <div className="space-y-6 sm:space-y-8 lg:space-y-10 2xl:space-y-14">
       <AnimatePresence>{toast && <Toast message={toast} />}</AnimatePresence>
 
       {/* Painel Solicitar Troca — Figma 381:303 */}
       <section
         aria-labelledby="solicitar-troca-heading"
-        className="rounded-[32px] border border-verde-400 bg-verde-100 p-5 sm:p-6 lg:p-8"
+        className="rounded-[20px] border border-verde-400 bg-verde-100 p-4 sm:rounded-[24px] sm:p-5 lg:p-6 2xl:rounded-[32px] 2xl:p-8"
       >
         <div className="max-w-3xl">
           <h2
             id="solicitar-troca-heading"
-            className="font-display text-xl font-bold text-verde-escuro-500 sm:text-2xl"
+            className="font-display text-lg font-bold text-verde-escuro-500 sm:text-xl 2xl:text-2xl"
           >
             Seus pedidos
           </h2>
@@ -115,7 +115,7 @@ export function SolicitarView({ onTradeActivity }: SolicitarViewProps) {
           </p>
         </div>
 
-        <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="mt-4 flex flex-col gap-2.5 sm:mt-5 sm:flex-row sm:items-center sm:gap-3 2xl:mt-6">
           <div className="relative flex-1">
             <Search
               size={18}
@@ -127,20 +127,20 @@ export function SolicitarView({ onTradeActivity }: SolicitarViewProps) {
               placeholder="Buscar nos seus pedidos…"
               value={wishSearch}
               onChange={(e) => setWishSearch(e.target.value)}
-              className="w-full rounded-pill border border-verde-200 bg-surface py-3 pl-11 pr-4 text-sm text-verde-escuro-capa outline-none transition-colors focus:border-verde-500"
+              className="w-full rounded-pill border border-verde-200 bg-surface py-2.5 pl-10 pr-4 text-sm text-verde-escuro-capa outline-none transition-colors focus:border-verde-500 sm:py-3 sm:pl-11"
             />
           </div>
           <button
             type="button"
             onClick={() => setAdding(true)}
-            className="flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-pill bg-verde-escuro-500 px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-verde-escuro-400"
+            className="flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-pill bg-verde-escuro-500 px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-verde-escuro-400 sm:px-6 sm:py-3"
           >
             <Plus size={16} aria-hidden />
             Adicionar pedido
           </button>
         </div>
 
-        <div className="mt-6 max-h-[520px] overflow-y-auto pr-1 [scrollbar-width:thin]">
+        <div className="mt-4 max-h-[min(42vh,400px)] overflow-y-auto pr-1 [scrollbar-width:thin] sm:mt-5 lg:max-h-[min(46vh,460px)] 2xl:mt-6 2xl:max-h-[520px]">
           {loadingWishes ? (
             <div className="flex h-48 items-center justify-center">
               <Loader2 size={28} className="animate-spin text-verde-300" />
@@ -148,7 +148,7 @@ export function SolicitarView({ onTradeActivity }: SolicitarViewProps) {
           ) : filteredWishes.length === 0 ? (
             <EmptyState message="Nenhum pedido criado ainda. Clique em Adicionar pedido para buscar figurinhas." />
           ) : (
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-3 sm:grid-cols-2 2xl:gap-4">
               <AnimatePresence>
                 {filteredWishes.map((w) => (
                   <motion.div
@@ -174,11 +174,11 @@ export function SolicitarView({ onTradeActivity }: SolicitarViewProps) {
 
       {/* Explorar — Figma 381:303 */}
       <section aria-labelledby="explorar-heading">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
           <div className="max-w-2xl">
             <h2
               id="explorar-heading"
-              className="font-display text-2xl font-bold text-verde-escuro-500 sm:text-3xl lg:text-4xl"
+              className="font-display text-xl font-bold text-verde-escuro-500 sm:text-2xl lg:text-3xl 2xl:text-4xl"
             >
               Explorar
             </h2>
@@ -191,14 +191,14 @@ export function SolicitarView({ onTradeActivity }: SolicitarViewProps) {
             type="button"
             onClick={loadExplore}
             disabled={loadingExplore}
-            className="flex shrink-0 cursor-pointer items-center gap-2 self-start rounded-pill border border-verde-200 bg-surface px-5 py-2.5 text-sm font-semibold text-verde-escuro-500 transition-colors hover:bg-verde-100 disabled:opacity-60"
+            className="flex shrink-0 cursor-pointer items-center gap-2 self-start rounded-pill border border-verde-200 bg-surface px-4 py-2 text-sm font-semibold text-verde-escuro-500 transition-colors hover:bg-verde-100 disabled:opacity-60 sm:px-5 sm:py-2.5"
           >
             <RefreshCw size={16} className={loadingExplore ? "animate-spin" : ""} aria-hidden />
             Atualizar explorar
           </button>
         </div>
 
-        <div className="mt-8">
+        <div className="mt-5 sm:mt-6 2xl:mt-8">
           {loadingExplore ? (
             <div className="flex h-48 items-center justify-center">
               <Loader2 size={28} className="animate-spin text-verde-300" />
@@ -209,7 +209,7 @@ export function SolicitarView({ onTradeActivity }: SolicitarViewProps) {
               icon={Compass}
             />
           ) : (
-            <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3 xl:gap-5 2xl:gap-6">
               {exploreWishes.map((w) => {
                 if (!w.sticker) return null;
                 return (
