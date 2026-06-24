@@ -35,8 +35,10 @@ export function MissoesClient({ packImageUrl }: MissoesClientProps) {
   const [claimingMissionId, setClaimingMissionId] = useState<number | null>(null);
   const [completedReward, setCompletedReward] = useState<CompletedReward | null>(null);
 
-  const loadMissions = useCallback(async () => {
-    setLoading(true);
+  const loadMissions = useCallback(async (options?: { silent?: boolean }) => {
+    if (!options?.silent) {
+      setLoading(true);
+    }
     setError(null);
     try {
       const res = await fetch("/api/missions");
@@ -44,14 +46,25 @@ export function MissoesClient({ packImageUrl }: MissoesClientProps) {
       if (!res.ok) {
         throw new Error(data.error ?? "Não foi possível carregar as missões");
       }
-      setMissions(data.missions ?? []);
+      const nextMissions = data.missions ?? [];
+      setMissions(nextMissions);
       setSummary(data.summary ?? EMPTY_SUMMARY);
+      setSelectedMission((current) => {
+        if (!current) return null;
+        return nextMissions.find((mission) => mission.id === current.id) ?? null;
+      });
+      return nextMissions;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao carregar missões");
-      setMissions([]);
-      setSummary(EMPTY_SUMMARY);
+      if (!options?.silent) {
+        setMissions([]);
+        setSummary(EMPTY_SUMMARY);
+      }
+      return null;
     } finally {
-      setLoading(false);
+      if (!options?.silent) {
+        setLoading(false);
+      }
     }
   }, []);
 
@@ -83,7 +96,7 @@ export function MissoesClient({ packImageUrl }: MissoesClientProps) {
         packsEarned: data.packs_earned ?? mission?.reward_packs ?? 1,
         pointsEarned: data.points_earned ?? mission?.reward_points ?? 100,
       });
-      await loadMissions();
+      await loadMissions({ silent: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao resgatar recompensa");
     } finally {
@@ -170,7 +183,7 @@ export function MissoesClient({ packImageUrl }: MissoesClientProps) {
             claiming={claimingMissionId === selectedMission.id}
             onClose={() => setSelectedMission(null)}
             onClaim={handleClaim}
-            onShareComplete={loadMissions}
+            onShareComplete={() => void loadMissions({ silent: true })}
           />
         ) : null}
       </AnimatePresence>

@@ -1,6 +1,8 @@
 "use client";
 
 import { Loader2 } from "lucide-react";
+import { resolveMissionAction } from "@/lib/mission-actions";
+import { CUSTOM_MISSION_TITLES } from "@/lib/missions";
 import {
   missionCardButtonLabel,
   missionIcon,
@@ -37,7 +39,15 @@ export function MissionCard({
   const percent = missionProgressPercent(mission.progress, mission.target_value);
   const canClaim = status === "COMPLETA" && !mission.reward_claimed;
   const isClaimed = status === "COMPLETA" && mission.reward_claimed;
-  const buttonLabel = missionCardButtonLabel(status, mission.reward_claimed);
+  const { label: actionLabel } = resolveMissionAction(mission);
+  const isShareMission = mission.title === CUSTOM_MISSION_TITLES.shareSocial;
+  const isInviteMission = mission.title === CUSTOM_MISSION_TITLES.inviteFriends;
+  const buttonLabel =
+    status === "COMPLETA"
+      ? missionCardButtonLabel(status, mission.reward_claimed)
+      : isShareMission || isInviteMission
+        ? actionLabel
+        : missionCardButtonLabel(status, mission.reward_claimed);
 
   function handleActionClick() {
     if (canClaim) {

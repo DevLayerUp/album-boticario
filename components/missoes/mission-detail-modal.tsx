@@ -15,6 +15,7 @@ import { resolveMissionAction } from "@/lib/mission-actions";
 import { CUSTOM_MISSION_TITLES } from "@/lib/missions";
 import { cn } from "@/lib/utils";
 import { MissionInvitePanel } from "./mission-invite-panel";
+import { MissionSharePanel } from "./mission-share-panel";
 import { MissionRewardBadges } from "./mission-reward-badges";
 import type { Mission } from "./types";
 
@@ -65,39 +66,9 @@ export function MissionDetailModal({
     };
   }, []);
 
-  async function handleShareMission() {
-    const shareUrl =
-      typeof window !== "undefined"
-        ? `${window.location.origin}/album`
-        : "/album";
-    const shareText = "Confira meu álbum de figurinhas Fãs da Natureza!";
-
-    if (typeof navigator.share === "function") {
-      try {
-        await navigator.share({
-          title: "Meu Álbum — Fãs da Natureza",
-          text: shareText,
-          url: shareUrl,
-        });
-      } catch (err) {
-        if (err instanceof DOMException && err.name === "AbortError") return;
-      }
-    }
-
-    const res = await fetch("/api/missions/share", { method: "POST" });
-    if (!res.ok) return;
-
-    onShareComplete?.();
-    onClose();
-  }
-
   function handlePrimaryAction() {
     if (canClaim) {
       onClaim(mission.id);
-      return;
-    }
-    if (isShareMission) {
-      void handleShareMission();
       return;
     }
     if (actionHref.startsWith("http")) {
@@ -213,6 +184,10 @@ export function MissionDetailModal({
             />
           ) : null}
 
+          {isShareMission && !canClaim && !isClaimed ? (
+            <MissionSharePanel onComplete={onShareComplete} />
+          ) : null}
+
           <MissionRewardBadges
             packs={mission.reward_packs}
             points={mission.reward_points}
@@ -249,18 +224,7 @@ export function MissionDetailModal({
           >
             Recompensa Resgatada
           </button>
-        ) : isShareMission ? (
-          <button
-            type="button"
-            onClick={handlePrimaryAction}
-            className={cn(
-              "flex w-full max-w-[min(100%,360px)] items-center justify-center rounded-pill px-5 py-1.5 text-xs font-medium text-white transition-all duration-200 hover:opacity-95 active:scale-[0.98] sm:max-w-[380px] sm:px-6 sm:py-2 sm:text-sm lg:text-base xl:max-w-[420px]",
-              theme.button,
-            )}
-          >
-            {actionLabel}
-          </button>
-        ) : isInviteMission ? null : (
+        ) : isInviteMission || isShareMission ? null : (
           <Link
             href={actionHref}
             onClick={onClose}
