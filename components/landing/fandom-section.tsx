@@ -61,12 +61,14 @@ export function LandingFandom({
   paragraph2          = "O Somos Fãs por Natureza é uma comunidade feita para quem acredita que proteger a natureza merece a mesma paixão de quem torce pelo seu time, acompanhar seu ídolo ou celebra cada conquista.",
   paragraph2Highlight = "Somos Fãs por Natureza",
   paragraph3          = "Aqui, cada pessoa pode fazer parte dessa torcida: aprendendo, compartilhando conhecimento e descobrindo histórias inspiradoras sobre a biodiversidade brasileira.",
-  ctaLabel            = "Faça parte do Fandom",
-  ctaHref             = "/register",
+  ctaLabel,
+  ctaHref,
   socialLinks,
 }: LandingFandomProps) {
   const links  = socialLinks?.length ? socialLinks : DEFAULT_SOCIAL_LINKS;
   const gifSrc = gifUrl ?? card1Url;
+  const ctaText = (ctaLabel ?? "Faça parte do Fandom").trim();
+  const showCta = ctaText.length > 0;
 
   return (
     <section
@@ -183,12 +185,14 @@ export function LandingFandom({
               {paragraph3 && <p>{paragraph3}</p>}
             </div>
 
-            <Link
-              href={ctaHref ?? "/register"}
-              className="inline-flex w-fit items-center rounded-pill bg-verde-escuro-500 px-8 py-3 text-base font-medium leading-[1.4] text-verde-100 transition-opacity hover:opacity-90 sm:text-lg lg:text-xl"
-            >
-              {ctaLabel}
-            </Link>
+            {showCta && (
+              <Link
+                href={ctaHref?.trim() || "/register"}
+                className="inline-flex w-fit items-center rounded-pill bg-verde-escuro-500 px-8 py-3 text-base font-medium leading-[1.4] text-verde-100 transition-opacity hover:opacity-90 sm:text-lg lg:text-xl"
+              >
+                {ctaText}
+              </Link>
+            )}
           </motion.div>
 
         </div>

@@ -1,4 +1,5 @@
 import { Package, Trophy } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface MissionRewardBadgesProps {
   packs: number;
@@ -8,13 +9,13 @@ interface MissionRewardBadgesProps {
 
 export function MissionRewardBadges({ packs, points, className }: MissionRewardBadgesProps) {
   return (
-    <div className={`flex flex-wrap items-center justify-center gap-4 ${className ?? ""}`}>
-      <span className="inline-flex h-8 items-center gap-2.5 rounded-pill bg-gradient-to-r from-[#deaa00] to-[#ffe07a] px-5 text-sm font-medium text-[#71410a]">
-        <Package className="size-5" aria-hidden />
+    <div className={cn("flex flex-wrap items-center justify-center gap-1.5 sm:gap-2", className)}>
+      <span className="inline-flex h-6 items-center gap-1 rounded-pill bg-gradient-to-r from-[#deaa00] to-[#ffe07a] px-2.5 text-[11px] font-medium text-[#71410a] sm:h-7 sm:gap-1.5 sm:px-3 sm:text-xs">
+        <Package className="size-3.5 sm:size-4" aria-hidden />
         {packs} Pacotinho{packs !== 1 ? "s" : ""}
       </span>
-      <span className="inline-flex h-8 items-center gap-2.5 rounded-pill bg-gradient-to-r from-[#deaa00] to-[#ffe07a] px-5 text-sm font-medium text-[#71410a]">
-        <Trophy className="size-5" aria-hidden />
+      <span className="inline-flex h-6 items-center gap-1 rounded-pill bg-gradient-to-r from-[#deaa00] to-[#ffe07a] px-2.5 text-[11px] font-medium text-[#71410a] sm:h-7 sm:gap-1.5 sm:px-3 sm:text-xs">
+        <Trophy className="size-3.5 sm:size-4" aria-hidden />
         {points} pontos
       </span>
     </div>

@@ -25,7 +25,7 @@ interface ProfileSnapshot {
   display_name: string | null;
   avatar_url: string | null;
   sticker_url: string | null;
-  birth_date: string | null;
+  bio: string | null;
   social_shared_at: string | null;
 }
 
@@ -50,7 +50,7 @@ function isProfileComplete(profile: ProfileSnapshot | null): boolean {
   if (!profile) return false;
   return Boolean(
     profile.display_name?.trim() &&
-      profile.birth_date &&
+      profile.bio?.trim() &&
       (profile.avatar_url || profile.sticker_url),
   );
 }
@@ -71,7 +71,7 @@ async function loadMissionMetrics(
   ] = await Promise.all([
     supabase
       .from("profiles")
-      .select("display_name, avatar_url, sticker_url, birth_date, social_shared_at")
+      .select("display_name, avatar_url, sticker_url, bio, social_shared_at")
       .eq("id", userId)
       .maybeSingle(),
     supabase

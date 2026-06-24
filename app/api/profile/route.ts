@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { fetchProfilePageData } from "@/lib/profile";
+import { validarMissoes } from "@/lib/missions";
 
 const PROFILE_FIELDS = [
   "display_name",
@@ -97,6 +98,8 @@ export async function PATCH(request: Request) {
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
+
+  await validarMissoes(supabase, user.id);
 
   try {
     const data = await fetchProfilePageData(supabase, user.id, user.email);

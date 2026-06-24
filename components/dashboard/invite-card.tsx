@@ -60,7 +60,10 @@ export function InviteCard({ data, inviterName }: InviteCardProps) {
   const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
 
   return (
-    <section className="overflow-hidden rounded-block border border-verde-500/20 bg-gradient-to-br from-verde-100/80 to-surface">
+    <section
+      id="convidar-amigos"
+      className="overflow-hidden rounded-block border border-verde-500/20 bg-gradient-to-br from-verde-100/80 to-surface"
+    >
       <div className="flex flex-col gap-6 p-5 sm:p-6 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0 flex-1">
           <div className="mb-2 flex items-center gap-2">
