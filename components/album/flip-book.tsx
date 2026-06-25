@@ -4,8 +4,28 @@ import dynamic from "next/dynamic";
 import { useRef, useState, useEffect, type KeyboardEvent, type ReactNode } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { AlbumPage, type AlbumPageData } from "./album-page";
+import { AlbumPage, type AlbumPageData, type PageSide } from "./album-page";
 import { AlbumCover } from "./album-cover";
+
+type BookOrientation = "portrait" | "landscape";
+
+/**
+ * Maps content page index to physical left/right in the flipbook.
+ * With showCover, flipbook index 0 is the cover; content starts at index 1.
+ * In portrait mode the library renders every page on the right except the last,
+ * which is shown on the left — so index % 2 is wrong there.
+ */
+function getAlbumPageSide(
+  contentIndex: number,
+  totalContentPages: number,
+  orientation: BookOrientation,
+): PageSide {
+  const flipIndex = contentIndex + 1;
+  if (orientation === "landscape") {
+    return flipIndex % 2 === 1 ? "left" : "right";
+  }
+  return flipIndex === totalContentPages ? "left" : "right";
+}
 
 type HTMLFlipBookComponent = typeof import("react-pageflip").default;
 
@@ -220,6 +240,7 @@ export function FlipBook({
 
   // currentPage = index of the currently visible page (0 = cover, 1+ = content)
   const [currentPage, setCurrentPage] = useState(0);
+  const [bookOrientation, setBookOrientation] = useState<BookOrientation>("landscape");
 
   // Reset when category changes (pages[0] id changes)
   const firstPageId = pages[0]?.id;
@@ -375,9 +396,15 @@ export function FlipBook({
             startPage={0}
             className=""
             style={{}}
+            onInit={(e: { data: { mode: BookOrientation } }) => {
+              setBookOrientation(e.data.mode);
+            }}
             onFlip={(e: { data: number }) => {
               setCurrentPage(e.data);
               releaseMobileScroll();
+            }}
+            onChangeOrientation={(e: { data: BookOrientation }) => {
+              setBookOrientation(e.data);
             }}
           >
             {/* ── Cover page (index 0) — hard page shown alone ── */}
@@ -390,7 +417,7 @@ export function FlipBook({
               <div key={page.id} className="h-full overflow-hidden">
                 <AlbumPage
                   page={page}
-                  side={index % 2 === 0 ? "left" : "right"}
+                  side={getAlbumPageSide(index, pages.length, bookOrientation)}
                   pastedSlotIds={pastedSlotIds}
                   ownedMap={ownedMap}
                   onPaste={onPaste}

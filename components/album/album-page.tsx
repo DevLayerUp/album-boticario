@@ -16,11 +16,11 @@ import {
   AlbumStickerGrid,
 } from "./album-grid-frame";
 import { FigurinhaNameTag } from "@/components/sticker/figurinha-name-tag";
-import { dashboardAssets } from "@/lib/dashboard-assets";
 import { cn } from "@/lib/utils";
+import { AlbumPageShell, type PageSide } from "./album-page-chrome";
 import { AlbumSocialPage } from "./album-social-page";
 
-export type PageSide = "left" | "right";
+export type { PageSide };
 
 export interface AlbumPageData {
   id: number;
@@ -58,63 +58,19 @@ export interface AlbumPageProps {
 
 function PageShell({
   side,
+  pageNumber,
   children,
   inFlipBook = false,
 }: {
   side: PageSide;
+  pageNumber: number;
   children: React.ReactNode;
   inFlipBook?: boolean;
 }) {
-  const decoration =
-    side === "left" ? dashboardAssets.album.left : dashboardAssets.album.right;
-
   return (
-    <div
-      className={cn(
-        "relative flex flex-col overflow-hidden bg-verde-escuro-500",
-        inFlipBook
-          ? cn(
-              "h-full",
-              side === "left"
-                ? "rounded-l-card rounded-r-none"
-                : "rounded-r-card rounded-l-none",
-            )
-          : cn(
-              "min-h-[480px]",
-              side === "left"
-                ? "rounded-card md:rounded-r-none"
-                : "rounded-card md:rounded-l-none",
-            ),
-      )}
-    >
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 bg-no-repeat"
-        style={{
-          backgroundImage: `url(${decoration})`,
-          backgroundPosition: side === "left" ? "right" : "left",
-          backgroundSize: "auto",
-          filter: "brightness(0.8)",
-        }}
-      />
-      <div className="relative z-10 flex flex-1 flex-col">{children}</div>
-    </div>
-  );
-}
-
-function LogoBadge() {
-  return (
-    <div className="flex h-[53px] w-[98px] items-center justify-center rounded-input bg-white">
-      <div className="relative h-10 w-20">
-        <Image
-          src={dashboardAssets.logo}
-          alt="Fãs da Natureza"
-          fill
-          className="object-contain"
-          sizes="80px"
-        />
-      </div>
-    </div>
+    <AlbumPageShell side={side} pageNumber={pageNumber} inFlipBook={inFlipBook}>
+      {children}
+    </AlbumPageShell>
   );
 }
 
@@ -126,13 +82,13 @@ function Title3Page({ page, side, pastedSlotIds, ownedMap, onPaste, inFlipBook, 
   const text  = data.text ?? null;
 
   return (
-    <PageShell side={side} inFlipBook={inFlipBook}>
+    <PageShell side={side} pageNumber={page.page_number} inFlipBook={inFlipBook}>
       <div
         className={cn(
           "flex flex-1 flex-col",
           inFlipBook
-            ? "px-4 pb-4 pt-5 sm:px-[10%] sm:pb-8 sm:pt-[14%]"
-            : "px-6 pb-8 pt-10 sm:px-[10%] sm:pt-[14%]",
+            ? "px-4 pb-2 pt-3 sm:px-[10%] sm:pb-4 sm:pt-4"
+            : "px-6 pb-4 pt-6 sm:px-[10%]",
         )}
       >
         {title && (
@@ -178,15 +134,6 @@ function Title3Page({ page, side, pastedSlotIds, ownedMap, onPaste, inFlipBook, 
             );
           })}
         </div>
-
-        <div
-          className={cn(
-            "mt-auto flex justify-center",
-            inFlipBook ? "pt-3 max-md:hidden sm:pt-10" : "pt-10",
-          )}
-        >
-          <LogoBadge />
-        </div>
       </div>
     </PageShell>
   );
@@ -198,13 +145,13 @@ function ProfilePage({ page, side, userStickerUrl, userDisplayName, inFlipBook }
   const hasSticker = Boolean(userStickerUrl);
 
   return (
-    <PageShell side={side} inFlipBook={inFlipBook}>
+    <PageShell side={side} pageNumber={page.page_number} inFlipBook={inFlipBook}>
       <div
         className={cn(
           "flex flex-1 flex-col items-center",
           inFlipBook
-            ? "px-4 py-5 sm:px-[10%] sm:py-8"
-            : "px-6 py-8 sm:px-[10%]",
+            ? "px-4 py-3 sm:px-[10%] sm:py-5"
+            : "px-6 py-6 sm:px-[10%]",
         )}
       >
         {title && (
@@ -272,15 +219,6 @@ function ProfilePage({ page, side, userStickerUrl, userDisplayName, inFlipBook }
             </Link>
           )}
         </div>
-
-        <div
-          className={cn(
-            "mt-auto flex justify-center",
-            inFlipBook ? "pt-4 max-md:hidden sm:pt-8" : "pt-8",
-          )}
-        >
-          <LogoBadge />
-        </div>
       </div>
     </PageShell>
   );
@@ -346,12 +284,8 @@ function Grid6Page({ page, side, pastedSlotIds, ownedMap, onPaste, inFlipBook, f
     ) : null;
 
   return (
-    <PageShell side={side} inFlipBook={inFlipBook}>
-      <AlbumGridFrame
-        pageNumber={page.page_number}
-        inFlipBook={inFlipBook}
-        afterGrid={footerContent}
-      >
+    <PageShell side={side} pageNumber={page.page_number} inFlipBook={inFlipBook}>
+      <AlbumGridFrame inFlipBook={inFlipBook} afterGrid={footerContent}>
         <AlbumStickerGrid cols={3} rows={2}>
           {renderGridSlots(page.album_slots, 6, pastedSlotIds, ownedMap, onPaste, focusSlotId)}
         </AlbumStickerGrid>
@@ -386,11 +320,11 @@ function Tri3Page({ page, side, pastedSlotIds, ownedMap, onPaste, inFlipBook, fo
   }
 
   return (
-    <PageShell side={side} inFlipBook={inFlipBook}>
+    <PageShell side={side} pageNumber={page.page_number} inFlipBook={inFlipBook}>
       <div
         className={cn(
           "flex flex-1 flex-col",
-          inFlipBook ? "px-4 py-5 sm:px-[8%] sm:py-[10%]" : "px-5 py-8 sm:px-[8%] sm:py-[10%]",
+          inFlipBook ? "px-4 py-3 sm:px-[8%] sm:py-5" : "px-5 py-6 sm:px-[8%]",
         )}
       >
         <div className="flex flex-1 items-center justify-center">
@@ -402,15 +336,6 @@ function Tri3Page({ page, side, pastedSlotIds, ownedMap, onPaste, inFlipBook, fo
             </div>
           </div>
         </div>
-
-        <div
-          className={cn(
-            "mt-auto flex justify-center",
-            inFlipBook ? "pt-3 max-md:hidden sm:pt-6" : "pt-6",
-          )}
-        >
-          <LogoBadge />
-        </div>
       </div>
     </PageShell>
   );
@@ -418,8 +343,8 @@ function Tri3Page({ page, side, pastedSlotIds, ownedMap, onPaste, inFlipBook, fo
 
 function Grid3x3Page({ page, side, pastedSlotIds, ownedMap, onPaste, inFlipBook, focusSlotId }: AlbumPageProps) {
   return (
-    <PageShell side={side} inFlipBook={inFlipBook}>
-      <AlbumGridFrame pageNumber={page.page_number} inFlipBook={inFlipBook}>
+    <PageShell side={side} pageNumber={page.page_number} inFlipBook={inFlipBook}>
+      <AlbumGridFrame inFlipBook={inFlipBook}>
         <AlbumStickerGrid cols={3} rows={3}>
           {renderGridSlots(page.album_slots, 9, pastedSlotIds, ownedMap, onPaste, focusSlotId)}
         </AlbumStickerGrid>
@@ -434,7 +359,7 @@ function InfoPage({ page, side, inFlipBook }: AlbumPageProps) {
   const html = page.content ?? "";
 
   return (
-    <PageShell side={side} inFlipBook={inFlipBook}>
+    <PageShell side={side} pageNumber={page.page_number} inFlipBook={inFlipBook}>
       <div
         className={cn(
           "flex flex-1 flex-col",
@@ -479,11 +404,7 @@ function InfoPage({ page, side, inFlipBook }: AlbumPageProps) {
 }
 
 function SocialPage(props: AlbumPageProps) {
-  const decoration =
-    props.side === "left"
-      ? dashboardAssets.album.left
-      : dashboardAssets.album.right;
-  return <AlbumSocialPage {...props} decoration={decoration} />;
+  return <AlbumSocialPage {...props} />;
 }
 
 export function AlbumPage(props: AlbumPageProps) {
