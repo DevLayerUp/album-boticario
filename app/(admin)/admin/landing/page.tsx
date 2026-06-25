@@ -156,6 +156,25 @@ const DEFAULT_REGISTER = {
   privacyUrl: "/privacidade",
 };
 
+const DEFAULT_MANIFEST = {
+  titleRegular: "O mundo tem sede",
+  titleBold:    "de mudança",
+  videoUrl:     null as string | null,
+  posterUrl:    null as string | null,
+};
+
+const DEFAULT_JOURNEY = {
+  titleRegular: "Uma jornada pela",
+  titleBold:    "nossa biodiversidade",
+  paragraph1:
+    "Se você ama descobrir curiosidades, completar coleções e explorar o mundo ao seu redor, este álbum foi feito para você.",
+  paragraph2:
+    "Ao longo das páginas, você vai conhecer espécies fascinantes, biomas brasileiros, projetos de conservação e histórias que ajudam a proteger a natureza há mais de 35 anos.",
+  ctaLabel: "Comece a colecionar agora!",
+  ctaHref:  "/register",
+  imageUrl: null as string | null,
+};
+
 const DEFAULT_HOW_IT_WORKS = {
   title: "Como funciona?",
   steps: [
@@ -185,7 +204,7 @@ export default async function LandingAdminPage() {
   const { data: rows } = await supabase
     .from("app_settings")
     .select("key, value")
-    .in("key", ["landing_navbar", "landing_hero", "landing_welcome", "landing_how_it_works", "landing_register", "landing_fandom", "landing_faq", "landing_footer"]);
+    .in("key", ["landing_navbar", "landing_hero", "landing_welcome", "landing_manifest", "landing_journey", "landing_how_it_works", "landing_register", "landing_fandom", "landing_faq", "landing_footer"]);
 
   const map = Object.fromEntries(
     (rows ?? []).map((r: { key: string; value: string | null }) => [r.key, r.value]),
@@ -214,6 +233,8 @@ export default async function LandingAdminPage() {
   });
 
   const welcome    = safeParse(map["landing_welcome"],       DEFAULT_WELCOME);
+  const manifest   = safeParse(map["landing_manifest"],      DEFAULT_MANIFEST);
+  const journey    = safeParse(map["landing_journey"],       DEFAULT_JOURNEY);
   const howItWorks = safeParse(map["landing_how_it_works"],  DEFAULT_HOW_IT_WORKS);
   const register   = safeParse(map["landing_register"],      DEFAULT_REGISTER);
   const fandom     = safeParse(map["landing_fandom"],        DEFAULT_FANDOM);
@@ -225,6 +246,8 @@ export default async function LandingAdminPage() {
       initialNavbar={navbar}
       initialHero={hero}
       initialWelcome={welcome}
+      initialManifest={manifest}
+      initialJourney={journey}
       initialHowItWorks={howItWorks}
       initialRegister={register}
       initialFandom={fandom}

@@ -43,6 +43,23 @@ interface WelcomeData {
   posterUrl:  string | null;
 }
 
+interface ManifestData {
+  titleRegular: string;
+  titleBold:    string;
+  videoUrl:     string | null;
+  posterUrl:    string | null;
+}
+
+interface JourneyData {
+  titleRegular: string;
+  titleBold:    string;
+  paragraph1:   string;
+  paragraph2:   string;
+  ctaLabel:     string;
+  ctaHref:      string;
+  imageUrl:     string | null;
+}
+
 interface HowItWorksStepData {
   iconUrl:     string | null;
   title:       string;
@@ -135,6 +152,8 @@ interface Props {
   initialNavbar:     NavbarData;
   initialHero:       HeroData;
   initialWelcome:    WelcomeData;
+  initialManifest:   ManifestData;
+  initialJourney:    JourneyData;
   initialHowItWorks: HowItWorksData;
   initialRegister:   RegisterData;
   initialFandom:     FandomData;
@@ -593,6 +612,187 @@ function WelcomeSection({ initial }: { initial: WelcomeData }) {
             />
           </Field>
         </div>
+      </div>
+
+      <SaveRow saving={saving} saved={saved} dirty={dirty} error={error} onSave={handleSave} />
+    </Section>
+  );
+}
+
+/* ─── Manifest video section ─────────────────────────────────────────────── */
+function ManifestSection({ initial }: { initial: ManifestData }) {
+  const [data,   setData]   = useState<ManifestData>(initial);
+  const [saving, setSaving] = useState(false);
+  const [saved,  setSaved]  = useState(false);
+  const [error,  setError]  = useState<string | null>(null);
+
+  const dirty = JSON.stringify(data) !== JSON.stringify(initial);
+
+  async function handleSave() {
+    setSaving(true);
+    setSaved(false);
+    setError(null);
+    try {
+      await saveKey("landing_manifest", data);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Erro ao salvar");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Section
+      title="Vídeo manifesto"
+      subtitle="Terceira seção da landing: título e vídeo horizontal em destaque (Figma 2330:258)."
+    >
+      <div className="space-y-6">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Título (parte regular)">
+            <Input
+              value={data.titleRegular}
+              onChange={(v) => setData((d) => ({ ...d, titleRegular: v }))}
+              placeholder="ex: O mundo tem sede"
+            />
+          </Field>
+          <Field label="Título (parte em negrito)">
+            <Input
+              value={data.titleBold}
+              onChange={(v) => setData((d) => ({ ...d, titleBold: v }))}
+              placeholder="ex: de mudança"
+            />
+          </Field>
+        </div>
+
+        <div className="grid gap-6 sm:grid-cols-2">
+          <Field
+            label="Vídeo"
+            hint="Vídeo horizontal (MP4, WebM ou MOV). Recomendado: 16:9, máx. 50 MB."
+          >
+            <VideoUploader
+              value={data.videoUrl}
+              onChange={(url) => setData((d) => ({ ...d, videoUrl: url }))}
+              bucket="landing"
+              folder="manifest/video"
+            />
+          </Field>
+
+          <Field
+            label="Capa do vídeo (opcional)"
+            hint="Imagem exibida antes de dar play. Se vazio, usa o primeiro frame do vídeo."
+          >
+            <ImageUploader
+              value={data.posterUrl}
+              onChange={(url) => setData((d) => ({ ...d, posterUrl: url }))}
+              bucket="landing"
+              folder="manifest/poster"
+              label="Poster do vídeo"
+            />
+          </Field>
+        </div>
+      </div>
+
+      <SaveRow saving={saving} saved={saved} dirty={dirty} error={error} onSave={handleSave} />
+    </Section>
+  );
+}
+
+/* ─── Journey section ────────────────────────────────────────────────────── */
+function JourneySection({ initial }: { initial: JourneyData }) {
+  const [data,   setData]   = useState<JourneyData>(initial);
+  const [saving, setSaving] = useState(false);
+  const [saved,  setSaved]  = useState(false);
+  const [error,  setError]  = useState<string | null>(null);
+
+  const dirty = JSON.stringify(data) !== JSON.stringify(initial);
+
+  async function handleSave() {
+    setSaving(true);
+    setSaved(false);
+    setError(null);
+    try {
+      await saveKey("landing_journey", data);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Erro ao salvar");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Section
+      title="Jornada pela biodiversidade"
+      subtitle="Quinta seção da landing: imagem à esquerda e texto com CTA à direita (Figma 2330:272)."
+    >
+      <div className="space-y-6">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Título (parte regular)">
+            <Input
+              value={data.titleRegular}
+              onChange={(v) => setData((d) => ({ ...d, titleRegular: v }))}
+              placeholder="ex: Uma jornada pela"
+            />
+          </Field>
+          <Field label="Título (parte em negrito)">
+            <Input
+              value={data.titleBold}
+              onChange={(v) => setData((d) => ({ ...d, titleBold: v }))}
+              placeholder="ex: nossa biodiversidade"
+            />
+          </Field>
+        </div>
+
+        <Field label="Primeiro parágrafo">
+          <textarea
+            value={data.paragraph1}
+            onChange={(e) => setData((d) => ({ ...d, paragraph1: e.target.value }))}
+            rows={3}
+            className="w-full resize-y rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-800 outline-none transition focus:border-gb-green focus:bg-white focus:ring-2 focus:ring-gb-green/20"
+          />
+        </Field>
+
+        <Field label="Segundo parágrafo">
+          <textarea
+            value={data.paragraph2}
+            onChange={(e) => setData((d) => ({ ...d, paragraph2: e.target.value }))}
+            rows={3}
+            className="w-full resize-y rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-800 outline-none transition focus:border-gb-green focus:bg-white focus:ring-2 focus:ring-gb-green/20"
+          />
+        </Field>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Texto do botão CTA">
+            <Input
+              value={data.ctaLabel}
+              onChange={(v) => setData((d) => ({ ...d, ctaLabel: v }))}
+              placeholder="ex: Comece a colecionar agora!"
+            />
+          </Field>
+          <Field label="Link do botão CTA">
+            <Input
+              value={data.ctaHref}
+              onChange={(v) => setData((d) => ({ ...d, ctaHref: v }))}
+              placeholder="ex: /register"
+            />
+          </Field>
+        </div>
+
+        <Field
+          label="Imagem"
+          hint="Imagem à esquerda da seção. Recomendado: 550 × 568 px."
+        >
+          <ImageUploader
+            value={data.imageUrl}
+            onChange={(url) => setData((d) => ({ ...d, imageUrl: url }))}
+            bucket="landing"
+            folder="journey/image"
+            label="Imagem da jornada"
+          />
+        </Field>
       </div>
 
       <SaveRow saving={saving} saved={saved} dirty={dirty} error={error} onSave={handleSave} />
@@ -1429,6 +1629,8 @@ export function LandingAdminClient({
   initialNavbar,
   initialHero,
   initialWelcome,
+  initialManifest,
+  initialJourney,
   initialHowItWorks,
   initialRegister,
   initialFandom,
@@ -1448,6 +1650,8 @@ export function LandingAdminClient({
       <NavbarSection      initial={initialNavbar} />
       <HeroSection        initial={initialHero} />
       <WelcomeSection     initial={initialWelcome} />
+      <ManifestSection    initial={initialManifest} />
+      <JourneySection     initial={initialJourney} />
       <HowItWorksSection  initial={initialHowItWorks} />
       <RegisterSection    initial={initialRegister} />
       <FandomSection      initial={initialFandom} />

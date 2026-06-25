@@ -3,6 +3,8 @@ import { createClient } from "@/lib/supabase/server";
 import { LandingNavbar } from "@/components/landing/navbar";
 import { LandingHero } from "@/components/landing/hero";
 import { LandingWelcome } from "@/components/landing/welcome-section";
+import { LandingManifest } from "@/components/landing/manifest-section";
+import { LandingJourney } from "@/components/landing/journey-section";
 import { LandingHowItWorks } from "@/components/landing/how-it-works-section";
 import { LandingRegister } from "@/components/landing/register-section";
 import { LandingFandom } from "@/components/landing/fandom-section";
@@ -13,6 +15,8 @@ import { buildRouteMetadata, fetchSeoSettings } from "@/lib/seo-metadata";
 import type { LandingNavbarProps } from "@/components/landing/navbar";
 import type { LandingHeroProps } from "@/components/landing/hero";
 import type { LandingWelcomeProps } from "@/components/landing/welcome-section";
+import type { LandingManifestProps } from "@/components/landing/manifest-section";
+import type { LandingJourneyProps } from "@/components/landing/journey-section";
 import type { LandingHowItWorksProps } from "@/components/landing/how-it-works-section";
 import type { LandingRegisterProps } from "@/components/landing/register-section";
 import type { LandingFandomProps } from "@/components/landing/fandom-section";
@@ -45,7 +49,7 @@ export default async function HomePage() {
   const { data: rows } = await supabase
     .from("app_settings")
     .select("key, value")
-    .in("key", ["landing_navbar", "landing_hero", "landing_welcome", "landing_how_it_works", "landing_register", "landing_fandom", "landing_faq", "landing_footer"]);
+    .in("key", ["landing_navbar", "landing_hero", "landing_welcome", "landing_manifest", "landing_journey", "landing_how_it_works", "landing_register", "landing_fandom", "landing_faq", "landing_footer"]);
 
   const settingsMap = Object.fromEntries(
     (rows ?? []).map((r: { key: string; value: string | null }) => [r.key, r.value]),
@@ -54,6 +58,8 @@ export default async function HomePage() {
   const navbarSettings  = safeParse<LandingNavbarProps>(settingsMap["landing_navbar"], {});
   const heroSettings    = safeParse<LandingHeroProps>(settingsMap["landing_hero"], {});
   const welcomeSettings    = safeParse<LandingWelcomeProps>(settingsMap["landing_welcome"], {});
+  const manifestSettings = safeParse<LandingManifestProps>(settingsMap["landing_manifest"], {});
+  const journeySettings  = safeParse<LandingJourneyProps>(settingsMap["landing_journey"], {});
   const howItWorksSettings = safeParse<LandingHowItWorksProps>(settingsMap["landing_how_it_works"], {});
   const registerSettings   = safeParse<LandingRegisterProps>(settingsMap["landing_register"], {});
   const fandomSettings     = safeParse<LandingFandomProps>(settingsMap["landing_fandom"], {});
@@ -65,6 +71,8 @@ export default async function HomePage() {
       <LandingNavbar     {...navbarSettings} />
       <LandingHero       {...heroSettings} />
       <LandingWelcome    {...welcomeSettings} />
+      <LandingManifest   {...manifestSettings} />
+      <LandingJourney    {...journeySettings} />
       <LandingHowItWorks {...howItWorksSettings} />
       <LandingRegister   {...registerSettings} />
       <LandingFandom     {...fandomSettings} />
