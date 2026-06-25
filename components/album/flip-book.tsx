@@ -36,6 +36,7 @@ interface FlipBookProps {
   ownedMap: Map<number, number>;
   onPaste: (slotId: number, stickerId: number) => Promise<void>;
   userStickerUrl?: string | null;
+  userDisplayName?: string | null;
   /** URL of the album cover image from Supabase storage (uploaded by admin) */
   coverUrl?: string | null;
 }
@@ -204,6 +205,7 @@ export function FlipBook({
   ownedMap,
   onPaste,
   userStickerUrl,
+  userDisplayName,
   coverUrl,
 }: FlipBookProps) {
   const bookRef = useRef<HTMLFlipBookHandle | null>(null);
@@ -361,6 +363,7 @@ export function FlipBook({
                   ownedMap={ownedMap}
                   onPaste={onPaste}
                   userStickerUrl={userStickerUrl}
+                  userDisplayName={userDisplayName}
                   inFlipBook
                 />
               </div>

@@ -7,7 +7,11 @@ import {
   getInitialPhotoTransform,
   type StickerPhotoTransform,
 } from "@/lib/sticker-card";
-import { FigurinhaPanel } from "./figurinha-panel";
+import {
+  FigurinhaOutlineButton,
+  FigurinhaPrimaryButton,
+} from "./figurinha-actions";
+import { FigurinhaCardScaler } from "./figurinha-card-scaler";
 import { StickerCard } from "./sticker-card";
 
 interface PhotoEditorProps {
@@ -95,29 +99,28 @@ export function PhotoEditor({
 
   if (!transform) {
     return (
-      <FigurinhaPanel
-        title="Ajuste sua foto"
-        description="Preparando o recorte transparente…"
-      >
-        <StickerCard />
-      </FigurinhaPanel>
+      <div className="flex w-full flex-col items-center gap-8">
+        <FigurinhaCardScaler>
+          <StickerCard />
+        </FigurinhaCardScaler>
+        <p className="text-sm text-white/70">Preparando o recorte…</p>
+      </div>
     );
   }
 
   return (
-    <FigurinhaPanel
-      title="Ajuste sua foto"
-      description="Recorte sem fundo sobre o card. Arraste e redimensione. A figurinha final só é criada ao clicar em “Gerar figurinha”."
-    >
-      <StickerCard
-        photoSrc={cutoutSrc}
-        photoTransform={transform}
-        photoAlt="Ajuste da figurinha"
-        photoInteractive
-        onPhotoPointerDown={handlePointerDown}
-        onPhotoPointerMove={handlePointerMove}
-        onPhotoPointerUp={handlePointerUp}
-      />
+    <div className="flex w-full flex-col items-center gap-8">
+      <FigurinhaCardScaler>
+        <StickerCard
+          photoSrc={cutoutSrc}
+          photoTransform={transform}
+          photoAlt="Ajuste da figurinha"
+          photoInteractive
+          onPhotoPointerDown={handlePointerDown}
+          onPhotoPointerMove={handlePointerMove}
+          onPhotoPointerUp={handlePointerUp}
+        />
+      </FigurinhaCardScaler>
 
       <div className="w-full max-w-sm space-y-4">
         <div className="flex items-center gap-3">
@@ -126,7 +129,7 @@ export function PhotoEditor({
             onClick={() => updateScale(-0.1)}
             disabled={confirming || transform.scale <= STICKER_PHOTO.minScale}
             aria-label="Diminuir foto"
-            className="flex size-10 shrink-0 items-center justify-center rounded-full border border-verde-500 text-verde-500 transition-colors hover:bg-verde-500/10 disabled:opacity-40"
+            className="flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-full border border-white/40 text-white transition-colors hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
           >
             <Minus className="size-4" aria-hidden />
           </button>
@@ -134,7 +137,7 @@ export function PhotoEditor({
           <div className="flex-1 space-y-1">
             <label
               htmlFor="photo-scale"
-              className="text-xs font-medium uppercase tracking-wide text-verde-escuro-500"
+              className="text-xs font-medium uppercase tracking-wide text-white/80"
             >
               Tamanho
             </label>
@@ -156,7 +159,7 @@ export function PhotoEditor({
                     : prev,
                 )
               }
-              className="h-2 w-full cursor-pointer accent-verde-500"
+              className="h-2 w-full cursor-pointer accent-amarelo"
             />
           </div>
 
@@ -165,13 +168,13 @@ export function PhotoEditor({
             onClick={() => updateScale(0.1)}
             disabled={confirming || transform.scale >= STICKER_PHOTO.maxScale}
             aria-label="Aumentar foto"
-            className="flex size-10 shrink-0 items-center justify-center rounded-full border border-verde-500 text-verde-500 transition-colors hover:bg-verde-500/10 disabled:opacity-40"
+            className="flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-full border border-white/40 text-white transition-colors hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
           >
             <Plus className="size-4" aria-hidden />
           </button>
         </div>
 
-        <div className="flex items-center justify-between text-sm text-verde-escuro-500/70">
+        <div className="flex items-center justify-between text-sm text-white/70">
           <span>{Math.round(transform.scale * 100)}%</span>
           <button
             type="button"
@@ -181,7 +184,7 @@ export function PhotoEditor({
               }
             }}
             disabled={confirming}
-            className="inline-flex items-center gap-1.5 text-verde-500 transition-colors hover:text-verde-600 disabled:opacity-40"
+            className="inline-flex cursor-pointer items-center gap-1.5 text-white/90 transition-colors hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
           >
             <RotateCcw className="size-3.5" aria-hidden />
             Redefinir
@@ -189,34 +192,28 @@ export function PhotoEditor({
         </div>
       </div>
 
-      <p className="text-center text-xs text-verde-escuro-500/60">
-        Dica: arraste diretamente sobre a foto no card para reposicionar.
+      <p className="max-w-sm text-center text-xs text-white/60">
+        Arraste a foto no card para reposicionar.
       </p>
 
       {error ? (
-        <p role="alert" className="text-center text-sm font-medium text-red-600">
+        <p role="alert" className="text-center text-sm font-medium text-red-300">
           {error}
         </p>
       ) : null}
 
-      <div className="flex w-full max-w-md flex-col gap-3 sm:flex-row">
-        <button
-          type="button"
+      <div className="flex w-full max-w-sm flex-col gap-3">
+        <FigurinhaPrimaryButton
           onClick={() => onConfirm(transform)}
           disabled={confirming}
-          className="inline-flex h-12 flex-1 items-center justify-center rounded-pill bg-amarelo px-6 font-medium text-verde-escuro-500 transition-all hover:brightness-95 active:scale-[0.98] disabled:opacity-60"
+          className="w-full"
         >
           {confirming ? "Gerando…" : "Gerar figurinha"}
-        </button>
-        <button
-          type="button"
-          onClick={onBack}
-          disabled={confirming}
-          className="inline-flex h-12 flex-1 items-center justify-center rounded-pill border border-verde-500 px-6 font-medium text-verde-500 transition-colors hover:bg-verde-500/10 active:scale-[0.98] disabled:opacity-40"
-        >
+        </FigurinhaPrimaryButton>
+        <FigurinhaOutlineButton onClick={onBack} disabled={confirming}>
           Escolher outra
-        </button>
+        </FigurinhaOutlineButton>
       </div>
-    </FigurinhaPanel>
+    </div>
   );
 }

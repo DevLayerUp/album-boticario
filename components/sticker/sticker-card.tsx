@@ -41,7 +41,7 @@ export function StickerCard({
     width,
     height,
     borderRadius,
-    aspectRatio: "345 / 493",
+    aspectRatio: "352 / 503",
   } as const;
 
   if (stickerSrc) {

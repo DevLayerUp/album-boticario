@@ -36,6 +36,29 @@ export const TEMPLATE_MAP = Object.fromEntries(
   ALBUM_TEMPLATES.map((t) => [t.id, t]),
 ) as Record<TemplateId, AlbumTemplate>;
 
+/** Dimensões Figma dos cards em grids do álbum (node 360:147 / slot 28:1120). */
+export const ALBUM_GRID_CARD = {
+  width: 160,
+  height: 229,
+  borderRadius: 8,
+  borderWidth: 5,
+  gapX: 20,
+  gapY: 24,
+} as const;
+
+/** @deprecated Use ALBUM_GRID_CARD */
+export const ALBUM_GRID_3X3_CARD = ALBUM_GRID_CARD;
+
+export function getAlbumGridDimensions(cols: number, rows: number) {
+  const { width, height, gapX, gapY } = ALBUM_GRID_CARD;
+  return {
+    width: cols * width + (cols - 1) * gapX,
+    height: rows * height + (rows - 1) * gapY,
+    gapX,
+    gapY,
+  };
+}
+
 /** Returns a Tailwind grid-cols-* class — both templates use 3 columns */
 export function templateColsClass(_templateId: string): string {
   return "grid-cols-3";

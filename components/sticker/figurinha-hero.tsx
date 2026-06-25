@@ -19,6 +19,17 @@ export function FigurinhaHero({ firstName, hasSticker }: FigurinhaHeroProps) {
         />
       </div>
 
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-y-0 right-0 hidden w-[min(52vw,640px)] bg-contain bg-right bg-no-repeat md:block"
+        style={{ backgroundImage: `url(${dashboardAssets.cards.figurinha})` }}
+      />
+
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 hidden bg-gradient-to-r from-verde-500 from-40% via-verde-500/85 via-65% to-transparent md:block"
+      />
+
       <div className="relative z-10 mx-auto flex w-full max-w-[1680px] flex-col gap-2 px-6 py-8 sm:py-10 2xl:px-[120px] 2xl:py-14">
         <p className="text-[10px] uppercase tracking-[0.12em] text-verde-100 sm:text-xs">
           Minha figurinha
@@ -29,7 +40,7 @@ export function FigurinhaHero({ firstName, hasSticker }: FigurinhaHeroProps) {
         <p className="max-w-xl text-sm text-verde-100 sm:text-base">
           {hasSticker
             ? "Atualize sua foto ou veja como ficou sua figurinha personalizada."
-            : "Envie uma foto com boa iluminação. O fundo será removido e aplicado ao card da coleção."}
+            : "Envie uma foto com boa iluminação. Removemos o fundo e você ajusta a posição no card da coleção."}
         </p>
       </div>
     </section>

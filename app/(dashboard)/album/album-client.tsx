@@ -32,6 +32,7 @@ interface AlbumClientProps {
   initialUserStickers: UserSticker[];
   totalSlots: number;
   userStickerUrl?: string | null;
+  userDisplayName?: string | null;
   coverUrl?: string | null;
 }
 
@@ -41,6 +42,7 @@ export function AlbumClient({
   initialUserStickers,
   totalSlots,
   userStickerUrl = null,
+  userDisplayName = null,
   coverUrl = null,
 }: AlbumClientProps) {
   const [activeCatId, setActiveCatId] = useState<number | null>(
@@ -224,6 +226,7 @@ export function AlbumClient({
               ownedMap={ownedMap}
               onPaste={handlePaste}
               userStickerUrl={userStickerUrl}
+              userDisplayName={userDisplayName}
               coverUrl={coverUrl}
             />
           )}

@@ -3,20 +3,25 @@
 import { useState } from "react";
 import Link from "next/link";
 import type { StickerPhotoTransform } from "@/lib/sticker-card";
+import {
+  FigurinhaOutlineButton,
+} from "./figurinha-actions";
+import { FigurinhaCardScaler } from "./figurinha-card-scaler";
 import { PhotoUploader } from "./photo-uploader";
 import { RevealStep } from "./reveal-step";
+import { FigurinhaNameTag } from "./figurinha-name-tag";
 import { StickerCard } from "./sticker-card";
 
 type Step = "existing" | "upload" | "reveal";
 
 interface StickerOnboardingProps {
   existingSticker: string | null;
-  firstName: string;
+  displayName: string;
 }
 
 export function StickerOnboarding({
   existingSticker,
-  firstName,
+  displayName,
 }: StickerOnboardingProps) {
   const [step, setStep] = useState<Step>(
     existingSticker ? "existing" : "upload",
@@ -67,34 +72,27 @@ export function StickerOnboarding({
 
   if (step === "existing" && stickerUrl) {
     return (
-      <div className="mx-auto flex w-full max-w-3xl flex-col items-center gap-8">
-        <div className="w-full space-y-2 text-center sm:text-left">
-          <h2 className="font-display text-xl font-bold text-verde-escuro-500 sm:text-2xl lg:text-[34px]">
-            Sua figurinha atual
-          </h2>
-          <p className="text-sm text-verde-escuro-500/80 sm:text-base">
-            Olá, {firstName}! Esta é a figurinha que aparece no seu perfil e no álbum.
-          </p>
+      <div className="flex w-full flex-col items-center gap-8">
+        <div className="flex w-full flex-col items-center">
+          <FigurinhaCardScaler>
+            <StickerCard
+              stickerSrc={stickerUrl}
+              photoAlt={`Figurinha de ${displayName}`}
+            />
+          </FigurinhaCardScaler>
+          <FigurinhaNameTag name={displayName} />
         </div>
 
-        <div className="flex w-full flex-col items-center gap-6 rounded-block bg-verde-100 p-6 sm:p-10">
-          <StickerCard stickerSrc={stickerUrl} photoAlt="Sua figurinha" />
-
-          <div className="flex w-full max-w-md flex-col gap-3 sm:flex-row">
-            <Link
-              href="/dashboard"
-              className="inline-flex h-12 flex-1 items-center justify-center rounded-pill bg-amarelo px-6 font-medium text-verde-escuro-500 transition-all hover:brightness-95 active:scale-[0.98]"
-            >
-              Ir para o álbum
-            </Link>
-            <button
-              type="button"
-              onClick={() => setStep("upload")}
-              className="inline-flex h-12 flex-1 items-center justify-center rounded-pill border border-verde-500 px-6 font-medium text-verde-500 transition-colors hover:bg-verde-500/10 active:scale-[0.98]"
-            >
-              Recriar figurinha
-            </button>
-          </div>
+        <div className="flex w-full max-w-sm flex-col items-center gap-3">
+          <Link
+            href="/album"
+            className="inline-flex h-11 w-full min-w-[200px] cursor-pointer items-center justify-center rounded-pill bg-amarelo px-8 text-sm font-semibold text-verde-escuro-500 transition-all duration-200 hover:brightness-95 active:scale-[0.98]"
+          >
+            Ver no álbum
+          </Link>
+          <FigurinhaOutlineButton onClick={() => setStep("upload")}>
+            Criar nova figurinha
+          </FigurinhaOutlineButton>
         </div>
       </div>
     );
@@ -106,6 +104,15 @@ export function StickerOnboarding({
         onGenerate={handleGenerate}
         generating={generating}
         error={apiError}
+        hasExistingSticker={Boolean(existingSticker)}
+        onCancelRecreate={
+          existingSticker
+            ? () => {
+                setStickerUrl(existingSticker);
+                setStep("existing");
+              }
+            : undefined
+        }
       />
     );
   }
@@ -114,6 +121,7 @@ export function StickerOnboarding({
     return (
       <RevealStep
         stickerUrl={stickerUrl}
+        displayName={displayName}
         onRecreate={() => {
           setStickerUrl(null);
           setStep("upload");

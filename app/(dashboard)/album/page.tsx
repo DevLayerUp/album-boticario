@@ -36,7 +36,7 @@ export default async function AlbumPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("sticker_url")
+    .select("sticker_url, display_name")
     .eq("id", user.id)
     .single();
 
@@ -60,6 +60,7 @@ export default async function AlbumPage() {
       initialUserStickers={userStickers ?? []}
       totalSlots={totalSlots ?? 0}
       userStickerUrl={profile?.sticker_url ?? null}
+      userDisplayName={profile?.display_name?.trim() || user.user_metadata?.full_name?.trim() || null}
       coverUrl={coverSetting?.value ?? null}
     />
   );
