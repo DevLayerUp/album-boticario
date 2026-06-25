@@ -12,6 +12,8 @@ type HTMLFlipBookComponent = typeof import("react-pageflip").default;
 interface PageFlipApi {
   flipPrev: (corner?: "top" | "bottom") => void;
   flipNext: (corner?: "top" | "bottom") => void;
+  flip: (pageNum: number, corner?: "top" | "bottom") => void;
+  turnToPage: (pageNum: number) => void;
 }
 
 interface HTMLFlipBookHandle {
@@ -39,6 +41,8 @@ interface FlipBookProps {
   userDisplayName?: string | null;
   /** URL of the album cover image from Supabase storage (uploaded by admin) */
   coverUrl?: string | null;
+  /** Abre a página do slot e destaca para colagem (vindo do estoque). */
+  focusSlotId?: number | null;
 }
 
 /* Shared style for the circular nav buttons */
@@ -207,6 +211,7 @@ export function FlipBook({
   userStickerUrl,
   userDisplayName,
   coverUrl,
+  focusSlotId = null,
 }: FlipBookProps) {
   const bookRef = useRef<HTMLFlipBookHandle | null>(null);
   const unlockFallbackRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -221,6 +226,33 @@ export function FlipBook({
   useEffect(() => {
     setCurrentPage(0);
   }, [firstPageId]);
+
+  useEffect(() => {
+    if (!focusSlotId || pages.length === 0) return;
+
+    const contentPageIndex = pages.findIndex((page) =>
+      page.album_slots.some((slot) => slot.id === focusSlotId),
+    );
+    if (contentPageIndex < 0) return;
+
+    const flipBookPage = contentPageIndex + 1;
+
+    const navigate = () => {
+      const api = bookRef.current?.pageFlip();
+      if (!api) return false;
+      api.flip(flipBookPage, "top");
+      setCurrentPage(flipBookPage);
+      return true;
+    };
+
+    const timeout = window.setTimeout(() => {
+      if (!navigate()) {
+        window.setTimeout(navigate, 400);
+      }
+    }, 350);
+
+    return () => window.clearTimeout(timeout);
+  }, [focusSlotId, firstPageId, pages]);
 
   const clearUnlockFallback = () => {
     if (unlockFallbackRef.current) {
@@ -365,6 +397,7 @@ export function FlipBook({
                   userStickerUrl={userStickerUrl}
                   userDisplayName={userDisplayName}
                   inFlipBook
+                  focusSlotId={focusSlotId}
                 />
               </div>
             ))}

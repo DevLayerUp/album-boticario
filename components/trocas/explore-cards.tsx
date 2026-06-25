@@ -3,6 +3,7 @@
 import { ArrowLeftRight } from "lucide-react";
 import { rarityColor } from "@/lib/rarity";
 import { cn } from "@/lib/utils";
+import { NO_DUPLICATES_TRADE_MESSAGE } from "@/lib/trade-duplicates";
 import { Avatar, StickerThumb } from "./shared";
 import { RarityBadge } from "./rarity-badge";
 import type { Sticker, Wish } from "./types";
@@ -41,10 +42,18 @@ function getTheme(slug?: string | null) {
 interface ExploreUserCardProps {
   wish: Wish;
   eligible: boolean;
+  hasSticker: boolean;
+  noDuplicates: boolean;
   onOffer: () => void;
 }
 
-export function ExploreUserCard({ wish, eligible, onOffer }: ExploreUserCardProps) {
+export function ExploreUserCard({
+  wish,
+  eligible,
+  hasSticker,
+  noDuplicates,
+  onOffer,
+}: ExploreUserCardProps) {
   if (!wish.user || !wish.sticker) return null;
 
   const slug = wish.sticker.rarities?.slug ?? "common";
@@ -103,6 +112,13 @@ export function ExploreUserCard({ wish, eligible, onOffer }: ExploreUserCardProp
             <ArrowLeftRight size={16} aria-hidden />
             Eu tenho essa
           </button>
+        ) : hasSticker && noDuplicates ? (
+          <div
+            className="flex items-center justify-center rounded-pill border border-dashed border-verde-200 bg-white/50 px-3 py-2.5 text-center text-[11px] leading-snug text-verde-escuro-300 sm:py-3 sm:text-xs"
+            title={NO_DUPLICATES_TRADE_MESSAGE}
+          >
+            Conquiste repetidas para ofertar
+          </div>
         ) : (
           <div className="flex items-center justify-center rounded-pill border border-dashed border-verde-200 bg-white/50 py-2.5 text-[11px] text-verde-escuro-300 sm:py-3 sm:text-xs">
             Você não possui esta figurinha

@@ -6,25 +6,52 @@ import { SectionTabs } from "./section-tabs";
 import { SolicitarView } from "./solicitar-view";
 import { NegociacaoView } from "./negociacao-view";
 import { EstoqueView } from "./estoque-view";
+import { TradeToastProvider, useTradeToast } from "./trade-toast";
+import { NO_DUPLICATES_TRADE_MESSAGE } from "@/lib/trade-duplicates";
 import type { TrocasSection } from "./types";
 
-export default function TrocasClient() {
+function TrocasContent() {
+  const { showToast } = useTradeToast();
   const [section, setSection] = useState<TrocasSection>("solicitar");
   const [pendingCount, setPendingCount] = useState(0);
+  const [hasDuplicates, setHasDuplicates] = useState(false);
+  const [metaLoaded, setMetaLoaded] = useState(false);
 
-  const refreshPendingCount = useCallback(async () => {
-    const [sent, received] = await Promise.all([
+  const refreshTradeMeta = useCallback(async () => {
+    const [sent, received, dupRes] = await Promise.all([
       fetch("/api/trades?tab=sent").then((r) => r.json()).catch(() => []),
       fetch("/api/trades?tab=received").then((r) => r.json()).catch(() => []),
+      fetch("/api/trades/duplicates").then((r) => r.json()).catch(() => ({})),
     ]);
     const count =
       (Array.isArray(sent) ? sent.length : 0) + (Array.isArray(received) ? received.length : 0);
     setPendingCount(count);
+    setHasDuplicates(Boolean(dupRes?.hasDuplicates));
+    setMetaLoaded(true);
   }, []);
 
   useEffect(() => {
-    refreshPendingCount();
-  }, [refreshPendingCount]);
+    void refreshTradeMeta();
+  }, [refreshTradeMeta]);
+
+  const canOpenNegotiation = hasDuplicates || pendingCount > 0;
+
+  useEffect(() => {
+    if (metaLoaded && section === "negociacao" && !canOpenNegotiation) {
+      setSection("solicitar");
+    }
+  }, [section, metaLoaded, canOpenNegotiation]);
+
+  function handleSectionChange(next: TrocasSection) {
+    if (next === "negociacao" && metaLoaded && !canOpenNegotiation) {
+      showToast({
+        message: NO_DUPLICATES_TRADE_MESSAGE,
+        variant: "warning",
+      });
+      return;
+    }
+    setSection(next);
+  }
 
   return (
     <div className="w-full space-y-5 sm:space-y-6 lg:space-y-8 2xl:space-y-10">
@@ -39,8 +66,9 @@ export default function TrocasClient() {
 
       <SectionTabs
         active={section}
-        onChange={setSection}
+        onChange={handleSectionChange}
         pendingCount={pendingCount}
+        negotiationLocked={metaLoaded && !canOpenNegotiation}
       />
 
       <AnimatePresence mode="wait">
@@ -52,14 +80,28 @@ export default function TrocasClient() {
           transition={{ duration: 0.2 }}
         >
           {section === "solicitar" && (
-            <SolicitarView onTradeActivity={refreshPendingCount} />
+            <SolicitarView
+              hasDuplicates={hasDuplicates}
+              metaLoaded={metaLoaded}
+              onTradeActivity={refreshTradeMeta}
+            />
           )}
           {section === "negociacao" && (
-            <NegociacaoView onTradeActivity={refreshPendingCount} />
+            <NegociacaoView onTradeActivity={refreshTradeMeta} />
           )}
-          {section === "estoque" && <EstoqueView />}
+          {section === "estoque" && (
+            <EstoqueView hasDuplicates={hasDuplicates} metaLoaded={metaLoaded} />
+          )}
         </motion.div>
       </AnimatePresence>
     </div>
+  );
+}
+
+export default function TrocasClient() {
+  return (
+    <TradeToastProvider>
+      <TrocasContent />
+    </TradeToastProvider>
   );
 }

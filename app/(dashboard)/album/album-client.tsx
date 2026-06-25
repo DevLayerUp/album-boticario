@@ -34,6 +34,8 @@ interface AlbumClientProps {
   userStickerUrl?: string | null;
   userDisplayName?: string | null;
   coverUrl?: string | null;
+  focusSlotId?: number | null;
+  focusCategoryId?: number | null;
 }
 
 export function AlbumClient({
@@ -44,10 +46,15 @@ export function AlbumClient({
   userStickerUrl = null,
   userDisplayName = null,
   coverUrl = null,
+  focusSlotId = null,
+  focusCategoryId = null,
 }: AlbumClientProps) {
-  const [activeCatId, setActiveCatId] = useState<number | null>(
-    categories[0]?.id ?? null
-  );
+  const [activeCatId, setActiveCatId] = useState<number | null>(() => {
+    if (focusCategoryId && categories.some((c) => c.id === focusCategoryId)) {
+      return focusCategoryId;
+    }
+    return categories[0]?.id ?? null;
+  });
   const [pages, setPages]                   = useState<AlbumPageData[]>([]);
   const [loadingPages, setLoadingPages]     = useState(false);
   const [userAlbum, setUserAlbum]           = useState<AlbumEntry[]>(initialUserAlbum);
@@ -228,6 +235,9 @@ export function AlbumClient({
               userStickerUrl={userStickerUrl}
               userDisplayName={userDisplayName}
               coverUrl={coverUrl}
+              focusSlotId={
+                focusCategoryId == null || activeCatId === focusCategoryId ? focusSlotId : null
+              }
             />
           )}
         </>

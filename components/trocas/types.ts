@@ -2,6 +2,7 @@ export interface Rarity {
   name: string;
   slug: string;
   color_hex: string;
+  animation_type?: string;
 }
 
 export interface Sticker {
@@ -49,6 +50,20 @@ export interface MyWish {
 export interface TradeableEntry {
   sticker: Sticker | null;
   quantity: number;
+}
+
+export interface StockPasteTarget {
+  slotId: number;
+  categoryId: number;
+}
+
+export interface StockItem {
+  sticker: Sticker;
+  quantity: number;
+  isPasted: boolean;
+  blocked: boolean;
+  hasOpenWish: boolean;
+  pasteTarget: StockPasteTarget | null;
 }
 
 export type TrocasSection = "solicitar" | "negociacao" | "estoque";

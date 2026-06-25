@@ -9,7 +9,19 @@ export async function generateMetadata(): Promise<Metadata> {
   return buildAppPageMetadata("album");
 }
 
-export default async function AlbumPage() {
+export default async function AlbumPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ slot?: string; category?: string }>;
+}) {
+  const params = await searchParams;
+  const focusSlotId = params.slot ? Number(params.slot) : null;
+  const focusCategoryId = params.category ? Number(params.category) : null;
+  const validFocusSlotId =
+    focusSlotId != null && Number.isFinite(focusSlotId) ? focusSlotId : null;
+  const validFocusCategoryId =
+    focusCategoryId != null && Number.isFinite(focusCategoryId) ? focusCategoryId : null;
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -62,6 +74,8 @@ export default async function AlbumPage() {
       userStickerUrl={profile?.sticker_url ?? null}
       userDisplayName={profile?.display_name?.trim() || user.user_metadata?.full_name?.trim() || null}
       coverUrl={coverSetting?.value ?? null}
+      focusSlotId={validFocusSlotId}
+      focusCategoryId={validFocusCategoryId}
     />
   );
 }
