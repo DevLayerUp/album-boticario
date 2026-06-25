@@ -15,13 +15,13 @@ import { NO_DUPLICATES_TRADE_MESSAGE } from "@/lib/trade-duplicates";
 import type { Sticker, StockItem } from "./types";
 
 interface EstoqueViewProps {
-  hasDuplicates: boolean;
-  metaLoaded: boolean;
+  onTradeActivity?: () => void;
 }
 
-export function EstoqueView({ hasDuplicates, metaLoaded }: EstoqueViewProps) {
+export function EstoqueView({ onTradeActivity }: EstoqueViewProps) {
   const { showToast } = useTradeToast();
   const [items, setItems] = useState<StockItem[]>([]);
+  const [hasTradeableDuplicates, setHasTradeableDuplicates] = useState(false);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<StockFilter>("all");
   const [tradeModalSticker, setTradeModalSticker] = useState<Sticker | null>(null);
@@ -32,6 +32,7 @@ export function EstoqueView({ hasDuplicates, metaLoaded }: EstoqueViewProps) {
       const res = await fetch("/api/trades/stock");
       const data = await res.json().catch(() => ({}));
       setItems(Array.isArray(data?.items) ? data.items : []);
+      setHasTradeableDuplicates(Boolean(data?.hasTradeableDuplicates));
     } finally {
       setLoading(false);
     }
@@ -95,8 +96,48 @@ export function EstoqueView({ hasDuplicates, metaLoaded }: EstoqueViewProps) {
   const duplicateCopies = items.reduce((acc, i) => acc + (i.quantity > 1 ? i.quantity - 1 : 0), 0);
   const openWishCount = items.filter((i) => i.hasOpenWish).length;
 
+  const hasTradeableDuplicatesFromItems = useMemo(
+    () => items.some((item) => item.quantity > 1),
+    [items],
+  );
+
+  const canTrade = hasTradeableDuplicates && hasTradeableDuplicatesFromItems;
+
+  useEffect(() => {
+    if (tradeModalSticker && !loading && !canTrade) {
+      setTradeModalSticker(null);
+    }
+  }, [tradeModalSticker, loading, canTrade]);
+
   function isRequestable(item: StockItem) {
-    return metaLoaded && hasDuplicates && item.quantity === 0 && !item.isPasted && !item.hasOpenWish;
+    return (
+      !loading &&
+      canTrade &&
+      item.quantity === 0 &&
+      !item.isPasted &&
+      !item.hasOpenWish
+    );
+  }
+
+  function handleRequestTrade(sticker: Sticker) {
+    if (!canTrade) {
+      showToast({
+        message: NO_DUPLICATES_TRADE_MESSAGE,
+        variant: "warning",
+      });
+      return;
+    }
+    setTradeModalSticker(sticker);
+  }
+
+  function isMissingWithoutDuplicates(item: StockItem) {
+    return (
+      !loading &&
+      !canTrade &&
+      item.quantity === 0 &&
+      !item.isPasted &&
+      !item.hasOpenWish
+    );
   }
 
   function pasteHrefFor(item: StockItem) {
@@ -116,7 +157,7 @@ export function EstoqueView({ hasDuplicates, metaLoaded }: EstoqueViewProps) {
           className="max-w-3xl text-sm leading-relaxed text-verde-escuro-500 sm:text-base lg:leading-relaxed 2xl:text-xl 2xl:leading-[33px]"
         >
           Todas as figurinhas do álbum em um só lugar. Toque nas faltantes para solicitar troca
-          {metaLoaded && !hasDuplicates
+          {!loading && !canTrade
             ? " (você precisa de repetidas para solicitar)"
             : ""}
           , nas que você já tem (com +) para ir colar no álbum, e veja repetidas com a quantidade.
@@ -181,18 +222,9 @@ export function EstoqueView({ hasDuplicates, metaLoaded }: EstoqueViewProps) {
                   blocked={item.blocked}
                   hasOpenWish={item.hasOpenWish}
                   index={index}
-                  onRequestTrade={
-                    isRequestable(item)
-                      ? () => setTradeModalSticker(item.sticker)
-                      : undefined
-                  }
-                  tradeBlockedNoDuplicates={
-                    metaLoaded &&
-                    !hasDuplicates &&
-                    item.quantity === 0 &&
-                    !item.isPasted &&
-                    !item.hasOpenWish
-                  }
+                  canRequestTrade={isRequestable(item)}
+                  onRequestTrade={() => handleRequestTrade(item.sticker)}
+                  tradeBlockedNoDuplicates={isMissingWithoutDuplicates(item)}
                   pasteHref={pasteHrefFor(item)}
                 />
               ))}
@@ -209,6 +241,7 @@ export function EstoqueView({ hasDuplicates, metaLoaded }: EstoqueViewProps) {
             onSuccess={() => {
               load();
               setTradeModalSticker(null);
+              onTradeActivity?.();
               showToast({
                 message: "Pedido publicado! Outros colecionadores já podem ver em Explorar.",
                 variant: "success",

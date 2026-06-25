@@ -20,6 +20,7 @@ interface StockStickerCardProps {
   blocked?: boolean;
   hasOpenWish?: boolean;
   index?: number;
+  canRequestTrade?: boolean;
   onRequestTrade?: () => void;
   pasteHref?: string | null;
   tradeBlockedNoDuplicates?: boolean;
@@ -38,6 +39,7 @@ export function StockStickerCard({
   blocked = false,
   hasOpenWish = false,
   index = 0,
+  canRequestTrade = false,
   onRequestTrade,
   pasteHref = null,
   tradeBlockedNoDuplicates = false,
@@ -52,7 +54,8 @@ export function StockStickerCard({
         ? "#09357a"
         : "var(--color-verde-escuro-500)";
   const animType = sticker.rarities?.animation_type;
-  const canRequestTrade = state === "missing" && !hasOpenWish && onRequestTrade;
+  const showRequestTrade =
+    canRequestTrade && state === "missing" && !hasOpenWish && Boolean(onRequestTrade);
   const canPaste = state === "owned" && Boolean(pasteHref);
 
   const cardImage = (
@@ -63,7 +66,7 @@ export function StockStickerCard({
           state === "missing" && "border-dashed bg-verde-escuro-capa/[0.04]",
           state === "owned" && "border-dashed",
           blocked && state !== "missing" && "opacity-80",
-          canRequestTrade && "group-hover:border-verde-500 group-hover:shadow-md",
+          showRequestTrade && "group-hover:border-verde-500 group-hover:shadow-md",
           canPaste && "group-hover:border-verde-500 group-hover:shadow-md",
         )}
         style={{
@@ -105,7 +108,7 @@ export function StockStickerCard({
           </div>
         )}
 
-        {canRequestTrade && (
+        {showRequestTrade && (
           <>
             <div className="absolute inset-0 flex items-center justify-center bg-verde-escuro-capa/20 transition-colors group-hover:bg-verde-escuro-500/25">
               <span className="flex size-9 items-center justify-center rounded-full bg-surface/90 shadow-sm transition-colors group-hover:bg-verde-500 group-hover:text-white sm:size-10">
@@ -127,7 +130,7 @@ export function StockStickerCard({
           </>
         )}
 
-        {state === "missing" && !hasOpenWish && !onRequestTrade && (
+        {state === "missing" && !hasOpenWish && !showRequestTrade && (
           <div
             className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-verde-escuro-capa/20 px-2"
             title={tradeBlockedNoDuplicates ? NO_DUPLICATES_TRADE_MESSAGE : undefined}
@@ -207,7 +210,7 @@ export function StockStickerCard({
         {sticker.name}
       </p>
 
-      {canRequestTrade ? (
+      {showRequestTrade ? (
         <p className="mt-1 text-[10px] font-semibold text-verde-500 sm:text-xs">
           Toque para solicitar
         </p>
@@ -227,7 +230,7 @@ export function StockStickerCard({
       transition={{ duration: 0.25, delay: Math.min(index * 0.02, 0.35) }}
       className="flex flex-col items-start gap-0"
     >
-      {canRequestTrade ? (
+      {showRequestTrade ? (
         <button
           type="button"
           onClick={onRequestTrade}

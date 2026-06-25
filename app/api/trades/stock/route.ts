@@ -107,5 +107,7 @@ export async function GET() {
     };
   });
 
-  return NextResponse.json({ items });
+  const hasTradeableDuplicates = (inventoryRes.data ?? []).some((row) => row.quantity > 1);
+
+  return NextResponse.json({ items, hasTradeableDuplicates });
 }

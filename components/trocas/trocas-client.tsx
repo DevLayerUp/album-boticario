@@ -90,7 +90,7 @@ function TrocasContent() {
             <NegociacaoView onTradeActivity={refreshTradeMeta} />
           )}
           {section === "estoque" && (
-            <EstoqueView hasDuplicates={hasDuplicates} metaLoaded={metaLoaded} />
+            <EstoqueView onTradeActivity={refreshTradeMeta} />
           )}
         </motion.div>
       </AnimatePresence>
