@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { PackageOpen } from "lucide-react";
 import { rarityColor } from "@/lib/rarity";
+import { StickerRarityEffects } from "@/components/sticker/sticker-rarity-effects";
 import { SOURCE_LABEL, formatOpenedRelative } from "./shared";
 import type { OpenedPackHistory, PackSticker } from "./types";
 
@@ -59,6 +60,12 @@ export function OpenedPackRow({ pack }: OpenedPackRowProps) {
                       ?
                     </div>
                   )}
+                  <StickerRarityEffects
+                    slug={slug}
+                    animationType={sticker.rarities?.animation_type}
+                    color={color}
+                    intensity="subtle"
+                  />
                 </div>
               );
             })}

@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { Lock, Sparkles } from "lucide-react";
 import { rarityColor } from "@/lib/rarity";
 import { cn } from "@/lib/utils";
+import { StickerRarityEffects } from "@/components/sticker/sticker-rarity-effects";
 import type { CollectionSticker } from "./types";
 
 interface CollectionStickerCardProps {
@@ -75,16 +76,20 @@ export function CollectionStickerCard({
           </div>
         )}
 
-        {owned && animType === "holographic" && (
-          <motion.div
-            className="pointer-events-none absolute inset-0 opacity-25"
-            animate={{ backgroundPositionX: ["0%", "200%"] }}
-            transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-            style={{
-              background:
-                "linear-gradient(115deg, transparent 25%, rgba(255,255,255,0.65) 45%, transparent 65%)",
-              backgroundSize: "200% 100%",
-            }}
+        {owned ? (
+          <StickerRarityEffects
+            slug={slug}
+            animationType={animType}
+            color={color}
+            intensity="normal"
+          />
+        ) : (
+          <StickerRarityEffects
+            slug={slug}
+            animationType={animType}
+            color={color}
+            intensity="subtle"
+            muted
           />
         )}
 

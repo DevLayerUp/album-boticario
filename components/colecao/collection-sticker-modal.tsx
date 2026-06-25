@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { rarityTheme } from "@/lib/rarity";
 import { cn } from "@/lib/utils";
+import { StickerRarityEffects } from "@/components/sticker/sticker-rarity-effects";
 import type { CollectionSticker } from "./types";
 
 interface CollectionStickerModalProps {
@@ -201,18 +202,12 @@ export function CollectionStickerModal({
                     sizes="392px"
                     priority
                   />
-                  {animation === "holographic" && (
-                    <motion.div
-                      className="pointer-events-none absolute inset-0 opacity-30"
-                      animate={{ backgroundPositionX: ["0%", "200%"] }}
-                      transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                      style={{
-                        background:
-                          "linear-gradient(115deg, transparent 25%, rgba(255,255,255,0.75) 45%, transparent 65%)",
-                        backgroundSize: "200% 100%",
-                      }}
-                    />
-                  )}
+                  <StickerRarityEffects
+                    slug={slug}
+                    animationType={animation}
+                    color={theme.border}
+                    intensity="strong"
+                  />
                   <div className="absolute inset-x-2 bottom-10 flex justify-center sm:bottom-16">
                     <StickerNameTag name={sticker.name} bgColor={theme.nameTag} />
                   </div>

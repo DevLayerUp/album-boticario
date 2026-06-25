@@ -7,8 +7,10 @@ import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { Lock, Plus, Sparkles, ThumbsUp, Trophy, X } from "lucide-react";
 import { PasteFlight, type PasteFlightConfig } from "@/components/album/paste-flight";
 import { FigurinhaNameTag } from "@/components/sticker/figurinha-name-tag";
+import { StickerRarityEffects } from "@/components/sticker/sticker-rarity-effects";
 import { playPasteSound } from "@/lib/play-paste-sound";
 import { rarityColor, rarityTheme, type RarityTheme } from "@/lib/rarity";
+import { cn } from "@/lib/utils";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 export interface SlotSticker {
@@ -183,18 +185,12 @@ function StickerDetailModal({
                 sizes="392px"
                 priority
               />
-              {animation === "holographic" && (
-                <motion.div
-                  className="pointer-events-none absolute inset-0 opacity-30"
-                  animate={{ backgroundPositionX: ["0%", "200%"] }}
-                  transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                  style={{
-                    background:
-                      "linear-gradient(115deg, transparent 25%, rgba(255,255,255,0.75) 45%, transparent 65%)",
-                    backgroundSize: "200% 100%",
-                  }}
-                />
-              )}
+              <StickerRarityEffects
+                slug={slug}
+                animationType={animation}
+                color={theme.border}
+                intensity="strong"
+              />
               {/* Nome sobre a imagem, próximo da base */}
               <div className="absolute inset-x-2 bottom-10 flex justify-center sm:bottom-16">
                 <StickerNameTag name={sticker.name} bgColor={theme.nameTag} />
@@ -420,25 +416,12 @@ export function StickerSlot({
               />
             )}
 
-            {animation === "holographic" && (
-              <motion.div
-                className="pointer-events-none absolute inset-0 opacity-25"
-                animate={{ backgroundPositionX: ["0%", "200%"] }}
-                transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-                style={{
-                  background:
-                    "linear-gradient(115deg, transparent 25%, rgba(255,255,255,0.7) 45%, transparent 65%)",
-                  backgroundSize: "200% 100%",
-                }}
-              />
-            )}
-
-            {(animation === "glow" || animation === "holographic") && (
-              <div
-                className="pointer-events-none absolute inset-0"
-                style={{ boxShadow: `inset 0 0 14px ${color}55` }}
-              />
-            )}
+            <StickerRarityEffects
+              slug={raritySlug}
+              animationType={animation}
+              color={color}
+              intensity={size === "large" ? "strong" : "normal"}
+            />
 
             <AnimatePresence>
               {showLandRing && <PasteLandRing color={color} />}
@@ -472,6 +455,12 @@ export function StickerSlot({
                   <>
                     <Image src={sticker.image_url} alt={sticker.name} fill
                       className="object-cover opacity-50" sizes="(max-width: 768px) 30vw, 200px" />
+                    <StickerRarityEffects
+                      slug={raritySlug}
+                      animationType={animation}
+                      color={color}
+                      intensity={size === "large" ? "normal" : "subtle"}
+                    />
                     <div className="absolute inset-0 flex items-center justify-center bg-verde-escuro-500/30">
                       <motion.div
                         animate={{ scale: [1, 1.18, 1] }}
@@ -499,16 +488,34 @@ export function StickerSlot({
                       className="object-cover grayscale opacity-35"
                       sizes={imageSizes}
                     />
-                    <div className="absolute inset-0 flex items-center justify-center bg-verde-escuro-capa/25">
-                      <span className="flex size-8 items-center justify-center rounded-full bg-surface/90 shadow-sm sm:size-9">
-                        <Lock size={14} className="text-verde-escuro-300" aria-hidden />
+                    <StickerRarityEffects
+                      slug={raritySlug}
+                      animationType={animation}
+                      color={color}
+                      intensity="subtle"
+                      muted
+                    />
+                    <div className="absolute inset-0 bg-verde-escuro-capa/25" aria-hidden />
+                    <div
+                      className={cn(
+                        "absolute inset-x-0 z-[5] flex -translate-y-1/2 justify-center",
+                        size === "large" ? "top-[32%]" : "top-[30%]",
+                      )}
+                    >
+                      <span className="flex size-7 items-center justify-center rounded-full bg-surface/90 shadow-sm sm:size-8">
+                        <Lock
+                          size={size === "large" ? 14 : 12}
+                          className="text-verde-escuro-300"
+                          aria-hidden
+                        />
                       </span>
                     </div>
                     <FigurinhaNameTag
                       name={sticker.name}
                       bgColor={theme.nameTag}
                       overlay
-                      compact={size === "default"}
+                      compact
+                      pinBottom
                     />
                   </>
                 ) : (
@@ -571,17 +578,12 @@ export function StickerSlot({
                   >
                     <Image src={sticker.image_url} alt={sticker.name} fill
                       className="object-cover" sizes="144px" />
-                    {animation === "holographic" && (
-                      <motion.div
-                        className="pointer-events-none absolute inset-0 opacity-35"
-                        animate={{ backgroundPositionX: ["0%", "200%"] }}
-                        transition={{ duration: 2.5, repeat: Infinity, ease: "linear" }}
-                        style={{
-                          background: "linear-gradient(130deg, transparent 20%, rgba(255,255,255,0.9) 42%, transparent 62%)",
-                          backgroundSize: "200% 100%",
-                        }}
-                      />
-                    )}
+                    <StickerRarityEffects
+                      slug={raritySlug}
+                      animationType={animation}
+                      color={color}
+                      intensity="normal"
+                    />
                   </motion.div>
                 </div>
 

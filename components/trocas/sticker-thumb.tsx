@@ -4,7 +4,14 @@ import Image from "next/image";
 import { CheckCircle2 } from "lucide-react";
 import { rarityColor } from "@/lib/rarity";
 import { cn } from "@/lib/utils";
+import { StickerRarityEffects, type StickerEffectIntensity } from "@/components/sticker/sticker-rarity-effects";
 import type { Sticker } from "./types";
+
+function effectIntensity(width: number): StickerEffectIntensity {
+  if (width <= 56) return "subtle";
+  if (width <= 100) return "normal";
+  return "strong";
+}
 
 function thumbFrameClass(width: number) {
   if (width <= 48) {
@@ -25,6 +32,7 @@ export function StickerThumb({
   height = 149,
   selected = false,
   badge,
+  hideEffects = false,
   className,
 }: {
   sticker: Sticker | null;
@@ -32,6 +40,8 @@ export function StickerThumb({
   height?: number;
   selected?: boolean;
   badge?: string | number;
+  /** Efeitos de raridade desativados (ex.: placeholder). */
+  hideEffects?: boolean;
   className?: string;
 }) {
   if (!sticker) {
@@ -65,6 +75,14 @@ export function StickerThumb({
         className="object-cover"
         sizes={`${width}px`}
       />
+      {!hideEffects ? (
+        <StickerRarityEffects
+          slug={sticker.rarities?.slug}
+          animationType={sticker.rarities?.animation_type}
+          color={borderColor}
+          intensity={effectIntensity(width)}
+        />
+      ) : null}
       {selected ? (
         <div className="absolute inset-0 flex items-center justify-center bg-verde-escuro-500/20">
           <CheckCircle2

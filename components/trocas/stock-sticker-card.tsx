@@ -7,6 +7,7 @@ import { BookOpen, BookmarkCheck, ArrowLeftRight, Lock, Plus } from "lucide-reac
 import { rarityColor } from "@/lib/rarity";
 import { cn } from "@/lib/utils";
 import { NO_DUPLICATES_TRADE_MESSAGE } from "@/lib/trade-duplicates";
+import { StickerRarityEffects } from "@/components/sticker/sticker-rarity-effects";
 import { RarityBadge } from "./rarity-badge";
 import type { Sticker } from "./types";
 
@@ -87,6 +88,14 @@ export function StockStickerCard({
           sizes="(max-width: 640px) 45vw, (max-width: 1024px) 25vw, 160px"
         />
 
+        <StickerRarityEffects
+          slug={slug}
+          animationType={animType}
+          color={borderColor}
+          intensity="normal"
+          muted={state === "missing"}
+        />
+
         {state === "missing" && hasOpenWish && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 bg-verde-escuro-capa/15">
             <span className="flex items-center gap-1 rounded-pill bg-verde-escuro-500/90 px-2.5 py-1 text-[9px] font-bold uppercase tracking-wide text-white shadow-sm sm:text-[10px]">
@@ -145,19 +154,6 @@ export function StockStickerCard({
                 </span>
               ) : null}
             </div>
-          )}
-
-          {state === "pasted" && animType === "holographic" && (
-            <motion.div
-              className="pointer-events-none absolute inset-0 opacity-25"
-              animate={{ backgroundPositionX: ["0%", "200%"] }}
-              transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-              style={{
-                background:
-                  "linear-gradient(115deg, transparent 25%, rgba(255,255,255,0.7) 45%, transparent 65%)",
-                backgroundSize: "200% 100%",
-              }}
-            />
           )}
 
           {state === "pasted" && (

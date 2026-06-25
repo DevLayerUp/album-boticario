@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { RarityBadge } from "@/components/trocas/rarity-badge";
+import { StickerRarityEffects } from "@/components/sticker/sticker-rarity-effects";
 import { rarityTheme } from "@/lib/rarity";
 import { cn } from "@/lib/utils";
 import type { PackSticker } from "./types";
@@ -44,6 +45,12 @@ export function PackResultSticker({ item, compact = false }: PackResultStickerPr
             ?
           </div>
         )}
+        <StickerRarityEffects
+          slug={slug}
+          animationType={sticker.rarities?.animation_type}
+          color={theme.border}
+          intensity={compact ? "normal" : "strong"}
+        />
       </div>
 
       <RarityBadge
