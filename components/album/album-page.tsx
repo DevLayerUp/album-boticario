@@ -91,6 +91,7 @@ function PageShell({
           backgroundImage: `url(${decoration})`,
           backgroundPosition: side === "left" ? "right" : "left",
           backgroundSize: "auto",
+          filter: "brightness(0.8)",
         }}
       />
       <div className="relative z-10 flex flex-1 flex-col">{children}</div>
@@ -215,29 +216,24 @@ function ProfilePage({ page, side, userStickerUrl, userDisplayName, inFlipBook }
 
         <div className="flex flex-1 flex-col items-center justify-center">
           {hasSticker ? (
-            <div className="flex flex-col items-center">
-              <div
-                className="relative overflow-hidden shadow-2xl shadow-black/30"
-                style={{
-                  width: "clamp(160px, 38vw, 280px)",
-                  aspectRatio: "352 / 503",
-                  borderRadius: 16,
-                }}
-              >
-                <Image
-                  src={userStickerUrl!}
-                  alt="Sua figurinha personalizada"
-                  fill
-                  className="object-cover"
-                  sizes="(max-width: 768px) 38vw, 280px"
-                  priority
-                />
-              </div>
+            <div
+              className="relative overflow-hidden shadow-2xl shadow-black/30"
+              style={{
+                width: "clamp(160px, 38vw, 280px)",
+                aspectRatio: "352 / 503",
+                borderRadius: 16,
+              }}
+            >
+              <Image
+                src={userStickerUrl!}
+                alt="Sua figurinha personalizada"
+                fill
+                className="object-cover"
+                sizes="(max-width: 768px) 38vw, 280px"
+                priority
+              />
               {userDisplayName ? (
-                <FigurinhaNameTag
-                  name={userDisplayName}
-                  className={inFlipBook ? "text-base sm:text-lg" : undefined}
-                />
+                <FigurinhaNameTag name={userDisplayName} overlay />
               ) : null}
             </div>
           ) : (

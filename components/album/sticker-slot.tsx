@@ -290,8 +290,17 @@ export function StickerSlot({
   const animation   = sticker?.rarities?.animation_type ?? "none";
   const isOwned     = owned > 0;
   const canPaste    = isOwned && !isPasted && !isFlying && sticker !== null;
+  const isMissing   = !isOwned && sticker !== null;
   const isComplete  = (isPasted || justPasted) && !isFlying;
   const isAwaitingLand = isFlying;
+
+  const slotLabel = isComplete
+    ? sticker?.name
+    : canPaste
+      ? `Colar ${sticker?.name ?? `figurinha ${slotNumber}`}`
+      : isMissing
+        ? `${sticker.name}, ainda não obtida`
+        : `Espaço ${slotNumber}`;
 
   const onFlightComplete = useCallback(() => {
     setIsFlying(false);
@@ -349,6 +358,7 @@ export function StickerSlot({
         type="button"
         layout
         data-slot-id={slotId}
+        aria-label={slotLabel}
         className={[
           `relative block ${aspectClass} w-full overflow-hidden rounded-input border-[5px] text-left transition-colors duration-300`,
           isComplete
@@ -357,13 +367,17 @@ export function StickerSlot({
             ? "border-dashed bg-white/5"
             : canPaste
             ? "cursor-pointer border-dashed bg-white/10 hover:bg-white/20"
-            : "border-white/15 bg-black/20",
+            : isMissing
+            ? "cursor-default border-dashed bg-black/15"
+            : "cursor-default border-white/15 bg-black/20",
         ].join(" ")}
         style={
           isComplete
             ? { borderColor: color }
             : isAwaitingLand || canPaste
             ? { borderColor: `${color}b3` }
+            : isMissing
+            ? { borderColor: `${color}55` }
             : undefined
         }
         onClick={() => {
@@ -464,8 +478,27 @@ export function StickerSlot({
                 )}
               </div>
             ) : (
-              <div className="flex h-full items-center justify-center">
-                <Lock size={16} className="text-white/30" />
+              <div className="relative h-full w-full">
+                {sticker ? (
+                  <>
+                    <Image
+                      src={sticker.image_url}
+                      alt=""
+                      fill
+                      className="object-cover grayscale opacity-35"
+                      sizes={imageSizes}
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center bg-verde-escuro-capa/25">
+                      <span className="flex size-8 items-center justify-center rounded-full bg-surface/90 shadow-sm sm:size-9">
+                        <Lock size={14} className="text-verde-escuro-300" aria-hidden />
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex h-full items-center justify-center">
+                    <Lock size={16} className="text-white/30" aria-hidden />
+                  </div>
+                )}
               </div>
             )}
           </div>

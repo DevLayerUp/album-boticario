@@ -78,9 +78,10 @@ export function StickerOnboarding({
             <StickerCard
               stickerSrc={stickerUrl}
               photoAlt={`Figurinha de ${displayName}`}
-            />
+            >
+              <FigurinhaNameTag name={displayName} overlay />
+            </StickerCard>
           </FigurinhaCardScaler>
-          <FigurinhaNameTag name={displayName} />
         </div>
 
         <div className="flex w-full max-w-sm flex-col items-center gap-3">

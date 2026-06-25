@@ -10,6 +10,7 @@ import { FigurinhaCardScaler } from "./figurinha-card-scaler";
 import { FigurinhaNameTag } from "./figurinha-name-tag";
 import { StickerCard } from "./sticker-card";
 import { STICKER_CARD } from "@/lib/sticker-card";
+import { cn } from "@/lib/utils";
 
 interface RevealStepProps {
   stickerUrl: string;
@@ -97,15 +98,20 @@ export function RevealStep({ stickerUrl, displayName, onRecreate }: RevealStepPr
                 <StickerCard
                   stickerSrc={stickerUrl}
                   photoAlt="Sua figurinha personalizada"
-                />
+                >
+                  <FigurinhaNameTag
+                    name={displayName}
+                    overlay
+                    className={cn(
+                      "transition-opacity duration-500",
+                      revealed ? "opacity-100" : "opacity-0",
+                    )}
+                  />
+                </StickerCard>
               </div>
             </div>
           </div>
         </FigurinhaCardScaler>
-        <FigurinhaNameTag
-          name={displayName}
-          className={revealed ? "opacity-100" : "opacity-0"}
-        />
       </div>
 
       <div
