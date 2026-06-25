@@ -2,25 +2,36 @@
 
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { Lock } from "lucide-react";
+import { BookOpen, Lock, Plus } from "lucide-react";
 import { rarityColor } from "@/lib/rarity";
 import { cn } from "@/lib/utils";
 import { RarityBadge } from "./rarity-badge";
 import type { Sticker } from "./types";
 
+export type StockCardState = "missing" | "owned" | "pasted";
+
 interface StockStickerCardProps {
   sticker: Sticker;
   quantity: number;
+  isPasted?: boolean;
   blocked?: boolean;
   index?: number;
+}
+
+function resolveState(quantity: number, isPasted: boolean): StockCardState {
+  if (isPasted) return "pasted";
+  if (quantity <= 0) return "missing";
+  return "owned";
 }
 
 export function StockStickerCard({
   sticker,
   quantity,
+  isPasted = false,
   blocked = false,
   index = 0,
 }: StockStickerCardProps) {
+  const state = resolveState(quantity, isPasted);
   const slug = sticker.rarities?.slug ?? "common";
   const borderColor = rarityColor(slug, sticker.rarities?.color_hex);
   const nameColor =
@@ -29,32 +40,84 @@ export function StockStickerCard({
       : slug === "rare"
         ? "#09357a"
         : "var(--color-verde-escuro-500)";
+  const animType = sticker.rarities?.animation_type;
 
   return (
     <motion.div
       layout
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.25, delay: Math.min(index * 0.03, 0.3) }}
+      transition={{ duration: 0.25, delay: Math.min(index * 0.02, 0.35) }}
       className="flex flex-col items-start gap-0"
     >
       <div className="relative w-full">
         <div
           className={cn(
-            "relative aspect-160/229 w-full overflow-hidden rounded-block border-[3px] shadow-[0_2px_8px_rgba(0,0,0,0.08)] sm:border-4 2xl:border-[5px]",
-            blocked && "opacity-75",
+            "relative aspect-160/229 w-full overflow-hidden rounded-block border-[5px] shadow-[0_2px_8px_rgba(0,0,0,0.08)]",
+            state === "missing" && "border-dashed bg-verde-escuro-capa/[0.04]",
+            state === "owned" && "border-dashed",
+            blocked && state !== "missing" && "opacity-80",
           )}
-          style={{ borderColor }}
+          style={{
+            borderColor:
+              state === "missing"
+                ? `${borderColor}55`
+                : state === "owned"
+                  ? `${borderColor}b3`
+                  : borderColor,
+          }}
         >
           <Image
             src={sticker.image_url}
             alt=""
             fill
-            className="object-cover"
-            sizes="(max-width: 640px) 45vw, (max-width: 1024px) 25vw, 242px"
+            className={cn(
+              "object-cover transition-[filter,opacity] duration-300",
+              state === "missing" && "grayscale opacity-35",
+              state === "owned" && "opacity-50",
+              state === "pasted" && "opacity-100",
+            )}
+            sizes="(max-width: 640px) 45vw, (max-width: 1024px) 25vw, 160px"
           />
-          {blocked && (
-            <div className="absolute inset-0 flex items-center justify-center bg-verde-escuro-capa/35">
+
+          {state === "missing" && (
+            <div className="absolute inset-0 flex items-center justify-center bg-verde-escuro-capa/20">
+              <span className="flex size-9 items-center justify-center rounded-full bg-surface/90 shadow-sm sm:size-10">
+                <Lock size={16} className="text-verde-escuro-300" aria-hidden />
+              </span>
+            </div>
+          )}
+
+          {state === "owned" && (
+            <div className="absolute inset-0 flex items-center justify-center bg-verde-escuro-500/25">
+              <span className="flex size-9 items-center justify-center rounded-full bg-verde-500 shadow-lg shadow-verde-escuro-500/30 sm:size-10">
+                <Plus size={18} className="text-white" aria-hidden />
+              </span>
+            </div>
+          )}
+
+          {state === "pasted" && animType === "holographic" && (
+            <motion.div
+              className="pointer-events-none absolute inset-0 opacity-25"
+              animate={{ backgroundPositionX: ["0%", "200%"] }}
+              transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+              style={{
+                background:
+                  "linear-gradient(115deg, transparent 25%, rgba(255,255,255,0.7) 45%, transparent 65%)",
+                backgroundSize: "200% 100%",
+              }}
+            />
+          )}
+
+          {state === "pasted" && (
+            <span className="absolute left-1.5 top-1.5 z-10 flex items-center gap-1 rounded-pill bg-verde-escuro-500/90 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white shadow-sm sm:text-[10px]">
+              <BookOpen size={10} aria-hidden />
+              No álbum
+            </span>
+          )}
+
+          {blocked && state !== "missing" && (
+            <div className="absolute inset-0 z-20 flex items-center justify-center bg-verde-escuro-capa/35">
               <span className="flex items-center gap-1.5 rounded-pill bg-surface/95 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide text-verde-escuro-500 shadow-sm">
                 <Lock size={12} aria-hidden />
                 Bloqueada
@@ -64,8 +127,11 @@ export function StockStickerCard({
         </div>
 
         {quantity > 1 && (
-          <span className="absolute -right-0.5 -top-1.5 flex size-6 items-center justify-center rounded-full bg-verde-500 text-[10px] font-bold text-white shadow-sm sm:-top-2 sm:size-7 sm:text-xs">
-            {quantity}x
+          <span
+            className="absolute -right-0.5 -top-1.5 z-30 flex size-7 min-w-7 items-center justify-center rounded-full bg-amarelo px-1 text-[10px] font-bold text-verde-escuro-500 shadow-md sm:-top-2 sm:size-8 sm:text-xs"
+            aria-label={`${quantity} cópias`}
+          >
+            {quantity}×
           </span>
         )}
       </div>
@@ -74,12 +140,18 @@ export function StockStickerCard({
         name={sticker.rarities?.name ?? "Comum"}
         slug={slug}
         colorHex={sticker.rarities?.color_hex}
-        className="mt-1.5 px-3 py-1 text-[10px] font-medium normal-case tracking-normal sm:mt-2 sm:px-4 sm:text-xs 2xl:mt-2.5 2xl:px-5 2xl:py-1.5 2xl:text-sm"
+        className={cn(
+          "mt-1.5 px-3 py-1 text-[10px] font-medium normal-case tracking-normal sm:mt-2 sm:px-4 sm:text-xs 2xl:mt-2.5 2xl:px-5 2xl:py-1.5 2xl:text-sm",
+          state === "missing" && "opacity-60",
+        )}
       />
 
       <p
-        className="mt-1.5 w-full truncate font-display text-sm font-bold leading-tight sm:mt-2 sm:text-base 2xl:text-xl"
-        style={{ color: nameColor }}
+        className={cn(
+          "mt-1.5 w-full truncate font-display text-sm font-bold leading-tight sm:mt-2 sm:text-base 2xl:text-xl",
+          state === "missing" && "text-verde-escuro-300",
+        )}
+        style={state !== "missing" ? { color: nameColor } : undefined}
       >
         {sticker.name}
       </p>
@@ -87,7 +159,15 @@ export function StockStickerCard({
   );
 }
 
-export type StockFilter = "all" | "common" | "rare" | "super_rare" | "blocked";
+export type StockFilter =
+  | "all"
+  | "common"
+  | "rare"
+  | "super_rare"
+  | "blocked"
+  | "repetidas"
+  | "faltando"
+  | "no_album";
 
 interface StockFilterBarProps {
   active: StockFilter;
@@ -100,11 +180,23 @@ const FILTER_LABELS: Record<StockFilter, string> = {
   common: "Comum",
   rare: "Rara",
   super_rare: "Super rara",
+  repetidas: "Repetidas",
+  faltando: "Faltando",
+  no_album: "No álbum",
   blocked: "Bloqueadas",
 };
 
 export function StockFilterBar({ active, onChange, counts }: StockFilterBarProps) {
-  const filters: StockFilter[] = ["all", "common", "rare", "super_rare", "blocked"];
+  const filters: StockFilter[] = [
+    "all",
+    "faltando",
+    "no_album",
+    "repetidas",
+    "common",
+    "rare",
+    "super_rare",
+    "blocked",
+  ];
 
   return (
     <div

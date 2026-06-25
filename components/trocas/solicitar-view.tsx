@@ -2,14 +2,14 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Compass, Loader2, Plus, RefreshCw, Search } from "lucide-react";
+import { ArrowLeftRight, Compass, Loader2, RefreshCw, Search } from "lucide-react";
 import { ExploreUserCard, WishRequestCard } from "./explore-cards";
 import {
-  AddWishModal,
+  CreateTradeEventModal,
   EmptyState,
   FulfillWishModal,
-  Toast,
 } from "./shared";
+import { parseTradeApiError, useTradeToast } from "./trade-toast";
 import type { MyWish, Trade, TradeableEntry, Wish } from "./types";
 
 interface SolicitarViewProps {
@@ -17,22 +17,17 @@ interface SolicitarViewProps {
 }
 
 export function SolicitarView({ onTradeActivity }: SolicitarViewProps) {
+  const { showToast } = useTradeToast();
   const [wishes, setWishes] = useState<MyWish[]>([]);
   const [receivedOffers, setReceivedOffers] = useState<Trade[]>([]);
   const [exploreWishes, setExploreWishes] = useState<Wish[]>([]);
   const [myAvailable, setMyAvailable] = useState<TradeableEntry[]>([]);
   const [loadingWishes, setLoadingWishes] = useState(true);
   const [loadingExplore, setLoadingExplore] = useState(true);
-  const [adding, setAdding] = useState(false);
+  const [creatingEvent, setCreatingEvent] = useState(false);
   const [fulfill, setFulfill] = useState<Wish | null>(null);
   const [busyWishId, setBusyWishId] = useState<number | null>(null);
   const [wishSearch, setWishSearch] = useState("");
-  const [toast, setToast] = useState("");
-
-  const showToast = useCallback((msg: string) => {
-    setToast(msg);
-    setTimeout(() => setToast(""), 3000);
-  }, []);
 
   const loadWishes = useCallback(async () => {
     setLoadingWishes(true);
@@ -79,14 +74,40 @@ export function SolicitarView({ onTradeActivity }: SolicitarViewProps) {
     (w.stickers?.name ?? "").toLowerCase().includes(wishSearch.toLowerCase()),
   );
 
+  const emptyListMessage =
+    wishes.length === 0
+      ? "Nenhum pedido criado ainda. Clique em Criar evento de troca para publicar o que você precisa."
+      : wishSearch.trim()
+        ? "Nenhum pedido corresponde ao filtro."
+        : "Nenhum pedido criado ainda.";
+
   async function cancelWish(id: number) {
     setBusyWishId(id);
     try {
-      await fetch(`/api/trades/wishes/${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/trades/wishes/${id}`, { method: "DELETE" });
+      if (!res.ok) {
+        showToast({
+          message: await parseTradeApiError(res, "Não foi possível cancelar o pedido."),
+          variant: "error",
+        });
+        return;
+      }
       setWishes((prev) => prev.filter((w) => w.id !== id));
+      showToast({
+        message: "Pedido cancelado com sucesso.",
+        variant: "info",
+      });
     } finally {
       setBusyWishId(null);
     }
+  }
+
+  async function handleRefreshExplore() {
+    await loadExplore();
+    showToast({
+      message: "Lista de pedidos atualizada.",
+      variant: "info",
+    });
   }
 
   function canOffer(wantedId: number) {
@@ -95,28 +116,36 @@ export function SolicitarView({ onTradeActivity }: SolicitarViewProps) {
 
   return (
     <div className="space-y-6 sm:space-y-8 lg:space-y-10 2xl:space-y-14">
-      <AnimatePresence>{toast && <Toast message={toast} />}</AnimatePresence>
-
-      {/* Painel Solicitar Troca — Figma 381:303 */}
       <section
         aria-labelledby="solicitar-troca-heading"
         className="rounded-[20px] border border-verde-400 bg-verde-100 p-4 sm:rounded-[24px] sm:p-5 lg:p-6 2xl:rounded-[32px] 2xl:p-8"
       >
-        <div className="max-w-3xl">
-          <h2
-            id="solicitar-troca-heading"
-            className="font-display text-lg font-bold text-verde-escuro-500 sm:text-xl 2xl:text-2xl"
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
+          <div className="max-w-3xl">
+            <h2
+              id="solicitar-troca-heading"
+              className="font-display text-lg font-bold text-verde-escuro-500 sm:text-xl 2xl:text-2xl"
+            >
+              Seus pedidos
+            </h2>
+            <p className="mt-2 text-sm leading-relaxed text-verde-escuro-400 sm:text-base">
+              Cadastre as figurinhas que você ainda precisa. Outros colecionadores verão seus pedidos
+              e poderão oferecer trocas com repetidas.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setCreatingEvent(true)}
+            className="flex w-full shrink-0 cursor-pointer items-center justify-center gap-2 rounded-pill bg-verde-escuro-500 px-5 py-2.5 text-sm font-bold text-white shadow-md shadow-verde-escuro-500/20 transition-colors hover:bg-verde-escuro-400 sm:w-auto sm:px-6 sm:py-3"
           >
-            Seus pedidos
-          </h2>
-          <p className="mt-2 text-sm leading-relaxed text-verde-escuro-400 sm:text-base">
-            Cadastre as figurinhas que você ainda precisa. Outros colecionadores verão seus pedidos
-            e poderão oferecer trocas com repetidas.
-          </p>
+            <ArrowLeftRight size={16} aria-hidden />
+            Criar evento de troca
+          </button>
         </div>
 
-        <div className="mt-4 flex flex-col gap-2.5 sm:mt-5 sm:flex-row sm:items-center sm:gap-3 2xl:mt-6">
-          <div className="relative flex-1">
+        {wishes.length > 0 ? (
+          <div className="relative mt-4 sm:mt-5 2xl:mt-6">
             <Search
               size={18}
               className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-verde-escuro-300"
@@ -124,21 +153,14 @@ export function SolicitarView({ onTradeActivity }: SolicitarViewProps) {
             />
             <input
               type="search"
-              placeholder="Buscar nos seus pedidos…"
+              placeholder="Filtrar seus pedidos…"
               value={wishSearch}
               onChange={(e) => setWishSearch(e.target.value)}
-              className="w-full rounded-pill border border-verde-200 bg-surface py-2.5 pl-10 pr-4 text-sm text-verde-escuro-capa outline-none transition-colors focus:border-verde-500 sm:py-3 sm:pl-11"
+              aria-label="Filtrar seus pedidos"
+              className="w-full rounded-pill border border-verde-200 bg-surface py-2.5 pl-10 pr-4 text-sm text-verde-escuro-capa outline-none transition-colors focus:border-verde-500 focus:ring-2 focus:ring-verde-500/20 sm:py-3 sm:pl-11"
             />
           </div>
-          <button
-            type="button"
-            onClick={() => setAdding(true)}
-            className="flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-pill bg-verde-escuro-500 px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-verde-escuro-400 sm:px-6 sm:py-3"
-          >
-            <Plus size={16} aria-hidden />
-            Adicionar pedido
-          </button>
-        </div>
+        ) : null}
 
         <div className="mt-4 max-h-[min(42vh,400px)] overflow-y-auto pr-1 [scrollbar-width:thin] sm:mt-5 lg:max-h-[min(46vh,460px)] 2xl:mt-6 2xl:max-h-[520px]">
           {loadingWishes ? (
@@ -146,7 +168,7 @@ export function SolicitarView({ onTradeActivity }: SolicitarViewProps) {
               <Loader2 size={28} className="animate-spin text-verde-300" />
             </div>
           ) : filteredWishes.length === 0 ? (
-            <EmptyState message="Nenhum pedido criado ainda. Clique em Adicionar pedido para buscar figurinhas." />
+            <EmptyState message={emptyListMessage} />
           ) : (
             <div className="grid gap-3 sm:grid-cols-2 2xl:gap-4">
               <AnimatePresence>
@@ -172,7 +194,6 @@ export function SolicitarView({ onTradeActivity }: SolicitarViewProps) {
         </div>
       </section>
 
-      {/* Explorar — Figma 381:303 */}
       <section aria-labelledby="explorar-heading">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
           <div className="max-w-2xl">
@@ -189,7 +210,7 @@ export function SolicitarView({ onTradeActivity }: SolicitarViewProps) {
           </div>
           <button
             type="button"
-            onClick={loadExplore}
+            onClick={() => void handleRefreshExplore()}
             disabled={loadingExplore}
             className="flex shrink-0 cursor-pointer items-center gap-2 self-start rounded-pill border border-verde-200 bg-surface px-4 py-2 text-sm font-semibold text-verde-escuro-500 transition-colors hover:bg-verde-100 disabled:opacity-60 sm:px-5 sm:py-2.5"
           >
@@ -227,27 +248,35 @@ export function SolicitarView({ onTradeActivity }: SolicitarViewProps) {
       </section>
 
       <AnimatePresence>
-        {adding && (
-          <AddWishModal
-            onClose={() => setAdding(false)}
+        {creatingEvent ? (
+          <CreateTradeEventModal
+            onClose={() => setCreatingEvent(false)}
             onSuccess={() => {
               loadWishes();
-              showToast("Pedido criado! Outros colecionadores já podem ver.");
+              loadExplore();
+              onTradeActivity?.();
+              showToast({
+                message: "Evento de troca publicado! Outros colecionadores já podem ver.",
+                variant: "success",
+              });
             }}
           />
-        )}
-        {fulfill && (
+        ) : null}
+        {fulfill ? (
           <FulfillWishModal
             wish={fulfill}
             myAvailable={myAvailable}
             onClose={() => setFulfill(null)}
             onSuccess={() => {
-              showToast("Oferta enviada! Aguardando resposta.");
+              showToast({
+                message: "Oferta enviada! Aguardando resposta do colecionador.",
+                variant: "success",
+              });
               setFulfill(null);
               onTradeActivity?.();
             }}
           />
-        )}
+        ) : null}
       </AnimatePresence>
     </div>
   );

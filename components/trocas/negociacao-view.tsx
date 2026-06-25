@@ -5,6 +5,7 @@ import { AnimatePresence } from "framer-motion";
 import { Loader2 } from "lucide-react";
 import { EmptyState } from "./shared";
 import { NegotiationSubTabs, TradeNegotiationCard } from "./trade-negotiation-card";
+import { parseTradeApiError, useTradeToast } from "./trade-toast";
 import type { Trade } from "./types";
 
 interface NegociacaoViewProps {
@@ -12,6 +13,7 @@ interface NegociacaoViewProps {
 }
 
 export function NegociacaoView({ onTradeActivity }: NegociacaoViewProps) {
+  const { showToast } = useTradeToast();
   const [sent, setSent] = useState<Trade[]>([]);
   const [received, setReceived] = useState<Trade[]>([]);
   const [loading, setLoading] = useState(true);
@@ -26,26 +28,61 @@ export function NegociacaoView({ onTradeActivity }: NegociacaoViewProps) {
     setSent(Array.isArray(s) ? s : []);
     setReceived(Array.isArray(r) ? r : []);
     setLoading(false);
-    onTradeActivity?.();
-  }, [onTradeActivity]);
+  }, []);
 
   useEffect(() => {
     load();
   }, [load]);
 
   async function accept(id: number) {
-    await fetch(`/api/trades/${id}?action=accept`, { method: "POST" });
-    load();
+    const res = await fetch(`/api/trades/${id}?action=accept`, { method: "POST" });
+    if (!res.ok) {
+      showToast({
+        message: await parseTradeApiError(res, "Não foi possível aceitar a troca."),
+        variant: "error",
+      });
+      return;
+    }
+    showToast({
+      message: "Troca aceita! As figurinhas foram atualizadas no seu álbum.",
+      variant: "success",
+    });
+    await load();
+    onTradeActivity?.();
   }
 
   async function reject(id: number) {
-    await fetch(`/api/trades/${id}?action=reject`, { method: "POST" });
-    load();
+    const res = await fetch(`/api/trades/${id}?action=reject`, { method: "POST" });
+    if (!res.ok) {
+      showToast({
+        message: await parseTradeApiError(res, "Não foi possível recusar a oferta."),
+        variant: "error",
+      });
+      return;
+    }
+    showToast({
+      message: "Oferta recusada.",
+      variant: "info",
+    });
+    await load();
+    onTradeActivity?.();
   }
 
   async function cancel(id: number) {
-    await fetch(`/api/trades/${id}`, { method: "DELETE" });
-    load();
+    const res = await fetch(`/api/trades/${id}`, { method: "DELETE" });
+    if (!res.ok) {
+      showToast({
+        message: await parseTradeApiError(res, "Não foi possível cancelar a solicitação."),
+        variant: "error",
+      });
+      return;
+    }
+    showToast({
+      message: "Solicitação de troca cancelada.",
+      variant: "info",
+    });
+    await load();
+    onTradeActivity?.();
   }
 
   const activeTrades = subTab === "recebidas" ? received : sent;

@@ -1,23 +1,24 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import Image from "next/image";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import {
   ArrowLeftRight,
-  BookmarkPlus,
   CheckCircle2,
   Loader2,
   PackageOpen,
   Send,
-  Sparkles,
   User,
   XCircle,
 } from "lucide-react";
-import { rarityColor } from "@/lib/rarity";
 import { cn } from "@/lib/utils";
 import { ProfileAvatarImage } from "@/components/profile/profile-avatar-image";
+import { StickerAutocomplete } from "./sticker-autocomplete";
+import { StickerThumb } from "./sticker-thumb";
+import { parseTradeApiError, useTradeToast } from "./trade-toast";
 import type { Profile, Sticker, Trade, TradeableEntry, Wish } from "./types";
+
+export { StickerThumb } from "./sticker-thumb";
 
 export const STATUS_META: Record<string, { label: string; bg: string; text: string }> = {
   pending: { label: "Aguardando", bg: "bg-verde-100", text: "text-verde-escuro-500" },
@@ -71,62 +72,6 @@ export function Avatar({
   );
 }
 
-export function StickerThumb({
-  sticker,
-  width = 104,
-  height = 149,
-  selected = false,
-  badge,
-  className,
-}: {
-  sticker: Sticker | null;
-  width?: number;
-  height?: number;
-  selected?: boolean;
-  badge?: string | number;
-  className?: string;
-}) {
-  if (!sticker) {
-    return (
-      <div
-        className={`shrink-0 rounded-block bg-verde-100 ${className ?? ""}`}
-        style={{ width, height }}
-      />
-    );
-  }
-  const borderColor = rarityColor(sticker.rarities?.slug, sticker.rarities?.color_hex);
-
-  return (
-    <div
-      className={`relative shrink-0 overflow-hidden rounded-block border-[3px] transition-all duration-200 sm:border-4 2xl:border-[5px] ${className ?? ""}`}
-      style={{
-        width,
-        height,
-        borderColor: selected ? "var(--color-verde-escuro-500)" : borderColor,
-        boxShadow: selected ? "0 0 0 3px rgba(13, 102, 50, 0.25)" : undefined,
-      }}
-    >
-      <Image
-        src={sticker.image_url}
-        alt={sticker.name}
-        fill
-        className="object-cover"
-        sizes={`${width}px`}
-      />
-      {selected && (
-        <div className="absolute inset-0 flex items-center justify-center bg-verde-escuro-500/25">
-          <CheckCircle2 size={width * 0.28} className="text-white drop-shadow" />
-        </div>
-      )}
-      {badge !== undefined && (
-        <div className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-verde-escuro-500 px-1 text-[9px] font-black text-white shadow">
-          {badge}×
-        </div>
-      )}
-    </div>
-  );
-}
-
 export function EmptyState({
   message,
   icon: Icon = PackageOpen,
@@ -139,21 +84,6 @@ export function EmptyState({
       <Icon size={32} className="text-verde-200 sm:size-9 2xl:size-[36px]" aria-hidden />
       <p className="max-w-sm text-sm text-verde-escuro-300">{message}</p>
     </div>
-  );
-}
-
-export function Toast({ message }: { message: string }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: -8 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0 }}
-      className="flex items-center gap-2 rounded-pill bg-verde-escuro-500 px-5 py-3 text-sm font-semibold text-white shadow-lg"
-      role="status"
-    >
-      <Sparkles size={16} aria-hidden />
-      {message}
-    </motion.div>
   );
 }
 
@@ -304,31 +234,17 @@ export function TradeCard({
   );
 }
 
-export function AddWishModal({
+export function CreateTradeEventModal({
   onClose,
   onSuccess,
 }: {
   onClose: () => void;
   onSuccess: () => void;
 }) {
-  const [stickers, setStickers] = useState<Sticker[]>([]);
-  const [selected, setSelected] = useState<number | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { showToast } = useTradeToast();
+  const [selected, setSelected] = useState<Sticker | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-  const [search, setSearch] = useState("");
-
-  useEffect(() => {
-    fetch("/api/admin/figurinhas?active=true")
-      .then((r) => r.json())
-      .then((d) => setStickers(Array.isArray(d) ? d : []))
-      .catch(() => setStickers([]))
-      .finally(() => setLoading(false));
-  }, []);
-
-  const filtered = stickers.filter((s) =>
-    s.name.toLowerCase().includes(search.toLowerCase()),
-  );
 
   async function save() {
     if (!selected) return;
@@ -338,11 +254,12 @@ export function AddWishModal({
       const res = await fetch("/api/trades/wishes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sticker_id: selected }),
+        body: JSON.stringify({ sticker_id: selected.id }),
       });
-      const d = await res.json();
       if (!res.ok) {
-        setError(d.error ?? "Erro ao criar pedido");
+        const message = await parseTradeApiError(res, "Erro ao criar evento de troca");
+        setError(message);
+        showToast({ message, variant: "error" });
         return;
       }
       onSuccess();
@@ -354,68 +271,60 @@ export function AddWishModal({
 
   return (
     <Modal onClose={onClose}>
-      <div className="flex items-center gap-2.5 border-b border-verde-100 px-4 py-3 sm:gap-3 sm:px-5 sm:py-4">
-        <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-verde-100 text-verde-escuro-500 sm:h-9 sm:w-9">
-          <BookmarkPlus size={16} className="sm:size-[18px]" />
-        </div>
-        <div>
-          <p className="text-sm font-bold text-verde-escuro-capa">Nova busca</p>
-          <p className="text-xs text-verde-escuro-300">Qual figurinha você precisa?</p>
+      <div className="relative shrink-0 overflow-hidden border-b border-verde-100 px-4 py-4 sm:px-5 sm:py-5">
+        <div
+          className="pointer-events-none absolute -right-6 -top-8 size-32 rounded-full bg-verde-300/25 blur-2xl"
+          aria-hidden
+        />
+        <div className="relative flex items-start gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-verde-escuro-500 text-white shadow-md shadow-verde-escuro-500/25 sm:h-11 sm:w-11">
+            <ArrowLeftRight size={18} aria-hidden />
+          </div>
+          <div className="min-w-0 pt-0.5">
+            <p className="font-display text-base font-bold text-verde-escuro-capa sm:text-lg">
+              Criar evento de troca
+            </p>
+            <p className="mt-1 text-sm leading-relaxed text-verde-escuro-400">
+              Busque a figurinha que falta no seu álbum. Outros colecionadores verão seu pedido em
+              Explorar.
+            </p>
+          </div>
         </div>
       </div>
 
-      <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-3 sm:space-y-4 sm:px-5 sm:py-4">
-        <input
-          placeholder="Buscar figurinha…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full rounded-pill border border-verde-200 bg-verde-100/30 px-4 py-2.5 text-sm outline-none transition-colors focus:border-verde-500 focus:bg-surface"
-        />
-        {loading ? (
-          <div className="flex h-32 items-center justify-center">
-            <Loader2 size={24} className="animate-spin text-verde-300" />
-          </div>
-        ) : (
-          <div className="grid max-h-40 grid-cols-4 gap-1.5 overflow-y-auto pr-1 sm:max-h-48 sm:gap-2">
-            {filtered.map((s) => (
-              <button
-                key={s.id}
-                type="button"
-                onClick={() => setSelected(s.id)}
-                className={`flex flex-col items-center gap-1 rounded-xl p-1.5 transition-all ${
-                  selected === s.id
-                    ? "bg-verde-100 ring-2 ring-verde-500/40"
-                    : "hover:bg-verde-100/50"
-                }`}
-              >
-                <StickerThumb
-                  sticker={s}
-                  width={52}
-                  height={74}
-                  selected={selected === s.id}
-                />
-                <p className="line-clamp-2 text-center text-[9px] font-medium leading-tight text-verde-escuro-capa">
-                  {s.name}
-                </p>
-              </button>
-            ))}
-            {filtered.length === 0 && (
-              <p className="col-span-4 py-6 text-center text-sm text-verde-escuro-300">
-                Nenhuma figurinha encontrada.
-              </p>
-            )}
-          </div>
-        )}
-        {error && (
-          <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>
-        )}
+      <div className="min-h-0 flex-1 space-y-4 overflow-visible px-4 py-4 sm:px-5 sm:py-5">
+        <div className="space-y-2">
+          <label
+            htmlFor="trade-event-sticker-search"
+            className="text-xs font-semibold uppercase tracking-wider text-verde-escuro-500"
+          >
+            Qual figurinha você precisa?
+          </label>
+          <StickerAutocomplete
+            inputId="trade-event-sticker-search"
+            value={selected}
+            onChange={setSelected}
+            placeholder="Digite o nome da figurinha…"
+            disabled={saving}
+          />
+          <p className="text-xs leading-relaxed text-verde-escuro-300">
+            As sugestões aparecem enquanto você digita. Selecione uma figurinha para publicar o
+            pedido.
+          </p>
+        </div>
+        {error ? (
+          <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-600" role="alert">
+            {error}
+          </p>
+        ) : null}
       </div>
 
       <div className="flex shrink-0 gap-2 border-t border-verde-100 px-4 py-3 sm:gap-3 sm:px-5 sm:py-4">
         <button
           type="button"
           onClick={onClose}
-          className="flex-1 rounded-pill border border-verde-200 py-2.5 text-sm font-medium text-verde-escuro-400 transition-colors hover:bg-verde-100/50"
+          disabled={saving}
+          className="flex-1 cursor-pointer rounded-pill border border-verde-200 py-2.5 text-sm font-medium text-verde-escuro-400 transition-colors hover:bg-verde-100/50 disabled:opacity-60"
         >
           Cancelar
         </button>
@@ -423,15 +332,22 @@ export function AddWishModal({
           type="button"
           disabled={!selected || saving}
           onClick={save}
-          className="flex flex-1 items-center justify-center gap-2 rounded-pill bg-verde-escuro-500 py-2.5 text-sm font-bold text-white transition-colors hover:bg-verde-escuro-400 disabled:opacity-50"
+          className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-pill bg-verde-escuro-500 py-2.5 text-sm font-bold text-white shadow-sm shadow-verde-escuro-500/20 transition-colors hover:bg-verde-escuro-400 disabled:opacity-50"
         >
-          {saving ? <Loader2 size={14} className="animate-spin" /> : <BookmarkPlus size={14} />}
-          Criar pedido
+          {saving ? (
+            <Loader2 size={14} className="animate-spin" aria-hidden />
+          ) : (
+            <ArrowLeftRight size={14} aria-hidden />
+          )}
+          Publicar pedido
         </button>
       </div>
     </Modal>
   );
 }
+
+/** @deprecated Use CreateTradeEventModal */
+export const AddWishModal = CreateTradeEventModal;
 
 export function FulfillWishModal({
   wish,
@@ -444,6 +360,7 @@ export function FulfillWishModal({
   onClose: () => void;
   onSuccess: () => void;
 }) {
+  const { showToast } = useTradeToast();
   const [selected, setSelected] = useState<number | null>(null);
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
@@ -471,9 +388,10 @@ export function FulfillWishModal({
           message: message || undefined,
         }),
       });
-      const d = await res.json();
       if (!res.ok) {
-        setError(d.error ?? "Erro ao enviar");
+        const errMessage = await parseTradeApiError(res, "Erro ao enviar oferta");
+        setError(errMessage);
+        showToast({ message: errMessage, variant: "error" });
         return;
       }
       onSuccess();
