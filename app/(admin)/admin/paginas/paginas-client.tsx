@@ -12,8 +12,10 @@ import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 import { RichTextEditor } from "@/components/admin/rich-text-editor";
 import {
   TEMPLATE_MAP, type TemplateId,
-  parseLayoutData, type Title3Data,
-  isProfileTemplate, hasRichTextContent,
+  parseLayoutData, type Title3Data, type SocialPageData, type AlbumSocialLink,
+  DEFAULT_ALBUM_SOCIAL_LINKS,
+  isProfileTemplate, isSocialTemplate, isSlotlessTemplate, hasRichTextContent,
+  parseSocialPageData,
 } from "@/lib/album-templates";
 
 interface Category { id: number; name: string }
@@ -74,9 +76,10 @@ function SlotConfigModal({
 
   const template = TEMPLATE_MAP[page.layout_template as TemplateId];
   const isProfile = isProfileTemplate(page.layout_template);
+  const isSlotless = isSlotlessTemplate(page.layout_template);
 
   const loadData = useCallback(async () => {
-    if (isProfile) {
+    if (isSlotless) {
       setLoading(false);
       return;
     }
@@ -98,7 +101,7 @@ function SlotConfigModal({
     } finally {
       setLoading(false);
     }
-  }, [page.id, isProfile]);
+  }, [page.id, isSlotless]);
 
   useEffect(() => { loadData(); }, [loadData]);
 
@@ -108,7 +111,7 @@ function SlotConfigModal({
   }
 
   async function handleSave() {
-    if (isProfile || slots.length === 0) {
+    if (isSlotless || slots.length === 0) {
       onClose(false);
       return;
     }
@@ -160,14 +163,16 @@ function SlotConfigModal({
 
         {loading ? (
           <div className="flex h-64 items-center justify-center"><Loader2 size={28} className="animate-spin text-gb-green/50" /></div>
-        ) : isProfile ? (
+        ) : isSlotless ? (
           <div className="p-6">
             <p className="text-sm text-gray-600">
-              Esta página usa o template <strong>Minha Figurinha</strong>. Não há slots de catálogo —
-              cada usuário vê a figurinha personalizada criada com a foto em <strong>/figurinha</strong>.
+              Esta página usa o template <strong>{isSocialTemplate(page.layout_template) ? "Redes Sociais" : "Minha Figurinha"}</strong>.
+              {isSocialTemplate(page.layout_template)
+                ? " Não há slots de catálogo — configure imagem, texto e links no editor de conteúdo."
+                : " Não há slots de catálogo — cada usuário vê a figurinha personalizada criada em /figurinha."}
             </p>
             <p className="mt-3 text-sm text-gray-500">
-              Use o botão de lápis para editar apenas o título da página.
+              Use o botão de lápis para editar o conteúdo da página.
             </p>
           </div>
         ) : (
@@ -247,7 +252,7 @@ function SlotConfigModal({
           )}
           <div className="flex gap-3">
             <button onClick={() => onClose(saved)} className="rounded-xl border border-border px-5 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50">Fechar</button>
-            {!isProfile && (
+            {!isSlotless && (
               <button onClick={handleSave} disabled={saving} className="flex items-center gap-2 rounded-xl bg-gb-green px-6 py-2.5 text-sm font-semibold text-white hover:bg-gb-green-dark disabled:opacity-60">
                 {saving ? <Loader2 size={15} className="animate-spin" /> : <Save size={15} />}
                 {saving ? "Salvando…" : "Salvar"}
@@ -497,6 +502,171 @@ function InfoPageEditorModal({
 }
 
 // ─── Layout content editor for sticker pages ─────────────────────────────────
+async function uploadPageImage(file: File): Promise<string> {
+  const fd = new FormData();
+  fd.append("file", file);
+  const res = await fetch("/api/admin/upload/page-image", { method: "POST", body: fd });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error ?? "Erro ao enviar imagem");
+  return data.url as string;
+}
+
+function SocialLinksEditor({
+  links,
+  onChange,
+  onError,
+}: {
+  links: AlbumSocialLink[];
+  onChange: (links: AlbumSocialLink[]) => void;
+  onError: (message: string) => void;
+}) {
+  const [uploadingIndex, setUploadingIndex] = useState<number | null>(null);
+  const fileRefs = useRef<Map<number, HTMLInputElement>>(new Map());
+
+  function updateLink(index: number, patch: Partial<AlbumSocialLink>) {
+    onChange(links.map((link, i) => (i === index ? { ...link, ...patch } : link)));
+  }
+
+  function addLink() {
+    onChange([
+      ...links,
+      { label: "", href: "", icon_url: "", enabled: true },
+    ]);
+  }
+
+  function removeLink(index: number) {
+    onChange(links.filter((_, i) => i !== index));
+  }
+
+  async function handleIconUpload(index: number, file: File) {
+    setUploadingIndex(index);
+    onError("");
+    try {
+      const url = await uploadPageImage(file);
+      updateLink(index, { icon_url: url });
+    } catch (err) {
+      onError(err instanceof Error ? err.message : "Erro ao enviar ícone");
+    } finally {
+      setUploadingIndex(null);
+    }
+  }
+
+  return (
+    <div className="space-y-3">
+      {links.map((link, index) => (
+        <div key={index} className="rounded-xl border border-border bg-surface p-3">
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <label className="flex items-center gap-2 text-sm font-medium text-gb-ink">
+              <input
+                type="checkbox"
+                checked={link.enabled !== false}
+                onChange={(e) => updateLink(index, { enabled: e.target.checked })}
+                className="rounded border-border text-gb-green focus:ring-gb-green"
+              />
+              Exibir
+            </label>
+            {links.length > 1 ? (
+              <button
+                type="button"
+                onClick={() => removeLink(index)}
+                className="rounded-lg p-1 text-gray-400 hover:bg-red-50 hover:text-red-500"
+                title="Remover link"
+              >
+                <Trash2 size={14} />
+              </button>
+            ) : null}
+          </div>
+
+          <div className="mb-2">
+            <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-gray-500">
+              Ícone
+            </label>
+            <div className="flex items-center gap-3">
+              <div className="relative flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-gray-50">
+                {link.icon_url ? (
+                  <>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={link.icon_url} alt="" className="size-full object-contain" />
+                    <button
+                      type="button"
+                      onClick={() => updateLink(index, { icon_url: "" })}
+                      className="absolute -right-1 -top-1 flex size-5 items-center justify-center rounded-full bg-black/60 text-white hover:bg-red-500"
+                      title="Remover ícone"
+                    >
+                      <X size={10} />
+                    </button>
+                  </>
+                ) : uploadingIndex === index ? (
+                  <Loader2 size={18} className="animate-spin text-gb-green/50" />
+                ) : (
+                  <ImageIcon size={18} className="text-gray-400" />
+                )}
+              </div>
+              <div className="min-w-0 flex-1 space-y-1.5">
+                <button
+                  type="button"
+                  onClick={() => fileRefs.current.get(index)?.click()}
+                  disabled={uploadingIndex === index}
+                  className="flex items-center gap-1.5 text-sm font-medium text-gb-green hover:text-gb-green-dark disabled:opacity-50"
+                >
+                  <Upload size={14} />
+                  {uploadingIndex === index ? "Enviando…" : "Enviar imagem do ícone"}
+                </button>
+                <input
+                  ref={(el) => {
+                    if (el) fileRefs.current.set(index, el);
+                    else fileRefs.current.delete(index);
+                  }}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml"
+                  className="sr-only"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) void handleIconUpload(index, f);
+                    e.target.value = "";
+                  }}
+                />
+                <input
+                  type="url"
+                  value={link.icon_url ?? ""}
+                  onChange={(e) => updateLink(index, { icon_url: e.target.value })}
+                  placeholder="Ou cole a URL do ícone…"
+                  className="w-full rounded-lg border border-border bg-white px-2.5 py-1.5 text-xs outline-none focus:border-gb-green"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="grid gap-2 sm:grid-cols-2">
+            <input
+              type="text"
+              value={link.label}
+              onChange={(e) => updateLink(index, { label: e.target.value })}
+              placeholder="Nome (acessibilidade)"
+              className="rounded-lg border border-border bg-white px-2.5 py-2 text-sm outline-none focus:border-gb-green"
+            />
+            <input
+              type="url"
+              value={link.href}
+              onChange={(e) => updateLink(index, { href: e.target.value })}
+              placeholder="https://…"
+              className="rounded-lg border border-border bg-white px-2.5 py-2 text-sm outline-none focus:border-gb-green"
+            />
+          </div>
+        </div>
+      ))}
+      <button
+        type="button"
+        onClick={addLink}
+        className="flex items-center gap-1.5 text-sm font-medium text-gb-green hover:text-gb-green-dark"
+      >
+        <Plus size={14} />
+        Adicionar rede social
+      </button>
+    </div>
+  );
+}
+
 function LayoutContentModal({
   page,
   onClose,
@@ -506,13 +676,28 @@ function LayoutContentModal({
 }) {
   const isTitle3      = page.layout_template === "title3";
   const isGrid6       = page.layout_template === "grid6";
+  const isSocial      = isSocialTemplate(page.layout_template);
   const hasRichText   = hasRichTextContent(page.layout_template);
   const isProfile     = isProfileTemplate(page.layout_template);
   const initial       = parseLayoutData(page.content) as Title3Data;
+  const initialSocial = parseSocialPageData(page.content);
 
-  const [title,    setTitle]    = useState(initial.title    ?? page.title ?? "");
-  const [text,     setText]     = useState(hasRichText ? (initial.text ?? "") : "");
-  const [imageUrl, setImageUrl] = useState(isTitle3 ? (initial.image_url ?? page.background_url ?? "") : "");
+  const [title,    setTitle]    = useState(
+    isSocial ? (initialSocial.title ?? page.title ?? "") : (initial.title ?? page.title ?? ""),
+  );
+  const [text,     setText]     = useState(
+    hasRichText ? (isSocial ? (initialSocial.text ?? "") : (initial.text ?? "")) : "",
+  );
+  const [imageUrl, setImageUrl] = useState(
+    isTitle3
+      ? (initial.image_url ?? page.background_url ?? "")
+      : isSocial
+        ? (initialSocial.image_url ?? page.background_url ?? "")
+        : "",
+  );
+  const [socialLinks, setSocialLinks] = useState<AlbumSocialLink[]>(
+    initialSocial.social_links ?? DEFAULT_ALBUM_SOCIAL_LINKS,
+  );
   const [uploading, setUploading] = useState(false);
   const [saving,   setSaving]   = useState(false);
   const [saved,    setSaved]    = useState(false);
@@ -533,9 +718,19 @@ function LayoutContentModal({
   async function handleSave() {
     setSaving(true); setError("");
     try {
-      const layoutData: Title3Data & { title?: string } = { title: title || undefined };
-      if (hasRichText && text) layoutData.text = text;
-      if (isTitle3 && imageUrl) layoutData.image_url = imageUrl;
+      let layoutData: Title3Data | SocialPageData = { title: title || undefined };
+
+      if (isSocial) {
+        layoutData = {
+          title: title || undefined,
+          image_url: imageUrl || undefined,
+          text: text || undefined,
+          social_links: socialLinks,
+        };
+      } else {
+        if (hasRichText && text) (layoutData as Title3Data).text = text;
+        if (isTitle3 && imageUrl) (layoutData as Title3Data).image_url = imageUrl;
+      }
 
       const res = await fetch(`/api/admin/paginas/${page.id}`, {
         method:  "PATCH",
@@ -569,9 +764,11 @@ function LayoutContentModal({
                   ? "Título, texto e imagem opcional"
                   : isGrid6
                     ? "Título e texto abaixo das figurinhas"
-                    : isProfile
-                      ? "Título da página (a figurinha vem da foto do usuário)"
-                      : "Título da página"}
+                    : isSocial
+                      ? "Imagem, texto e links das redes sociais"
+                      : isProfile
+                        ? "Título da página (a figurinha vem da foto do usuário)"
+                        : "Título da página"}
               </p>
             </div>
           </div>
@@ -595,8 +792,8 @@ function LayoutContentModal({
             />
           </div>
 
-          {/* Rich text — title3 and grid6 */}
-          {hasRichText && !isTitle3 && (
+          {/* Rich text — grid6 */}
+          {hasRichText && !isTitle3 && !isSocial && (
             <div>
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-gray-500">
                 Texto da Página
@@ -683,6 +880,90 @@ function LayoutContentModal({
                 <p className="mt-1 text-xs text-gray-400">
                   Este texto aparece abaixo do título, antes das figurinhas.
                 </p>
+              </div>
+            </>
+          )}
+
+          {/* Social template — image + text + links */}
+          {isSocial && (
+            <>
+              <div>
+                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-gray-500">
+                  Imagem de Destaque
+                </label>
+                <div className="relative overflow-hidden rounded-xl border-2 border-dashed border-border bg-gray-50 transition-colors hover:border-gb-green/50">
+                  {imageUrl ? (
+                    <div className="relative">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={imageUrl} alt="Imagem" className="h-40 w-full rounded-xl object-cover" />
+                      <button
+                        onClick={() => { setImageUrl(""); setSaved(false); }}
+                        className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/50 text-white hover:bg-red-500"
+                      >
+                        <X size={12} />
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => fileRef.current?.click()}
+                      disabled={uploading}
+                      className="flex w-full flex-col items-center gap-2 py-6 text-center"
+                    >
+                      {uploading ? (
+                        <Loader2 size={24} className="animate-spin text-gb-green/50" />
+                      ) : (
+                        <Upload size={24} className="text-gray-400" />
+                      )}
+                      <span className="text-sm text-gray-500">
+                        {uploading ? "Enviando…" : "Clique para enviar uma imagem"}
+                      </span>
+                      <span className="text-xs text-gray-400">JPG, PNG, WebP — máx. 5 MB</span>
+                    </button>
+                  )}
+                  <input
+                    ref={fileRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    className="sr-only"
+                    onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageUpload(f); e.target.value = ""; }}
+                  />
+                </div>
+                <div className="mt-2 flex items-center gap-2">
+                  <ImageIcon size={13} className="shrink-0 text-gray-400" />
+                  <input
+                    type="url"
+                    value={imageUrl}
+                    onChange={(e) => { setImageUrl(e.target.value); setSaved(false); }}
+                    placeholder="Ou cole uma URL de imagem…"
+                    className="min-w-0 flex-1 rounded-lg border border-border bg-surface px-2.5 py-1.5 text-xs outline-none focus:border-gb-green"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-gray-500">
+                  Texto da Página
+                </label>
+                <RichTextEditor
+                  value={text}
+                  onChange={(html) => { setText(html); setSaved(false); }}
+                  minHeight={160}
+                />
+                <p className="mt-1 text-xs text-gray-400">
+                  Texto centralizado abaixo da imagem no álbum.
+                </p>
+              </div>
+
+              <div>
+                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-gray-500">
+                  Redes Sociais
+                </label>
+                <SocialLinksEditor
+                  links={socialLinks}
+                  onChange={(links) => { setSocialLinks(links); setSaved(false); }}
+                  onError={setError}
+                />
               </div>
             </>
           )}
@@ -1012,6 +1293,8 @@ export function PaginasClient({ initialCategories, initialPages }: PaginasClient
               {catPages.map((p) => {
                 const isInfo    = p.page_type === "info";
                 const isProfile = isProfileTemplate(p.layout_template);
+                const isSocial  = isSocialTemplate(p.layout_template);
+                const isSlotless = isSlotlessTemplate(p.layout_template);
                 const tpl       = TEMPLATE_MAP[p.layout_template as TemplateId];
                 return (
                   <div key={p.id} className="flex items-center gap-3 px-5 py-4">
@@ -1023,6 +1306,15 @@ export function PaginasClient({ initialCategories, initialPages }: PaginasClient
                     ) : isProfile ? (
                       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-100">
                         <div className="h-7 w-5 rounded-[2px] bg-gb-green/40" />
+                      </div>
+                    ) : isSocial ? (
+                      <div className="flex h-9 w-9 shrink-0 flex-col items-center justify-center gap-0.5 rounded-lg bg-emerald-100 p-1">
+                        <div className="h-3.5 w-5 rounded-[40%] bg-gb-green/35" />
+                        <div className="flex gap-px">
+                          {[0, 1, 2].map((i) => (
+                            <div key={i} className="size-1 rounded-full bg-gb-green/40" />
+                          ))}
+                        </div>
                       </div>
                     ) : p.layout_template === "tri3" ? (
                       <div className="flex h-9 w-9 shrink-0 items-center gap-px rounded-lg bg-gb-green/5 p-1">
@@ -1058,6 +1350,8 @@ export function PaginasClient({ initialCategories, initialPages }: PaginasClient
                           </span>
                         ) : isProfile ? (
                           <span className="text-amber-700">Minha Figurinha · foto do usuário</span>
+                        ) : isSocial ? (
+                          <span className="text-emerald-700">Redes Sociais · imagem + texto + links</span>
                         ) : (
                           `${p.layout_template} · ${p.slot_count} slots`
                         )}
@@ -1089,7 +1383,7 @@ export function PaginasClient({ initialCategories, initialPages }: PaginasClient
                         >
                           <PenLine size={15} />
                         </button>
-                        {!isProfile && (
+                        {!isSlotless && (
                           <button
                             onClick={() => setConfigPage(p)}
                             title="Configurar slots"

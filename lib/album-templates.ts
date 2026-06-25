@@ -7,6 +7,7 @@
  *   tri3    → 3 sticker slots in a V layout (1 left + 2 stacked right), larger cards
  *   3x3     → 9 sticker slots in a 3 × 3 grid
  *   profile → single centered slot filled with the user's photo sticker (profiles.sticker_url)
+ *   social  → imagem orgânica + texto + ícones de redes sociais (0 slots)
  *
  * Layout content is stored as JSON in the `content` DB column for sticker pages.
  * Info pages continue to use `content` as raw HTML.
@@ -14,7 +15,50 @@
 
 // ─── Template registry ────────────────────────────────────────────────────────
 
-export type TemplateId = "title3" | "grid6" | "tri3" | "3x3" | "profile";
+export type TemplateId = "title3" | "grid6" | "tri3" | "3x3" | "profile" | "social";
+
+export type AlbumSocialPlatform =
+  | "instagram"
+  | "linkedin"
+  | "tiktok"
+  | "youtube"
+  | "facebook";
+
+export interface AlbumSocialLink {
+  label: string;
+  href: string;
+  icon_url?: string;
+  enabled?: boolean;
+  /** Legado — não usado na renderização */
+  platform?: AlbumSocialPlatform;
+}
+
+export const DEFAULT_ALBUM_SOCIAL_LINKS: AlbumSocialLink[] = [
+  {
+    platform: "instagram",
+    label: "Instagram",
+    href: "https://www.instagram.com/fundacaogrupoboticario/",
+    enabled: true,
+  },
+  {
+    platform: "tiktok",
+    label: "TikTok",
+    href: "https://www.tiktok.com/@fundacaogrupoboticario",
+    enabled: true,
+  },
+  {
+    platform: "linkedin",
+    label: "LinkedIn",
+    href: "https://www.linkedin.com/company/fundacaogrupoboticario/",
+    enabled: true,
+  },
+  {
+    platform: "youtube",
+    label: "YouTube",
+    href: "https://www.youtube.com/user/fundacaoboticario",
+    enabled: true,
+  },
+];
 
 export interface AlbumTemplate {
   id: TemplateId;
@@ -30,6 +74,7 @@ export const ALBUM_TEMPLATES: AlbumTemplate[] = [
   { id: "tri3",    label: "3 em V",          cols: 2, rows: 2, total: 3 },
   { id: "3x3",     label: "3 × 3",           cols: 3, rows: 3, total: 9 },
   { id: "profile", label: "Minha Figurinha", cols: 1, rows: 1, total: 0 },
+  { id: "social",  label: "Redes Sociais",   cols: 1, rows: 1, total: 0 },
 ];
 
 export const TEMPLATE_MAP = Object.fromEntries(
@@ -89,17 +134,46 @@ export interface ProfileData {
   title?: string;
 }
 
+/** Fields for the "social" template (Figma 366:2500) */
+export interface SocialPageData {
+  title?: string;
+  image_url?: string;
+  text?: string;
+  social_links?: AlbumSocialLink[];
+}
+
 /** Union of all possible layout data shapes */
-export type LayoutData = Title3Data | Grid6Data | Grid3x3Data | ProfileData;
+export type LayoutData = Title3Data | Grid6Data | Grid3x3Data | ProfileData | SocialPageData;
 
 /** Templates with editable title + rich text in the content modal */
 export function hasRichTextContent(templateId: string): boolean {
-  return templateId === "title3" || templateId === "grid6";
+  return templateId === "title3" || templateId === "grid6" || templateId === "social";
 }
 
 /** Templates that do not use catalog sticker slots */
 export function isProfileTemplate(templateId: string): boolean {
   return templateId === "profile";
+}
+
+export function isSocialTemplate(templateId: string): boolean {
+  return templateId === "social";
+}
+
+export function isSlotlessTemplate(templateId: string): boolean {
+  return isProfileTemplate(templateId) || isSocialTemplate(templateId);
+}
+
+/** Parse social page JSON with defaults for links. */
+export function parseSocialPageData(raw: string | null | undefined): SocialPageData {
+  const parsed = parseLayoutData(raw) as SocialPageData;
+  const links =
+    parsed.social_links?.length && Array.isArray(parsed.social_links)
+      ? parsed.social_links
+      : DEFAULT_ALBUM_SOCIAL_LINKS;
+  return {
+    ...parsed,
+    social_links: links,
+  };
 }
 
 /**

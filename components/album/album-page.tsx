@@ -18,6 +18,7 @@ import {
 import { FigurinhaNameTag } from "@/components/sticker/figurinha-name-tag";
 import { dashboardAssets } from "@/lib/dashboard-assets";
 import { cn } from "@/lib/utils";
+import { AlbumSocialPage } from "./album-social-page";
 
 export type PageSide = "left" | "right";
 
@@ -40,7 +41,7 @@ export interface AlbumPageData {
   }>;
 }
 
-interface AlbumPageProps {
+export interface AlbumPageProps {
   page: AlbumPageData;
   side: PageSide;
   pastedSlotIds: Set<number>;
@@ -427,9 +428,73 @@ function Grid3x3Page({ page, side, pastedSlotIds, ownedMap, onPaste, inFlipBook,
   );
 }
 
+function InfoPage({ page, side, inFlipBook }: AlbumPageProps) {
+  const title = page.title;
+  const imageUrl = page.background_url;
+  const html = page.content ?? "";
+
+  return (
+    <PageShell side={side} inFlipBook={inFlipBook}>
+      <div
+        className={cn(
+          "flex flex-1 flex-col",
+          inFlipBook ? "px-4 py-5 sm:px-[8%] sm:py-8" : "px-6 py-8 sm:px-[8%]",
+        )}
+      >
+        <div className="flex flex-1 flex-col items-center justify-center gap-4 sm:gap-5">
+          {imageUrl ? (
+            <div className="relative aspect-[4/3] w-full max-w-[320px] overflow-hidden rounded-card sm:max-w-[380px]">
+              <Image
+                src={imageUrl}
+                alt={title ?? "Imagem da página"}
+                fill
+                className="object-cover"
+                sizes="(max-width: 768px) 80vw, 380px"
+              />
+            </div>
+          ) : null}
+          {title ? (
+            <h2
+              className={cn(
+                "text-center font-display font-bold text-white",
+                inFlipBook ? "text-xl sm:text-2xl" : "text-2xl md:text-3xl",
+              )}
+            >
+              {title}
+            </h2>
+          ) : null}
+          {html ? (
+            <div
+              className={cn(
+                "max-w-[520px] text-center leading-[1.45] text-white **:text-white [&_a]:underline [&_p]:mb-2.5 [&_strong]:font-semibold",
+                inFlipBook ? "text-sm sm:text-base" : "text-base",
+              )}
+              dangerouslySetInnerHTML={{ __html: html }}
+            />
+          ) : null}
+        </div>
+      </div>
+    </PageShell>
+  );
+}
+
+function SocialPage(props: AlbumPageProps) {
+  const decoration =
+    props.side === "left"
+      ? dashboardAssets.album.left
+      : dashboardAssets.album.right;
+  return <AlbumSocialPage {...props} decoration={decoration} />;
+}
+
 export function AlbumPage(props: AlbumPageProps) {
+  if (props.page.page_type === "info") {
+    return <InfoPage {...props} />;
+  }
   if (props.page.layout_template === "profile") {
     return <ProfilePage {...props} />;
+  }
+  if (props.page.layout_template === "social") {
+    return <SocialPage {...props} />;
   }
   if (props.page.layout_template === "title3") {
     return <Title3Page {...props} />;

@@ -23,6 +23,20 @@ function TemplatePreview({ id, selected }: { id: TemplateId; selected: boolean }
     );
   }
 
+  if (id === "social") {
+    return (
+      <div className="flex flex-col items-center justify-center gap-1" style={{ width: 52, height: 52 }}>
+        <div className={`h-7 w-8 rounded-[40%] ${base}`} />
+        <div className={`h-1.5 w-8 rounded-sm ${empty}`} />
+        <div className="flex gap-0.5">
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className={`size-1.5 rounded-full ${base}`} />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   if (id === "title3") {
     return (
       <div className="flex flex-col gap-1" style={{ width: 52, height: 52 }}>
@@ -85,7 +99,7 @@ function TemplatePreview({ id, selected }: { id: TemplateId; selected: boolean }
 
 export function TemplatePicker({ value, onChange }: TemplatePickerProps) {
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-6">
       {ALBUM_TEMPLATES.map((tpl) => {
         const active = value === tpl.id;
         return (
@@ -107,7 +121,9 @@ export function TemplatePicker({ value, onChange }: TemplatePickerProps) {
               <p className="text-[10px] text-gray-400">
                 {tpl.id === "profile"
                   ? "figurinha do usuário"
-                  : `${tpl.total} slot${tpl.total !== 1 ? "s" : ""}`}
+                  : tpl.id === "social"
+                    ? "imagem + texto + redes"
+                    : `${tpl.total} slot${tpl.total !== 1 ? "s" : ""}`}
               </p>
             </div>
           </button>
