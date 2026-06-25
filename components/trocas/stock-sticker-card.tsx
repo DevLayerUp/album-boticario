@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { BookOpen, BookmarkCheck, ArrowLeftRight, Lock, Plus } from "lucide-react";
 import { rarityColor } from "@/lib/rarity";
 import { cn } from "@/lib/utils";
+import { NO_DUPLICATES_TRADE_MESSAGE } from "@/lib/trade-duplicates";
 import { RarityBadge } from "./rarity-badge";
 import type { Sticker } from "./types";
 
@@ -20,6 +21,7 @@ interface StockStickerCardProps {
   index?: number;
   onRequestTrade?: () => void;
   pasteHref?: string | null;
+  tradeBlockedNoDuplicates?: boolean;
 }
 
 function resolveState(quantity: number, isPasted: boolean): StockCardState {
@@ -37,6 +39,7 @@ export function StockStickerCard({
   index = 0,
   onRequestTrade,
   pasteHref = null,
+  tradeBlockedNoDuplicates = false,
 }: StockStickerCardProps) {
   const state = resolveState(quantity, isPasted);
   const slug = sticker.rarities?.slug ?? "common";
@@ -116,10 +119,18 @@ export function StockStickerCard({
         )}
 
         {state === "missing" && !hasOpenWish && !onRequestTrade && (
-          <div className="absolute inset-0 flex items-center justify-center bg-verde-escuro-capa/20">
+          <div
+            className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-verde-escuro-capa/20 px-2"
+            title={tradeBlockedNoDuplicates ? NO_DUPLICATES_TRADE_MESSAGE : undefined}
+          >
             <span className="flex size-9 items-center justify-center rounded-full bg-surface/90 shadow-sm sm:size-10">
               <Lock size={16} className="text-verde-escuro-300" aria-hidden />
             </span>
+            {tradeBlockedNoDuplicates ? (
+              <span className="pointer-events-none text-center text-[9px] font-semibold leading-tight text-verde-escuro-400 sm:text-[10px]">
+                Sem repetidas
+              </span>
+            ) : null}
           </div>
         )}
 
@@ -239,6 +250,14 @@ export function StockStickerCard({
           {cardImage}
           {cardMeta}
         </Link>
+      ) : tradeBlockedNoDuplicates ? (
+        <div
+          className="w-full text-left"
+          title={NO_DUPLICATES_TRADE_MESSAGE}
+        >
+          {cardImage}
+          {cardMeta}
+        </div>
       ) : (
         <>
           {cardImage}

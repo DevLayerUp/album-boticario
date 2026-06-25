@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { userHasDuplicateStickers } from "@/lib/trade-duplicates";
 
 /**
  * GET /api/trades/duplicates
@@ -23,9 +24,10 @@ export async function GET() {
   const rows = data ?? [];
   const duplicateTypes = rows.length;
   const extraCopies = rows.reduce((acc, row) => acc + (row.quantity - 1), 0);
+  const hasDuplicates = await userHasDuplicateStickers(supabase, user.id);
 
   return NextResponse.json({
-    hasDuplicates: duplicateTypes > 0,
+    hasDuplicates,
     duplicateTypes,
     extraCopies,
   });

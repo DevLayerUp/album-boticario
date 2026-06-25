@@ -10,13 +10,20 @@ import {
   FulfillWishModal,
 } from "./shared";
 import { parseTradeApiError, useTradeToast } from "./trade-toast";
+import { NO_DUPLICATES_TRADE_MESSAGE } from "@/lib/trade-duplicates";
 import type { MyWish, Trade, TradeableEntry, Wish } from "./types";
 
 interface SolicitarViewProps {
+  hasDuplicates: boolean;
+  metaLoaded: boolean;
   onTradeActivity?: () => void;
 }
 
-export function SolicitarView({ onTradeActivity }: SolicitarViewProps) {
+export function SolicitarView({
+  hasDuplicates,
+  metaLoaded,
+  onTradeActivity,
+}: SolicitarViewProps) {
   const { showToast } = useTradeToast();
   const [wishes, setWishes] = useState<MyWish[]>([]);
   const [receivedOffers, setReceivedOffers] = useState<Trade[]>([]);
@@ -111,8 +118,10 @@ export function SolicitarView({ onTradeActivity }: SolicitarViewProps) {
   }
 
   function canOffer(wantedId: number) {
-    return myAvailable.some((m) => m.sticker?.id === wantedId);
+    return hasDuplicates && myAvailable.some((m) => m.sticker?.id === wantedId);
   }
+
+  const canCreateEvent = metaLoaded && hasDuplicates;
 
   return (
     <div className="space-y-6 sm:space-y-8 lg:space-y-10 2xl:space-y-14">
@@ -134,14 +143,20 @@ export function SolicitarView({ onTradeActivity }: SolicitarViewProps) {
             </p>
           </div>
 
-          <button
-            type="button"
-            onClick={() => setCreatingEvent(true)}
-            className="flex w-full shrink-0 cursor-pointer items-center justify-center gap-2 rounded-pill bg-verde-escuro-500 px-5 py-2.5 text-sm font-bold text-white shadow-md shadow-verde-escuro-500/20 transition-colors hover:bg-verde-escuro-400 sm:w-auto sm:px-6 sm:py-3"
+          <span
+            className="w-full shrink-0 sm:w-auto"
+            title={!canCreateEvent ? NO_DUPLICATES_TRADE_MESSAGE : undefined}
           >
-            <ArrowLeftRight size={16} aria-hidden />
-            Criar evento de troca
-          </button>
+            <button
+              type="button"
+              onClick={() => canCreateEvent && setCreatingEvent(true)}
+              disabled={!canCreateEvent}
+              className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-pill bg-verde-escuro-500 px-5 py-2.5 text-sm font-bold text-white shadow-md shadow-verde-escuro-500/20 transition-colors hover:bg-verde-escuro-400 disabled:cursor-not-allowed disabled:bg-verde-escuro-300 disabled:shadow-none disabled:hover:bg-verde-escuro-300 sm:px-6 sm:py-3"
+            >
+              <ArrowLeftRight size={16} aria-hidden />
+              Criar evento de troca
+            </button>
+          </span>
         </div>
 
         {wishes.length > 0 ? (
@@ -238,6 +253,8 @@ export function SolicitarView({ onTradeActivity }: SolicitarViewProps) {
                     key={w.id}
                     wish={w}
                     eligible={canOffer(w.sticker.id)}
+                    hasSticker={myAvailable.some((m) => m.sticker?.id === w.sticker!.id)}
+                    noDuplicates={metaLoaded && !hasDuplicates}
                     onOffer={() => setFulfill(w)}
                   />
                 );

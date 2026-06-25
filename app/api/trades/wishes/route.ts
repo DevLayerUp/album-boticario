@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { NO_DUPLICATES_TRADE_MESSAGE, userHasDuplicateStickers } from "@/lib/trade-duplicates";
 
 /**
  * GET /api/trades/wishes
@@ -82,6 +83,11 @@ export async function POST(request: NextRequest) {
   const sticker_id = Number(body.sticker_id);
   if (!sticker_id) {
     return NextResponse.json({ error: "sticker_id é obrigatório" }, { status: 400 });
+  }
+
+  const hasDuplicates = await userHasDuplicateStickers(supabase, user.id);
+  if (!hasDuplicates) {
+    return NextResponse.json({ error: NO_DUPLICATES_TRADE_MESSAGE }, { status: 403 });
   }
 
   const { data, error } = await supabase

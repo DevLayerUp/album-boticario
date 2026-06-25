@@ -7,13 +7,15 @@ import { SolicitarView } from "./solicitar-view";
 import { NegociacaoView } from "./negociacao-view";
 import { EstoqueView } from "./estoque-view";
 import { TradeToastProvider, useTradeToast } from "./trade-toast";
+import { NO_DUPLICATES_TRADE_MESSAGE } from "@/lib/trade-duplicates";
 import type { TrocasSection } from "./types";
 
 function TrocasContent() {
   const { showToast } = useTradeToast();
   const [section, setSection] = useState<TrocasSection>("solicitar");
   const [pendingCount, setPendingCount] = useState(0);
-  const [hasDuplicates, setHasDuplicates] = useState(true);
+  const [hasDuplicates, setHasDuplicates] = useState(false);
+  const [metaLoaded, setMetaLoaded] = useState(false);
 
   const refreshTradeMeta = useCallback(async () => {
     const [sent, received, dupRes] = await Promise.all([
@@ -25,6 +27,7 @@ function TrocasContent() {
       (Array.isArray(sent) ? sent.length : 0) + (Array.isArray(received) ? received.length : 0);
     setPendingCount(count);
     setHasDuplicates(Boolean(dupRes?.hasDuplicates));
+    setMetaLoaded(true);
   }, []);
 
   useEffect(() => {
@@ -34,21 +37,15 @@ function TrocasContent() {
   const canOpenNegotiation = hasDuplicates || pendingCount > 0;
 
   useEffect(() => {
-    if (section === "negociacao" && !canOpenNegotiation) {
+    if (metaLoaded && section === "negociacao" && !canOpenNegotiation) {
       setSection("solicitar");
-      showToast({
-        message:
-          "Você precisa de figurinhas repetidas para negociar trocas. Abra pacotinhos ou complete missões para conseguir mais cópias.",
-        variant: "warning",
-      });
     }
-  }, [section, canOpenNegotiation, showToast]);
+  }, [section, metaLoaded, canOpenNegotiation]);
 
   function handleSectionChange(next: TrocasSection) {
-    if (next === "negociacao" && !canOpenNegotiation) {
+    if (next === "negociacao" && metaLoaded && !canOpenNegotiation) {
       showToast({
-        message:
-          "Você precisa de figurinhas repetidas para negociar trocas. Abra pacotinhos ou complete missões para conseguir mais cópias.",
+        message: NO_DUPLICATES_TRADE_MESSAGE,
         variant: "warning",
       });
       return;
@@ -71,7 +68,7 @@ function TrocasContent() {
         active={section}
         onChange={handleSectionChange}
         pendingCount={pendingCount}
-        negotiationLocked={!canOpenNegotiation}
+        negotiationLocked={metaLoaded && !canOpenNegotiation}
       />
 
       <AnimatePresence mode="wait">
@@ -83,12 +80,18 @@ function TrocasContent() {
           transition={{ duration: 0.2 }}
         >
           {section === "solicitar" && (
-            <SolicitarView onTradeActivity={refreshTradeMeta} />
+            <SolicitarView
+              hasDuplicates={hasDuplicates}
+              metaLoaded={metaLoaded}
+              onTradeActivity={refreshTradeMeta}
+            />
           )}
           {section === "negociacao" && (
             <NegociacaoView onTradeActivity={refreshTradeMeta} />
           )}
-          {section === "estoque" && <EstoqueView />}
+          {section === "estoque" && (
+            <EstoqueView hasDuplicates={hasDuplicates} metaLoaded={metaLoaded} />
+          )}
         </motion.div>
       </AnimatePresence>
     </div>

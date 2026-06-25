@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { sanitizeId, sanitizeUuid, sanitizeText } from "@/lib/sanitize";
 import { createNotification } from "@/lib/notifications";
+import { NO_DUPLICATES_TRADE_MESSAGE, userHasDuplicateStickers } from "@/lib/trade-duplicates";
 
 const STICKER_SELECT = `
   id, name, image_url,
@@ -83,6 +84,11 @@ export async function POST(request: NextRequest) {
 
   if (receiver_id === user.id) {
     return NextResponse.json({ error: "Você não pode trocar consigo mesmo" }, { status: 400 });
+  }
+
+  const hasDuplicates = await userHasDuplicateStickers(supabase, user.id);
+  if (!hasDuplicates) {
+    return NextResponse.json({ error: NO_DUPLICATES_TRADE_MESSAGE }, { status: 403 });
   }
 
   // 1. Requester must have at least 1 copy of the offered sticker

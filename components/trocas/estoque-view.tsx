@@ -11,9 +11,15 @@ import {
   type StockFilter,
 } from "./stock-sticker-card";
 import { useTradeToast } from "./trade-toast";
+import { NO_DUPLICATES_TRADE_MESSAGE } from "@/lib/trade-duplicates";
 import type { Sticker, StockItem } from "./types";
 
-export function EstoqueView() {
+interface EstoqueViewProps {
+  hasDuplicates: boolean;
+  metaLoaded: boolean;
+}
+
+export function EstoqueView({ hasDuplicates, metaLoaded }: EstoqueViewProps) {
   const { showToast } = useTradeToast();
   const [items, setItems] = useState<StockItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -90,7 +96,7 @@ export function EstoqueView() {
   const openWishCount = items.filter((i) => i.hasOpenWish).length;
 
   function isRequestable(item: StockItem) {
-    return item.quantity === 0 && !item.isPasted && !item.hasOpenWish;
+    return metaLoaded && hasDuplicates && item.quantity === 0 && !item.isPasted && !item.hasOpenWish;
   }
 
   function pasteHrefFor(item: StockItem) {
@@ -109,8 +115,11 @@ export function EstoqueView() {
           id="estoque-heading"
           className="max-w-3xl text-sm leading-relaxed text-verde-escuro-500 sm:text-base lg:leading-relaxed 2xl:text-xl 2xl:leading-[33px]"
         >
-          Todas as figurinhas do álbum em um só lugar. Toque nas faltantes para solicitar troca,
-          nas que você já tem (com +) para ir colar no álbum, e veja repetidas com a quantidade.
+          Todas as figurinhas do álbum em um só lugar. Toque nas faltantes para solicitar troca
+          {metaLoaded && !hasDuplicates
+            ? " (você precisa de repetidas para solicitar)"
+            : ""}
+          , nas que você já tem (com +) para ir colar no álbum, e veja repetidas com a quantidade.
         </p>
 
         {!loading && items.length > 0 ? (
@@ -176,6 +185,13 @@ export function EstoqueView() {
                     isRequestable(item)
                       ? () => setTradeModalSticker(item.sticker)
                       : undefined
+                  }
+                  tradeBlockedNoDuplicates={
+                    metaLoaded &&
+                    !hasDuplicates &&
+                    item.quantity === 0 &&
+                    !item.isPasted &&
+                    !item.hasOpenWish
                   }
                   pasteHref={pasteHrefFor(item)}
                 />
