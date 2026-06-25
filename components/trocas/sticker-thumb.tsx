@@ -3,7 +3,18 @@
 import Image from "next/image";
 import { CheckCircle2 } from "lucide-react";
 import { rarityColor } from "@/lib/rarity";
+import { cn } from "@/lib/utils";
 import type { Sticker } from "./types";
+
+function thumbFrameClass(width: number) {
+  if (width <= 48) {
+    return "rounded-[10px] border-2 shadow-sm";
+  }
+  if (width <= 72) {
+    return "rounded-block border-[3px] shadow-[0_2px_8px_rgba(0,0,0,0.1)]";
+  }
+  return "rounded-block border-[3px] shadow-[0_2px_8px_rgba(0,0,0,0.1)] sm:border-4 2xl:border-[5px]";
+}
 
 export function StickerThumb({
   sticker,
@@ -23,7 +34,7 @@ export function StickerThumb({
   if (!sticker) {
     return (
       <div
-        className={`shrink-0 rounded-block bg-verde-100 ${className ?? ""}`}
+        className={cn("shrink-0 rounded-block bg-verde-100", className)}
         style={{ width, height }}
       />
     );
@@ -32,12 +43,16 @@ export function StickerThumb({
 
   return (
     <div
-      className={`relative shrink-0 overflow-hidden rounded-block border-[3px] transition-all duration-200 sm:border-4 2xl:border-[5px] ${className ?? ""}`}
+      className={cn(
+        "relative shrink-0 overflow-hidden transition-all duration-200",
+        thumbFrameClass(width),
+        className,
+      )}
       style={{
         width,
         height,
         borderColor: selected ? "var(--color-verde-escuro-500)" : borderColor,
-        boxShadow: selected ? "0 0 0 3px rgba(13, 102, 50, 0.25)" : undefined,
+        boxShadow: selected ? "0 0 0 3px rgba(13, 102, 50, 0.22)" : undefined,
       }}
     >
       <Image
@@ -47,16 +62,20 @@ export function StickerThumb({
         className="object-cover"
         sizes={`${width}px`}
       />
-      {selected && (
-        <div className="absolute inset-0 flex items-center justify-center bg-verde-escuro-500/25">
-          <CheckCircle2 size={width * 0.28} className="text-white drop-shadow" />
+      {selected ? (
+        <div className="absolute inset-0 flex items-center justify-center bg-verde-escuro-500/20">
+          <CheckCircle2
+            size={Math.max(16, width * 0.26)}
+            className="text-white drop-shadow-md"
+            aria-hidden
+          />
         </div>
-      )}
-      {badge !== undefined && (
+      ) : null}
+      {badge !== undefined ? (
         <div className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-verde-escuro-500 px-1 text-[9px] font-black text-white shadow">
           {badge}×
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

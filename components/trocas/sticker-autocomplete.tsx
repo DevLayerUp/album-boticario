@@ -9,8 +9,10 @@ import {
   useState,
 } from "react";
 import { createPortal } from "react-dom";
-import { Loader2, Search, X } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+import { Check, Loader2, Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { RarityBadge } from "./rarity-badge";
 import { StickerThumb } from "./sticker-thumb";
 import type { Sticker } from "./types";
 
@@ -21,15 +23,21 @@ function normalizeSticker(raw: Sticker & { rarities?: RarityRow | RarityRow[] | 
   return { ...raw, rarities };
 }
 
+function stickerNameColor(slug?: string | null) {
+  if (slug === "super_rare") return "#b57d02";
+  if (slug === "rare") return "#09357a";
+  return "var(--color-verde-escuro-500)";
+}
+
 interface StickerAutocompleteProps {
   value: Sticker | null;
   onChange: (sticker: Sticker | null) => void;
   placeholder?: string;
   disabled?: boolean;
   inputId?: string;
-  /** Ao selecionar uma figurinha (ex.: criar pedido direto). */
+  /** Layout da seleção — hero exibe preview grande (modal de troca). */
+  selectionLayout?: "inline" | "hero";
   onStickerPicked?: (sticker: Sticker) => void | Promise<void>;
-  /** Limpa o campo após `onStickerPicked`. */
   resetOnSelect?: boolean;
 }
 
@@ -39,6 +47,7 @@ export function StickerAutocomplete({
   placeholder = "Digite o nome da figurinha…",
   disabled = false,
   inputId,
+  selectionLayout = "inline",
   onStickerPicked,
   resetOnSelect = false,
 }: StickerAutocompleteProps) {
@@ -169,55 +178,83 @@ export function StickerAutocomplete({
         role="listbox"
         style={{
           position: "fixed",
-          top: dropdownRect.bottom + 8,
+          top: dropdownRect.bottom + 10,
           left: dropdownRect.left,
           width: dropdownRect.width,
-          zIndex: 10000,
+          zIndex: 110,
         }}
-        className="max-h-56 overflow-y-auto rounded-card border border-verde-200 bg-surface py-1 shadow-lg [scrollbar-width:thin]"
+        className="max-h-[min(320px,50dvh)] overflow-y-auto rounded-[20px] border border-verde-200/90 bg-surface p-2 shadow-[0_16px_48px_rgba(13,102,50,0.14)] ring-1 ring-verde-100 [scrollbar-width:thin]"
       >
         {loading && results.length === 0 ? (
-          <li className="px-4 py-3 text-center text-sm text-verde-escuro-300">
+          <li className="flex items-center justify-center gap-2 px-4 py-6 text-sm text-verde-escuro-300">
+            <Loader2 size={16} className="animate-spin" aria-hidden />
             Buscando figurinhas…
           </li>
         ) : null}
         {fetchError ? (
-          <li className="px-4 py-3 text-center text-sm text-red-600">{fetchError}</li>
+          <li className="px-4 py-4 text-center text-sm text-red-600">{fetchError}</li>
         ) : null}
         {!loading && !fetchError && results.length === 0 ? (
-          <li className="px-4 py-3 text-center text-sm text-verde-escuro-300">
+          <li className="px-4 py-6 text-center text-sm text-verde-escuro-300">
             Nenhuma figurinha encontrada.
           </li>
         ) : null}
-        {results.map((sticker, index) => (
-          <li
-            key={sticker.id}
-            id={`${listId}-option-${sticker.id}`}
-            role="option"
-            aria-selected={value?.id === sticker.id || highlight === index}
-          >
-            <button
-              type="button"
-              onMouseEnter={() => setHighlight(index)}
-              onClick={() => void select(sticker)}
-              className={cn(
-                "flex w-full cursor-pointer items-center gap-3 px-3 py-2 text-left transition-colors",
-                highlight === index ? "bg-verde-100" : "hover:bg-verde-100/60",
-                value?.id === sticker.id && "bg-verde-100/80",
-              )}
+        {results.map((sticker, index) => {
+          const slug = sticker.rarities?.slug ?? "common";
+          const isActive = highlight === index || value?.id === sticker.id;
+          return (
+            <li
+              key={sticker.id}
+              id={`${listId}-option-${sticker.id}`}
+              role="option"
+              aria-selected={isActive}
+              className="py-0.5"
             >
-              <StickerThumb sticker={sticker} width={40} height={58} />
-              <span className="min-w-0 flex-1 text-sm font-medium leading-snug text-verde-escuro-capa">
-                {sticker.name}
-              </span>
-            </button>
-          </li>
-        ))}
+              <button
+                type="button"
+                onMouseEnter={() => setHighlight(index)}
+                onClick={() => void select(sticker)}
+                className={cn(
+                  "flex w-full cursor-pointer items-center gap-3.5 rounded-2xl px-2.5 py-2.5 text-left transition-colors duration-150",
+                  isActive
+                    ? "bg-verde-100 ring-1 ring-verde-300/80"
+                    : "hover:bg-verde-50",
+                )}
+              >
+                <StickerThumb sticker={sticker} width={52} height={74} />
+                <div className="min-w-0 flex-1">
+                  <RarityBadge
+                    name={sticker.rarities?.name ?? "Comum"}
+                    slug={slug}
+                    colorHex={sticker.rarities?.color_hex}
+                    className="mb-1.5 px-2.5 py-0.5 text-[9px] normal-case sm:text-[10px]"
+                  />
+                  <p
+                    className="line-clamp-2 font-display text-sm font-bold leading-snug"
+                    style={{ color: stickerNameColor(slug) }}
+                  >
+                    {sticker.name}
+                  </p>
+                </div>
+                {isActive ? (
+                  <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-verde-escuro-500 text-white">
+                    <Check size={14} aria-hidden />
+                  </span>
+                ) : (
+                  <span className="size-7 shrink-0" aria-hidden />
+                )}
+              </button>
+            </li>
+          );
+        })}
       </ul>
     ) : null;
 
+  const showHeroSelection = value && !resetOnSelect && selectionLayout === "hero";
+  const showInlineSelection = value && !resetOnSelect && selectionLayout === "inline";
+
   return (
-    <div ref={containerRef} className="space-y-3">
+    <div ref={containerRef} className="space-y-4">
       <div className="relative">
         <Search
           size={18}
@@ -251,7 +288,7 @@ export function StickerAutocomplete({
             if (results.length === 0 && !fetchError) void fetchStickers(query);
           }}
           onKeyDown={onKeyDown}
-          className="w-full rounded-pill border border-verde-200 bg-verde-100/30 py-2.5 pl-11 pr-10 text-sm outline-none transition-colors focus:border-verde-500 focus:bg-surface disabled:opacity-60"
+          className="w-full rounded-pill border border-verde-200 bg-surface py-3 pl-11 pr-11 text-sm text-verde-escuro-capa shadow-sm outline-none transition-[border-color,box-shadow] focus:border-verde-500 focus:ring-2 focus:ring-verde-500/20 disabled:opacity-60"
         />
         <div className="pointer-events-none absolute right-3 top-1/2 flex -translate-y-1/2 items-center gap-1">
           {loading ? (
@@ -261,10 +298,10 @@ export function StickerAutocomplete({
               type="button"
               onClick={clear}
               disabled={disabled}
-              className="pointer-events-auto flex size-7 cursor-pointer items-center justify-center rounded-full text-verde-escuro-300 transition-colors hover:bg-verde-100 hover:text-verde-escuro-500"
+              className="pointer-events-auto flex size-8 cursor-pointer items-center justify-center rounded-full text-verde-escuro-300 transition-colors hover:bg-verde-100 hover:text-verde-escuro-500"
               aria-label="Limpar busca"
             >
-              <X size={14} aria-hidden />
+              <X size={15} aria-hidden />
             </button>
           ) : null}
         </div>
@@ -272,9 +309,40 @@ export function StickerAutocomplete({
 
       {typeof document !== "undefined" && dropdown ? createPortal(dropdown, document.body) : null}
 
-      {value && !resetOnSelect ? (
+      <AnimatePresence mode="wait">
+        {showHeroSelection ? (
+          <motion.div
+            key={value.id}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.22 }}
+            className="rounded-[20px] border border-verde-200 bg-gradient-to-b from-verde-100/80 to-surface px-4 py-5 sm:px-5"
+          >
+            <p className="text-center text-[10px] font-bold uppercase tracking-[0.14em] text-verde-escuro-400">
+              Figurinha selecionada
+            </p>
+            <div className="mt-4 flex flex-col items-center gap-3">
+              <StickerThumb sticker={value} width={112} height={160} selected />
+              <RarityBadge
+                name={value.rarities?.name ?? "Comum"}
+                slug={value.rarities?.slug ?? "common"}
+                colorHex={value.rarities?.color_hex}
+              />
+              <p
+                className="max-w-[260px] text-center font-display text-lg font-bold leading-tight sm:text-xl"
+                style={{ color: stickerNameColor(value.rarities?.slug) }}
+              >
+                {value.name}
+              </p>
+            </div>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
+
+      {showInlineSelection ? (
         <div className="flex items-center gap-3 rounded-card border border-verde-200 bg-verde-100/50 px-3 py-2.5">
-          <StickerThumb sticker={value} width={52} height={74} selected />
+          <StickerThumb sticker={value} width={56} height={80} selected />
           <div className="min-w-0">
             <p className="text-[10px] font-bold uppercase tracking-wider text-verde-escuro-500">
               Selecionada

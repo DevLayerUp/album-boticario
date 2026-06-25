@@ -4,18 +4,21 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { AnimatePresence } from "framer-motion";
 import { BookOpen, Layers, Loader2 } from "lucide-react";
-import { EmptyState } from "./shared";
+import { CreateTradeEventModal, EmptyState } from "./shared";
 import {
   StockFilterBar,
   StockStickerCard,
   type StockFilter,
 } from "./stock-sticker-card";
-import type { StockItem } from "./types";
+import { useTradeToast } from "./trade-toast";
+import type { Sticker, StockItem } from "./types";
 
 export function EstoqueView() {
+  const { showToast } = useTradeToast();
   const [items, setItems] = useState<StockItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<StockFilter>("all");
+  const [tradeModalSticker, setTradeModalSticker] = useState<Sticker | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -84,6 +87,11 @@ export function EstoqueView() {
 
   const pastedCount = items.filter((i) => i.isPasted).length;
   const duplicateCopies = items.reduce((acc, i) => acc + (i.quantity > 1 ? i.quantity - 1 : 0), 0);
+  const openWishCount = items.filter((i) => i.hasOpenWish).length;
+
+  function isRequestable(item: StockItem) {
+    return item.quantity === 0 && !item.isPasted && !item.hasOpenWish;
+  }
 
   return (
     <section
@@ -95,9 +103,9 @@ export function EstoqueView() {
           id="estoque-heading"
           className="max-w-3xl text-sm leading-relaxed text-verde-escuro-500 sm:text-base lg:leading-relaxed 2xl:text-xl 2xl:leading-[33px]"
         >
-          Todas as figurinhas do álbum em um só lugar: faltantes com cadeado, coladas com etiqueta
-          &quot;No álbum&quot; e repetidas com a quantidade no canto. As bloqueadas estão em
-          negociações ativas.
+          Todas as figurinhas do álbum em um só lugar. Toque nas faltantes para abrir uma solicitação
+          de troca sem sair do estoque — coladas mostram &quot;No álbum&quot; e repetidas exibem a
+          quantidade.
         </p>
 
         {!loading && items.length > 0 ? (
@@ -110,6 +118,11 @@ export function EstoqueView() {
               <Layers size={14} className="text-verde-escuro-500" aria-hidden />
               {duplicateCopies} repetidas
             </span>
+            {openWishCount > 0 ? (
+              <span className="flex items-center gap-1.5 rounded-pill bg-surface/80 px-3 py-1.5 ring-1 ring-verde-200">
+                {openWishCount} pedidos abertos
+              </span>
+            ) : null}
           </div>
         ) : null}
       </div>
@@ -152,13 +165,36 @@ export function EstoqueView() {
                   quantity={item.quantity}
                   isPasted={item.isPasted}
                   blocked={item.blocked}
+                  hasOpenWish={item.hasOpenWish}
                   index={index}
+                  onRequestTrade={
+                    isRequestable(item)
+                      ? () => setTradeModalSticker(item.sticker)
+                      : undefined
+                  }
                 />
               ))}
             </AnimatePresence>
           </div>
         )}
       </div>
+
+      <AnimatePresence>
+        {tradeModalSticker ? (
+          <CreateTradeEventModal
+            initialSticker={tradeModalSticker}
+            onClose={() => setTradeModalSticker(null)}
+            onSuccess={() => {
+              load();
+              setTradeModalSticker(null);
+              showToast({
+                message: "Pedido publicado! Outros colecionadores já podem ver em Explorar.",
+                variant: "success",
+              });
+            }}
+          />
+        ) : null}
+      </AnimatePresence>
     </section>
   );
 }

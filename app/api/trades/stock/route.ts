@@ -19,7 +19,7 @@ export async function GET() {
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const [stickersRes, inventoryRes, pastedRes, sentRes, receivedRes] = await Promise.all([
+  const [stickersRes, inventoryRes, pastedRes, wishesRes, sentRes, receivedRes] = await Promise.all([
     supabase
       .from("stickers")
       .select("id, name, image_url, rarities ( name, slug, color_hex, animation_type )")
@@ -32,6 +32,11 @@ export async function GET() {
       .eq("user_id", user.id)
       .gte("quantity", 1),
     supabase.from("user_album").select("sticker_id").eq("user_id", user.id),
+    supabase
+      .from("trade_wishes")
+      .select("sticker_id")
+      .eq("user_id", user.id)
+      .eq("status", "open"),
     supabase
       .from("trade_requests")
       .select("offered_sticker_id, requested_sticker_id")
@@ -58,6 +63,11 @@ export async function GET() {
     if (row.sticker_id != null) pastedStickerIds.add(row.sticker_id);
   }
 
+  const openWishStickerIds = new Set<number>();
+  for (const row of wishesRes.data ?? []) {
+    if (row.sticker_id != null) openWishStickerIds.add(row.sticker_id);
+  }
+
   const blockedStickerIds = new Set<number>();
   for (const trade of [...(sentRes.data ?? []), ...(receivedRes.data ?? [])]) {
     if (trade.offered_sticker_id) blockedStickerIds.add(trade.offered_sticker_id);
@@ -76,6 +86,7 @@ export async function GET() {
       quantity,
       isPasted: pastedStickerIds.has(row.id),
       blocked: blockedStickerIds.has(row.id),
+      hasOpenWish: openWishStickerIds.has(row.id),
     };
   });
 

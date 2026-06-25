@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { BookOpen, Lock, Plus } from "lucide-react";
+import { BookOpen, BookmarkCheck, ArrowLeftRight, Lock, Plus } from "lucide-react";
 import { rarityColor } from "@/lib/rarity";
 import { cn } from "@/lib/utils";
 import { RarityBadge } from "./rarity-badge";
@@ -15,7 +15,9 @@ interface StockStickerCardProps {
   quantity: number;
   isPasted?: boolean;
   blocked?: boolean;
+  hasOpenWish?: boolean;
   index?: number;
+  onRequestTrade?: () => void;
 }
 
 function resolveState(quantity: number, isPasted: boolean): StockCardState {
@@ -29,7 +31,9 @@ export function StockStickerCard({
   quantity,
   isPasted = false,
   blocked = false,
+  hasOpenWish = false,
   index = 0,
+  onRequestTrade,
 }: StockStickerCardProps) {
   const state = resolveState(quantity, isPasted);
   const slug = sticker.rarities?.slug ?? "common";
@@ -41,52 +45,78 @@ export function StockStickerCard({
         ? "#09357a"
         : "var(--color-verde-escuro-500)";
   const animType = sticker.rarities?.animation_type;
+  const canRequestTrade = state === "missing" && !hasOpenWish && onRequestTrade;
 
-  return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.25, delay: Math.min(index * 0.02, 0.35) }}
-      className="flex flex-col items-start gap-0"
-    >
-      <div className="relative w-full">
-        <div
+  const cardImage = (
+    <div className="relative w-full">
+      <div
+        className={cn(
+          "relative aspect-160/229 w-full overflow-hidden rounded-block border-[5px] shadow-[0_2px_8px_rgba(0,0,0,0.08)] transition-[box-shadow,transform] duration-200",
+          state === "missing" && "border-dashed bg-verde-escuro-capa/[0.04]",
+          state === "owned" && "border-dashed",
+          blocked && state !== "missing" && "opacity-80",
+          canRequestTrade && "group-hover:border-verde-500 group-hover:shadow-md",
+        )}
+        style={{
+          borderColor:
+            state === "missing"
+              ? `${borderColor}55`
+              : state === "owned"
+                ? `${borderColor}b3`
+                : borderColor,
+        }}
+      >
+        <Image
+          src={sticker.image_url}
+          alt=""
+          fill
           className={cn(
-            "relative aspect-160/229 w-full overflow-hidden rounded-block border-[5px] shadow-[0_2px_8px_rgba(0,0,0,0.08)]",
-            state === "missing" && "border-dashed bg-verde-escuro-capa/[0.04]",
-            state === "owned" && "border-dashed",
-            blocked && state !== "missing" && "opacity-80",
+            "object-cover transition-[filter,opacity] duration-300",
+            state === "missing" && "grayscale opacity-35 group-hover:opacity-45",
+            state === "owned" && "opacity-50",
+            state === "pasted" && "opacity-100",
           )}
-          style={{
-            borderColor:
-              state === "missing"
-                ? `${borderColor}55`
-                : state === "owned"
-                  ? `${borderColor}b3`
-                  : borderColor,
-          }}
-        >
-          <Image
-            src={sticker.image_url}
-            alt=""
-            fill
-            className={cn(
-              "object-cover transition-[filter,opacity] duration-300",
-              state === "missing" && "grayscale opacity-35",
-              state === "owned" && "opacity-50",
-              state === "pasted" && "opacity-100",
-            )}
-            sizes="(max-width: 640px) 45vw, (max-width: 1024px) 25vw, 160px"
-          />
+          sizes="(max-width: 640px) 45vw, (max-width: 1024px) 25vw, 160px"
+        />
 
-          {state === "missing" && (
-            <div className="absolute inset-0 flex items-center justify-center bg-verde-escuro-capa/20">
-              <span className="flex size-9 items-center justify-center rounded-full bg-surface/90 shadow-sm sm:size-10">
-                <Lock size={16} className="text-verde-escuro-300" aria-hidden />
+        {state === "missing" && hasOpenWish && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 bg-verde-escuro-capa/15">
+            <span className="flex items-center gap-1 rounded-pill bg-verde-escuro-500/90 px-2.5 py-1 text-[9px] font-bold uppercase tracking-wide text-white shadow-sm sm:text-[10px]">
+              <BookmarkCheck size={11} aria-hidden />
+              Pedido aberto
+            </span>
+          </div>
+        )}
+
+        {canRequestTrade && (
+          <>
+            <div className="absolute inset-0 flex items-center justify-center bg-verde-escuro-capa/20 transition-colors group-hover:bg-verde-escuro-500/25">
+              <span className="flex size-9 items-center justify-center rounded-full bg-surface/90 shadow-sm transition-colors group-hover:bg-verde-500 group-hover:text-white sm:size-10">
+                <Lock
+                  size={16}
+                  className="text-verde-escuro-300 transition-opacity group-hover:opacity-0"
+                  aria-hidden
+                />
+                <ArrowLeftRight
+                  size={18}
+                  className="absolute text-verde-escuro-500 opacity-0 transition-opacity group-hover:opacity-100 group-hover:text-white"
+                  aria-hidden
+                />
               </span>
             </div>
-          )}
+            <span className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-verde-escuro-capa/80 to-transparent px-2 pb-2 pt-6 text-center text-[10px] font-bold uppercase tracking-wide text-white opacity-0 transition-opacity group-hover:opacity-100 sm:text-[11px]">
+              Solicitar troca
+            </span>
+          </>
+        )}
+
+        {state === "missing" && !hasOpenWish && !onRequestTrade && (
+          <div className="absolute inset-0 flex items-center justify-center bg-verde-escuro-capa/20">
+            <span className="flex size-9 items-center justify-center rounded-full bg-surface/90 shadow-sm sm:size-10">
+              <Lock size={16} className="text-verde-escuro-300" aria-hidden />
+            </span>
+          </div>
+        )}
 
           {state === "owned" && (
             <div className="absolute inset-0 flex items-center justify-center bg-verde-escuro-500/25">
@@ -135,7 +165,10 @@ export function StockStickerCard({
           </span>
         )}
       </div>
+  );
 
+  const cardMeta = (
+    <>
       <RarityBadge
         name={sticker.rarities?.name ?? "Comum"}
         slug={slug}
@@ -149,12 +182,46 @@ export function StockStickerCard({
       <p
         className={cn(
           "mt-1.5 w-full truncate font-display text-sm font-bold leading-tight sm:mt-2 sm:text-base 2xl:text-xl",
-          state === "missing" && "text-verde-escuro-300",
+          state === "missing" && !hasOpenWish && "text-verde-escuro-300",
+          hasOpenWish && "text-verde-escuro-400",
         )}
-        style={state !== "missing" ? { color: nameColor } : undefined}
+        style={state !== "missing" || hasOpenWish ? { color: hasOpenWish ? undefined : nameColor } : undefined}
       >
         {sticker.name}
       </p>
+
+      {canRequestTrade ? (
+        <p className="mt-1 text-[10px] font-semibold text-verde-500 sm:text-xs">
+          Toque para solicitar
+        </p>
+      ) : null}
+    </>
+  );
+
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.25, delay: Math.min(index * 0.02, 0.35) }}
+      className="flex flex-col items-start gap-0"
+    >
+      {canRequestTrade ? (
+        <button
+          type="button"
+          onClick={onRequestTrade}
+          className="group w-full cursor-pointer text-left"
+          aria-label={`Solicitar troca de ${sticker.name}`}
+        >
+          {cardImage}
+          {cardMeta}
+        </button>
+      ) : (
+        <>
+          {cardImage}
+          {cardMeta}
+        </>
+      )}
     </motion.div>
   );
 }

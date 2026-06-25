@@ -57,6 +57,7 @@ export interface StockItem {
   quantity: number;
   isPasted: boolean;
   blocked: boolean;
+  hasOpenWish: boolean;
 }
 
 export type TrocasSection = "solicitar" | "negociacao" | "estoque";
