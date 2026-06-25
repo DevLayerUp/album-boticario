@@ -26,7 +26,7 @@ export async function GET(request: Request) {
       `id, source, opened_at,
        pack_stickers (
          position,
-         stickers (id, name, image_url, rarities (name, slug, color_hex))
+         stickers (id, name, image_url, rarities (name, slug, color_hex, animation_type))
        )`,
     )
     .eq("user_id", user.id)

@@ -8,6 +8,7 @@ export interface PackSticker {
       name: string;
       slug: string;
       color_hex: string;
+      animation_type?: string;
     } | null;
   } | null;
 }
