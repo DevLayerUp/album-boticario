@@ -52,12 +52,18 @@ export interface TradeableEntry {
   quantity: number;
 }
 
+export interface StockPasteTarget {
+  slotId: number;
+  categoryId: number;
+}
+
 export interface StockItem {
   sticker: Sticker;
   quantity: number;
   isPasted: boolean;
   blocked: boolean;
   hasOpenWish: boolean;
+  pasteTarget: StockPasteTarget | null;
 }
 
 export type TrocasSection = "solicitar" | "negociacao" | "estoque";

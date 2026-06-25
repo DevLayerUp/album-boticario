@@ -33,6 +33,8 @@ export interface StickerSlotProps {
   onPaste?: (slotId: number, stickerId: number) => Promise<void>;
   /** default 160×229 — large 199×284 (tri3 template) */
   size?: "default" | "large";
+  /** Abre o modal de colagem ao montar (deep link do estoque). */
+  autoOpenPaste?: boolean;
 }
 
 // ─── Subtle landing ring (replaces emoji burst) ───────────────────────────────
@@ -266,7 +268,7 @@ function StickerDetailModal({
 
 // ─── Main StickerSlot component ───────────────────────────────────────────────
 export function StickerSlot({
-  slotId, slotNumber, sticker, isPasted, owned, onPaste, size = "default",
+  slotId, slotNumber, sticker, isPasted, owned, onPaste, size = "default", autoOpenPaste = false,
 }: StickerSlotProps) {
   const aspectClass = size === "large" ? "aspect-[199/284]" : "aspect-160/229";
   const imageSizes  = size === "large" ? "199px" : "(max-width: 768px) 30vw, 200px";
@@ -292,6 +294,12 @@ export function StickerSlot({
   const canPaste    = isOwned && !isPasted && !isFlying && sticker !== null;
   const isComplete  = (isPasted || justPasted) && !isFlying;
   const isAwaitingLand = isFlying;
+
+  useEffect(() => {
+    if (!autoOpenPaste || !canPaste) return;
+    const timeout = window.setTimeout(() => setShowPasteModal(true), 500);
+    return () => window.clearTimeout(timeout);
+  }, [autoOpenPaste, canPaste]);
 
   const onFlightComplete = useCallback(() => {
     setIsFlying(false);
@@ -358,6 +366,7 @@ export function StickerSlot({
             : canPaste
             ? "cursor-pointer border-dashed bg-white/10 hover:bg-white/20"
             : "border-white/15 bg-black/20",
+          autoOpenPaste && canPaste && "ring-2 ring-verde-500 ring-offset-2 ring-offset-transparent",
         ].join(" ")}
         style={
           isComplete

@@ -93,6 +93,12 @@ export function EstoqueView() {
     return item.quantity === 0 && !item.isPasted && !item.hasOpenWish;
   }
 
+  function pasteHrefFor(item: StockItem) {
+    if (item.quantity <= 0 || item.isPasted || !item.pasteTarget) return null;
+    const { slotId, categoryId } = item.pasteTarget;
+    return `/album?slot=${slotId}&category=${categoryId}`;
+  }
+
   return (
     <section
       aria-labelledby="estoque-heading"
@@ -103,9 +109,8 @@ export function EstoqueView() {
           id="estoque-heading"
           className="max-w-3xl text-sm leading-relaxed text-verde-escuro-500 sm:text-base lg:leading-relaxed 2xl:text-xl 2xl:leading-[33px]"
         >
-          Todas as figurinhas do álbum em um só lugar. Toque nas faltantes para abrir uma solicitação
-          de troca sem sair do estoque — coladas mostram &quot;No álbum&quot; e repetidas exibem a
-          quantidade.
+          Todas as figurinhas do álbum em um só lugar. Toque nas faltantes para solicitar troca,
+          nas que você já tem (com +) para ir colar no álbum, e veja repetidas com a quantidade.
         </p>
 
         {!loading && items.length > 0 ? (
@@ -172,6 +177,7 @@ export function EstoqueView() {
                       ? () => setTradeModalSticker(item.sticker)
                       : undefined
                   }
+                  pasteHref={pasteHrefFor(item)}
                 />
               ))}
             </AnimatePresence>

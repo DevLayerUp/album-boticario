@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { motion } from "framer-motion";
 import { BookOpen, BookmarkCheck, ArrowLeftRight, Lock, Plus } from "lucide-react";
 import { rarityColor } from "@/lib/rarity";
@@ -18,6 +19,7 @@ interface StockStickerCardProps {
   hasOpenWish?: boolean;
   index?: number;
   onRequestTrade?: () => void;
+  pasteHref?: string | null;
 }
 
 function resolveState(quantity: number, isPasted: boolean): StockCardState {
@@ -34,6 +36,7 @@ export function StockStickerCard({
   hasOpenWish = false,
   index = 0,
   onRequestTrade,
+  pasteHref = null,
 }: StockStickerCardProps) {
   const state = resolveState(quantity, isPasted);
   const slug = sticker.rarities?.slug ?? "common";
@@ -46,6 +49,7 @@ export function StockStickerCard({
         : "var(--color-verde-escuro-500)";
   const animType = sticker.rarities?.animation_type;
   const canRequestTrade = state === "missing" && !hasOpenWish && onRequestTrade;
+  const canPaste = state === "owned" && Boolean(pasteHref);
 
   const cardImage = (
     <div className="relative w-full">
@@ -56,6 +60,7 @@ export function StockStickerCard({
           state === "owned" && "border-dashed",
           blocked && state !== "missing" && "opacity-80",
           canRequestTrade && "group-hover:border-verde-500 group-hover:shadow-md",
+          canPaste && "group-hover:border-verde-500 group-hover:shadow-md",
         )}
         style={{
           borderColor:
@@ -119,10 +124,15 @@ export function StockStickerCard({
         )}
 
           {state === "owned" && (
-            <div className="absolute inset-0 flex items-center justify-center bg-verde-escuro-500/25">
-              <span className="flex size-9 items-center justify-center rounded-full bg-verde-500 shadow-lg shadow-verde-escuro-500/30 sm:size-10">
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-verde-escuro-500/25 transition-colors group-hover:bg-verde-escuro-500/35">
+              <span className="flex size-9 items-center justify-center rounded-full bg-verde-500 shadow-lg shadow-verde-escuro-500/30 transition-transform group-hover:scale-105 sm:size-10">
                 <Plus size={18} className="text-white" aria-hidden />
               </span>
+              {canPaste ? (
+                <span className="pointer-events-none px-2 text-center text-[9px] font-bold uppercase tracking-wide text-white opacity-0 transition-opacity group-hover:opacity-100 sm:text-[10px]">
+                  Colar no álbum
+                </span>
+              ) : null}
             </div>
           )}
 
@@ -194,6 +204,10 @@ export function StockStickerCard({
         <p className="mt-1 text-[10px] font-semibold text-verde-500 sm:text-xs">
           Toque para solicitar
         </p>
+      ) : canPaste ? (
+        <p className="mt-1 text-[10px] font-semibold text-verde-500 sm:text-xs">
+          Toque para colar
+        </p>
       ) : null}
     </>
   );
@@ -216,6 +230,15 @@ export function StockStickerCard({
           {cardImage}
           {cardMeta}
         </button>
+      ) : canPaste ? (
+        <Link
+          href={pasteHref!}
+          className="group w-full cursor-pointer text-left"
+          aria-label={`Colar ${sticker.name} no álbum`}
+        >
+          {cardImage}
+          {cardMeta}
+        </Link>
       ) : (
         <>
           {cardImage}

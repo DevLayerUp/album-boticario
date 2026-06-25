@@ -19,7 +19,8 @@ export async function GET() {
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const [stickersRes, inventoryRes, pastedRes, wishesRes, sentRes, receivedRes] = await Promise.all([
+  const [stickersRes, inventoryRes, pastedRes, wishesRes, sentRes, receivedRes, slotsRes] =
+    await Promise.all([
     supabase
       .from("stickers")
       .select("id, name, image_url, rarities ( name, slug, color_hex, animation_type )")
@@ -47,6 +48,10 @@ export async function GET() {
       .select("offered_sticker_id, requested_sticker_id")
       .eq("receiver_id", user.id)
       .eq("status", "pending"),
+    supabase
+      .from("album_slots")
+      .select("id, sticker_id, album_pages ( category_id )")
+      .not("sticker_id", "is", null),
   ]);
 
   if (stickersRes.error) {
@@ -74,6 +79,17 @@ export async function GET() {
     if (trade.requested_sticker_id) blockedStickerIds.add(trade.requested_sticker_id);
   }
 
+  const pasteTargetBySticker = new Map<number, { slotId: number; categoryId: number }>();
+  for (const row of slotsRes.data ?? []) {
+    if (row.sticker_id == null) continue;
+    const page = row.album_pages as { category_id: number } | { category_id: number }[] | null;
+    const categoryId = Array.isArray(page) ? page[0]?.category_id : page?.category_id;
+    if (!categoryId) continue;
+    if (!pasteTargetBySticker.has(row.sticker_id)) {
+      pasteTargetBySticker.set(row.sticker_id, { slotId: row.id, categoryId });
+    }
+  }
+
   const items = (stickersRes.data ?? []).map((row) => {
     const rarities = row.rarities as RarityRow | RarityRow[] | null;
     const sticker = {
@@ -87,6 +103,7 @@ export async function GET() {
       isPasted: pastedStickerIds.has(row.id),
       blocked: blockedStickerIds.has(row.id),
       hasOpenWish: openWishStickerIds.has(row.id),
+      pasteTarget: pasteTargetBySticker.get(row.id) ?? null,
     };
   });
 

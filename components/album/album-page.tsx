@@ -51,6 +51,8 @@ interface AlbumPageProps {
   userDisplayName?: string | null;
   /** When true, fills the fixed-height flipbook page (h-full + spine-straight borders) */
   inFlipBook?: boolean;
+  /** Slot a destacar/abrir colagem (deep link do estoque). */
+  focusSlotId?: number | null;
 }
 
 function PageShell({
@@ -114,7 +116,7 @@ function LogoBadge() {
   );
 }
 
-function Title3Page({ page, side, pastedSlotIds, ownedMap, onPaste, inFlipBook }: AlbumPageProps) {
+function Title3Page({ page, side, pastedSlotIds, ownedMap, onPaste, inFlipBook, focusSlotId }: AlbumPageProps) {
   const slots = [...page.album_slots].sort((a, b) => a.slot_number - b.slot_number);
 
   const data  = parseLayoutData(page.content) as Title3Data;
@@ -169,6 +171,7 @@ function Title3Page({ page, side, pastedSlotIds, ownedMap, onPaste, inFlipBook }
                 isPasted={pastedSlotIds.has(slot.id)}
                 owned={stickerId ? (ownedMap.get(stickerId) ?? 0) : 0}
                 onPaste={onPaste}
+                autoOpenPaste={focusSlotId === slot.id}
               />
             );
           })}
@@ -292,6 +295,7 @@ function renderGridSlots(
   pastedSlotIds: Set<number>,
   ownedMap: Map<number, number>,
   onPaste: AlbumPageProps["onPaste"],
+  focusSlotId?: number | null,
 ) {
   return [...slots]
     .sort((a, b) => a.slot_number - b.slot_number)
@@ -307,13 +311,14 @@ function renderGridSlots(
             isPasted={pastedSlotIds.has(slot.id)}
             owned={stickerId ? (ownedMap.get(stickerId) ?? 0) : 0}
             onPaste={onPaste}
+            autoOpenPaste={focusSlotId === slot.id}
           />
         </AlbumGridSlotCell>
       );
     });
 }
 
-function Grid6Page({ page, side, pastedSlotIds, ownedMap, onPaste, inFlipBook }: AlbumPageProps) {
+function Grid6Page({ page, side, pastedSlotIds, ownedMap, onPaste, inFlipBook, focusSlotId }: AlbumPageProps) {
   const data  = parseLayoutData(page.content) as Grid6Data;
   const title = data.title ?? page.title ?? null;
   const text  = data.text ?? null;
@@ -351,7 +356,7 @@ function Grid6Page({ page, side, pastedSlotIds, ownedMap, onPaste, inFlipBook }:
         afterGrid={footerContent}
       >
         <AlbumStickerGrid cols={3} rows={2}>
-          {renderGridSlots(page.album_slots, 6, pastedSlotIds, ownedMap, onPaste)}
+          {renderGridSlots(page.album_slots, 6, pastedSlotIds, ownedMap, onPaste, focusSlotId)}
         </AlbumStickerGrid>
       </AlbumGridFrame>
     </PageShell>
@@ -359,7 +364,7 @@ function Grid6Page({ page, side, pastedSlotIds, ownedMap, onPaste, inFlipBook }:
 }
 
 /** Slot 1 = left center · slots 2–3 = top/bottom right (199×284 cards) */
-function Tri3Page({ page, side, pastedSlotIds, ownedMap, onPaste, inFlipBook }: AlbumPageProps) {
+function Tri3Page({ page, side, pastedSlotIds, ownedMap, onPaste, inFlipBook, focusSlotId }: AlbumPageProps) {
   const slots = [...page.album_slots].sort((a, b) => a.slot_number - b.slot_number);
   const [left, topRight, bottomRight] = slots;
 
@@ -378,6 +383,7 @@ function Tri3Page({ page, side, pastedSlotIds, ownedMap, onPaste, inFlipBook }: 
         owned={stickerId ? (ownedMap.get(stickerId) ?? 0) : 0}
         onPaste={onPaste}
         size="large"
+        autoOpenPaste={focusSlotId === slot.id}
       />
     );
   }
@@ -413,12 +419,12 @@ function Tri3Page({ page, side, pastedSlotIds, ownedMap, onPaste, inFlipBook }: 
   );
 }
 
-function Grid3x3Page({ page, side, pastedSlotIds, ownedMap, onPaste, inFlipBook }: AlbumPageProps) {
+function Grid3x3Page({ page, side, pastedSlotIds, ownedMap, onPaste, inFlipBook, focusSlotId }: AlbumPageProps) {
   return (
     <PageShell side={side} inFlipBook={inFlipBook}>
       <AlbumGridFrame pageNumber={page.page_number} inFlipBook={inFlipBook}>
         <AlbumStickerGrid cols={3} rows={3}>
-          {renderGridSlots(page.album_slots, 9, pastedSlotIds, ownedMap, onPaste)}
+          {renderGridSlots(page.album_slots, 9, pastedSlotIds, ownedMap, onPaste, focusSlotId)}
         </AlbumStickerGrid>
       </AlbumGridFrame>
     </PageShell>
