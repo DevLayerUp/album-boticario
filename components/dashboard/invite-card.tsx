@@ -6,9 +6,9 @@ import {
   Check,
   Share2,
   Users,
-  MessageCircle,
   Link2,
 } from "lucide-react";
+import { SocialShareButtons } from "@/components/ui/social-share-buttons";
 import type { ReferralSummary } from "@/lib/referrals";
 import { buildShareText } from "@/lib/referrals";
 
@@ -56,8 +56,6 @@ export function InviteCard({ data, inviterName }: InviteCardProps) {
       /* usuário cancelou */
     }
   }
-
-  const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
 
   return (
     <section
@@ -132,24 +130,14 @@ export function InviteCard({ data, inviterName }: InviteCardProps) {
             Código: <span className="font-mono font-semibold">{data.referral_code}</span>
           </p>
 
-          <div className="mt-4 flex flex-wrap gap-2">
-            <a
-              href={whatsappUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-pill border border-verde-500/25 bg-white px-4 py-2 text-sm font-medium text-verde-escuro-500 transition-colors hover:bg-verde-100/60"
-            >
-              <MessageCircle aria-hidden className="size-4 text-[#25D366]" />
-              WhatsApp
-            </a>
-            <button
-              type="button"
-              onClick={nativeShare}
-              className="inline-flex items-center gap-2 rounded-pill border border-verde-500/25 bg-white px-4 py-2 text-sm font-medium text-verde-escuro-500 transition-colors hover:bg-verde-100/60"
-            >
-              <Share2 aria-hidden className="size-4" />
-              Compartilhar
-            </button>
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            <SocialShareButtons
+              shareUrl={data.invite_url}
+              shareText={shareText}
+              size="md"
+              className="justify-start"
+              onNativeShare={nativeShare}
+            />
             <button
               type="button"
               onClick={copyMessage}

@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { Check, Copy, Link2, MessageCircle, Share2 } from "lucide-react";
+import { Check, Copy, Link2 } from "lucide-react";
+import { SocialShareButtons } from "@/components/ui/social-share-buttons";
 import {
   buildAlbumShareText,
   buildAlbumShareUrl,
@@ -21,7 +22,6 @@ export function MissionSharePanel({ onComplete }: MissionSharePanelProps) {
       ? buildAlbumShareUrl(window.location.origin)
       : "/album";
   const shareText = buildAlbumShareText(shareUrl);
-  const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
 
   const markCopied = useCallback(() => {
     setCopied(true);
@@ -67,13 +67,6 @@ export function MissionSharePanel({ onComplete }: MissionSharePanelProps) {
     await copyLink();
   }
 
-  async function shareViaWhatsApp() {
-    const ok = await completeShare();
-    if (ok) {
-      window.open(whatsappUrl, "_blank", "noopener,noreferrer");
-    }
-  }
-
   return (
     <div className="w-full space-y-2 rounded-block border border-verde-500/20 bg-verde-100/50 p-2.5 sm:space-y-2.5 sm:p-3">
       <p className="text-left text-xs text-verde-escuro-500 sm:text-sm">
@@ -96,26 +89,13 @@ export function MissionSharePanel({ onComplete }: MissionSharePanelProps) {
         </button>
       </div>
 
-      <div className="flex flex-wrap justify-center gap-1.5">
-        <button
-          type="button"
-          onClick={() => void shareViaWhatsApp()}
-          disabled={submitting}
-          className="inline-flex items-center gap-1 rounded-pill border border-verde-500/25 bg-white px-2.5 py-1 text-[11px] font-medium text-verde-escuro-500 transition-colors hover:bg-white/80 disabled:opacity-60 sm:px-3 sm:py-1.5 sm:text-xs"
-        >
-          <MessageCircle className="size-3 text-[#25D366]" aria-hidden />
-          WhatsApp
-        </button>
-        <button
-          type="button"
-          onClick={() => void nativeShare()}
-          disabled={submitting}
-          className="inline-flex items-center gap-1 rounded-pill border border-verde-500/25 bg-white px-2.5 py-1 text-[11px] font-medium text-verde-escuro-500 transition-colors hover:bg-white/80 disabled:opacity-60 sm:px-3 sm:py-1.5 sm:text-xs"
-        >
-          <Share2 className="size-3" aria-hidden />
-          Compartilhar
-        </button>
-      </div>
+      <SocialShareButtons
+        shareUrl={shareUrl}
+        shareText={shareText}
+        disabled={submitting}
+        onBeforeShare={completeShare}
+        onNativeShare={nativeShare}
+      />
     </div>
   );
 }
