@@ -6,6 +6,7 @@ import Image from "next/image";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { Lock, Plus, Sparkles, ThumbsUp, Trophy, X } from "lucide-react";
 import { PasteFlight, type PasteFlightConfig } from "@/components/album/paste-flight";
+import { FigurinhaNameTag } from "@/components/sticker/figurinha-name-tag";
 import { playPasteSound } from "@/lib/play-paste-sound";
 import { rarityColor, rarityTheme, type RarityTheme } from "@/lib/rarity";
 
@@ -289,6 +290,7 @@ export function StickerSlot({
 
   const color       = rarityColor(sticker?.rarities?.slug, sticker?.rarities?.color_hex);
   const raritySlug  = sticker?.rarities?.slug ?? "common";
+  const theme       = rarityTheme(raritySlug, sticker?.rarities?.color_hex);
   const animation   = sticker?.rarities?.animation_type ?? "none";
   const isOwned     = owned > 0;
   const canPaste    = isOwned && !isPasted && !isFlying && sticker !== null;
@@ -502,6 +504,12 @@ export function StickerSlot({
                         <Lock size={14} className="text-verde-escuro-300" aria-hidden />
                       </span>
                     </div>
+                    <FigurinhaNameTag
+                      name={sticker.name}
+                      bgColor={theme.nameTag}
+                      overlay
+                      compact={size === "default"}
+                    />
                   </>
                 ) : (
                   <div className="flex h-full items-center justify-center">

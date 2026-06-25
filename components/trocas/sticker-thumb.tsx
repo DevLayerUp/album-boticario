@@ -8,10 +8,13 @@ import type { Sticker } from "./types";
 
 function thumbFrameClass(width: number) {
   if (width <= 48) {
-    return "rounded-[10px] border-2 shadow-sm";
+    return "rounded-[8px] border shadow-sm";
   }
   if (width <= 72) {
-    return "rounded-block border-[3px] shadow-[0_2px_8px_rgba(0,0,0,0.1)]";
+    return "rounded-block border-2 shadow-[0_1px_4px_rgba(0,0,0,0.08)]";
+  }
+  if (width <= 120) {
+    return "rounded-block border-2 shadow-[0_2px_6px_rgba(0,0,0,0.1)] sm:border-[3px] 2xl:border-4";
   }
   return "rounded-block border-[3px] shadow-[0_2px_8px_rgba(0,0,0,0.1)] sm:border-4 2xl:border-[5px]";
 }

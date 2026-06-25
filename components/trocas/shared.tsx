@@ -132,22 +132,24 @@ export function Modal({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[100] flex items-end justify-center p-3 sm:items-center sm:p-4"
+      className="fixed inset-0 z-[100] flex items-end justify-center p-2 sm:items-center sm:p-3 lg:p-4"
       role="presentation"
     >
       <div
-        className="absolute inset-0 bg-verde-escuro-capa/45 backdrop-blur-[6px]"
+        className="absolute inset-0 bg-verde-escuro-capa/45 backdrop-blur-[6px] sm:backdrop-blur-[8px]"
         onClick={handleClose}
         aria-hidden
       />
       <motion.div
-        initial={{ opacity: 0, y: 48 }}
+        initial={{ opacity: 0, y: 32 }}
         animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: 48 }}
+        exit={{ opacity: 0, y: 32 }}
         transition={{ type: "spring", stiffness: 400, damping: 32 }}
         className={cn(
-          "relative z-10 flex max-h-[min(92dvh,680px)] w-full flex-col overflow-hidden rounded-[24px] bg-surface shadow-[0_24px_64px_rgba(13,102,50,0.18)] sm:max-h-[min(90dvh,760px)] 2xl:max-h-none",
-          size === "lg" ? "max-w-lg sm:max-w-xl" : "max-w-md",
+          "relative z-10 flex w-full max-h-[min(88dvh,600px)] flex-col overflow-hidden rounded-block bg-surface shadow-[0_16px_48px_rgba(13,102,50,0.16)] sm:max-h-[min(90dvh,680px)] sm:rounded-card sm:shadow-[0_24px_64px_rgba(13,102,50,0.18)] lg:max-h-[min(90dvh,720px)] 2xl:max-h-none",
+          size === "lg"
+            ? "max-w-[min(100%,400px)] sm:max-w-md lg:max-w-lg 2xl:max-w-xl"
+            : "max-w-[min(100%,360px)] sm:max-w-sm lg:max-w-md 2xl:max-w-lg",
         )}
         onClick={(e) => e.stopPropagation()}
         role="dialog"
@@ -327,9 +329,9 @@ export function CreateTradeEventModal({
 
   return (
     <Modal onClose={onClose} size="lg">
-      <div className="relative shrink-0 border-b border-verde-100 bg-gradient-to-br from-verde-100 via-verde-100/60 to-surface px-5 py-5 sm:px-6 sm:py-6">
+      <div className="relative shrink-0 border-b border-verde-100 bg-gradient-to-br from-verde-100 via-verde-100/60 to-surface px-4 py-4 sm:px-5 sm:py-5 lg:px-6 lg:py-6">
         <div
-          className="pointer-events-none absolute -right-10 -top-12 size-40 rounded-full bg-verde-300/30 blur-3xl"
+          className="pointer-events-none absolute -right-10 -top-12 size-32 rounded-full bg-verde-300/30 blur-3xl sm:size-40"
           aria-hidden
         />
         <button
@@ -340,20 +342,20 @@ export function CreateTradeEventModal({
             window.setTimeout(() => onClose(), 0);
           }}
           disabled={saving}
-          className="absolute right-4 top-4 z-30 flex size-9 cursor-pointer items-center justify-center rounded-full bg-surface/80 text-verde-escuro-400 ring-1 ring-verde-200 transition-colors hover:bg-surface hover:text-verde-escuro-capa disabled:opacity-60 sm:right-5 sm:top-5"
+          className="absolute right-3 top-3 z-30 flex size-8 cursor-pointer items-center justify-center rounded-full bg-surface/80 text-verde-escuro-400 ring-1 ring-verde-200 transition-colors hover:bg-surface hover:text-verde-escuro-capa disabled:opacity-60 sm:right-4 sm:top-4 sm:size-9"
           aria-label="Fechar"
         >
-          <X size={18} aria-hidden />
+          <X size={16} className="sm:size-[18px]" aria-hidden />
         </button>
-        <div className="relative flex items-start gap-4 pr-10">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-verde-escuro-500 text-white shadow-lg shadow-verde-escuro-500/25">
-            <ArrowLeftRight size={20} aria-hidden />
+        <div className="relative flex items-start gap-3 pr-9 sm:gap-4 sm:pr-10">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-verde-escuro-500 text-white shadow-lg shadow-verde-escuro-500/25 sm:h-11 sm:w-11 2xl:h-12 2xl:w-12">
+            <ArrowLeftRight size={18} className="sm:size-5" aria-hidden />
           </div>
           <div className="min-w-0 pt-0.5">
-            <h2 className="font-display text-xl font-bold text-verde-escuro-capa sm:text-2xl">
+            <h2 className="font-display text-lg font-bold text-verde-escuro-capa sm:text-xl lg:text-2xl">
               Criar evento de troca
             </h2>
-            <p className="mt-1.5 max-w-md text-sm leading-relaxed text-verde-escuro-400">
+            <p className="mt-1 max-w-md text-xs leading-relaxed text-verde-escuro-400 sm:mt-1.5 sm:text-sm">
               Busque a figurinha que falta no seu álbum. Seu pedido aparecerá em Explorar para outros
               colecionadores.
             </p>
@@ -361,7 +363,7 @@ export function CreateTradeEventModal({
         </div>
       </div>
 
-      <div className="min-h-0 flex-1 space-y-4 overflow-visible bg-[#f8fbf7] px-5 py-5 sm:px-6 sm:py-6">
+      <div className="min-h-0 flex-1 space-y-3 overflow-y-auto overflow-x-visible bg-[#f8fbf7] px-4 py-4 sm:space-y-4 sm:px-5 sm:py-5 lg:px-6 lg:py-6">
         <div className="space-y-3">
           <label
             htmlFor="trade-event-sticker-search"
@@ -391,12 +393,12 @@ export function CreateTradeEventModal({
         ) : null}
       </div>
 
-      <div className="flex shrink-0 gap-3 border-t border-verde-100 bg-surface px-5 py-4 sm:px-6 sm:py-5">
+      <div className="flex shrink-0 gap-2 border-t border-verde-100 bg-surface px-4 py-3 sm:gap-3 sm:px-5 sm:py-4 lg:px-6 lg:py-5">
         <button
           type="button"
           onClick={onClose}
           disabled={saving}
-          className="flex-1 cursor-pointer rounded-pill border border-verde-200 py-3 text-sm font-semibold text-verde-escuro-400 transition-colors hover:bg-verde-100/50 disabled:opacity-60"
+          className="flex-1 cursor-pointer rounded-pill border border-verde-200 py-2.5 text-sm font-semibold text-verde-escuro-400 transition-colors hover:bg-verde-100/50 disabled:opacity-60 sm:py-3"
         >
           Cancelar
         </button>
@@ -404,7 +406,7 @@ export function CreateTradeEventModal({
           type="button"
           disabled={!selected || saving}
           onClick={save}
-          className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-pill bg-verde-escuro-500 py-3 text-sm font-bold text-white shadow-md shadow-verde-escuro-500/20 transition-colors hover:bg-verde-escuro-400 disabled:opacity-50"
+          className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-pill bg-verde-escuro-500 py-2.5 text-sm font-bold text-white shadow-md shadow-verde-escuro-500/20 transition-colors hover:bg-verde-escuro-400 disabled:opacity-50 sm:py-3"
         >
           {saving ? (
             <Loader2 size={16} className="animate-spin" aria-hidden />
@@ -475,15 +477,15 @@ export function FulfillWishModal({
 
   return (
     <Modal onClose={onClose}>
-      <div className="flex shrink-0 items-center gap-2.5 border-b border-verde-100 px-4 py-3 sm:gap-3 sm:px-5 sm:py-4">
-        <Avatar profile={wish.user} size={32} className="sm:!w-9 sm:!h-9" />
+      <div className="flex shrink-0 items-center gap-2 border-b border-verde-100 px-3 py-2.5 sm:gap-3 sm:px-4 sm:py-3 lg:px-5 lg:py-4">
+        <Avatar profile={wish.user} size={28} className="sm:!w-8 sm:!h-8" />
         <div>
           <p className="text-sm font-bold text-verde-escuro-capa">Oferecer figurinha</p>
-          <p className="text-xs text-verde-escuro-300">para {wish.user?.display_name}</p>
+          <p className="text-[11px] text-verde-escuro-300 sm:text-xs">para {wish.user?.display_name}</p>
         </div>
       </div>
 
-      <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-3 sm:space-y-4 sm:px-5 sm:py-4">
+      <div className="min-h-0 flex-1 space-y-2.5 overflow-y-auto px-3 py-2.5 sm:space-y-3 sm:px-4 sm:py-3 lg:space-y-4 lg:px-5 lg:py-4">
         <div className="flex items-center gap-3 rounded-card border border-verde-200 bg-verde-100/50 px-3 py-2.5">
           <StickerThumb sticker={wish.sticker} width={48} height={69} />
           <div>
@@ -519,7 +521,7 @@ export function FulfillWishModal({
             Este usuário não tem repetidas disponíveis para trocar no momento.
           </div>
         ) : (
-          <div className="grid max-h-36 grid-cols-4 gap-1.5 overflow-y-auto pr-1 sm:max-h-44 sm:gap-2">
+          <div className="grid max-h-32 grid-cols-4 gap-1 overflow-y-auto pr-1 sm:max-h-40 sm:gap-1.5 lg:max-h-44 lg:gap-2">
             {wish.user_stickers.map(({ sticker: st, quantity }) => {
               if (!st) return null;
               return (
@@ -563,7 +565,7 @@ export function FulfillWishModal({
         )}
       </div>
 
-      <div className="flex shrink-0 gap-2 border-t border-verde-100 px-4 py-3 sm:gap-3 sm:px-5 sm:py-4">
+      <div className="flex shrink-0 gap-2 border-t border-verde-100 px-3 py-2.5 sm:gap-3 sm:px-4 sm:py-3 lg:px-5 lg:py-4">
         <button
           type="button"
           onClick={onClose}

@@ -183,7 +183,7 @@ export function StickerAutocomplete({
           width: dropdownRect.width,
           zIndex: 110,
         }}
-        className="max-h-[min(320px,50dvh)] overflow-y-auto rounded-[20px] border border-verde-200/90 bg-surface p-2 shadow-[0_16px_48px_rgba(13,102,50,0.14)] ring-1 ring-verde-100 [scrollbar-width:thin]"
+        className="max-h-[min(280px,45dvh)] overflow-y-auto rounded-block border border-verde-200/90 bg-surface p-1.5 shadow-[0_12px_40px_rgba(13,102,50,0.14)] ring-1 ring-verde-100 [scrollbar-width:thin] sm:max-h-[min(320px,50dvh)] sm:rounded-card sm:p-2 sm:shadow-[0_16px_48px_rgba(13,102,50,0.14)]"
       >
         {loading && results.length === 0 ? (
           <li className="flex items-center justify-center gap-2 px-4 py-6 text-sm text-verde-escuro-300">
@@ -215,7 +215,7 @@ export function StickerAutocomplete({
                 onMouseEnter={() => setHighlight(index)}
                 onClick={() => void select(sticker)}
                 className={cn(
-                  "flex w-full cursor-pointer items-center gap-3.5 rounded-2xl px-2.5 py-2.5 text-left transition-colors duration-150",
+                  "flex w-full cursor-pointer items-center gap-2.5 rounded-xl px-2 py-2 text-left transition-colors duration-150 sm:gap-3 sm:rounded-2xl sm:px-2.5 sm:py-2.5",
                   isActive
                     ? "bg-verde-100 ring-1 ring-verde-300/80"
                     : "hover:bg-verde-50",
@@ -230,7 +230,7 @@ export function StickerAutocomplete({
                     className="mb-1.5 px-2.5 py-0.5 text-[9px] normal-case sm:text-[10px]"
                   />
                   <p
-                    className="line-clamp-2 font-display text-sm font-bold leading-snug"
+                    className="line-clamp-2 font-display text-[13px] font-bold leading-snug sm:text-sm"
                     style={{ color: stickerNameColor(slug) }}
                   >
                     {sticker.name}
@@ -257,8 +257,8 @@ export function StickerAutocomplete({
     <div ref={containerRef} className="space-y-4">
       <div className="relative">
         <Search
-          size={18}
-          className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-verde-escuro-300"
+          size={16}
+          className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-verde-escuro-300 sm:left-4 sm:size-[18px]"
           aria-hidden
         />
         <input
@@ -288,7 +288,7 @@ export function StickerAutocomplete({
             if (results.length === 0 && !fetchError) void fetchStickers(query);
           }}
           onKeyDown={onKeyDown}
-          className="w-full rounded-pill border border-verde-200 bg-surface py-3 pl-11 pr-11 text-sm text-verde-escuro-capa shadow-sm outline-none transition-[border-color,box-shadow] focus:border-verde-500 focus:ring-2 focus:ring-verde-500/20 disabled:opacity-60"
+          className="w-full rounded-pill border border-verde-200 bg-surface py-2.5 pl-10 pr-10 text-sm text-verde-escuro-capa shadow-sm outline-none transition-[border-color,box-shadow] focus:border-verde-500 focus:ring-2 focus:ring-verde-500/20 disabled:opacity-60 sm:py-3 sm:pl-11 sm:pr-11"
         />
         <div className="pointer-events-none absolute right-3 top-1/2 flex -translate-y-1/2 items-center gap-1">
           {loading ? (
@@ -317,20 +317,20 @@ export function StickerAutocomplete({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -6 }}
             transition={{ duration: 0.22 }}
-            className="rounded-[20px] border border-verde-200 bg-gradient-to-b from-verde-100/80 to-surface px-4 py-5 sm:px-5"
+            className="rounded-block border border-verde-200 bg-gradient-to-b from-verde-100/80 to-surface px-3 py-4 sm:rounded-card sm:px-4 sm:py-5 lg:px-5"
           >
-            <p className="text-center text-[10px] font-bold uppercase tracking-[0.14em] text-verde-escuro-400">
+            <p className="text-center text-[9px] font-bold uppercase tracking-[0.12em] text-verde-escuro-400 sm:text-[10px] sm:tracking-[0.14em]">
               Figurinha selecionada
             </p>
-            <div className="mt-4 flex flex-col items-center gap-3">
-              <StickerThumb sticker={value} width={112} height={160} selected />
+            <div className="mt-3 flex flex-col items-center gap-2.5 sm:mt-4 sm:gap-3">
+              <StickerThumb sticker={value} width={100} height={143} />
               <RarityBadge
                 name={value.rarities?.name ?? "Comum"}
                 slug={value.rarities?.slug ?? "common"}
                 colorHex={value.rarities?.color_hex}
               />
               <p
-                className="max-w-[260px] text-center font-display text-lg font-bold leading-tight sm:text-xl"
+                className="max-w-[240px] text-center font-display text-base font-bold leading-tight sm:max-w-[260px] sm:text-lg lg:text-xl"
                 style={{ color: stickerNameColor(value.rarities?.slug) }}
               >
                 {value.name}
@@ -342,7 +342,7 @@ export function StickerAutocomplete({
 
       {showInlineSelection ? (
         <div className="flex items-center gap-3 rounded-card border border-verde-200 bg-verde-100/50 px-3 py-2.5">
-          <StickerThumb sticker={value} width={56} height={80} selected />
+          <StickerThumb sticker={value} width={56} height={80} />
           <div className="min-w-0">
             <p className="text-[10px] font-bold uppercase tracking-wider text-verde-escuro-500">
               Selecionada
