@@ -31,6 +31,7 @@ export default async function EditarFigurinhaPage({
         image_url: s.image_url,
         category_id: s.category_id ? String(s.category_id) : "",
         rarity_id: s.rarity_id ? String(s.rarity_id) : "",
+        redirect_url: s.redirect_url ?? "",
         is_user_type: s.is_user_type,
         is_active: s.is_active,
       }}

@@ -12,6 +12,7 @@ interface Rarity { id: number; name: string; color_hex: string }
 interface FormData {
   name: string;
   description: string;
+  redirect_url: string;
   image_url: string | null;
   category_id: string;
   rarity_id: string;
@@ -29,6 +30,7 @@ interface FigurinhaFormProps {
 const defaults: FormData = {
   name: "",
   description: "",
+  redirect_url: "",
   image_url: null,
   category_id: "",
   rarity_id: "",
@@ -54,6 +56,18 @@ export function FigurinhaForm({
   async function handleSave() {
     if (!form.name.trim()) { setError("Nome é obrigatório"); return; }
     if (!form.image_url) { setError("Imagem é obrigatória"); return; }
+    if (form.redirect_url.trim()) {
+      try {
+        const parsed = new URL(form.redirect_url.trim());
+        if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+          setError("O link do material deve começar com http:// ou https://");
+          return;
+        }
+      } catch {
+        setError("Informe um link válido para o material");
+        return;
+      }
+    }
 
     setSaving(true);
     setError(null);
@@ -66,6 +80,7 @@ export function FigurinhaForm({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...form,
+          redirect_url: form.redirect_url.trim() || null,
           category_id: form.category_id ? Number(form.category_id) : null,
           rarity_id: form.rarity_id ? Number(form.rarity_id) : null,
         }),
@@ -141,6 +156,22 @@ export function FigurinhaForm({
               className="w-full resize-none rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gb-green focus:ring-1 focus:ring-gb-green"
               placeholder="Texto do verso / tooltip"
             />
+          </div>
+
+          <div className="sm:col-span-2">
+            <label className="mb-1 block text-sm font-medium text-gray-700">
+              Link do material
+            </label>
+            <input
+              type="url"
+              value={form.redirect_url}
+              onChange={(e) => set("redirect_url", e.target.value)}
+              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gb-green focus:ring-1 focus:ring-gb-green"
+              placeholder="https://exemplo.com/material (opcional)"
+            />
+            <p className="mt-1 text-xs text-gray-500">
+              Quando preenchido, exibe um botão no verso da figurinha no álbum.
+            </p>
           </div>
 
           <div>

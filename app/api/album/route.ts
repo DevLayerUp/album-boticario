@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
        album_slots (
          id, slot_number, position_x, position_y,
          stickers (
-           id, name, description, image_url, is_user_type,
+           id, name, description, image_url, is_user_type, redirect_url,
            rarities (name, slug, color_hex, animation_type)
          )
        )`

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminGuard } from "@/lib/admin-guard";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { normalizeRedirectUrl } from "@/lib/sticker-redirect-url";
 
 export async function GET(request: NextRequest) {
   const guard = await adminGuard();
@@ -37,13 +38,16 @@ export async function POST(request: NextRequest) {
   if (guard) return guard;
 
   const body = await request.json();
-  const { name, description, image_url, category_id, rarity_id, is_user_type } = body;
+  const { name, description, image_url, category_id, rarity_id, is_user_type, redirect_url } = body;
 
   if (!name?.trim()) {
     return NextResponse.json({ error: "Nome é obrigatório" }, { status: 400 });
   }
   if (!image_url) {
     return NextResponse.json({ error: "Imagem é obrigatória" }, { status: 400 });
+  }
+  if (redirect_url && normalizeRedirectUrl(redirect_url) === null) {
+    return NextResponse.json({ error: "Link do material inválido" }, { status: 400 });
   }
 
   const supabase = createAdminClient();
@@ -53,6 +57,7 @@ export async function POST(request: NextRequest) {
       name: name.trim(),
       description,
       image_url,
+      redirect_url: normalizeRedirectUrl(redirect_url),
       category_id: category_id || null,
       rarity_id: rarity_id || null,
       is_user_type: !!is_user_type,

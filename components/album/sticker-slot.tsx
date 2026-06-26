@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { Lock, Plus, Sparkles, ThumbsUp, Trophy, X } from "lucide-react";
+import { Lock, Plus, Sparkles, ThumbsUp, Trophy, X, ExternalLink } from "lucide-react";
 import { PasteFlight, type PasteFlightConfig } from "@/components/album/paste-flight";
 import { FigurinhaNameTag } from "@/components/sticker/figurinha-name-tag";
 import { StickerRarityEffects } from "@/components/sticker/sticker-rarity-effects";
@@ -18,6 +18,7 @@ export interface SlotSticker {
   name: string;
   description?: string | null;
   image_url: string;
+  redirect_url?: string | null;
   is_user_type: boolean;
   rarities: {
     name: string;
@@ -126,6 +127,7 @@ function StickerDetailModal({
   const theme      = rarityTheme(slug, sticker.rarities?.color_hex);
   const rarityName = sticker.rarities?.name ?? "Comum";
   const animation  = sticker.rarities?.animation_type ?? "none";
+  const materialUrl = sticker.redirect_url?.trim() || null;
 
   useEffect(() => {
     setShowBack(false);
@@ -210,11 +212,23 @@ function StickerDetailModal({
             >
               <StickerNameTag name={sticker.name} fullWidth bgColor={theme.nameTag} />
 
-              <div className="flex min-h-0 flex-1 items-center overflow-y-auto">
+              <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 overflow-y-auto">
                 <p className="text-center text-base leading-[1.4] text-white sm:text-xl">
                   {sticker.description ??
                     "Figurinha exclusiva da coleção Fãs da Natureza."}
                 </p>
+
+                {materialUrl ? (
+                  <a
+                    href={materialUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-pill bg-white px-6 py-2.5 text-sm font-semibold text-verde-escuro-500 shadow-[0_4px_16px_rgba(0,0,0,0.12)] transition-colors hover:bg-verde-100"
+                  >
+                    <ExternalLink size={16} aria-hidden />
+                    Acessar material
+                  </a>
+                ) : null}
               </div>
 
               <RarityBadge name={rarityName} slug={slug} theme={theme} />
