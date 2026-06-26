@@ -15,15 +15,15 @@ function effectIntensity(width: number): StickerEffectIntensity {
 
 function thumbFrameClass(width: number) {
   if (width <= 48) {
-    return "rounded-[8px] border shadow-sm";
+    return "rounded-input border shadow-sm";
   }
   if (width <= 72) {
-    return "rounded-block border-2 shadow-[0_1px_4px_rgba(0,0,0,0.08)]";
+    return "rounded-input border-2 shadow-[0_1px_4px_rgba(0,0,0,0.08)]";
   }
   if (width <= 120) {
-    return "rounded-block border-2 shadow-[0_2px_6px_rgba(0,0,0,0.1)] sm:border-[3px] 2xl:border-4";
+    return "rounded-input border-2 shadow-[0_2px_6px_rgba(0,0,0,0.1)] sm:border-[3px] 2xl:border-4";
   }
-  return "rounded-block border-[3px] shadow-[0_2px_8px_rgba(0,0,0,0.1)] sm:border-4 2xl:border-[5px]";
+  return "rounded-input border-[3px] shadow-[0_2px_8px_rgba(0,0,0,0.1)] sm:border-4 2xl:border-[5px]";
 }
 
 export function StickerThumb({
@@ -47,7 +47,7 @@ export function StickerThumb({
   if (!sticker) {
     return (
       <div
-        className={cn("shrink-0 rounded-block bg-verde-100", className)}
+        className={cn("shrink-0 rounded-input bg-verde-100", className)}
         style={{ width, height }}
       />
     );
