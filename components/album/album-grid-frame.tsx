@@ -136,7 +136,7 @@ export function AlbumDuo2Scaler({ inFlipBook = false, children }: AlbumDuo2Scale
   const containerRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
-  const [contentSize, setContentSize] = useState({
+  const [contentSize, setContentSize] = useState<{ w: number; h: number }>({
     w: ALBUM_DUO2_DESIGN.rowWidth,
     h: ALBUM_DUO2_DESIGN.cardHeight,
   });
@@ -179,7 +179,7 @@ export function AlbumDuo2Scaler({ inFlipBook = false, children }: AlbumDuo2Scale
     const observer = new ResizeObserver(update);
     observer.observe(el);
     return () => observer.disconnect();
-  }, [contentSize.w, contentSize.h]);
+  }, [contentSize]);
 
   const layoutW = contentSize.w * scale;
   const layoutH = contentSize.h * scale;
