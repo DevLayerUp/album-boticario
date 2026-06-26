@@ -4,8 +4,13 @@ import { useState } from "react";
 import { LogOut } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
-export function SignOutButton() {
+interface SignOutButtonProps {
+  className?: string;
+}
+
+export function SignOutButton({ className }: SignOutButtonProps) {
   const [loading, setLoading] = useState(false);
 
   async function handleSignOut() {
@@ -22,6 +27,7 @@ export function SignOutButton() {
       size="sm"
       onClick={handleSignOut}
       loading={loading}
+      className={cn("h-auto min-h-0 gap-1.5 px-3 py-1.5", className)}
     >
       {!loading && <LogOut aria-hidden className="size-4" strokeWidth={1.8} />}
       Sair

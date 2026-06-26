@@ -1,6 +1,64 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { adminGuard } from "@/lib/admin-guard";
+import { TEMPLATE_MAP, type TemplateId } from "@/lib/album-templates";
+import type { SupabaseClient } from "@supabase/supabase-js";
+
+async function reconcilePageSlots(
+  supabase: SupabaseClient,
+  pageId: number,
+  templateId: TemplateId,
+) {
+  const template = TEMPLATE_MAP[templateId];
+  if (!template) {
+    return { error: "Template inválido" as const };
+  }
+
+  const newTotal = template.total;
+
+  if (newTotal === 0) {
+    const { error } = await supabase.from("album_slots").delete().eq("page_id", pageId);
+    if (error) return { error: error.message };
+    return { slot_count: 0 };
+  }
+
+  const { error: deleteError } = await supabase
+    .from("album_slots")
+    .delete()
+    .eq("page_id", pageId)
+    .gt("slot_number", newTotal);
+
+  if (deleteError) return { error: deleteError.message };
+
+  const { data: remaining, error: fetchError } = await supabase
+    .from("album_slots")
+    .select("slot_number")
+    .eq("page_id", pageId)
+    .order("slot_number");
+
+  if (fetchError) return { error: fetchError.message };
+
+  const maxSlot = remaining?.length
+    ? Math.max(...remaining.map((s) => s.slot_number))
+    : 0;
+
+  if (maxSlot < newTotal) {
+    const slots = Array.from({ length: newTotal - maxSlot }, (_, offset) => {
+      const i = maxSlot + offset;
+      return {
+        page_id: pageId,
+        slot_number: i + 1,
+        position_x: ((i % template.cols) / template.cols) * 100,
+        position_y: (Math.floor(i / template.cols) / template.rows) * 100,
+      };
+    });
+
+    const { error: insertError } = await supabase.from("album_slots").insert(slots);
+    if (insertError) return { error: insertError.message };
+  }
+
+  return { slot_count: newTotal };
+}
 
 /**
  * DELETE /api/admin/paginas/[id]
@@ -77,8 +135,9 @@ export async function PUT(
  *   → `content` is raw HTML
  *
  * Sticker pages (layout content via JSON):
- *   { layout_data?, title? }
+ *   { layout_data?, title?, layout_template? }
  *   → `layout_data` is a JSON string (or object) stored in the `content` column
+ *   → `layout_template` reconciles catalog slots (add/remove) for existing sticker pages
  *   → `title` is also synced to the top-level DB column for quick lookups
  *
  * Both variants can be combined in the same request body; the handler
@@ -100,14 +159,51 @@ export async function PATCH(
     background_url,
     title,
     layout_data,   // ← for sticker pages: LayoutData object OR JSON string
+    layout_template,
   } = body as {
     content?: string;
     background_url?: string;
     title?: string;
     layout_data?: unknown;
+    layout_template?: string;
   };
 
   const patch: Record<string, unknown> = {};
+  let slotCount: number | undefined;
+
+  if (layout_template !== undefined) {
+    const template = TEMPLATE_MAP[layout_template as TemplateId];
+    if (!template) {
+      return NextResponse.json({ error: "Template inválido" }, { status: 400 });
+    }
+
+    const { data: page, error: pageError } = await supabase
+      .from("album_pages")
+      .select("page_type, layout_template")
+      .eq("id", id)
+      .single();
+
+    if (pageError || !page) {
+      return NextResponse.json({ error: "Página não encontrada" }, { status: 404 });
+    }
+    if (page.page_type !== "sticker") {
+      return NextResponse.json(
+        { error: "Só é possível alterar o template de páginas de figurinhas" },
+        { status: 400 },
+      );
+    }
+    if (page.layout_template !== layout_template) {
+      const reconciled = await reconcilePageSlots(supabase, Number(id), layout_template as TemplateId);
+      if ("error" in reconciled) {
+        return NextResponse.json({ error: reconciled.error }, { status: 500 });
+      }
+      slotCount = reconciled.slot_count;
+    } else {
+      slotCount = template.total;
+    }
+
+    patch.layout_template = layout_template;
+  }
 
   // Info page fields
   if (content !== undefined)        patch.content        = content ?? null;
@@ -147,5 +243,8 @@ export async function PATCH(
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json(data);
+  return NextResponse.json({
+    ...data,
+    ...(slotCount !== undefined ? { slot_count: slotCount } : {}),
+  });
 }

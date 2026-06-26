@@ -35,8 +35,8 @@ export interface StickerSlotProps {
   isPasted: boolean;
   owned: number;
   onPaste?: (slotId: number, stickerId: number) => Promise<void>;
-  /** default 160×229 — large 199×284 (tri3 template) */
-  size?: "default" | "large";
+  /** default 160×229 — large 199×284 (tri3) — duo 267×381 (duo2, Figma 334:2607) */
+  size?: "default" | "large" | "duo";
   /** Abre o modal de colagem ao montar (deep link do estoque). */
   autoOpenPaste?: boolean;
 }
@@ -66,16 +66,20 @@ function StickerNameTag({
   name,
   fullWidth,
   bgColor,
+  compact,
 }: {
   name: string;
   fullWidth?: boolean;
   bgColor: string;
+  compact?: boolean;
 }) {
   return (
     <span
-      className={`flex items-end justify-center rounded-card rounded-br-none px-4 py-2 text-center font-display text-lg font-bold uppercase leading-tight text-white sm:text-2xl sm:leading-8 ${
-        fullWidth ? "w-full" : ""
-      }`}
+      className={cn(
+        "flex items-end justify-center rounded-card rounded-br-none px-4 py-2 text-center font-display font-bold uppercase leading-tight text-white",
+        fullWidth ? "w-full" : "",
+        compact ? "px-3 py-1.5 text-sm leading-snug sm:text-base" : "text-lg sm:text-2xl sm:leading-8",
+      )}
       style={{ backgroundColor: bgColor }}
     >
       {name}
@@ -87,17 +91,22 @@ function RarityBadge({
   name,
   slug,
   theme,
+  compact,
 }: {
   name: string;
   slug: string;
   theme: RarityTheme;
+  compact?: boolean;
 }) {
   const { badge } = theme;
   const Icon = slug === "super_rare" ? Trophy : ThumbsUp;
 
   return (
     <span
-      className="inline-flex items-center gap-2.5 rounded-pill px-10 py-2 text-base font-medium"
+      className={cn(
+        "inline-flex items-center gap-2.5 rounded-pill font-medium",
+        compact ? "gap-1.5 px-5 py-1.5 text-xs sm:text-sm" : "px-10 py-2 text-base",
+      )}
       style={{
         color: badge.text,
         background:
@@ -107,7 +116,7 @@ function RarityBadge({
         boxShadow: badge.shadow,
       }}
     >
-      <Icon size={slug === "super_rare" ? 20 : 17} />
+      <Icon size={compact ? (slug === "super_rare" ? 15 : 13) : slug === "super_rare" ? 20 : 17} />
       {name}
     </span>
   );
@@ -139,7 +148,7 @@ function StickerDetailModal({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4"
       onClick={onClose}
     >
       {/* Backdrop: tint verde + blur (Figma 28:1510) */}
@@ -150,20 +159,23 @@ function StickerDetailModal({
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.92, opacity: 0, y: 12 }}
         transition={{ type: "spring", stiffness: 320, damping: 28 }}
-        className="relative flex max-h-[92dvh] w-full max-w-[497px] flex-col overflow-y-auto rounded-card bg-[#ebffe6] p-6 shadow-card sm:p-8"
+        className="relative flex w-full max-w-[497px] flex-col overflow-hidden rounded-card bg-[#ebffe6] p-4 shadow-card sm:p-6 lg:p-8"
         onClick={(e) => e.stopPropagation()}
       >
         <button
           type="button"
           onClick={onClose}
           aria-label="Fechar"
-          className="absolute right-5 top-5 z-20 flex h-10 w-10 cursor-pointer items-center justify-center text-black transition-colors hover:text-verde-escuro-500"
+          className="absolute right-3 top-3 z-20 flex h-8 w-8 cursor-pointer items-center justify-center text-black transition-colors hover:text-verde-escuro-500 sm:right-4 sm:top-4 sm:h-9 sm:w-9"
         >
-          <X size={32} strokeWidth={2.5} />
+          <X className="h-6 w-6 sm:h-7 sm:w-7" strokeWidth={2.5} />
         </button>
 
-        {/* Flip card */}
-        <div className="mx-auto mt-8 w-full max-w-[392px]" style={{ perspective: "1200px" }}>
+        {/* Flip card — altura limitada ao viewport para evitar scroll no modal */}
+        <div
+          className="mx-auto mt-6 w-[min(100%,392px,calc((92dvh-10.5rem)*392/560))] shrink-0"
+          style={{ perspective: "1200px" }}
+        >
           <motion.div
             animate={{ rotateY: showBack ? 180 : 0 }}
             transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
@@ -184,7 +196,7 @@ function StickerDetailModal({
                 alt={sticker.name}
                 fill
                 className="object-cover"
-                sizes="392px"
+                sizes="(max-width: 640px) 280px, 392px"
                 priority
               />
               <StickerRarityEffects
@@ -193,15 +205,14 @@ function StickerDetailModal({
                 color={theme.border}
                 intensity="strong"
               />
-              {/* Nome sobre a imagem, próximo da base */}
-              <div className="absolute inset-x-2 bottom-10 flex justify-center sm:bottom-16">
-                <StickerNameTag name={sticker.name} bgColor={theme.nameTag} />
+              <div className="absolute inset-x-2 bottom-6 flex justify-center sm:bottom-10">
+                <StickerNameTag name={sticker.name} bgColor={theme.nameTag} compact />
               </div>
             </div>
 
             {/* ── Verso ── */}
             <div
-              className="absolute inset-0 flex flex-col items-center justify-between gap-4 overflow-hidden rounded-block border-[5px] px-6 py-8 sm:py-10"
+              className="absolute inset-0 flex flex-col items-center justify-between gap-2 overflow-hidden rounded-block border-[5px] px-4 py-5 sm:gap-3 sm:px-5 sm:py-6"
               style={{
                 borderColor: theme.border,
                 backgroundColor: theme.backBg,
@@ -210,10 +221,10 @@ function StickerDetailModal({
                 transform: "rotateY(180deg)",
               }}
             >
-              <StickerNameTag name={sticker.name} fullWidth bgColor={theme.nameTag} />
+              <StickerNameTag name={sticker.name} fullWidth bgColor={theme.nameTag} compact />
 
-              <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 overflow-y-auto">
-                <p className="text-center text-base leading-[1.4] text-white sm:text-xl">
+              <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-2.5 sm:gap-3">
+                <p className="line-clamp-6 text-center text-sm leading-[1.35] text-white sm:line-clamp-8 sm:text-base lg:text-lg">
                   {sticker.description ??
                     "Figurinha exclusiva da coleção Fãs da Natureza."}
                 </p>
@@ -223,25 +234,25 @@ function StickerDetailModal({
                     href={materialUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-pill bg-white px-6 py-2.5 text-sm font-semibold text-verde-escuro-500 shadow-[0_4px_16px_rgba(0,0,0,0.12)] transition-colors hover:bg-verde-100"
+                    className="inline-flex min-h-9 shrink-0 items-center justify-center gap-1.5 rounded-pill bg-white px-4 py-2 text-xs font-semibold text-verde-escuro-500 shadow-[0_4px_16px_rgba(0,0,0,0.12)] transition-colors hover:bg-verde-100 sm:min-h-10 sm:gap-2 sm:px-5 sm:text-sm"
                   >
-                    <ExternalLink size={16} aria-hidden />
+                    <ExternalLink size={14} className="sm:h-4 sm:w-4" aria-hidden />
                     Acessar material
                   </a>
                 ) : null}
               </div>
 
-              <RarityBadge name={rarityName} slug={slug} theme={theme} />
+              <RarityBadge name={rarityName} slug={slug} theme={theme} compact />
             </div>
           </motion.div>
         </div>
 
         {/* Frente / Verso toggle (Figma 28:1535) */}
-        <div className="mb-1 mt-8 flex items-center justify-center gap-4">
+        <div className="mt-4 flex shrink-0 items-center justify-center gap-3 pb-0.5 sm:mt-5 sm:gap-4">
           <button
             type="button"
             onClick={() => setShowBack(false)}
-            className="cursor-pointer text-base font-medium uppercase text-verde-500 transition-opacity hover:opacity-80"
+            className="cursor-pointer text-sm font-medium uppercase text-verde-500 transition-opacity hover:opacity-80 sm:text-base"
           >
             Frente
           </button>
@@ -251,23 +262,23 @@ function StickerDetailModal({
             aria-checked={showBack}
             aria-label={showBack ? "Mostrando verso" : "Mostrando frente"}
             onClick={() => setShowBack((v) => !v)}
-            className={`relative h-8 w-[87px] cursor-pointer rounded-pill transition-colors ${
+            className={`relative h-7 w-[76px] cursor-pointer rounded-pill transition-colors sm:h-8 sm:w-[87px] ${
               showBack ? "bg-verde-escuro-500" : "bg-verde-500"
             }`}
           >
             <motion.span
               layout
               transition={{ type: "spring", stiffness: 500, damping: 30 }}
-              className={`absolute top-[3px] h-[26px] w-[26px] rounded-full ${
-                showBack ? "bg-verde-500" : "bg-verde-escuro-500"
-              }`}
-              style={{ left: showBack ? "calc(100% - 29px)" : "3px" }}
+              className={cn(
+                "absolute top-[3px] h-[22px] w-[22px] rounded-full sm:h-[26px] sm:w-[26px]",
+                showBack ? "right-[3px] bg-verde-500" : "left-[3px] bg-verde-escuro-500",
+              )}
             />
           </button>
           <button
             type="button"
             onClick={() => setShowBack(true)}
-            className="cursor-pointer text-base font-medium uppercase text-verde-escuro-500 transition-opacity hover:opacity-80"
+            className="cursor-pointer text-sm font-medium uppercase text-verde-escuro-500 transition-opacity hover:opacity-80 sm:text-base"
           >
             Verso
           </button>
@@ -281,8 +292,20 @@ function StickerDetailModal({
 export function StickerSlot({
   slotId, slotNumber, sticker, isPasted, owned, onPaste, size = "default", autoOpenPaste = false,
 }: StickerSlotProps) {
-  const aspectClass = size === "large" ? "aspect-[199/284]" : "aspect-160/229";
-  const imageSizes  = size === "large" ? "199px" : "(max-width: 768px) 30vw, 200px";
+  const aspectClass =
+    size === "duo"
+      ? "aspect-[267/381]"
+      : size === "large"
+        ? "aspect-[199/284]"
+        : "aspect-160/229";
+  const radiusClass = size === "duo" ? "rounded-[16px]" : "rounded-input";
+  const imageSizes  =
+    size === "duo"
+      ? "267px"
+      : size === "large"
+        ? "199px"
+        : "(max-width: 768px) 30vw, 200px";
+  const isBigCard   = size === "large" || size === "duo";
   const [showPasteModal, setShowPasteModal]   = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [pasting, setPasting]                 = useState(false);
@@ -380,7 +403,7 @@ export function StickerSlot({
         data-slot-id={slotId}
         aria-label={slotLabel}
         className={[
-          `relative block ${aspectClass} w-full overflow-hidden rounded-input border-[5px] text-left transition-colors duration-300`,
+          `relative block ${aspectClass} w-full overflow-hidden ${radiusClass} border-[5px] text-left transition-colors duration-300`,
           isComplete
             ? "cursor-pointer"
             : isAwaitingLand
@@ -434,7 +457,7 @@ export function StickerSlot({
               slug={raritySlug}
               animationType={animation}
               color={color}
-              intensity={size === "large" ? "strong" : "normal"}
+              intensity={isBigCard ? "strong" : "normal"}
             />
 
             <AnimatePresence>
@@ -468,12 +491,12 @@ export function StickerSlot({
                 {sticker ? (
                   <>
                     <Image src={sticker.image_url} alt={sticker.name} fill
-                      className="object-cover opacity-50" sizes="(max-width: 768px) 30vw, 200px" />
+                      className="object-cover opacity-50" sizes={imageSizes} />
                     <StickerRarityEffects
                       slug={raritySlug}
                       animationType={animation}
                       color={color}
-                      intensity={size === "large" ? "normal" : "subtle"}
+                      intensity={isBigCard ? "normal" : "subtle"}
                     />
                     <div className="absolute inset-0 flex items-center justify-center bg-verde-escuro-500/30">
                       <motion.div
@@ -513,12 +536,12 @@ export function StickerSlot({
                     <div
                       className={cn(
                         "absolute inset-x-0 z-[5] flex -translate-y-1/2 justify-center",
-                        size === "large" ? "top-[32%]" : "top-[30%]",
+                        isBigCard ? "top-[32%]" : "top-[30%]",
                       )}
                     >
                       <span className="flex size-7 items-center justify-center rounded-full bg-surface/90 shadow-sm sm:size-8">
                         <Lock
-                          size={size === "large" ? 14 : 12}
+                          size={isBigCard ? 14 : 12}
                           className="text-verde-escuro-300"
                           aria-hidden
                         />

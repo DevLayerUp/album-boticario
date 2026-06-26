@@ -8,9 +8,14 @@ import {
   parseLayoutData,
   type Title3Data,
   type Grid6Data,
+  type Duo2Data,
   type ProfileData,
+  ALBUM_DUO2_CARD,
+  ALBUM_DUO2_DESIGN,
+  ALBUM_GRID_CARD,
 } from "@/lib/album-templates";
 import {
+  AlbumDuo2Scaler,
   AlbumGridFrame,
   AlbumGridSlotCell,
   AlbumStickerGrid,
@@ -85,7 +90,7 @@ function Title3Page({ page, side, pastedSlotIds, ownedMap, onPaste, inFlipBook, 
     <PageShell side={side} pageNumber={page.page_number} inFlipBook={inFlipBook}>
       <div
         className={cn(
-          "flex flex-1 flex-col",
+          "flex w-full flex-col",
           inFlipBook
             ? "px-4 pb-2 pt-3 sm:px-[10%] sm:pb-4 sm:pt-4"
             : "px-6 pb-4 pt-6 sm:px-[10%]",
@@ -148,7 +153,7 @@ function ProfilePage({ page, side, userStickerUrl, userDisplayName, inFlipBook }
     <PageShell side={side} pageNumber={page.page_number} inFlipBook={inFlipBook}>
       <div
         className={cn(
-          "flex flex-1 flex-col items-center",
+          "flex w-full flex-col items-center",
           inFlipBook
             ? "px-4 py-3 sm:px-[10%] sm:py-5"
             : "px-6 py-6 sm:px-[10%]",
@@ -165,7 +170,7 @@ function ProfilePage({ page, side, userStickerUrl, userDisplayName, inFlipBook }
           </h2>
         )}
 
-        <div className="flex flex-1 flex-col items-center justify-center">
+        <div className="flex flex-col items-center justify-center">
           {hasSticker ? (
             <div
               className="relative overflow-hidden shadow-2xl shadow-black/30"
@@ -231,14 +236,19 @@ function renderGridSlots(
   ownedMap: Map<number, number>,
   onPaste: AlbumPageProps["onPaste"],
   focusSlotId?: number | null,
+  options?: {
+    card?: typeof ALBUM_DUO2_CARD;
+    slotSize?: "default" | "large" | "duo";
+  },
 ) {
+  const card = options?.card ?? ALBUM_GRID_CARD;
   return [...slots]
     .sort((a, b) => a.slot_number - b.slot_number)
     .slice(0, limit)
     .map((slot) => {
       const stickerId = slot.stickers?.id;
       return (
-        <AlbumGridSlotCell key={slot.id}>
+        <AlbumGridSlotCell key={slot.id} card={card}>
           <StickerSlot
             slotId={slot.id}
             slotNumber={slot.slot_number}
@@ -246,6 +256,7 @@ function renderGridSlots(
             isPasted={pastedSlotIds.has(slot.id)}
             owned={stickerId ? (ownedMap.get(stickerId) ?? 0) : 0}
             onPaste={onPaste}
+            size={options?.slotSize}
             autoOpenPaste={focusSlotId === slot.id}
           />
         </AlbumGridSlotCell>
@@ -323,11 +334,11 @@ function Tri3Page({ page, side, pastedSlotIds, ownedMap, onPaste, inFlipBook, fo
     <PageShell side={side} pageNumber={page.page_number} inFlipBook={inFlipBook}>
       <div
         className={cn(
-          "flex flex-1 flex-col",
+          "flex w-full flex-col",
           inFlipBook ? "px-4 py-3 sm:px-[8%] sm:py-5" : "px-5 py-6 sm:px-[8%]",
         )}
       >
-        <div className="flex flex-1 items-center justify-center">
+        <div className="flex items-center justify-center">
           <div className="flex items-center gap-5 sm:gap-8 md:gap-10">
             <div className={cellClass}>{renderSlot(left)}</div>
             <div className="flex flex-col gap-5 sm:gap-6 md:gap-8">
@@ -337,6 +348,92 @@ function Tri3Page({ page, side, pastedSlotIds, ownedMap, onPaste, inFlipBook, fo
           </div>
         </div>
       </div>
+    </PageShell>
+  );
+}
+
+function Duo2Page({ page, side, pastedSlotIds, ownedMap, onPaste, inFlipBook, focusSlotId }: AlbumPageProps) {
+  const slots = [...page.album_slots].sort((a, b) => a.slot_number - b.slot_number).slice(0, 2);
+  const data = parseLayoutData(page.content) as Duo2Data;
+  const text = data.text ?? null;
+
+  function renderSlot(slot: (typeof slots)[number]) {
+    const stickerId = slot.stickers?.id;
+    return (
+      <div
+        key={slot.id}
+        className="shrink-0"
+        style={{
+          width: ALBUM_DUO2_DESIGN.cardWidth,
+          height: ALBUM_DUO2_DESIGN.cardHeight,
+        }}
+      >
+        <StickerSlot
+          slotId={slot.id}
+          slotNumber={slot.slot_number}
+          sticker={slot.stickers}
+          isPasted={pastedSlotIds.has(slot.id)}
+          owned={stickerId ? (ownedMap.get(stickerId) ?? 0) : 0}
+          onPaste={onPaste}
+          size="duo"
+          autoOpenPaste={focusSlotId === slot.id}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <PageShell side={side} pageNumber={page.page_number} inFlipBook={inFlipBook}>
+      <div
+        className={cn(
+          "flex max-h-full min-h-0 w-full flex-col",
+          inFlipBook ? "px-4 sm:px-[6%]" : "px-6 sm:px-[8%]",
+        )}
+      >
+        <AlbumDuo2Scaler inFlipBook={inFlipBook}>
+          {text ? (
+            <div
+              className={cn(
+                "w-full text-white",
+                "**:text-white [&_p]:mb-0 [&_p]:leading-[30px] [&_p:last-child]:mb-0 [&_strong]:font-bold",
+              )}
+              style={{
+                maxWidth: ALBUM_DUO2_DESIGN.textMaxWidth,
+                fontSize: ALBUM_DUO2_DESIGN.textFontSize,
+                lineHeight: `${ALBUM_DUO2_DESIGN.textLineHeight}px`,
+              }}
+              dangerouslySetInnerHTML={{ __html: text }}
+            />
+          ) : null}
+
+          {text ? (
+            <div
+              aria-hidden
+              className="shrink-0"
+              style={{ height: ALBUM_DUO2_DESIGN.textToCardsGap }}
+            />
+          ) : null}
+
+          <div
+            className="flex items-center justify-center"
+            style={{ gap: ALBUM_DUO2_DESIGN.cardGap }}
+          >
+            {slots.map(renderSlot)}
+          </div>
+        </AlbumDuo2Scaler>
+      </div>
+    </PageShell>
+  );
+}
+
+function Grid4Page({ page, side, pastedSlotIds, ownedMap, onPaste, inFlipBook, focusSlotId }: AlbumPageProps) {
+  return (
+    <PageShell side={side} pageNumber={page.page_number} inFlipBook={inFlipBook}>
+      <AlbumGridFrame inFlipBook={inFlipBook}>
+        <AlbumStickerGrid cols={2} rows={2}>
+          {renderGridSlots(page.album_slots, 4, pastedSlotIds, ownedMap, onPaste, focusSlotId)}
+        </AlbumStickerGrid>
+      </AlbumGridFrame>
     </PageShell>
   );
 }
@@ -362,11 +459,11 @@ function InfoPage({ page, side, inFlipBook }: AlbumPageProps) {
     <PageShell side={side} pageNumber={page.page_number} inFlipBook={inFlipBook}>
       <div
         className={cn(
-          "flex flex-1 flex-col",
+          "flex w-full flex-col",
           inFlipBook ? "px-4 py-5 sm:px-[8%] sm:py-8" : "px-6 py-8 sm:px-[8%]",
         )}
       >
-        <div className="flex flex-1 flex-col items-center justify-center gap-4 sm:gap-5">
+        <div className="flex flex-col items-center justify-center gap-4 sm:gap-5">
           {imageUrl ? (
             <div className="relative aspect-[4/3] w-full max-w-[320px] overflow-hidden rounded-card sm:max-w-[380px]">
               <Image
@@ -425,6 +522,12 @@ export function AlbumPage(props: AlbumPageProps) {
   }
   if (props.page.layout_template === "tri3") {
     return <Tri3Page {...props} />;
+  }
+  if (props.page.layout_template === "grid4") {
+    return <Grid4Page {...props} />;
+  }
+  if (props.page.layout_template === "duo2") {
+    return <Duo2Page {...props} />;
   }
   if (props.page.layout_template === "3x3") {
     return <Grid3x3Page {...props} />;

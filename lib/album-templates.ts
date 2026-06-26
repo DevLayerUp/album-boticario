@@ -4,6 +4,8 @@
  * Templates:
  *   title3  → title + rich-text paragraph + optional image + 3 sticker slots
  *   grid6   → 6 sticker slots (2 × 3) + title + rich-text paragraph below
+ *   grid4   → 4 sticker slots in a 2 × 2 grid (Figma 339:2764)
+ *   duo2    → rich text above + 2 large sticker slots side by side (Figma 334:2607)
  *   tri3    → 3 sticker slots in a V layout (1 left + 2 stacked right), larger cards
  *   3x3     → 9 sticker slots in a 3 × 3 grid
  *   profile → single centered slot filled with the user's photo sticker (profiles.sticker_url)
@@ -15,7 +17,7 @@
 
 // ─── Template registry ────────────────────────────────────────────────────────
 
-export type TemplateId = "title3" | "grid6" | "tri3" | "3x3" | "profile" | "social";
+export type TemplateId = "title3" | "grid6" | "grid4" | "duo2" | "tri3" | "3x3" | "profile" | "social";
 
 export type AlbumSocialPlatform =
   | "instagram"
@@ -71,6 +73,8 @@ export interface AlbumTemplate {
 export const ALBUM_TEMPLATES: AlbumTemplate[] = [
   { id: "title3",  label: "Título + 3",      cols: 3, rows: 1, total: 3 },
   { id: "grid6",   label: "6 + Texto",       cols: 3, rows: 2, total: 6 },
+  { id: "grid4",   label: "2 × 2",           cols: 2, rows: 2, total: 4 },
+  { id: "duo2",    label: "2 + Texto",       cols: 2, rows: 1, total: 2 },
   { id: "tri3",    label: "3 em V",          cols: 2, rows: 2, total: 3 },
   { id: "3x3",     label: "3 × 3",           cols: 3, rows: 3, total: 9 },
   { id: "profile", label: "Minha Figurinha", cols: 1, rows: 1, total: 0 },
@@ -81,7 +85,28 @@ export const TEMPLATE_MAP = Object.fromEntries(
   ALBUM_TEMPLATES.map((t) => [t.id, t]),
 ) as Record<TemplateId, AlbumTemplate>;
 
-/** Dimensões Figma dos cards em grids do álbum (node 360:147 / slot 28:1120). */
+/** Cards do template duo2 — Figma 334:2607 (267×381, gap 26px). */
+export const ALBUM_DUO2_CARD = {
+  width: 267,
+  height: 381,
+  gapX: 26,
+  gapY: 0,
+  borderRadius: 16,
+  borderWidth: 5,
+} as const;
+
+/** Layout de referência duo2 para escala no flipbook (frame 698×880). */
+export const ALBUM_DUO2_DESIGN = {
+  cardWidth: ALBUM_DUO2_CARD.width,
+  cardHeight: ALBUM_DUO2_CARD.height,
+  cardGap: ALBUM_DUO2_CARD.gapX,
+  rowWidth: ALBUM_DUO2_CARD.width * 2 + ALBUM_DUO2_CARD.gapX,
+  textMaxWidth: 493,
+  textToCardsGap: 80,
+  textFontSize: 24,
+  textLineHeight: 30,
+} as const;
+
 export const ALBUM_GRID_CARD = {
   width: 160,
   height: 229,
@@ -94,13 +119,18 @@ export const ALBUM_GRID_CARD = {
 /** @deprecated Use ALBUM_GRID_CARD */
 export const ALBUM_GRID_3X3_CARD = ALBUM_GRID_CARD;
 
-export function getAlbumGridDimensions(cols: number, rows: number) {
-  const { width, height, gapX, gapY } = ALBUM_GRID_CARD;
+export function getAlbumGridDimensions(
+  cols: number,
+  rows: number,
+  card: { width: number; height: number; gapX: number; gapY: number } = ALBUM_GRID_CARD,
+) {
   return {
-    width: cols * width + (cols - 1) * gapX,
-    height: rows * height + (rows - 1) * gapY,
-    gapX,
-    gapY,
+    width: cols * card.width + (cols - 1) * card.gapX,
+    height: rows * card.height + (rows - 1) * card.gapY,
+    gapX: card.gapX,
+    gapY: card.gapY,
+    cardW: card.width,
+    cardH: card.height,
   };
 }
 
@@ -124,7 +154,12 @@ export interface Grid6Data {
   text?: string;
 }
 
-/** Fields for the "tri3" and "3x3" templates */
+/** Fields for the "duo2" template (Figma 334:2607) */
+export interface Duo2Data {
+  text?: string;
+}
+
+/** Fields for the "grid4", "tri3" and "3x3" templates */
 export interface Grid3x3Data {
   title?: string;
 }
@@ -143,11 +178,16 @@ export interface SocialPageData {
 }
 
 /** Union of all possible layout data shapes */
-export type LayoutData = Title3Data | Grid6Data | Grid3x3Data | ProfileData | SocialPageData;
+export type LayoutData = Title3Data | Grid6Data | Duo2Data | Grid3x3Data | ProfileData | SocialPageData;
 
 /** Templates with editable title + rich text in the content modal */
 export function hasRichTextContent(templateId: string): boolean {
-  return templateId === "title3" || templateId === "grid6" || templateId === "social";
+  return (
+    templateId === "title3" ||
+    templateId === "grid6" ||
+    templateId === "duo2" ||
+    templateId === "social"
+  );
 }
 
 /** Templates that do not use catalog sticker slots */

@@ -120,7 +120,9 @@ export function AlbumPageShell({
         }}
       />
       <div className="relative z-10 flex min-h-0 flex-1 flex-col">
-        <div className="flex min-h-0 flex-1 flex-col">{children}</div>
+        <div className="flex min-h-0 flex-1 flex-col justify-center overflow-hidden">
+          <div className="min-h-0 w-full max-h-full overflow-hidden">{children}</div>
+        </div>
 
         <div
           className={cn(

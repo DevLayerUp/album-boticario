@@ -676,6 +676,7 @@ function LayoutContentModal({
 }) {
   const isTitle3      = page.layout_template === "title3";
   const isGrid6       = page.layout_template === "grid6";
+  const isDuo2        = page.layout_template === "duo2";
   const isSocial      = isSocialTemplate(page.layout_template);
   const hasRichText   = hasRichTextContent(page.layout_template);
   const isProfile     = isProfileTemplate(page.layout_template);
@@ -686,7 +687,13 @@ function LayoutContentModal({
     isSocial ? (initialSocial.title ?? page.title ?? "") : (initial.title ?? page.title ?? ""),
   );
   const [text,     setText]     = useState(
-    hasRichText ? (isSocial ? (initialSocial.text ?? "") : (initial.text ?? "")) : "",
+    hasRichText
+      ? isSocial
+        ? (initialSocial.text ?? "")
+        : isDuo2
+          ? ((parseLayoutData(page.content) as { text?: string }).text ?? "")
+          : (initial.text ?? "")
+      : "",
   );
   const [imageUrl, setImageUrl] = useState(
     isTitle3
@@ -718,7 +725,7 @@ function LayoutContentModal({
   async function handleSave() {
     setSaving(true); setError("");
     try {
-      let layoutData: Title3Data | SocialPageData = { title: title || undefined };
+      let layoutData: Title3Data | SocialPageData | { text?: string } = { title: title || undefined };
 
       if (isSocial) {
         layoutData = {
@@ -727,6 +734,8 @@ function LayoutContentModal({
           text: text || undefined,
           social_links: socialLinks,
         };
+      } else if (isDuo2) {
+        layoutData = { text: text || undefined };
       } else {
         if (hasRichText && text) (layoutData as Title3Data).text = text;
         if (isTitle3 && imageUrl) (layoutData as Title3Data).image_url = imageUrl;
@@ -764,11 +773,13 @@ function LayoutContentModal({
                   ? "Título, texto e imagem opcional"
                   : isGrid6
                     ? "Título e texto abaixo das figurinhas"
-                    : isSocial
-                      ? "Imagem, texto e links das redes sociais"
-                      : isProfile
-                        ? "Título da página (a figurinha vem da foto do usuário)"
-                        : "Título da página"}
+                    : isDuo2
+                      ? "Texto acima das duas figurinhas"
+                      : isSocial
+                        ? "Imagem, texto e links das redes sociais"
+                        : isProfile
+                          ? "Título da página (a figurinha vem da foto do usuário)"
+                          : "Título da página"}
               </p>
             </div>
           </div>
@@ -779,6 +790,7 @@ function LayoutContentModal({
 
         <div className="p-6 space-y-5">
           {/* Title */}
+          {!isDuo2 && (
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-gray-500">
               Título da Página
@@ -791,8 +803,9 @@ function LayoutContentModal({
               className="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm outline-none focus:border-gb-green"
             />
           </div>
+          )}
 
-          {/* Rich text — grid6 */}
+          {/* Rich text — grid6 / duo2 */}
           {hasRichText && !isTitle3 && !isSocial && (
             <div>
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-gray-500">
@@ -804,7 +817,9 @@ function LayoutContentModal({
                 minHeight={200}
               />
               <p className="mt-1 text-xs text-gray-400">
-                Este texto aparece abaixo do título, depois das figurinhas.
+                {isDuo2
+                  ? "Este texto aparece acima das duas figurinhas, centralizado."
+                  : "Este texto aparece abaixo do título, depois das figurinhas."}
               </p>
             </div>
           )}
@@ -1125,6 +1140,143 @@ function PageNumberModal({
   );
 }
 
+// ─── Template changer ─────────────────────────────────────────────────────────
+function TemplateChangeModal({
+  page,
+  onClose,
+}: {
+  page: PageRow;
+  onClose: (updated?: Pick<PageRow, "layout_template" | "slot_count">) => void;
+}) {
+  const currentTemplate = page.layout_template as TemplateId;
+  const [template, setTemplate] = useState<TemplateId>(currentTemplate);
+  const [saving, setSaving]       = useState(false);
+  const [saved, setSaved]         = useState(false);
+  const [error, setError]         = useState("");
+
+  const currentMeta = TEMPLATE_MAP[currentTemplate];
+  const selectedMeta  = TEMPLATE_MAP[template];
+  const willRemoveSlots =
+    (selectedMeta?.total ?? 0) < page.slot_count;
+  const switchingToSlotless = isSlotlessTemplate(template) && page.slot_count > 0;
+  const unchanged = template === currentTemplate;
+
+  async function handleSave() {
+    if (unchanged) {
+      onClose();
+      return;
+    }
+
+    setSaving(true);
+    setError("");
+    try {
+      const res = await fetch(`/api/admin/paginas/${page.id}`, {
+        method:  "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ layout_template: template }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setError(data.error ?? "Erro ao salvar"); return; }
+      setSaved(true);
+      setTimeout(
+        () =>
+          onClose({
+            layout_template: template,
+            slot_count: data.slot_count ?? selectedMeta?.total ?? 0,
+          }),
+        600,
+      );
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto p-4 py-8" onClick={() => onClose()}>
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+      <div
+        className="relative flex w-full max-w-2xl flex-col rounded-2xl bg-white shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between border-b border-border px-6 py-4">
+          <div className="flex items-center gap-3">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gb-green/10 text-gb-green">
+              <Layers size={16} />
+            </span>
+            <div>
+              <h2 className="font-display text-base font-semibold text-gb-ink">Alterar Template</h2>
+              <p className="text-xs text-muted">
+                Pág. {page.page_number}{page.title ? ` · ${page.title}` : ""}
+              </p>
+            </div>
+          </div>
+          <button onClick={() => onClose()} className="rounded-lg p-2 text-gray-400 hover:bg-gray-100">
+            <X size={18} />
+          </button>
+        </div>
+
+        <div className="space-y-5 overflow-y-auto px-6 py-5">
+          <p className="text-sm text-gray-600">
+            Template atual:{" "}
+            <strong className="text-gb-ink">{currentMeta?.label ?? currentTemplate}</strong>
+            {page.slot_count > 0 ? ` · ${page.slot_count} slots` : " · sem slots de catálogo"}
+          </p>
+
+          <div>
+            <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-gray-500">
+              Novo layout
+            </label>
+            <TemplatePicker value={template} onChange={setTemplate} />
+            <p className="mt-2 text-xs text-gray-400">
+              {isSlotlessTemplate(template)
+                ? "Este template não usa slots de catálogo."
+                : `${selectedMeta?.total ?? 0} slots após a alteração.`}
+            </p>
+          </div>
+
+          {(willRemoveSlots || switchingToSlotless) && !unchanged && (
+            <p className="rounded-xl bg-amber-50 px-3 py-2.5 text-sm text-amber-800">
+              {switchingToSlotless
+                ? "Os slots de catálogo serão removidos. Figurinhas já coladas pelos usuários nesses slots serão perdidas."
+                : "Slots excedentes serão removidos. Figurinhas já coladas pelos usuários nesses slots serão perdidas."}
+            </p>
+          )}
+
+          {error && <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>}
+        </div>
+
+        <div className="flex items-center justify-between border-t border-border px-6 py-4">
+          {saved ? (
+            <span className="flex items-center gap-2 text-sm font-medium text-gb-green">
+              <CheckCircle2 size={16} /> Salvo!
+            </span>
+          ) : (
+            <span className="text-sm text-gray-400">
+              {unchanged ? "Selecione outro template para alterar" : `Novo: ${selectedMeta?.label ?? template}`}
+            </span>
+          )}
+          <div className="flex gap-2">
+            <button
+              onClick={() => onClose()}
+              className="rounded-xl border border-border px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={saving || unchanged}
+              className="flex items-center gap-2 rounded-xl bg-gb-green px-5 py-2 text-sm font-semibold text-white hover:bg-gb-green-dark disabled:opacity-60"
+            >
+              {saving ? <Loader2 size={15} className="animate-spin" /> : <Save size={15} />}
+              Salvar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main component ───────────────────────────────────────────────────────────
 export function PaginasClient({ initialCategories, initialPages }: PaginasClientProps) {
   const [pages, setPages]              = useState<PageRow[]>(initialPages);
@@ -1138,6 +1290,7 @@ export function PaginasClient({ initialCategories, initialPages }: PaginasClient
   const [infoEditPage, setInfoEditPage]    = useState<PageRow | null>(null);
   const [contentEditPage, setContentEditPage] = useState<PageRow | null>(null);
   const [numberEditPage, setNumberEditPage]   = useState<PageRow | null>(null);
+  const [templateEditPage, setTemplateEditPage] = useState<PageRow | null>(null);
 
   const categories = initialCategories;
 
@@ -1377,6 +1530,13 @@ export function PaginasClient({ initialCategories, initialPages }: PaginasClient
                     ) : (
                       <>
                         <button
+                          onClick={() => setTemplateEditPage(p)}
+                          title="Alterar template"
+                          className="shrink-0 rounded-lg p-1.5 text-emerald-600 hover:bg-emerald-50"
+                        >
+                          <Layers size={15} />
+                        </button>
+                        <button
                           onClick={() => setContentEditPage(p)}
                           title="Editar título e texto"
                           className="shrink-0 rounded-lg p-1.5 text-blue-500 hover:bg-blue-50"
@@ -1592,6 +1752,22 @@ export function PaginasClient({ initialCategories, initialPages }: PaginasClient
               );
             }
             setNumberEditPage(null);
+          }}
+        />
+      )}
+
+      {templateEditPage && (
+        <TemplateChangeModal
+          page={templateEditPage}
+          onClose={(updated) => {
+            if (updated) {
+              setPages((prev) =>
+                prev.map((p) =>
+                  p.id === templateEditPage.id ? { ...p, ...updated } : p
+                )
+              );
+            }
+            setTemplateEditPage(null);
           }}
         />
       )}

@@ -11,6 +11,7 @@ import { DashboardMain } from "@/components/dashboard/dashboard-main";
 import { ReferralClaimOnLoad } from "@/components/referral/referral-claim-on-load";
 import { FirstStepsOnLoad } from "@/components/first-steps/first-steps-on-load";
 import { NotificationBell } from "@/components/notifications/notification-bell";
+import { cn } from "@/lib/utils";
 
 const NAV = [
   { href: "/dashboard",  label: "Início" },
@@ -21,6 +22,9 @@ const NAV = [
   { href: "/missoes",    label: "Missões" },
   { href: "/ranking",    label: "Ranking" },
 ];
+
+const NAV_ACTION_CLASS =
+  "inline-flex items-center gap-1.5 rounded-pill px-3 py-1.5 text-sm font-medium text-verde-escuro-500 transition-colors duration-200 hover:bg-verde-500/10";
 
 export default async function DashboardLayout({
   children,
@@ -56,12 +60,12 @@ export default async function DashboardLayout({
             <Link
               href="/perfil"
               aria-label="Meu perfil"
-              className="hidden items-center gap-1.5 rounded-pill px-3 py-1.5 text-sm font-medium text-verde-escuro-500 transition-colors hover:bg-verde-500/10 md:flex"
+              className={cn(NAV_ACTION_CLASS, "hidden md:flex")}
             >
               <User aria-hidden className="size-4" strokeWidth={1.8} />
               Perfil
             </Link>
-            <SignOutButton />
+            <SignOutButton className={NAV_ACTION_CLASS} />
           </div>
         </div>
       </header>

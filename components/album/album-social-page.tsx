@@ -24,11 +24,11 @@ export function AlbumSocialPage({
     >
       <div
         className={cn(
-          "flex flex-1 flex-col",
+          "flex w-full flex-col",
           inFlipBook ? "px-4 py-3 sm:px-[10%] sm:py-5" : "px-6 py-6 sm:px-[10%]",
         )}
       >
-        <div className="flex flex-1 flex-col items-center justify-center gap-4 sm:gap-5 md:gap-6">
+        <div className="flex flex-col items-center justify-center gap-4 sm:gap-5 md:gap-6">
           {imageUrl ? (
             <div className="relative w-[min(88%,380px)]">
               <Image
