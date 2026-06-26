@@ -39,6 +39,10 @@ export const dashboardAssets = {
   quiz: {
     background: `${BASE}/quiz/blob-lg.png`,
   },
+  /** Fundo do card TOP 3 do ranking. */
+  ranking: {
+    background: `${BASE}/ranking/bg-ranking.png`,
+  },
   /** Card de criação de figurinha personalizada. */
   figurinhaCard: `${BASE}/bg-minha-figurinha.png`,
   /** Headers dos feature cards da seção "Explorar". */

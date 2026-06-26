@@ -159,7 +159,7 @@ export function RankingTopThree({ entries, updatedLabel }: RankingTopThreeProps)
     <section className="@container/top3 relative overflow-hidden rounded-card bg-verde-escuro-500 @2xl:h-[612px]">
       <div className="pointer-events-none absolute inset-0" aria-hidden>
         <Image
-          src={dashboardAssets.quiz.background}
+          src={dashboardAssets.ranking.background}
           alt=""
           fill
           className="object-cover opacity-70"
