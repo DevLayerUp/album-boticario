@@ -1062,7 +1062,7 @@ function RegisterSection({ initial }: { initial: RegisterData }) {
             <Input
               value={data.privacyUrl}
               onChange={(v) => setData((d) => ({ ...d, privacyUrl: v }))}
-              placeholder="ex: /privacidade"
+              placeholder="ex: https://www.grupoboticario.com.br/privacidade/"
             />
           </Field>
         </div>

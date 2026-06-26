@@ -1,7 +1,7 @@
 "use client";
 
 import { LandingImage } from "@/components/landing/landing-image";
-import Link from "next/link";
+import { GBG_PRIVACY_URL } from "@/lib/landing-urls";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { FormEvent, useState } from "react";
@@ -40,7 +40,7 @@ export function LandingRegister({
   paragraph2          = "Bora abrir seus primeiros pacotinhos e começar uma jornada cheia de espécies incríveis, curiosidades e desafios?",
   formTitle,
   ctaLabel            = "Comece a colecionar agora!",
-  privacyUrl          = "/privacidade",
+  privacyUrl          = GBG_PRIVACY_URL,
 }: LandingRegisterProps) {
   return (
     <section
@@ -232,13 +232,14 @@ function RegisterForm({ formTitle, ctaLabel, privacyUrl }: RegisterFormProps) {
           />
           <span className="text-left text-sm leading-[1.4] text-black sm:text-base">
             Ao prosseguir você estará ciente de que os dados informados serão tratados de acordo com a{" "}
-            <Link
+            <a
               href={privacyUrl}
               target="_blank"
+              rel="noopener noreferrer"
               className="underline hover:text-verde-escuro-500"
             >
               Política de Privacidade do Grupo Boticário
-            </Link>
+            </a>
             *
           </span>
         </label>

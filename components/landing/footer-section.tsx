@@ -10,6 +10,8 @@ import {
   FaYoutube,
 } from "react-icons/fa6";
 import { LandingImage } from "@/components/landing/landing-image";
+import { OpenCookiePreferencesButton } from "@/components/landing/open-cookie-preferences-button";
+import { GBG_PRIVACY_URL } from "@/lib/landing-urls";
 
 /* ─── Types ─────────────────────────────────────────────────────────────── */
 export type FooterSocialPlatform =
@@ -375,7 +377,25 @@ export function LandingFooter({
               ))}
             </div>
 
-            <div className="flex justify-end pt-5">
+            <div className="flex flex-col items-end gap-4 pt-5 sm:flex-row sm:items-center sm:justify-between">
+              <nav
+                aria-label="Links legais"
+                className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-[#027235]"
+              >
+                <a
+                  href={GBG_PRIVACY_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="transition-opacity hover:opacity-75"
+                >
+                  Política de Privacidade
+                </a>
+                <span className="hidden text-[#027235]/40 sm:inline" aria-hidden>
+                  |
+                </span>
+                <OpenCookiePreferencesButton className="transition-opacity hover:opacity-75" />
+              </nav>
+
               <button
                 type="button"
                 onClick={scrollToTop}

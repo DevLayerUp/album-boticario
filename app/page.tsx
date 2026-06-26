@@ -10,7 +10,9 @@ import { LandingRegister } from "@/components/landing/register-section";
 import { LandingFandom } from "@/components/landing/fandom-section";
 import { LandingFaq } from "@/components/landing/faq-section";
 import { LandingFooter } from "@/components/landing/footer-section";
+import { LandingCookieConsent } from "@/components/landing/cookie-consent";
 import type { Metadata } from "next";
+import { GBG_PRIVACY_URL } from "@/lib/landing-urls";
 import { buildRouteMetadata, fetchSeoSettings } from "@/lib/seo-metadata";
 import type { LandingNavbarProps } from "@/components/landing/navbar";
 import type { LandingHeroProps } from "@/components/landing/hero";
@@ -65,8 +67,10 @@ export default async function HomePage() {
   const fandomSettings     = safeParse<LandingFandomProps>(settingsMap["landing_fandom"], {});
   const faqSettings        = safeParse<LandingFaqProps>(settingsMap["landing_faq"], {});
   const footerSettings     = safeParse<LandingFooterProps>(settingsMap["landing_footer"], {});
+  const privacyHref = registerSettings.privacyUrl ?? GBG_PRIVACY_URL;
 
   return (
+    <>
     <main id="main-content">
       <LandingNavbar     {...navbarSettings} />
       <LandingHero       {...heroSettings} />
@@ -79,5 +83,7 @@ export default async function HomePage() {
       <LandingFaq        {...faqSettings} />
       <LandingFooter     {...footerSettings} />
     </main>
+    <LandingCookieConsent privacyHref={privacyHref} />
+    </>
   );
 }

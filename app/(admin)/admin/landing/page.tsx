@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { GBG_PRIVACY_URL } from "@/lib/landing-urls";
 import { LandingAdminClient } from "./landing-client";
 import type { Metadata } from "next";
 
@@ -210,7 +211,7 @@ const DEFAULT_REGISTER = {
     "Bora abrir seus primeiros pacotinhos e começar uma jornada cheia de espécies incríveis, curiosidades e desafios?",
   formTitle:  "",
   ctaLabel:   "Comece a colecionar agora!",
-  privacyUrl: "/privacidade",
+  privacyUrl: GBG_PRIVACY_URL,
 };
 
 function normalizeRegister(raw: Partial<typeof DEFAULT_REGISTER>): typeof DEFAULT_REGISTER {
