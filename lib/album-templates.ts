@@ -4,6 +4,7 @@
  * Templates:
  *   title3  → title + rich-text paragraph + optional image + 3 sticker slots
  *   grid6   → 6 sticker slots (2 × 3) + title + rich-text paragraph below
+ *   grid6cta→ 6 sticker slots (3 × 2) + CTA pill below (Figma 360:147)
  *   grid4   → 4 sticker slots in a 2 × 2 grid (Figma 339:2764)
  *   duo2    → rich text above + 2 large sticker slots side by side (Figma 334:2607)
  *   tri3    → 3 sticker slots in a V layout (1 left + 2 stacked right), larger cards
@@ -17,7 +18,7 @@
 
 // ─── Template registry ────────────────────────────────────────────────────────
 
-export type TemplateId = "title3" | "grid6" | "grid4" | "duo2" | "tri3" | "3x3" | "profile" | "social";
+export type TemplateId = "title3" | "grid6" | "grid6cta" | "grid4" | "duo2" | "tri3" | "3x3" | "profile" | "social";
 
 export type AlbumSocialPlatform =
   | "instagram"
@@ -72,7 +73,8 @@ export interface AlbumTemplate {
 
 export const ALBUM_TEMPLATES: AlbumTemplate[] = [
   { id: "title3",  label: "Título + 3",      cols: 3, rows: 1, total: 3 },
-  { id: "grid6",   label: "6 + Texto",       cols: 3, rows: 2, total: 6 },
+  { id: "grid6",    label: "6 + Texto",       cols: 3, rows: 2, total: 6 },
+  { id: "grid6cta", label: "6 + CTA",         cols: 3, rows: 2, total: 6 },
   { id: "grid4",   label: "2 × 2",           cols: 2, rows: 2, total: 4 },
   { id: "duo2",    label: "2 + Texto",       cols: 2, rows: 1, total: 2 },
   { id: "tri3",    label: "3 em V",          cols: 2, rows: 2, total: 3 },
@@ -114,6 +116,16 @@ export const ALBUM_GRID_CARD = {
   borderWidth: 5,
   gapX: 20,
   gapY: 24,
+} as const;
+
+/** Cards do template grid6cta — Figma 360:147 (170×243, gap 25×32). */
+export const ALBUM_GRID6_CTA_CARD = {
+  width: 170,
+  height: 243,
+  gapX: 25,
+  gapY: 32,
+  borderRadius: 16,
+  borderWidth: 5,
 } as const;
 
 /** @deprecated Use ALBUM_GRID_CARD */
@@ -159,6 +171,12 @@ export interface Duo2Data {
   text?: string;
 }
 
+/** Fields for the "grid6cta" template (Figma 360:147) */
+export interface Grid6CtaData {
+  cta_label?: string;
+  cta_href?: string;
+}
+
 /** Fields for the "grid4", "tri3" and "3x3" templates */
 export interface Grid3x3Data {
   title?: string;
@@ -178,7 +196,11 @@ export interface SocialPageData {
 }
 
 /** Union of all possible layout data shapes */
-export type LayoutData = Title3Data | Grid6Data | Duo2Data | Grid3x3Data | ProfileData | SocialPageData;
+export type LayoutData = Title3Data | Grid6Data | Grid6CtaData | Duo2Data | Grid3x3Data | ProfileData | SocialPageData;
+
+export function hasCtaContent(templateId: string): boolean {
+  return templateId === "grid6cta";
+}
 
 /** Templates with editable title + rich text in the content modal */
 export function hasRichTextContent(templateId: string): boolean {

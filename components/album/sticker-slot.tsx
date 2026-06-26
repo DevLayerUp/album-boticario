@@ -35,8 +35,8 @@ export interface StickerSlotProps {
   isPasted: boolean;
   owned: number;
   onPaste?: (slotId: number, stickerId: number) => Promise<void>;
-  /** default 160×229 — large 199×284 (tri3) — duo 267×381 (duo2, Figma 334:2607) */
-  size?: "default" | "large" | "duo";
+  /** default 160×229 — large 199×284 (tri3) — duo 267×381 (duo2) — cta 170×243 (grid6cta) */
+  size?: "default" | "large" | "duo" | "cta";
   /** Abre o modal de colagem ao montar (deep link do estoque). */
   autoOpenPaste?: boolean;
 }
@@ -293,19 +293,24 @@ export function StickerSlot({
   slotId, slotNumber, sticker, isPasted, owned, onPaste, size = "default", autoOpenPaste = false,
 }: StickerSlotProps) {
   const aspectClass =
-    size === "duo"
-      ? "aspect-[267/381]"
-      : size === "large"
-        ? "aspect-[199/284]"
-        : "aspect-160/229";
-  const radiusClass = size === "duo" ? "rounded-[16px]" : "rounded-input";
+    size === "cta"
+      ? "aspect-[170/243]"
+      : size === "duo"
+        ? "aspect-[267/381]"
+        : size === "large"
+          ? "aspect-[199/284]"
+          : "aspect-160/229";
+  const radiusClass =
+    size === "cta" || size === "duo" ? "rounded-[16px]" : "rounded-input";
   const imageSizes  =
-    size === "duo"
-      ? "267px"
-      : size === "large"
-        ? "199px"
-        : "(max-width: 768px) 30vw, 200px";
-  const isBigCard   = size === "large" || size === "duo";
+    size === "cta"
+      ? "170px"
+      : size === "duo"
+        ? "267px"
+        : size === "large"
+          ? "199px"
+          : "(max-width: 768px) 30vw, 200px";
+  const isBigCard   = size === "large" || size === "duo" || size === "cta";
   const [showPasteModal, setShowPasteModal]   = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [pasting, setPasting]                 = useState(false);

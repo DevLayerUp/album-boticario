@@ -55,6 +55,26 @@ function TemplatePreview({ id, selected }: { id: TemplateId; selected: boolean }
     );
   }
 
+  if (id === "grid6cta") {
+    return (
+      <div className="flex flex-col gap-1" style={{ width: 52, height: 52 }}>
+        <div
+          className="grid flex-1 gap-0.5"
+          style={{ gridTemplateColumns: "repeat(3, 1fr)" }}
+        >
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div
+              key={i}
+              className={`rounded-sm ${base}`}
+              style={{ aspectRatio: "170/243" }}
+            />
+          ))}
+        </div>
+        <div className={`mx-auto h-2 w-3/5 rounded-pill ${base}`} />
+      </div>
+    );
+  }
+
   if (id === "grid6") {
     return (
       <div
@@ -115,7 +135,7 @@ function TemplatePreview({ id, selected }: { id: TemplateId; selected: boolean }
     );
   }
 
-  // "3x3" — 9 cards 160×229 (Figma 360:147)
+  // "3x3" — 9 cards 160×229
   return (
     <div
       className="grid gap-0.5"

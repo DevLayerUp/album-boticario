@@ -12,7 +12,7 @@ import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 import { RichTextEditor } from "@/components/admin/rich-text-editor";
 import {
   TEMPLATE_MAP, type TemplateId,
-  parseLayoutData, type Title3Data, type SocialPageData, type AlbumSocialLink,
+  parseLayoutData, type Title3Data, type SocialPageData, type Grid6CtaData, type AlbumSocialLink,
   DEFAULT_ALBUM_SOCIAL_LINKS,
   isProfileTemplate, isSocialTemplate, isSlotlessTemplate, hasRichTextContent,
   parseSocialPageData,
@@ -676,6 +676,7 @@ function LayoutContentModal({
 }) {
   const isTitle3      = page.layout_template === "title3";
   const isGrid6       = page.layout_template === "grid6";
+  const isGrid6Cta    = page.layout_template === "grid6cta";
   const isDuo2        = page.layout_template === "duo2";
   const isSocial      = isSocialTemplate(page.layout_template);
   const hasRichText   = hasRichTextContent(page.layout_template);
@@ -705,6 +706,9 @@ function LayoutContentModal({
   const [socialLinks, setSocialLinks] = useState<AlbumSocialLink[]>(
     initialSocial.social_links ?? DEFAULT_ALBUM_SOCIAL_LINKS,
   );
+  const initialGrid6Cta = parseLayoutData(page.content) as { cta_label?: string; cta_href?: string };
+  const [ctaLabel, setCtaLabel] = useState(isGrid6Cta ? (initialGrid6Cta.cta_label ?? "") : "");
+  const [ctaHref, setCtaHref] = useState(isGrid6Cta ? (initialGrid6Cta.cta_href ?? "") : "");
   const [uploading, setUploading] = useState(false);
   const [saving,   setSaving]   = useState(false);
   const [saved,    setSaved]    = useState(false);
@@ -725,7 +729,7 @@ function LayoutContentModal({
   async function handleSave() {
     setSaving(true); setError("");
     try {
-      let layoutData: Title3Data | SocialPageData | { text?: string } = { title: title || undefined };
+      let layoutData: Title3Data | SocialPageData | Grid6CtaData | { text?: string } = { title: title || undefined };
 
       if (isSocial) {
         layoutData = {
@@ -736,6 +740,11 @@ function LayoutContentModal({
         };
       } else if (isDuo2) {
         layoutData = { text: text || undefined };
+      } else if (isGrid6Cta) {
+        layoutData = {
+          cta_label: ctaLabel.trim() || undefined,
+          cta_href: ctaHref.trim() || undefined,
+        };
       } else {
         if (hasRichText && text) (layoutData as Title3Data).text = text;
         if (isTitle3 && imageUrl) (layoutData as Title3Data).image_url = imageUrl;
@@ -773,7 +782,9 @@ function LayoutContentModal({
                   ? "Título, texto e imagem opcional"
                   : isGrid6
                     ? "Título e texto abaixo das figurinhas"
-                    : isDuo2
+                    : isGrid6Cta
+                      ? "Botão de ação abaixo das seis figurinhas"
+                      : isDuo2
                       ? "Texto acima das duas figurinhas"
                       : isSocial
                         ? "Imagem, texto e links das redes sociais"
@@ -790,7 +801,7 @@ function LayoutContentModal({
 
         <div className="p-6 space-y-5">
           {/* Title */}
-          {!isDuo2 && (
+          {!isDuo2 && !isGrid6Cta && (
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-gray-500">
               Título da Página
@@ -822,6 +833,38 @@ function LayoutContentModal({
                   : "Este texto aparece abaixo do título, depois das figurinhas."}
               </p>
             </div>
+          )}
+
+          {isGrid6Cta && (
+            <>
+              <div>
+                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-gray-500">
+                  Texto do botão (CTA)
+                </label>
+                <input
+                  type="text"
+                  value={ctaLabel}
+                  onChange={(e) => { setCtaLabel(e.target.value); setSaved(false); }}
+                  placeholder="ex: Visite nossa reserva"
+                  className="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm outline-none focus:border-gb-green"
+                />
+              </div>
+              <div>
+                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-gray-500">
+                  Link do botão (CTA)
+                </label>
+                <input
+                  type="url"
+                  value={ctaHref}
+                  onChange={(e) => { setCtaHref(e.target.value); setSaved(false); }}
+                  placeholder="https://…"
+                  className="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm outline-none focus:border-gb-green"
+                />
+                <p className="mt-1 text-xs text-gray-400">
+                  O botão aparece centralizado abaixo do grid de figurinhas. Deixe em branco para ocultar.
+                </p>
+              </div>
+            </>
           )}
 
           {/* Image + rich text — only for title3 */}

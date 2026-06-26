@@ -8,6 +8,8 @@ import {
   parseLayoutData,
   type Title3Data,
   type Grid6Data,
+  type Grid6CtaData,
+  ALBUM_GRID6_CTA_CARD,
   type Duo2Data,
   type ProfileData,
   ALBUM_DUO2_CARD,
@@ -24,6 +26,7 @@ import { FigurinhaNameTag } from "@/components/sticker/figurinha-name-tag";
 import { cn } from "@/lib/utils";
 import { AlbumPageShell, type PageSide } from "./album-page-chrome";
 import { AlbumSocialPage } from "./album-social-page";
+import { AlbumPageCta } from "./album-page-cta";
 
 export type { PageSide };
 
@@ -61,6 +64,24 @@ export interface AlbumPageProps {
   focusSlotId?: number | null;
 }
 
+type AlbumSlotEntry = AlbumPageData["album_slots"][number];
+
+/** Slot com figurinha cadastrada no admin (sem sticker → não renderiza no álbum). */
+function isAssignedAlbumSlot(slot: AlbumSlotEntry) {
+  return slot.stickers != null;
+}
+
+function getAssignedAlbumSlots(slots: AlbumSlotEntry[], limit?: number) {
+  const sorted = [...slots].sort((a, b) => a.slot_number - b.slot_number);
+  const assigned = sorted.filter(isAssignedAlbumSlot);
+  return limit != null ? assigned.slice(0, limit) : assigned;
+}
+
+function albumGridRows(slotCount: number, cols: number) {
+  if (slotCount <= 0) return 0;
+  return Math.ceil(slotCount / cols);
+}
+
 function PageShell({
   side,
   pageNumber,
@@ -80,7 +101,7 @@ function PageShell({
 }
 
 function Title3Page({ page, side, pastedSlotIds, ownedMap, onPaste, inFlipBook, focusSlotId }: AlbumPageProps) {
-  const slots = [...page.album_slots].sort((a, b) => a.slot_number - b.slot_number);
+  const assignedSlots = getAssignedAlbumSlots(page.album_slots, 3);
 
   const data  = parseLayoutData(page.content) as Title3Data;
   const title = data.title ?? page.title ?? null;
@@ -117,28 +138,30 @@ function Title3Page({ page, side, pastedSlotIds, ownedMap, onPaste, inFlipBook, 
           />
         )}
 
-        <div
-          className={cn(
-            "grid grid-cols-3",
-            inFlipBook ? "mt-3 gap-2 sm:mt-8 sm:gap-4 md:gap-7" : "mt-8 gap-4 md:gap-7",
-          )}
-        >
-          {slots.slice(0, 3).map((slot) => {
-            const stickerId = slot.stickers?.id;
-            return (
-              <StickerSlot
-                key={slot.id}
-                slotId={slot.id}
-                slotNumber={slot.slot_number}
-                sticker={slot.stickers}
-                isPasted={pastedSlotIds.has(slot.id)}
-                owned={stickerId ? (ownedMap.get(stickerId) ?? 0) : 0}
-                onPaste={onPaste}
-                autoOpenPaste={focusSlotId === slot.id}
-              />
-            );
-          })}
-        </div>
+        {assignedSlots.length > 0 ? (
+          <div
+            className={cn(
+              "grid grid-cols-3",
+              inFlipBook ? "mt-3 gap-2 sm:mt-8 sm:gap-4 md:gap-7" : "mt-8 gap-4 md:gap-7",
+            )}
+          >
+            {assignedSlots.map((slot) => {
+              const stickerId = slot.stickers?.id;
+              return (
+                <StickerSlot
+                  key={slot.id}
+                  slotId={slot.id}
+                  slotNumber={slot.slot_number}
+                  sticker={slot.stickers}
+                  isPasted={pastedSlotIds.has(slot.id)}
+                  owned={stickerId ? (ownedMap.get(stickerId) ?? 0) : 0}
+                  onPaste={onPaste}
+                  autoOpenPaste={focusSlotId === slot.id}
+                />
+              );
+            })}
+          </div>
+        ) : null}
       </div>
     </PageShell>
   );
@@ -237,13 +260,14 @@ function renderGridSlots(
   onPaste: AlbumPageProps["onPaste"],
   focusSlotId?: number | null,
   options?: {
-    card?: typeof ALBUM_DUO2_CARD;
-    slotSize?: "default" | "large" | "duo";
+    card?: typeof ALBUM_DUO2_CARD | typeof ALBUM_GRID6_CTA_CARD;
+    slotSize?: "default" | "large" | "duo" | "cta";
   },
 ) {
   const card = options?.card ?? ALBUM_GRID_CARD;
   return [...slots]
     .sort((a, b) => a.slot_number - b.slot_number)
+    .filter(isAssignedAlbumSlot)
     .slice(0, limit)
     .map((slot) => {
       const stickerId = slot.stickers?.id;
@@ -264,10 +288,49 @@ function renderGridSlots(
     });
 }
 
+function Grid6CtaPage({ page, side, pastedSlotIds, ownedMap, onPaste, inFlipBook, focusSlotId }: AlbumPageProps) {
+  const data = parseLayoutData(page.content) as Grid6CtaData;
+  const ctaLabel = data.cta_label?.trim() ?? "";
+  const ctaHref = data.cta_href?.trim() ?? "";
+  const assigned = getAssignedAlbumSlots(page.album_slots, 6);
+  const cols = 3;
+  const rows = albumGridRows(assigned.length, cols);
+
+  const footerContent =
+    ctaLabel && ctaHref ? (
+      <div className={cn("flex justify-center", inFlipBook ? "mt-3 sm:mt-5" : "mt-5 sm:mt-6")}>
+        <AlbumPageCta label={ctaLabel} href={ctaHref} inFlipBook={inFlipBook} />
+      </div>
+    ) : null;
+
+  return (
+    <PageShell side={side} pageNumber={page.page_number} inFlipBook={inFlipBook}>
+      <AlbumGridFrame inFlipBook={inFlipBook} afterGrid={footerContent}>
+        {rows > 0 ? (
+          <AlbumStickerGrid cols={cols} rows={rows} card={ALBUM_GRID6_CTA_CARD}>
+            {renderGridSlots(
+              page.album_slots,
+              6,
+              pastedSlotIds,
+              ownedMap,
+              onPaste,
+              focusSlotId,
+              { card: ALBUM_GRID6_CTA_CARD, slotSize: "cta" },
+            )}
+          </AlbumStickerGrid>
+        ) : null}
+      </AlbumGridFrame>
+    </PageShell>
+  );
+}
+
 function Grid6Page({ page, side, pastedSlotIds, ownedMap, onPaste, inFlipBook, focusSlotId }: AlbumPageProps) {
   const data  = parseLayoutData(page.content) as Grid6Data;
   const title = data.title ?? page.title ?? null;
   const text  = data.text ?? null;
+  const assigned = getAssignedAlbumSlots(page.album_slots, 6);
+  const cols = 3;
+  const rows = albumGridRows(assigned.length, cols);
 
   const footerContent =
     title || text ? (
@@ -297,9 +360,11 @@ function Grid6Page({ page, side, pastedSlotIds, ownedMap, onPaste, inFlipBook, f
   return (
     <PageShell side={side} pageNumber={page.page_number} inFlipBook={inFlipBook}>
       <AlbumGridFrame inFlipBook={inFlipBook} afterGrid={footerContent}>
-        <AlbumStickerGrid cols={3} rows={2}>
-          {renderGridSlots(page.album_slots, 6, pastedSlotIds, ownedMap, onPaste, focusSlotId)}
-        </AlbumStickerGrid>
+        {rows > 0 ? (
+          <AlbumStickerGrid cols={cols} rows={rows}>
+            {renderGridSlots(page.album_slots, 6, pastedSlotIds, ownedMap, onPaste, focusSlotId)}
+          </AlbumStickerGrid>
+        ) : null}
       </AlbumGridFrame>
     </PageShell>
   );
@@ -313,7 +378,7 @@ function Tri3Page({ page, side, pastedSlotIds, ownedMap, onPaste, inFlipBook, fo
   const cellClass = "w-[clamp(112px,34vw,199px)] shrink-0";
 
   function renderSlot(slot: (typeof slots)[number] | undefined) {
-    if (!slot) return null;
+    if (!slot || !isAssignedAlbumSlot(slot)) return null;
     const stickerId = slot.stickers?.id;
     return (
       <StickerSlot
@@ -340,11 +405,19 @@ function Tri3Page({ page, side, pastedSlotIds, ownedMap, onPaste, inFlipBook, fo
       >
         <div className="flex items-center justify-center">
           <div className="flex items-center gap-5 sm:gap-8 md:gap-10">
-            <div className={cellClass}>{renderSlot(left)}</div>
-            <div className="flex flex-col gap-5 sm:gap-6 md:gap-8">
-              <div className={cellClass}>{renderSlot(topRight)}</div>
-              <div className={cellClass}>{renderSlot(bottomRight)}</div>
-            </div>
+            {isAssignedAlbumSlot(left) ? (
+              <div className={cellClass}>{renderSlot(left)}</div>
+            ) : null}
+            {(isAssignedAlbumSlot(topRight) || isAssignedAlbumSlot(bottomRight)) ? (
+              <div className="flex flex-col gap-5 sm:gap-6 md:gap-8">
+                {isAssignedAlbumSlot(topRight) ? (
+                  <div className={cellClass}>{renderSlot(topRight)}</div>
+                ) : null}
+                {isAssignedAlbumSlot(bottomRight) ? (
+                  <div className={cellClass}>{renderSlot(bottomRight)}</div>
+                ) : null}
+              </div>
+            ) : null}
           </div>
         </div>
       </div>
@@ -353,7 +426,7 @@ function Tri3Page({ page, side, pastedSlotIds, ownedMap, onPaste, inFlipBook, fo
 }
 
 function Duo2Page({ page, side, pastedSlotIds, ownedMap, onPaste, inFlipBook, focusSlotId }: AlbumPageProps) {
-  const slots = [...page.album_slots].sort((a, b) => a.slot_number - b.slot_number).slice(0, 2);
+  const slots = getAssignedAlbumSlots(page.album_slots, 2);
   const data = parseLayoutData(page.content) as Duo2Data;
   const text = data.text ?? null;
 
@@ -418,7 +491,7 @@ function Duo2Page({ page, side, pastedSlotIds, ownedMap, onPaste, inFlipBook, fo
             className="flex items-center justify-center"
             style={{ gap: ALBUM_DUO2_DESIGN.cardGap }}
           >
-            {slots.map(renderSlot)}
+            {slots.length > 0 ? slots.map(renderSlot) : null}
           </div>
         </AlbumDuo2Scaler>
       </div>
@@ -427,24 +500,36 @@ function Duo2Page({ page, side, pastedSlotIds, ownedMap, onPaste, inFlipBook, fo
 }
 
 function Grid4Page({ page, side, pastedSlotIds, ownedMap, onPaste, inFlipBook, focusSlotId }: AlbumPageProps) {
+  const assigned = getAssignedAlbumSlots(page.album_slots, 4);
+  const cols = 2;
+  const rows = albumGridRows(assigned.length, cols);
+
   return (
     <PageShell side={side} pageNumber={page.page_number} inFlipBook={inFlipBook}>
       <AlbumGridFrame inFlipBook={inFlipBook}>
-        <AlbumStickerGrid cols={2} rows={2}>
-          {renderGridSlots(page.album_slots, 4, pastedSlotIds, ownedMap, onPaste, focusSlotId)}
-        </AlbumStickerGrid>
+        {rows > 0 ? (
+          <AlbumStickerGrid cols={cols} rows={rows}>
+            {renderGridSlots(page.album_slots, 4, pastedSlotIds, ownedMap, onPaste, focusSlotId)}
+          </AlbumStickerGrid>
+        ) : null}
       </AlbumGridFrame>
     </PageShell>
   );
 }
 
 function Grid3x3Page({ page, side, pastedSlotIds, ownedMap, onPaste, inFlipBook, focusSlotId }: AlbumPageProps) {
+  const assigned = getAssignedAlbumSlots(page.album_slots, 9);
+  const cols = 3;
+  const rows = albumGridRows(assigned.length, cols);
+
   return (
     <PageShell side={side} pageNumber={page.page_number} inFlipBook={inFlipBook}>
       <AlbumGridFrame inFlipBook={inFlipBook}>
-        <AlbumStickerGrid cols={3} rows={3}>
-          {renderGridSlots(page.album_slots, 9, pastedSlotIds, ownedMap, onPaste, focusSlotId)}
-        </AlbumStickerGrid>
+        {rows > 0 ? (
+          <AlbumStickerGrid cols={cols} rows={rows}>
+            {renderGridSlots(page.album_slots, 9, pastedSlotIds, ownedMap, onPaste, focusSlotId)}
+          </AlbumStickerGrid>
+        ) : null}
       </AlbumGridFrame>
     </PageShell>
   );
@@ -519,6 +604,9 @@ export function AlbumPage(props: AlbumPageProps) {
   }
   if (props.page.layout_template === "grid6") {
     return <Grid6Page {...props} />;
+  }
+  if (props.page.layout_template === "grid6cta") {
+    return <Grid6CtaPage {...props} />;
   }
   if (props.page.layout_template === "tri3") {
     return <Tri3Page {...props} />;
