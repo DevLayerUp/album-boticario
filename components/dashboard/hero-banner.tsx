@@ -36,13 +36,13 @@ export function HeroBanner({
         <>
           <div
             aria-hidden
-            className="pointer-events-none absolute inset-0 z-0 bg-cover bg-center bg-no-repeat md:bg-contain md:bg-right"
+            className="pointer-events-none absolute inset-0 z-0 hidden bg-contain bg-right bg-no-repeat md:block"
             style={{ backgroundImage: `url(${backgroundImage})` }}
           />
-          {/* Legibilidade do texto quando a arte invade a área esquerda (< 1200px). */}
+          {/* Legibilidade do texto quando a arte invade a área esquerda (md–1399px). */}
           <div
             aria-hidden
-            className="pointer-events-none absolute inset-0 z-[1] hidden bg-gradient-to-r from-verde-escuro-500 from-45% via-verde-escuro-500/75 via-70% to-transparent max-[1399px]:block"
+            className="pointer-events-none absolute inset-0 z-[1] hidden bg-gradient-to-r from-verde-escuro-500 from-45% via-verde-escuro-500/75 via-70% to-transparent md:max-[1399px]:block"
           />
         </>
       )}
