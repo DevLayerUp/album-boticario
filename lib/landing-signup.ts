@@ -5,7 +5,10 @@ const DRAFT_TTL_MS = 30 * 60 * 1000;
 export interface LandingSignupDraft {
   email: string;
   name: string;
+  estado?: string;
   cidade?: string;
+  birthDate?: string;
+  /** @deprecated use birthDate */
   idade?: string;
   newsletter: boolean;
 }
@@ -42,7 +45,9 @@ export function readLandingSignupDraft(): LandingSignupDraft | null {
     return {
       email: parsed.email,
       name: parsed.name,
+      estado: typeof parsed.estado === "string" ? parsed.estado : undefined,
       cidade: typeof parsed.cidade === "string" ? parsed.cidade : undefined,
+      birthDate: typeof parsed.birthDate === "string" ? parsed.birthDate : undefined,
       idade: typeof parsed.idade === "string" ? parsed.idade : undefined,
       newsletter: parsed.newsletter,
     };

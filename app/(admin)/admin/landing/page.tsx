@@ -16,16 +16,48 @@ function safeParse<T>(raw: string | null, fallback: T): T {
 }
 
 const DEFAULT_WELCOME = {
-  title: "Seja bem-vindo Fã por natureza!",
-  paragraph1:
-    "Se você ama descobrir curiosidades, completar coleções e explorar o mundo ao seu redor, este álbum foi feito para você.",
-  paragraph2:
-    "Ao longo das páginas, você vai conhecer espécies fascinantes, biomas brasileiros, projetos de conservação e histórias que ajudam a proteger a natureza há mais de 35 anos.",
-  ctaLabel: "Comece a colecionar agora!",
-  ctaHref:  "/register",
-  videoUrl:  null as string | null,
-  posterUrl: null as string | null,
+  titleRegular: "Vista o orgulho e ",
+  titleBold:    "vibre pela nossa natureza",
+  body: [
+    "Ser fã não é só assistir. É suar cantar junto.",
+    "É perder a voz na arquibancada, vestir a camisa e ir até o apito final.",
+    "A gente sabe fazer barulho por aquilo que ama.",
+    "E se tem uma coisa que está no nosso sangue, é a nossa própria natureza.",
+    "Cada passo, cada voz, cada escolha muda o jogo e o futuro exige impacto real.",
+    "É hora de transformar toda essa nossa paixão em movimento.",
+    "Por isso, decidimos criar o maior fã-clube para a nossa natureza.",
+    "Porque a biodiversidade brasileira é o nosso maior orgulho.",
+    "E por ela, a gente entra em campo para vencer.",
+  ].join("\n"),
+  ctaLabel: "Faça parte do Fandom",
+  ctaHref:  "#fandom",
+  imageUrl: null as string | null,
 };
+
+type LegacyWelcome = Partial<typeof DEFAULT_WELCOME> & {
+  title?:      string;
+  paragraph1?: string;
+  paragraph2?: string;
+  posterUrl?:  string | null;
+};
+
+function normalizeWelcome(raw: LegacyWelcome): typeof DEFAULT_WELCOME {
+  if (raw.titleRegular && raw.body) {
+    return { ...DEFAULT_WELCOME, ...raw };
+  }
+
+  return {
+    ...DEFAULT_WELCOME,
+    titleRegular: raw.titleRegular ?? raw.title ?? DEFAULT_WELCOME.titleRegular,
+    titleBold:    raw.titleBold ?? DEFAULT_WELCOME.titleBold,
+    body:
+      raw.body ??
+      ([raw.paragraph1, raw.paragraph2].filter(Boolean).join("\n") || DEFAULT_WELCOME.body),
+    ctaLabel: raw.ctaLabel ?? DEFAULT_WELCOME.ctaLabel,
+    ctaHref:  raw.ctaHref ?? DEFAULT_WELCOME.ctaHref,
+    imageUrl: raw.imageUrl ?? raw.posterUrl ?? DEFAULT_WELCOME.imageUrl,
+  };
+}
 
 const DEFAULT_FAQ = {
   eyebrow: "PERGUNTAS FREQUENTES",
@@ -146,15 +178,50 @@ const DEFAULT_FANDOM = {
   ],
 };
 
+const DEFAULT_NAVBAR = {
+  logoUrl:     null as string | null,
+  fgbLogoUrl:  null as string | null,
+  fgbLogoHref: "https://fundacaogrupoboticario.org.br/",
+  links: [
+    { label: "Conheça o Álbum da Natureza", href: "#album" },
+    { label: "Projeto Fãs por Natureza",    href: "#projeto" },
+    { label: "FAQ",                          href: "#faq" },
+  ],
+  ctaLabel: "Quero participar!",
+  ctaHref:  "/register",
+};
+
+function normalizeNavbar(raw: Partial<typeof DEFAULT_NAVBAR>): typeof DEFAULT_NAVBAR {
+  return {
+    ...DEFAULT_NAVBAR,
+    ...raw,
+    fgbLogoUrl:  raw.fgbLogoUrl ?? DEFAULT_NAVBAR.fgbLogoUrl,
+    fgbLogoHref: raw.fgbLogoHref ?? DEFAULT_NAVBAR.fgbLogoHref,
+  };
+}
+
 const DEFAULT_REGISTER = {
-  backgroundUrl: null as string | null,
-  heading:    "Comece sua coleção agora",
-  paragraph1: "Cadastre-se para acessar o álbum digital Colecionando Natureza, abrir seus primeiros pacotinhos e começar uma jornada cheia de espécies incríveis, curiosidades e desafios.",
-  paragraph2: "Preencha seus dados para receber acesso ao álbum digital e fazer parte da comunidade de Fãs por Natureza.",
-  formTitle:  "Preencha o formulário e comece a colecionar",
+  backgroundUrl:       null as string | null,
+  heading:             "Entre para o nosso Fandom agora!",
+  paragraph1:
+    "Cadastre-se, faça parte do maior fã-clube da natureza e libere o seu acesso ao nosso álbum digital.",
+  paragraph1Highlight: "acesso ao nosso álbum digital",
+  paragraph2:
+    "Bora abrir seus primeiros pacotinhos e começar uma jornada cheia de espécies incríveis, curiosidades e desafios?",
+  formTitle:  "",
   ctaLabel:   "Comece a colecionar agora!",
   privacyUrl: "/privacidade",
 };
+
+function normalizeRegister(raw: Partial<typeof DEFAULT_REGISTER>): typeof DEFAULT_REGISTER {
+  return {
+    ...DEFAULT_REGISTER,
+    ...raw,
+    paragraph1Highlight:
+      raw.paragraph1Highlight ?? DEFAULT_REGISTER.paragraph1Highlight,
+    formTitle: raw.formTitle ?? DEFAULT_REGISTER.formTitle,
+  };
+}
 
 const DEFAULT_MANIFEST = {
   titleRegular: "O mundo tem sede",
@@ -172,8 +239,22 @@ const DEFAULT_JOURNEY = {
     "Ao longo das páginas, você vai conhecer espécies fascinantes, biomas brasileiros, projetos de conservação e histórias que ajudam a proteger a natureza há mais de 35 anos.",
   ctaLabel: "Comece a colecionar agora!",
   ctaHref:  "/register",
-  imageUrl: null as string | null,
+  videoUrl:  null as string | null,
+  posterUrl: null as string | null,
 };
+
+type LegacyJourney = Partial<typeof DEFAULT_JOURNEY> & {
+  imageUrl?: string | null;
+};
+
+function normalizeJourney(raw: LegacyJourney): typeof DEFAULT_JOURNEY {
+  return {
+    ...DEFAULT_JOURNEY,
+    ...raw,
+    videoUrl:  raw.videoUrl ?? DEFAULT_JOURNEY.videoUrl,
+    posterUrl: raw.posterUrl ?? raw.imageUrl ?? DEFAULT_JOURNEY.posterUrl,
+  };
+}
 
 const DEFAULT_HOW_IT_WORKS = {
   title: "Como funciona?",
@@ -210,16 +291,7 @@ export default async function LandingAdminPage() {
     (rows ?? []).map((r: { key: string; value: string | null }) => [r.key, r.value]),
   );
 
-  const navbar = safeParse(map["landing_navbar"], {
-    logoUrl: null,
-    links: [
-      { label: "Conheça o Álbum da Natureza", href: "#album" },
-      { label: "Projeto Fãs por Natureza",    href: "#projeto" },
-      { label: "FAQ",                          href: "#faq" },
-    ],
-    ctaLabel: "Quero participar!",
-    ctaHref:  "/register",
-  });
+  const navbar = normalizeNavbar(safeParse(map["landing_navbar"], DEFAULT_NAVBAR));
 
   const hero = safeParse(map["landing_hero"], {
     logoUrl:       null,
@@ -232,11 +304,11 @@ export default async function LandingAdminPage() {
     ctaHref:  "/register",
   });
 
-  const welcome    = safeParse(map["landing_welcome"],       DEFAULT_WELCOME);
+  const welcome    = normalizeWelcome(safeParse(map["landing_welcome"], DEFAULT_WELCOME));
   const manifest   = safeParse(map["landing_manifest"],      DEFAULT_MANIFEST);
-  const journey    = safeParse(map["landing_journey"],       DEFAULT_JOURNEY);
+  const journey    = normalizeJourney(safeParse(map["landing_journey"], DEFAULT_JOURNEY));
   const howItWorks = safeParse(map["landing_how_it_works"],  DEFAULT_HOW_IT_WORKS);
-  const register   = safeParse(map["landing_register"],      DEFAULT_REGISTER);
+  const register   = normalizeRegister(safeParse(map["landing_register"], DEFAULT_REGISTER));
   const fandom     = safeParse(map["landing_fandom"],        DEFAULT_FANDOM);
   const faq        = safeParse(map["landing_faq"],           DEFAULT_FAQ);
   const footer     = safeParse(map["landing_footer"],      DEFAULT_FOOTER);

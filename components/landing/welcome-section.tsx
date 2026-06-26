@@ -1,152 +1,137 @@
 "use client";
 
 import Link from "next/link";
-import { useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { Play, Volume2, VolumeX } from "lucide-react";
+import { LandingImage } from "@/components/landing/landing-image";
 
 export interface LandingWelcomeProps {
-  title?:      string;
-  paragraph1?: string;
-  paragraph2?: string;
-  ctaLabel?:   string;
-  ctaHref?:    string;
-  videoUrl?:   string | null;
-  posterUrl?:  string | null;
+  titleRegular?: string;
+  titleBold?:    string;
+  /** Uma linha por parágrafo. */
+  body?:         string;
+  ctaLabel?:     string;
+  ctaHref?:      string;
+  imageUrl?:     string | null;
+  /** Campos legados — mantidos para settings antigos no admin. */
+  title?:        string;
+  paragraph1?:   string;
+  paragraph2?:    string;
+  posterUrl?:    string | null;
+}
+
+const DEFAULT_BODY = [
+  "Ser fã não é só assistir. É suar cantar junto.",
+  "É perder a voz na arquibancada, vestir a camisa e ir até o apito final.",
+  "A gente sabe fazer barulho por aquilo que ama.",
+  "E se tem uma coisa que está no nosso sangue, é a nossa própria natureza.",
+  "Cada passo, cada voz, cada escolha muda o jogo e o futuro exige impacto real.",
+  "É hora de transformar toda essa nossa paixão em movimento.",
+  "Por isso, decidimos criar o maior fã-clube para a nossa natureza.",
+  "Porque a biodiversidade brasileira é o nosso maior orgulho.",
+  "E por ela, a gente entra em campo para vencer.",
+].join("\n");
+
+function resolveParagraphs({
+  body,
+  paragraph1,
+  paragraph2,
+}: Pick<LandingWelcomeProps, "body" | "paragraph1" | "paragraph2">): string[] {
+  const source = body ?? [paragraph1, paragraph2].filter(Boolean).join("\n");
+  return source
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
 }
 
 export function LandingWelcome({
-  title      = "Seja bem-vindo Fã por natureza!",
-  paragraph1 = "Se você ama descobrir curiosidades, completar coleções e explorar o mundo ao seu redor, este álbum foi feito para você.",
-  paragraph2 = "Ao longo das páginas, você vai conhecer espécies fascinantes, biomas brasileiros, projetos de conservação e histórias que ajudam a proteger a natureza há mais de 35 anos.",
-  ctaLabel   = "Comece a colecionar agora!",
-  ctaHref    = "/register",
-  videoUrl,
+  titleRegular = "Vista o orgulho e ",
+  titleBold    = "vibre pela nossa natureza",
+  body         = DEFAULT_BODY,
+  ctaLabel     = "Faça parte do Fandom",
+  ctaHref      = "#fandom",
+  imageUrl,
+  title,
+  paragraph1,
+  paragraph2,
   posterUrl,
 }: LandingWelcomeProps) {
+  const hasSplitTitle = Boolean(titleRegular || titleBold);
+  const displayImageUrl = imageUrl ?? posterUrl ?? null;
+  const paragraphs = resolveParagraphs({ body, paragraph1, paragraph2 });
+
   return (
     <section
       id="projeto"
-      className="bg-surface py-16 md:py-24"
+      className="bg-surface py-16 md:py-20 lg:py-24"
       aria-label="Boas-vindas"
     >
       <div className="mx-auto max-w-[1680px] px-6 md:px-12 2xl:px-[120px]">
-        <div className="grid grid-cols-12">
-          <div className="col-span-12 flex flex-col items-center gap-12 lg:col-span-9 lg:col-start-3 lg:flex-row lg:gap-20">
-            {/* Text */}
-            <motion.div
-              initial={{ opacity: 0, x: -24 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true, margin: "-80px" }}
-              transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-              className="flex min-w-0 flex-1 flex-col items-start gap-8 lg:gap-10"
-            >
-          <h2 className="font-display text-3xl font-bold leading-[1.14] text-verde-500 sm:text-4xl md:text-[40px] lg:text-[44px] xl:text-[58px] xl:leading-[66px]">
-            {title}
-          </h2>
-
-          <div className="space-y-4 text-base leading-[1.6] text-black sm:text-lg md:text-lg lg:text-xl xl:text-[22px] xl:leading-[30px]">
-            {paragraph1 && <p>{paragraph1}</p>}
-            {paragraph2 && <p>{paragraph2}</p>}
-          </div>
-
-          <Link
-            href={ctaHref}
-            className="inline-flex rounded-pill bg-verde-500 px-8 py-3 text-base font-bold text-verde-100 transition-colors hover:bg-verde-400 sm:text-lg"
+        <div className="flex flex-col items-center gap-10 lg:flex-row lg:items-center lg:gap-12 xl:gap-[63px]">
+          <motion.div
+            initial={{ opacity: 0, x: -24 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, margin: "-80px" }}
+            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+            className="flex w-full min-w-0 flex-col items-start gap-8 lg:max-w-[720px] lg:gap-10"
           >
-            {ctaLabel}
-          </Link>
-        </motion.div>
+            <h2 className="max-w-[469px] font-display text-3xl leading-[1.14] text-verde-escuro-500 sm:text-4xl md:text-5xl lg:text-[58px] lg:leading-[66px]">
+              {hasSplitTitle ? (
+                <>
+                  <span className="font-normal">{titleRegular}</span>
+                  <span className="font-semibold">{titleBold}</span>
+                </>
+              ) : (
+                <span className="font-bold">{title}</span>
+              )}
+            </h2>
 
-        {/* Video */}
-        <motion.div
-          initial={{ opacity: 0, x: 24 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          viewport={{ once: true, margin: "-80px" }}
-          transition={{ duration: 0.6, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
-          className="w-full shrink-0 lg:w-[399px]"
-        >
-          {videoUrl ? (
-            <WelcomeVideo src={videoUrl} poster={posterUrl ?? undefined} />
-          ) : (
-            <div className="flex aspect-399/709 w-full items-center justify-center rounded-block bg-verde-100 text-sm text-verde-escuro-400">
-              Vídeo em breve
+            <div className="flex w-full max-w-[651px] gap-5 sm:gap-7">
+              <div
+                className="hidden w-px shrink-0 self-stretch bg-verde-escuro-500/30 sm:block"
+                aria-hidden
+              />
+              <div className="min-w-0 space-y-0 text-base leading-7 text-black sm:text-lg lg:max-w-[624px] lg:text-[18px] lg:leading-[28px]">
+                {paragraphs.map((paragraph, index) => (
+                  <p key={index} className={index < paragraphs.length - 1 ? "mb-0" : undefined}>
+                    {paragraph}
+                  </p>
+                ))}
+              </div>
             </div>
-          )}
-        </motion.div>
-          </div>
+
+            <Link
+              href={ctaHref}
+              className="inline-flex rounded-pill bg-verde-escuro-500 px-8 py-2.5 text-base font-bold text-verde-100 transition-colors hover:bg-verde-escuro-400 sm:px-[34px] sm:py-3 sm:text-xl lg:text-2xl lg:leading-[1.4]"
+            >
+              {ctaLabel}
+            </Link>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, x: 24 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, margin: "-80px" }}
+            transition={{ duration: 0.6, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
+            className="w-full shrink-0 lg:max-w-[677px]"
+          >
+            {displayImageUrl ? (
+              <div className="relative aspect-[677/553] w-full overflow-hidden rounded-[16px]">
+                <LandingImage
+                  src={displayImageUrl}
+                  alt=""
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 1024px) 92vw, 677px"
+                />
+              </div>
+            ) : (
+              <div className="flex aspect-[677/553] w-full items-center justify-center rounded-[16px] border border-dashed border-verde-300 bg-verde-100/50 text-sm text-verde-escuro-400">
+                Imagem em breve
+              </div>
+            )}
+          </motion.div>
         </div>
       </div>
     </section>
-  );
-}
-
-function WelcomeVideo({ src, poster }: { src: string; poster?: string }) {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [playing, setPlaying]   = useState(false);
-  const [muted, setMuted]       = useState(true);
-
-  function togglePlay() {
-    const el = videoRef.current;
-    if (!el) return;
-    if (el.paused) {
-      void el.play();
-      setPlaying(true);
-    } else {
-      el.pause();
-      setPlaying(false);
-    }
-  }
-
-  function toggleMute() {
-    const el = videoRef.current;
-    if (!el) return;
-    el.muted = !el.muted;
-    setMuted(el.muted);
-  }
-
-  return (
-    <div className="relative aspect-399/709 w-full overflow-hidden rounded-block bg-black shadow-card">
-      <video
-        ref={videoRef}
-        src={src}
-        poster={poster}
-        className="size-full object-cover"
-        playsInline
-        muted={muted}
-        loop
-        preload="metadata"
-        onPlay={() => setPlaying(true)}
-        onPause={() => setPlaying(false)}
-        onClick={togglePlay}
-      />
-
-      {/* Play overlay */}
-      {!playing && (
-        <button
-          type="button"
-          onClick={togglePlay}
-          aria-label="Reproduzir vídeo"
-          className="absolute inset-0 flex items-center justify-center bg-black/20 transition-colors hover:bg-black/30"
-        >
-          <span className="flex size-16 items-center justify-center rounded-full bg-white/90 shadow-lg md:size-20">
-            <Play size={32} className="ml-1 text-verde-escuro-500" fill="currentColor" />
-          </span>
-        </button>
-      )}
-
-      {/* Mute toggle */}
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          toggleMute();
-        }}
-        aria-label={muted ? "Ativar som" : "Silenciar"}
-        className="absolute bottom-4 right-4 flex size-9 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-sm transition-colors hover:bg-black/70"
-      >
-        {muted ? <VolumeX size={18} /> : <Volume2 size={18} />}
-      </button>
-    </div>
   );
 }

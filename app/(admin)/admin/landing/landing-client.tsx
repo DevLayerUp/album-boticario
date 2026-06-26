@@ -17,10 +17,12 @@ import { VideoUploader } from "@/components/admin/video-uploader";
 interface NavLink { label: string; href: string; }
 
 interface NavbarData {
-  logoUrl:  string | null;
-  links:    NavLink[];
-  ctaLabel: string;
-  ctaHref:  string;
+  logoUrl:     string | null;
+  fgbLogoUrl:  string | null;
+  fgbLogoHref: string;
+  links:       NavLink[];
+  ctaLabel:    string;
+  ctaHref:     string;
 }
 
 interface HeroData {
@@ -34,13 +36,12 @@ interface HeroData {
 }
 
 interface WelcomeData {
-  title:      string;
-  paragraph1: string;
-  paragraph2: string;
-  ctaLabel:   string;
-  ctaHref:    string;
-  videoUrl:   string | null;
-  posterUrl:  string | null;
+  titleRegular: string;
+  titleBold:    string;
+  body:         string;
+  ctaLabel:     string;
+  ctaHref:      string;
+  imageUrl:     string | null;
 }
 
 interface ManifestData {
@@ -57,7 +58,8 @@ interface JourneyData {
   paragraph2:   string;
   ctaLabel:     string;
   ctaHref:      string;
-  imageUrl:     string | null;
+  videoUrl:     string | null;
+  posterUrl:    string | null;
 }
 
 interface HowItWorksStepData {
@@ -72,13 +74,14 @@ interface HowItWorksData {
 }
 
 interface RegisterData {
-  backgroundUrl: string | null;
-  heading:       string;
-  paragraph1:    string;
-  paragraph2:    string;
-  formTitle:     string;
-  ctaLabel:      string;
-  privacyUrl:    string;
+  backgroundUrl:       string | null;
+  heading:             string;
+  paragraph1:          string;
+  paragraph1Highlight: string;
+  paragraph2:          string;
+  formTitle:           string;
+  ctaLabel:            string;
+  privacyUrl:          string;
 }
 
 interface FandomSocialLink {
@@ -322,18 +325,44 @@ function NavbarSection({ initial }: { initial: NavbarData }) {
   return (
     <Section
       title="Navbar"
-      subtitle="Logo, links de navegação e botão de chamada para ação."
+      subtitle="Logos, links de navegação e botão de chamada para ação."
     >
       <div className="space-y-6">
-        {/* Logo */}
-        <Field label="Logo" hint="Imagem da logo exibida à esquerda (PNG ou WEBP transparente). Dimensões sugeridas: 290 × 146 px.">
-          <ImageUploader
-            value={data.logoUrl}
-            onChange={(url) => setData((d) => ({ ...d, logoUrl: url }))}
-            bucket="landing"
-            folder="navbar"
-            label="Logo da Navbar"
-            priority
+        <div className="grid gap-6 sm:grid-cols-2">
+          <Field
+            label="Logo Fãs por Natureza"
+            hint="Logo à esquerda (PNG ou WEBP transparente). Sugerido: 290 × 146 px."
+          >
+            <ImageUploader
+              value={data.logoUrl}
+              onChange={(url) => setData((d) => ({ ...d, logoUrl: url }))}
+              bucket="landing"
+              folder="navbar/fans"
+              label="Logo Fãs por Natureza"
+              priority
+            />
+          </Field>
+
+          <Field
+            label="Logo Fundação Grupo Boticário"
+            hint="Segundo logo, após o divisor. Sugerido: 182 × 66 px."
+          >
+            <ImageUploader
+              value={data.fgbLogoUrl}
+              onChange={(url) => setData((d) => ({ ...d, fgbLogoUrl: url }))}
+              bucket="landing"
+              folder="navbar/fgb"
+              label="Logo FGB"
+              priority
+            />
+          </Field>
+        </div>
+
+        <Field label="Link do logo FGB">
+          <Input
+            value={data.fgbLogoHref}
+            onChange={(v) => setData((d) => ({ ...d, fgbLogoHref: v }))}
+            placeholder="ex: https://fundacaogrupoboticario.org.br/"
           />
         </Field>
 
@@ -540,31 +569,34 @@ function WelcomeSection({ initial }: { initial: WelcomeData }) {
   return (
     <Section
       title="Boas-vindas"
-      subtitle="Seção com texto de apresentação e vídeo vertical ao lado."
+      subtitle="Segunda seção da landing: texto com destaque e imagem ao lado (Figma 2330:246)."
     >
       <div className="space-y-6">
-        <Field label="Título">
-          <Input
-            value={data.title}
-            onChange={(v) => setData((d) => ({ ...d, title: v }))}
-            placeholder="ex: Seja bem-vindo Fã por natureza!"
-          />
-        </Field>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Título (parte regular)">
+            <Input
+              value={data.titleRegular}
+              onChange={(v) => setData((d) => ({ ...d, titleRegular: v }))}
+              placeholder="ex: Vista o orgulho e "
+            />
+          </Field>
+          <Field label="Título (parte em negrito)">
+            <Input
+              value={data.titleBold}
+              onChange={(v) => setData((d) => ({ ...d, titleBold: v }))}
+              placeholder="ex: vibre pela nossa natureza"
+            />
+          </Field>
+        </div>
 
-        <Field label="Primeiro parágrafo">
+        <Field
+          label="Texto"
+          hint="Uma linha por parágrafo. A linha vertical decorativa é aplicada automaticamente no layout."
+        >
           <textarea
-            value={data.paragraph1}
-            onChange={(e) => setData((d) => ({ ...d, paragraph1: e.target.value }))}
-            rows={3}
-            className="w-full resize-y rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-800 outline-none transition focus:border-gb-green focus:bg-white focus:ring-2 focus:ring-gb-green/20"
-          />
-        </Field>
-
-        <Field label="Segundo parágrafo">
-          <textarea
-            value={data.paragraph2}
-            onChange={(e) => setData((d) => ({ ...d, paragraph2: e.target.value }))}
-            rows={3}
+            value={data.body}
+            onChange={(e) => setData((d) => ({ ...d, body: e.target.value }))}
+            rows={10}
             className="w-full resize-y rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-800 outline-none transition focus:border-gb-green focus:bg-white focus:ring-2 focus:ring-gb-green/20"
           />
         </Field>
@@ -574,44 +606,30 @@ function WelcomeSection({ initial }: { initial: WelcomeData }) {
             <Input
               value={data.ctaLabel}
               onChange={(v) => setData((d) => ({ ...d, ctaLabel: v }))}
-              placeholder="ex: Comece a colecionar agora!"
+              placeholder="ex: Faça parte do Fandom"
             />
           </Field>
           <Field label="Link do botão CTA">
             <Input
               value={data.ctaHref}
               onChange={(v) => setData((d) => ({ ...d, ctaHref: v }))}
-              placeholder="ex: /register"
+              placeholder="ex: #fandom"
             />
           </Field>
         </div>
 
-        <div className="grid gap-6 sm:grid-cols-2">
-          <Field
-            label="Vídeo"
-            hint="Vídeo vertical curto (MP4, WebM ou MOV). Recomendado: 399 × 709 px, máx. 50 MB."
-          >
-            <VideoUploader
-              value={data.videoUrl}
-              onChange={(url) => setData((d) => ({ ...d, videoUrl: url }))}
-              bucket="landing"
-              folder="welcome/video"
-            />
-          </Field>
-
-          <Field
-            label="Capa do vídeo (opcional)"
-            hint="Imagem exibida antes de dar play. Se vazio, usa o primeiro frame do vídeo."
-          >
-            <ImageUploader
-              value={data.posterUrl}
-              onChange={(url) => setData((d) => ({ ...d, posterUrl: url }))}
-              bucket="landing"
-              folder="welcome/poster"
-              label="Poster do vídeo"
-            />
-          </Field>
-        </div>
+        <Field
+          label="Imagem"
+          hint="Imagem à direita da seção. Recomendado: 677 × 553 px."
+        >
+          <ImageUploader
+            value={data.imageUrl}
+            onChange={(url) => setData((d) => ({ ...d, imageUrl: url }))}
+            bucket="landing"
+            folder="welcome/image"
+            label="Imagem de boas-vindas"
+          />
+        </Field>
       </div>
 
       <SaveRow saving={saving} saved={saved} dirty={dirty} error={error} onSave={handleSave} />
@@ -726,7 +744,7 @@ function JourneySection({ initial }: { initial: JourneyData }) {
   return (
     <Section
       title="Jornada pela biodiversidade"
-      subtitle="Quinta seção da landing: imagem à esquerda e texto com CTA à direita (Figma 2330:272)."
+      subtitle="Quinta seção da landing: vídeo vertical à esquerda e texto com CTA à direita (Figma 2330:272)."
     >
       <div className="space-y-6">
         <div className="grid gap-4 sm:grid-cols-2">
@@ -781,18 +799,32 @@ function JourneySection({ initial }: { initial: JourneyData }) {
           </Field>
         </div>
 
-        <Field
-          label="Imagem"
-          hint="Imagem à esquerda da seção. Recomendado: 550 × 568 px."
-        >
-          <ImageUploader
-            value={data.imageUrl}
-            onChange={(url) => setData((d) => ({ ...d, imageUrl: url }))}
-            bucket="landing"
-            folder="journey/image"
-            label="Imagem da jornada"
-          />
-        </Field>
+        <div className="grid gap-6 sm:grid-cols-2">
+          <Field
+            label="Vídeo"
+            hint="Vídeo vertical (MP4, WebM ou MOV). Recomendado: 399 × 709 px, máx. 50 MB."
+          >
+            <VideoUploader
+              value={data.videoUrl}
+              onChange={(url) => setData((d) => ({ ...d, videoUrl: url }))}
+              bucket="landing"
+              folder="journey/video"
+            />
+          </Field>
+
+          <Field
+            label="Capa do vídeo (opcional)"
+            hint="Imagem exibida antes de dar play. Se vazio, usa o primeiro frame do vídeo."
+          >
+            <ImageUploader
+              value={data.posterUrl}
+              onChange={(url) => setData((d) => ({ ...d, posterUrl: url }))}
+              bucket="landing"
+              folder="journey/poster"
+              label="Poster do vídeo"
+            />
+          </Field>
+        </div>
       </div>
 
       <SaveRow saving={saving} saved={saved} dirty={dirty} error={error} onSave={handleSave} />
@@ -956,7 +988,7 @@ function RegisterSection({ initial }: { initial: RegisterData }) {
   return (
     <Section
       title="Cadastro"
-      subtitle="Seção com formulário de pré-cadastro e imagem de fundo."
+      subtitle="Seção com formulário de pré-cadastro sobre fundo verde escuro (Figma 2310:281)."
     >
       <div className="space-y-6">
         <Field
@@ -973,11 +1005,11 @@ function RegisterSection({ initial }: { initial: RegisterData }) {
           />
         </Field>
 
-        <Field label="Título">
+        <Field label="Título (amarelo)">
           <Input
             value={data.heading}
             onChange={(v) => setData((d) => ({ ...d, heading: v }))}
-            placeholder="ex: Comece sua coleção agora"
+            placeholder="ex: Entre para o nosso Fandom agora!"
           />
         </Field>
 
@@ -990,6 +1022,14 @@ function RegisterSection({ initial }: { initial: RegisterData }) {
           />
         </Field>
 
+        <Field label="Destaque em negrito (primeiro parágrafo)">
+          <Input
+            value={data.paragraph1Highlight}
+            onChange={(v) => setData((d) => ({ ...d, paragraph1Highlight: v }))}
+            placeholder="ex: acesso ao nosso álbum digital"
+          />
+        </Field>
+
         <Field label="Segundo parágrafo">
           <textarea
             value={data.paragraph2}
@@ -999,7 +1039,10 @@ function RegisterSection({ initial }: { initial: RegisterData }) {
           />
         </Field>
 
-        <Field label="Título do card do formulário">
+        <Field
+          label="Título do card do formulário (opcional)"
+          hint="Deixe vazio para ocultar — o layout atual do Figma não exibe título no card."
+        >
           <Input
             value={data.formTitle}
             onChange={(v) => setData((d) => ({ ...d, formTitle: v }))}

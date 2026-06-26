@@ -189,8 +189,10 @@ export function LandingPasswordForm() {
       signup_source: "landing",
       newsletter_opt_in: draft.newsletter ? "true" : "false",
     };
+    if (draft.estado) signUpData.state = draft.estado;
     if (draft.cidade) signUpData.city = draft.cidade;
-    if (draft.idade) signUpData.age = draft.idade;
+    if (draft.birthDate) signUpData.birth_date = draft.birthDate;
+    else if (draft.idade) signUpData.age = draft.idade;
     if (referralCode) signUpData.referral_code = referralCode;
 
     try {

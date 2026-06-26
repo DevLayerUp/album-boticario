@@ -12,10 +12,12 @@ export interface NavLink {
 }
 
 export interface LandingNavbarProps {
-  logoUrl?: string | null;
-  links?: NavLink[];
-  ctaLabel?: string;
-  ctaHref?: string;
+  logoUrl?:     string | null;
+  fgbLogoUrl?:  string | null;
+  fgbLogoHref?: string;
+  links?:       NavLink[];
+  ctaLabel?:    string;
+  ctaHref?:     string;
 }
 
 const DEFAULT_LINKS: NavLink[] = [
@@ -24,8 +26,8 @@ const DEFAULT_LINKS: NavLink[] = [
   { label: "FAQ", href: "#faq" },
 ];
 
-const FGB_URL = "https://fundacaogrupoboticario.org.br/";
-const FGB_LOGO = "/images/landing/footer/logo.png";
+const DEFAULT_FGB_LOGO = "/images/landing/footer/logo.png";
+const DEFAULT_FGB_HREF = "https://fundacaogrupoboticario.org.br/";
 
 const EASE_OUT = [0.22, 1, 0.36, 1] as const;
 
@@ -229,11 +231,14 @@ function MobileNavMenu({
 
 export function LandingNavbar({
   logoUrl,
+  fgbLogoUrl,
+  fgbLogoHref = DEFAULT_FGB_HREF,
   links,
   ctaLabel = "Quero participar!",
   ctaHref = "/register",
 }: LandingNavbarProps) {
   const navLinks = links?.length ? links : DEFAULT_LINKS;
+  const displayFgbLogo = fgbLogoUrl ?? DEFAULT_FGB_LOGO;
   const [mobileOpen, setMobileOpen] = useState(false);
   const menuId = useId();
   const reducedMotion = useReducedMotion();
@@ -289,18 +294,18 @@ export function LandingNavbar({
           />
 
           <a
-            href={FGB_URL}
+            href={fgbLogoHref}
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Fundação Grupo Boticário — site oficial"
             className="shrink-0"
           >
             <LandingImage
-              src={FGB_LOGO}
+              src={displayFgbLogo}
               alt="Fundação Grupo Boticário"
               width={182}
               height={66}
-              className="h-9 w-auto max-w-[120px] object-contain sm:h-11 sm:max-w-none"
+              className="h-9 w-auto max-w-[120px] object-contain sm:h-11 lg:max-w-[140px]"
               priority
             />
           </a>
