@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { PerfilDeleteAccount } from "./perfil-delete-account";
 import { PerfilFormActions } from "./perfil-form-actions";
 
 interface PerfilSecurityPanelProps {
@@ -22,10 +23,12 @@ function PasswordInput({
   value,
   onChange,
   className,
+  disabled,
 }: {
   value: string;
   onChange: (value: string) => void;
   className?: string;
+  disabled?: boolean;
 }) {
   const [visible, setVisible] = useState(false);
 
@@ -35,13 +38,15 @@ function PasswordInput({
         type={visible ? "text" : "password"}
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        disabled={disabled}
         autoComplete="off"
-        className="h-12 w-full rounded-pill border border-verde-200 bg-white px-5 pr-12 text-base text-[#5a5a5a] tracking-widest focus:border-verde-500 focus:outline-none focus-visible:outline-2 focus-visible:outline-verde-500"
+        className="h-12 w-full rounded-pill border border-verde-200 bg-white px-5 pr-12 text-base text-[#5a5a5a] tracking-widest focus:border-verde-500 focus:outline-none focus-visible:outline-2 focus-visible:outline-verde-500 disabled:cursor-not-allowed disabled:opacity-60"
       />
       <button
         type="button"
         onClick={() => setVisible((v) => !v)}
-        className="absolute right-4 top-1/2 -translate-y-1/2 text-verde-escuro-400"
+        disabled={disabled}
+        className="absolute right-4 top-1/2 -translate-y-1/2 text-verde-escuro-400 disabled:opacity-60"
         aria-label={visible ? "Ocultar senha" : "Mostrar senha"}
       >
         {visible ? (
@@ -157,6 +162,10 @@ export function PerfilSecurityPanel({
         onSave={() => void handleSave()}
         saveLabel="Atualizar senha"
       />
+
+      <div className="border-t border-verde-300 pt-8 sm:pt-10">
+        <PerfilDeleteAccount />
+      </div>
     </div>
   );
 }
