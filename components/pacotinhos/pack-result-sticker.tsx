@@ -2,8 +2,10 @@
 
 import Image from "next/image";
 import { RarityBadge } from "@/components/trocas/rarity-badge";
+import { StickerFormattedText } from "@/components/sticker/sticker-formatted-text";
 import { StickerRarityEffects } from "@/components/sticker/sticker-rarity-effects";
 import { rarityTheme } from "@/lib/rarity";
+import { stickerTextToPlain } from "@/lib/sticker-text-format";
 import { cn } from "@/lib/utils";
 import type { PackSticker } from "./types";
 
@@ -35,7 +37,7 @@ export function PackResultSticker({ item, compact = false }: PackResultStickerPr
         {sticker.image_url ? (
           <Image
             src={sticker.image_url}
-            alt={sticker.name}
+            alt={stickerTextToPlain(sticker.name)}
             fill
             className="object-cover"
             sizes="228px"
@@ -69,7 +71,7 @@ export function PackResultSticker({ item, compact = false }: PackResultStickerPr
         )}
         style={{ color: theme.nameTag }}
       >
-        {sticker.name}
+        <StickerFormattedText text={sticker.name} />
       </p>
     </div>
   );

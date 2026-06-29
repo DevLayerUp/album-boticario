@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { CheckCircle2 } from "lucide-react";
 import { rarityColor } from "@/lib/rarity";
+import { stickerTextToPlain } from "@/lib/sticker-text-format";
 import { cn } from "@/lib/utils";
 import { StickerRarityEffects, type StickerEffectIntensity } from "@/components/sticker/sticker-rarity-effects";
 import type { Sticker } from "./types";
@@ -70,7 +71,7 @@ export function StickerThumb({
     >
       <Image
         src={sticker.image_url}
-        alt={sticker.name}
+        alt={stickerTextToPlain(sticker.name)}
         fill
         className="object-cover"
         sizes={`${width}px`}

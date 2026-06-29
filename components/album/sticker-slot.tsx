@@ -7,9 +7,11 @@ import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { Lock, Plus, Sparkles, ThumbsUp, Trophy, X, ExternalLink } from "lucide-react";
 import { PasteFlight, type PasteFlightConfig } from "@/components/album/paste-flight";
 import { FigurinhaNameTag } from "@/components/sticker/figurinha-name-tag";
+import { StickerFormattedText } from "@/components/sticker/sticker-formatted-text";
 import { StickerRarityEffects } from "@/components/sticker/sticker-rarity-effects";
 import { playPasteSound } from "@/lib/play-paste-sound";
 import { rarityColor, rarityTheme, type RarityTheme } from "@/lib/rarity";
+import { stickerTextToPlain } from "@/lib/sticker-text-format";
 import { cn } from "@/lib/utils";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -82,7 +84,7 @@ function StickerNameTag({
       )}
       style={{ backgroundColor: bgColor }}
     >
-      {name}
+      <StickerFormattedText text={name} uppercasePlain />
     </span>
   );
 }
@@ -193,7 +195,7 @@ function StickerDetailModal({
             >
               <Image
                 src={sticker.image_url}
-                alt={sticker.name}
+                alt={stickerTextToPlain(sticker.name)}
                 fill
                 className="object-cover"
                 sizes="(max-width: 640px) 280px, 392px"
@@ -226,8 +228,12 @@ function StickerDetailModal({
               <div className="flex min-h-0 w-full flex-1 flex-col items-center gap-2 overflow-hidden sm:gap-2.5">
                 <div className="flex min-h-0 w-full flex-1 items-center justify-center overflow-y-auto overscroll-contain [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-white/30">
                   <p className="wrap-break-word px-0.5 text-center text-[11px] leading-[1.45] text-white sm:text-xs md:text-sm">
-                    {sticker.description ??
-                      "Figurinha exclusiva da coleção Fãs da Natureza."}
+                    <StickerFormattedText
+                      text={
+                        sticker.description ??
+                        "Figurinha exclusiva da coleção Fãs da Natureza."
+                      }
+                    />
                   </p>
                 </div>
 
@@ -343,7 +349,7 @@ export function StickerSlot({
     : canPaste
       ? `Colar ${sticker?.name ?? `figurinha ${slotNumber}`}`
       : isMissing
-        ? `${sticker.name}, ainda não obtida`
+        ? `${stickerTextToPlain(sticker.name)}, ainda não obtida`
         : `Espaço ${slotNumber}`;
 
   useEffect(() => {
@@ -453,7 +459,7 @@ export function StickerSlot({
             {sticker && (
               <Image
                 src={sticker.image_url}
-                alt={sticker.name}
+                alt={stickerTextToPlain(sticker.name)}
                 fill
                 className="object-cover"
                 sizes={imageSizes}
@@ -507,7 +513,7 @@ export function StickerSlot({
               <div className="relative h-full w-full">
                 {sticker ? (
                   <>
-                    <Image src={sticker.image_url} alt={sticker.name} fill
+                    <Image src={sticker.image_url} alt={stickerTextToPlain(sticker.name)} fill
                       className="object-cover opacity-50" sizes={imageSizes} />
                     <StickerRarityEffects
                       slug={raritySlug}
@@ -630,7 +636,7 @@ export function StickerSlot({
                       transformStyle: "preserve-3d",
                     }}
                   >
-                    <Image src={sticker.image_url} alt={sticker.name} fill
+                    <Image src={sticker.image_url} alt={stickerTextToPlain(sticker.name)} fill
                       className="object-cover" sizes="144px" />
                     <StickerRarityEffects
                       slug={raritySlug}
@@ -644,7 +650,7 @@ export function StickerSlot({
                 {/* Info */}
                 <div className="space-y-2 text-center">
                   <h3 className="font-display text-2xl font-bold uppercase text-verde-escuro-500">
-                    {sticker.name}
+                    <StickerFormattedText text={sticker.name} uppercasePlain />
                   </h3>
                   {sticker.rarities && (
                     <motion.span
@@ -659,7 +665,7 @@ export function StickerSlot({
                   )}
                   {sticker.description && (
                     <p className="mx-auto mt-1.5 max-w-xs text-sm leading-relaxed text-verde-escuro-400">
-                      {sticker.description}
+                      <StickerFormattedText text={sticker.description} />
                     </p>
                   )}
                 </div>

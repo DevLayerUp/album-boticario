@@ -9,6 +9,11 @@ import {
   STICKER_DESCRIPTION_MAX_LENGTH,
   validateStickerDescription,
 } from "@/lib/sticker-description";
+import {
+  STICKER_NAME_MAX_LENGTH,
+  validateStickerFormattedText,
+} from "@/lib/sticker-text-format";
+import { StickerFormattedTextField } from "./sticker-formatted-text-field";
 
 interface Category { id: number; name: string }
 interface Rarity { id: number; name: string; color_hex: string }
@@ -59,6 +64,27 @@ export function FigurinhaForm({
 
   async function handleSave() {
     if (!form.name.trim()) { setError("Nome é obrigatório"); return; }
+
+    const nameFormatError = validateStickerFormattedText(
+      form.name,
+      STICKER_NAME_MAX_LENGTH,
+      "O nome",
+    );
+    if (nameFormatError) {
+      setError(nameFormatError);
+      return;
+    }
+
+    const descriptionFormatError = validateStickerFormattedText(
+      form.description,
+      STICKER_DESCRIPTION_MAX_LENGTH,
+      "A descrição",
+    );
+    if (descriptionFormatError) {
+      setError(descriptionFormatError);
+      return;
+    }
+
     if (!form.image_url) { setError("Imagem é obrigatória"); return; }
     if (form.redirect_url.trim()) {
       try {
@@ -145,31 +171,30 @@ export function FigurinhaForm({
       <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
         <div className="grid gap-5 sm:grid-cols-2">
           <div className="sm:col-span-2">
-            <label className="mb-1 block text-sm font-medium text-gray-700">
-              Nome <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
+            <StickerFormattedTextField
+              id="fig-name"
+              label="Nome"
               value={form.name}
-              onChange={(e) => set("name", e.target.value)}
-              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gb-green focus:ring-1 focus:ring-gb-green"
-              placeholder="Nome da figurinha"
+              onChange={(value) => set("name", value)}
+              maxLength={STICKER_NAME_MAX_LENGTH}
+              rows={2}
+              placeholder="Ex.: Arara-vermelha {{sci|Ara chloropterus}}"
+              hint="exibido na frente e no verso da figurinha"
+              required
             />
           </div>
 
           <div className="sm:col-span-2">
-            <label className="mb-1 block text-sm font-medium text-gray-700">Descrição</label>
-            <textarea
-              rows={3}
-              maxLength={STICKER_DESCRIPTION_MAX_LENGTH}
+            <StickerFormattedTextField
+              id="fig-description"
+              label="Descrição"
               value={form.description}
-              onChange={(e) => set("description", e.target.value)}
-              className="w-full resize-none rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gb-green focus:ring-1 focus:ring-gb-green"
+              onChange={(value) => set("description", value)}
+              maxLength={STICKER_DESCRIPTION_MAX_LENGTH}
+              rows={4}
               placeholder="Texto do verso / tooltip"
+              hint="texto exibido no verso da figurinha no álbum"
             />
-            <p className="mt-1 text-xs text-gray-500">
-              {form.description.length}/{STICKER_DESCRIPTION_MAX_LENGTH} caracteres — texto exibido no verso da figurinha no álbum.
-            </p>
           </div>
 
           <div className="sm:col-span-2">

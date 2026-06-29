@@ -12,6 +12,8 @@ import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { Check, Loader2, Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { stickerTextToPlain } from "@/lib/sticker-text-format";
+import { StickerFormattedText } from "@/components/sticker/sticker-formatted-text";
 import { RarityBadge } from "./rarity-badge";
 import { StickerThumb } from "./sticker-thumb";
 import type { Sticker } from "./types";
@@ -128,7 +130,7 @@ export function StickerAutocomplete({
 
   async function select(sticker: Sticker) {
     onChange(sticker);
-    setQuery(sticker.name);
+    setQuery(stickerTextToPlain(sticker.name));
     setOpen(false);
     if (onStickerPicked) {
       await onStickerPicked(sticker);
@@ -233,7 +235,7 @@ export function StickerAutocomplete({
                     className="line-clamp-2 font-display text-[13px] font-bold leading-snug sm:text-sm"
                     style={{ color: stickerNameColor(slug) }}
                   >
-                    {sticker.name}
+                    <StickerFormattedText text={sticker.name} />
                   </p>
                 </div>
                 {isActive ? (
@@ -333,7 +335,7 @@ export function StickerAutocomplete({
                 className="max-w-[240px] text-center font-display text-base font-bold leading-tight sm:max-w-[260px] sm:text-lg lg:text-xl"
                 style={{ color: stickerNameColor(value.rarities?.slug) }}
               >
-                {value.name}
+                <StickerFormattedText text={value.name} />
               </p>
             </div>
           </motion.div>
@@ -347,7 +349,9 @@ export function StickerAutocomplete({
             <p className="text-[10px] font-bold uppercase tracking-wider text-verde-escuro-500">
               Selecionada
             </p>
-            <p className="truncate text-sm font-semibold text-verde-escuro-capa">{value.name}</p>
+            <p className="truncate text-sm font-semibold text-verde-escuro-capa">
+              <StickerFormattedText text={value.name} />
+            </p>
           </div>
         </div>
       ) : null}

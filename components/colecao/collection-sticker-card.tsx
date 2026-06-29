@@ -4,7 +4,9 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import { Lock, Sparkles } from "lucide-react";
 import { rarityColor } from "@/lib/rarity";
+import { stickerTextToPlain } from "@/lib/sticker-text-format";
 import { cn } from "@/lib/utils";
+import { StickerFormattedText } from "@/components/sticker/sticker-formatted-text";
 import { StickerRarityEffects } from "@/components/sticker/sticker-rarity-effects";
 import type { CollectionSticker } from "./types";
 
@@ -41,8 +43,8 @@ export function CollectionStickerCard({
       onClick={onSelect}
       aria-label={
         owned
-          ? `${sticker.name}, ${quantity > 1 ? `${quantity} cópias` : "obtida"}`
-          : `${sticker.name}, ainda não obtida`
+          ? `${stickerTextToPlain(sticker.name)}, ${quantity > 1 ? `${quantity} cópias` : "obtida"}`
+          : `${stickerTextToPlain(sticker.name)}, ainda não obtida`
       }
       className="group flex w-full cursor-pointer flex-col gap-1.5 text-left"
     >
@@ -119,7 +121,7 @@ export function CollectionStickerCard({
           owned ? "text-verde-escuro-500" : "text-verde-escuro-300",
         )}
       >
-        {sticker.name}
+        <StickerFormattedText text={sticker.name} uppercasePlain className="truncate" />
       </p>
     </motion.button>
   );

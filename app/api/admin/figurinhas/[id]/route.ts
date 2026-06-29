@@ -5,7 +5,13 @@ import { normalizeRedirectUrl } from "@/lib/sticker-redirect-url";
 import {
   normalizeStickerDescription,
   validateStickerDescription,
+  STICKER_DESCRIPTION_MAX_LENGTH,
 } from "@/lib/sticker-description";
+import {
+  normalizeStickerName,
+  STICKER_NAME_MAX_LENGTH,
+  validateStickerFormattedText,
+} from "@/lib/sticker-text-format";
 
 export async function GET(
   _request: NextRequest,
@@ -49,6 +55,25 @@ export async function PUT(
   if (!name?.trim()) {
     return NextResponse.json({ error: "Nome é obrigatório" }, { status: 400 });
   }
+
+  const nameFormatError = validateStickerFormattedText(
+    name,
+    STICKER_NAME_MAX_LENGTH,
+    "O nome",
+  );
+  if (nameFormatError) {
+    return NextResponse.json({ error: nameFormatError }, { status: 400 });
+  }
+
+  const descriptionFormatError = validateStickerFormattedText(
+    description,
+    STICKER_DESCRIPTION_MAX_LENGTH,
+    "A descrição",
+  );
+  if (descriptionFormatError) {
+    return NextResponse.json({ error: descriptionFormatError }, { status: 400 });
+  }
+
   if (redirect_url && normalizeRedirectUrl(redirect_url) === null) {
     return NextResponse.json({ error: "Link do material inválido" }, { status: 400 });
   }
@@ -62,7 +87,7 @@ export async function PUT(
   const { data, error } = await supabase
     .from("stickers")
     .update({
-      name: name.trim(),
+      name: normalizeStickerName(name),
       description: normalizeStickerDescription(description),
       image_url,
       redirect_url: normalizeRedirectUrl(redirect_url),

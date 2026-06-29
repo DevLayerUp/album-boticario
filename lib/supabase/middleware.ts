@@ -26,6 +26,7 @@ const ALWAYS_PUBLIC = [
   "/.well-known/",
   "/opengraph-image",
   "/api/categories",      // endpoint público de categorias
+  "/api/leads",           // captura de leads da landing (pré-cadastro)
 ];
 
 /**

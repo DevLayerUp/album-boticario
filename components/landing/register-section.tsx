@@ -8,6 +8,7 @@ import { motion } from "framer-motion";
 import { FormEvent, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { saveLandingSignupDraft } from "@/lib/landing-signup";
+import { submitLandingLead } from "@/lib/submit-landing-lead";
 
 export interface LandingRegisterProps {
   backgroundUrl?:        string | null;
@@ -148,14 +149,26 @@ function RegisterForm({ formTitle, ctaLabel, privacyUrl }: RegisterFormProps) {
     setLoading(true);
 
     try {
-      saveLandingSignupDraft({
+      const draft = {
         email: email.trim(),
         name: nome.trim(),
         estado: estado.trim() || undefined,
         cidade: cidade.trim() || undefined,
         birthDate: birthDate || undefined,
         newsletter: true,
+      };
+
+      await submitLandingLead({
+        name: draft.name,
+        email: draft.email,
+        estado: draft.estado,
+        cidade: draft.cidade,
+        birthDate: draft.birthDate,
+        newsletterOptIn: draft.newsletter,
+        privacyAccepted: true,
       });
+
+      saveLandingSignupDraft(draft);
       router.push("/register/senha");
     } catch {
       setError("Não foi possível continuar. Tente novamente.");

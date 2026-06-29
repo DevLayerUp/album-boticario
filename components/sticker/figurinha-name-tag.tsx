@@ -1,5 +1,7 @@
 import { rarityTheme } from "@/lib/rarity";
+import { stickerTextToPlain } from "@/lib/sticker-text-format";
 import { cn } from "@/lib/utils";
+import { StickerFormattedNameTag } from "@/components/sticker/sticker-formatted-text";
 
 interface FigurinhaNameTagProps {
   name: string;
@@ -23,7 +25,7 @@ export function FigurinhaNameTag({
   pinBottom = false,
   className,
 }: FigurinhaNameTagProps) {
-  const label = name.trim();
+  const label = stickerTextToPlain(name);
   if (!label) return null;
 
   const isAlbumSlot = compact && pinBottom;
@@ -41,7 +43,7 @@ export function FigurinhaNameTag({
       )}
       style={{ backgroundColor: bgColor ?? rarityTheme("common").nameTag }}
     >
-      {label}
+      <StickerFormattedNameTag text={name} uppercasePlain />
     </span>
   );
 

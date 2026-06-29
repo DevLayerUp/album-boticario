@@ -3,6 +3,7 @@
 import { ArrowLeftRight } from "lucide-react";
 import { rarityColor } from "@/lib/rarity";
 import { cn } from "@/lib/utils";
+import { StickerFormattedText } from "@/components/sticker/sticker-formatted-text";
 import { NO_DUPLICATES_TRADE_MESSAGE } from "@/lib/trade-duplicates";
 import { Avatar, StickerThumb } from "./shared";
 import { RarityBadge } from "./rarity-badge";
@@ -92,7 +93,7 @@ export function ExploreUserCard({
           className="line-clamp-2 text-center font-display text-sm font-bold leading-tight text-verde-escuro-capa sm:text-base 2xl:text-lg"
           style={{ color: rarityColor(slug, wish.sticker.rarities?.color_hex) }}
         >
-          {wish.sticker.name}
+          <StickerFormattedText text={wish.sticker.name} />
         </p>
       </div>
 
@@ -166,7 +167,7 @@ export function WishRequestCard({
           className="mt-1.5 font-display text-lg font-bold leading-tight text-verde-escuro-capa sm:mt-2 sm:text-xl lg:text-2xl 2xl:text-[32px]"
           style={{ color: borderColor }}
         >
-          {sticker.name}
+          <StickerFormattedText text={sticker.name} />
         </p>
         {onCancel && (
           <button

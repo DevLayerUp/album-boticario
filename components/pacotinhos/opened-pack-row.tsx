@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { PackageOpen } from "lucide-react";
 import { rarityColor } from "@/lib/rarity";
+import { stickerTextToPlain } from "@/lib/sticker-text-format";
 import { StickerRarityEffects } from "@/components/sticker/sticker-rarity-effects";
 import { SOURCE_LABEL, formatOpenedRelative } from "./shared";
 import type { OpenedPackHistory, PackSticker } from "./types";
@@ -20,7 +21,7 @@ export function OpenedPackRow({ pack }: OpenedPackRowProps) {
     (ps): ps is PackStickerEntry => Boolean(ps.stickers),
   );
   const preview = entries.slice(0, 3);
-  const names = entries.map((ps) => ps.stickers.name).join(" • ");
+  const names = entries.map((ps) => stickerTextToPlain(ps.stickers.name)).join(" • ");
 
   return (
     <div className="flex min-h-0 flex-col gap-3 rounded-[20px] border border-verde-400 bg-verde-100 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:rounded-[24px] sm:px-5 sm:py-3.5 lg:px-6 2xl:min-h-28 2xl:gap-6 2xl:rounded-[32px] 2xl:py-6 2xl:pl-8 2xl:pr-[51px]">

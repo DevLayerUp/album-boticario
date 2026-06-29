@@ -14,6 +14,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { StickerFormattedText } from "@/components/sticker/sticker-formatted-text";
 import { ProfileAvatarImage } from "@/components/profile/profile-avatar-image";
 import { StickerAutocomplete } from "./sticker-autocomplete";
 import { StickerThumb } from "./sticker-thumb";
@@ -492,7 +493,11 @@ export function FulfillWishModal({
             <p className="text-[10px] font-bold uppercase tracking-wider text-verde-escuro-500">
               Você vai oferecer
             </p>
-            <p className="text-sm font-semibold text-verde-escuro-capa">{wish.sticker?.name}</p>
+            <p className="text-sm font-semibold text-verde-escuro-capa">
+              {wish.sticker?.name ? (
+                <StickerFormattedText text={wish.sticker.name} />
+              ) : null}
+            </p>
             {!canOffer ? (
               <p className="mt-1 text-xs text-red-500">Você não possui esta figurinha</p>
             ) : isLastCopy ? (
@@ -543,7 +548,7 @@ export function FulfillWishModal({
                     badge={quantity > 1 ? quantity : undefined}
                   />
                   <p className="line-clamp-2 text-center text-[9px] font-medium leading-tight text-verde-escuro-capa">
-                    {st.name}
+                    <StickerFormattedText text={st.name} />
                   </p>
                 </button>
               );

@@ -5,8 +5,10 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { BookOpen, BookmarkCheck, ArrowLeftRight, Lock, Plus } from "lucide-react";
 import { rarityColor } from "@/lib/rarity";
+import { stickerTextToPlain } from "@/lib/sticker-text-format";
 import { cn } from "@/lib/utils";
 import { NO_DUPLICATES_TRADE_MESSAGE } from "@/lib/trade-duplicates";
+import { StickerFormattedText } from "@/components/sticker/sticker-formatted-text";
 import { StickerRarityEffects } from "@/components/sticker/sticker-rarity-effects";
 import { RarityBadge } from "./rarity-badge";
 import type { Sticker } from "./types";
@@ -207,7 +209,7 @@ export function StockStickerCard({
         )}
         style={state !== "missing" || hasOpenWish ? { color: hasOpenWish ? undefined : nameColor } : undefined}
       >
-        {sticker.name}
+        <StickerFormattedText text={sticker.name} className="truncate" />
       </p>
 
       {showRequestTrade ? (
@@ -235,7 +237,7 @@ export function StockStickerCard({
           type="button"
           onClick={onRequestTrade}
           className="group w-full cursor-pointer text-left"
-          aria-label={`Solicitar troca de ${sticker.name}`}
+          aria-label={`Solicitar troca de ${stickerTextToPlain(sticker.name)}`}
         >
           {cardImage}
           {cardMeta}
@@ -244,7 +246,7 @@ export function StockStickerCard({
         <Link
           href={pasteHref!}
           className="group w-full cursor-pointer text-left"
-          aria-label={`Colar ${sticker.name} no álbum`}
+          aria-label={`Colar ${stickerTextToPlain(sticker.name)} no álbum`}
         >
           {cardImage}
           {cardMeta}

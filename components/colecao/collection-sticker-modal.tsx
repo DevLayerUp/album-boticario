@@ -14,7 +14,9 @@ import {
   X,
 } from "lucide-react";
 import { rarityTheme } from "@/lib/rarity";
+import { stickerTextToPlain } from "@/lib/sticker-text-format";
 import { cn } from "@/lib/utils";
+import { StickerFormattedText } from "@/components/sticker/sticker-formatted-text";
 import { StickerRarityEffects } from "@/components/sticker/sticker-rarity-effects";
 import type { CollectionSticker } from "./types";
 
@@ -41,7 +43,7 @@ function StickerNameTag({
       )}
       style={{ backgroundColor: bgColor }}
     >
-      {name}
+      <StickerFormattedText text={name} uppercasePlain />
     </span>
   );
 }
@@ -140,7 +142,7 @@ export function CollectionStickerModal({
             id="collection-modal-title"
             className="mt-1 font-display text-2xl font-bold uppercase text-verde-escuro-500 sm:text-3xl"
           >
-            {sticker.name}
+            <StickerFormattedText text={sticker.name} uppercasePlain />
           </h2>
           {sticker.sticker_categories && (
             <p className="mt-1 text-sm text-verde-escuro-capa/60">
@@ -157,7 +159,7 @@ export function CollectionStickerModal({
             >
               <Image
                 src={sticker.image_url}
-                alt={sticker.name}
+                alt={stickerTextToPlain(sticker.name)}
                 fill
                 className="object-cover grayscale opacity-40"
                 sizes="280px"
@@ -196,7 +198,7 @@ export function CollectionStickerModal({
                 >
                   <Image
                     src={sticker.image_url}
-                    alt={sticker.name}
+                    alt={stickerTextToPlain(sticker.name)}
                     fill
                     className="object-cover"
                     sizes="392px"
@@ -226,8 +228,12 @@ export function CollectionStickerModal({
                   <StickerNameTag name={sticker.name} fullWidth bgColor={theme.nameTag} />
                   <div className="flex min-h-0 flex-1 items-center overflow-y-auto">
                     <p className="text-center text-base leading-[1.4] text-white sm:text-xl">
-                      {sticker.description ??
-                        "Figurinha exclusiva da coleção Fãs da Natureza."}
+                      <StickerFormattedText
+                        text={
+                          sticker.description ??
+                          "Figurinha exclusiva da coleção Fãs da Natureza."
+                        }
+                      />
                     </p>
                   </div>
                   <RarityBadge name={rarityName} slug={slug} theme={theme} />
