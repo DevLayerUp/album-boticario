@@ -3,6 +3,7 @@
 import { useCallback, useState } from "react";
 import { Camera } from "lucide-react";
 import { STICKER_UPLOAD_ZONE, type StickerPhotoTransform } from "@/lib/sticker-card";
+import { removeBackgroundInBrowser } from "@/lib/remove-background-client";
 import { assertCutoutHasTransparency } from "@/lib/validate-cutout-client";
 import { FigurinhaOutlineButton } from "./figurinha-actions";
 import { FigurinhaCardScaler } from "./figurinha-card-scaler";
@@ -35,6 +36,7 @@ export function PhotoUploader({
   const [cutoutBlob, setCutoutBlob] = useState<Blob | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
+  const [loadingHint, setLoadingHint] = useState<string | null>(null);
 
   const error = externalError ?? localError;
   const slot = stickerUploadZonePosition();
@@ -64,46 +66,32 @@ export function PhotoUploader({
     }
 
     setPhase("removing-bg");
-
-    const formData = new FormData();
-    formData.append("photo", file);
+    setLoadingHint("Preparando recorte…");
 
     try {
-      const res = await fetch("/api/sticker/remove-bg", { method: "POST", body: formData });
-
-      if (!res.ok) {
-        const contentType = res.headers.get("content-type") ?? "";
-        if (contentType.includes("application/json")) {
-          const json = (await res.json()) as { error?: string };
-          throw new Error(json.error ?? "Não foi possível remover o fundo.");
-        }
-        throw new Error("Não foi possível remover o fundo.");
-      }
-
-      const contentType = res.headers.get("content-type") ?? "";
-      if (!contentType.includes("image/png")) {
-        throw new Error("Recorte inválido retornado pelo servidor.");
-      }
-
-      const blob = await res.blob();
-      if (!blob.size) {
-        throw new Error("Resposta vazia do servidor.");
-      }
+      const blob = await removeBackgroundInBrowser(file, (fraction) => {
+        setLoadingHint(
+          fraction < 0.2
+            ? "Carregando modelo (só na 1ª vez)…"
+            : "Removendo fundo…",
+        );
+      });
 
       await assertCutoutHasTransparency(blob);
 
       setCutoutBlob(blob);
       setCutoutSrc(URL.createObjectURL(blob));
+      setLocalError(null);
       setPhase("edit");
     } catch (err) {
       const message =
-        err instanceof TypeError
-          ? "Falha de conexão ao enviar a imagem. Verifique sua internet ou use uma foto menor."
-          : err instanceof Error
-            ? err.message
-            : "Erro ao processar a foto.";
+        err instanceof Error
+          ? err.message
+          : "Erro ao processar a foto.";
       setLocalError(message);
       setPhase("pick");
+    } finally {
+      setLoadingHint(null);
     }
   }, []);
 
@@ -173,6 +161,7 @@ export function PhotoUploader({
               <StickerUploadCard
                 dragOver={dragOver}
                 loading={phase === "removing-bg"}
+                loadingMessage={loadingHint ?? "Removendo fundo…"}
               />
             </label>
           </FigurinhaCardScaler>

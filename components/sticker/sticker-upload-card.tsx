@@ -7,12 +7,14 @@ import { STICKER_CARD, STICKER_FRAME } from "@/lib/sticker-card";
 interface StickerUploadCardProps {
   dragOver?: boolean;
   loading?: boolean;
+  loadingMessage?: string;
   className?: string;
 }
 
 export function StickerUploadCard({
   dragOver = false,
   loading = false,
+  loadingMessage = "Removendo fundo…",
   className,
 }: StickerUploadCardProps) {
   const { width, height, borderRadius } = STICKER_CARD;
@@ -43,7 +45,7 @@ export function StickerUploadCard({
           <>
             <Loader2 className="size-10 animate-spin text-verde-500" aria-hidden />
             <span className="text-sm font-medium text-verde-escuro-500">
-              Removendo fundo…
+              {loadingMessage}
             </span>
           </>
         ) : (
