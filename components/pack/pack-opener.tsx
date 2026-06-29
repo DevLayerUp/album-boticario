@@ -16,6 +16,10 @@ import {
 } from "@/lib/play-pack-open-sound";
 import type { PackSticker } from "@/components/pacotinhos/types";
 import { STICKERS_PER_PACK } from "@/lib/pack-settings";
+import {
+  isPackOpeningGifPreloaded,
+  preloadPackOpeningGif,
+} from "@/lib/preload-pack-opening-gif";
 
 type Phase = "ready" | "opening" | "results";
 
@@ -30,8 +34,14 @@ interface PackOpenerProps {
 }
 
 const OPENING_MIN_MS = 2200;
+/** Never block results longer than this if the GIF fails to load. */
+const OPENING_MAX_WAIT_MS = 12000;
 /** Small buffer after the GIF is on screen so audio matches the first visible frame. */
 const OPENING_GIF_SOUND_DELAY_MS = 40;
+
+/** Scales with viewport height so the modal fits laptops without scroll. */
+const PACK_MEDIA_CLASS =
+  "relative h-[min(30dvh,150px)] w-[min(21dvh,105px)] shrink-0 sm:h-[min(32dvh,170px)] sm:w-[min(22.5dvh,119px)] lg:h-[min(34dvh,190px)] lg:w-[min(24dvh,133px)] 2xl:h-[min(38dvh,240px)] 2xl:w-[min(27dvh,168px)] [@media(max-height:800px)]:h-[min(28dvh,130px)] [@media(max-height:800px)]:w-[min(20dvh,91px)]";
 
 export function PackOpener({
   packId,
@@ -75,6 +85,11 @@ export function PackOpener({
       tryPlayOpeningGifSound();
       return;
     }
+    if (isPackOpeningGifPreloaded(openingGifUrl)) {
+      openingSync.current.mediaReady = true;
+      tryPlayOpeningGifSound();
+      return;
+    }
     const img = openingGifRef.current;
     if (img?.complete && img.naturalWidth > 0) {
       openingSync.current.mediaReady = true;
@@ -85,10 +100,11 @@ export function PackOpener({
   useEffect(() => {
     playPackPopupSound();
     preloadPackOpeningGifSound();
+    void preloadPackOpeningGif(openingGifUrl);
     return () => {
       stopPackOpeningGifSound();
     };
-  }, []);
+  }, [openingGifUrl]);
 
   useEffect(() => {
     if (phase !== "opening" || !openingDone) return;
@@ -97,9 +113,21 @@ export function PackOpener({
 
     async function showResults() {
       const started = openingStartedAt.current ?? Date.now();
-      const elapsed = Date.now() - started;
-      const wait = Math.max(0, OPENING_MIN_MS - elapsed);
-      await new Promise((r) => setTimeout(r, wait));
+
+      while (!cancelled) {
+        const elapsed = Date.now() - started;
+        const minTimeMet = elapsed >= OPENING_MIN_MS;
+        const gifReady =
+          !openingGifUrl ||
+          openingSync.current.mediaReady ||
+          isPackOpeningGifPreloaded(openingGifUrl);
+
+        if (minTimeMet && gifReady) break;
+        if (elapsed >= OPENING_MAX_WAIT_MS) break;
+
+        await new Promise((r) => setTimeout(r, 50));
+      }
+
       if (!cancelled) {
         stopPackOpeningGifSound();
         playPackRevealSound();
@@ -111,14 +139,15 @@ export function PackOpener({
     return () => {
       cancelled = true;
     };
-  }, [phase, openingDone]);
+  }, [phase, openingDone, openingGifUrl]);
 
   function resetOpeningSoundSync() {
     openingSoundPlayed.current = false;
     openingEnterAnimationDone.current = false;
     openingSync.current = {
       entered: false,
-      mediaReady: !openingGifUrl,
+      mediaReady:
+        !openingGifUrl || isPackOpeningGifPreloaded(openingGifUrl),
     };
   }
 
@@ -169,18 +198,18 @@ export function PackOpener({
   const sourceLabel = SOURCE_LABEL[source] ?? source;
   const count = stickerCount || stickers.length || STICKERS_PER_PACK;
   const canClose = phase !== "opening";
-  const compactResults = stickers.length > 3;
+  const compactResults = stickers.length !== 1;
 
   return (
-    <div className="relative w-full">
+    <div className="relative flex max-h-full min-h-0 w-full flex-col pt-5 pr-1">
       <button
         type="button"
         onClick={canClose ? onClose : undefined}
         disabled={!canClose}
-        className="absolute right-0 top-0 z-10 flex size-8 items-center justify-center rounded-full text-verde-escuro-300 transition-colors hover:bg-verde-100 hover:text-verde-escuro-500 disabled:pointer-events-none 2xl:size-10"
+        className="absolute -right-1 -top-1 z-10 flex size-7 items-center justify-center rounded-full text-verde-escuro-300 transition-colors hover:bg-verde-100 hover:text-verde-escuro-500 disabled:pointer-events-none sm:size-8"
         aria-label="Fechar"
       >
-        <X className="size-5 2xl:size-[22px]" />
+        <X className="size-4 sm:size-5" />
       </button>
 
       <AnimatePresence mode="wait">
@@ -190,28 +219,30 @@ export function PackOpener({
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
-            className="mx-auto flex max-w-[320px] flex-col items-center gap-5 pt-1 sm:max-w-[340px] sm:gap-6 2xl:max-w-[387px] 2xl:gap-10 2xl:pt-2"
+            className="mx-auto flex w-full max-w-[320px] flex-col items-center gap-2.5 pt-0.5 sm:max-w-[360px] sm:gap-3 lg:gap-3.5 2xl:max-w-[420px] 2xl:gap-4"
           >
-            <span className="rounded-pill border border-verde-400 px-4 py-1 text-sm font-medium text-verde-400 sm:text-base 2xl:px-[30px] 2xl:py-2 2xl:text-xl">
+            <span className="rounded-pill border border-verde-400 px-3 py-0.5 text-xs font-medium text-verde-400 sm:px-3.5 sm:py-1 sm:text-sm 2xl:px-4 2xl:text-base">
               {sourceLabel}
             </span>
 
             <div className="text-center">
-              <h2 className="font-display text-xl font-bold text-verde-escuro-500 sm:text-2xl lg:text-3xl 2xl:text-[48px] 2xl:leading-tight">
+              <h2 className="font-display text-lg font-bold leading-tight text-verde-escuro-500 sm:text-xl lg:text-2xl 2xl:text-3xl">
                 Pacotinho pronto!
               </h2>
-              <p className="mt-2 text-sm text-verde-escuro-500 sm:text-base lg:text-lg 2xl:mt-3 2xl:text-[22px]">
+              <p className="mt-1 text-xs text-verde-escuro-500 sm:text-sm lg:text-base 2xl:mt-1.5 2xl:text-lg">
                 {count} figurinha{count !== 1 ? "s" : ""} esperando por você.
               </p>
             </div>
 
-            <div className="relative h-[200px] w-[140px] shrink-0 overflow-hidden rounded-xl border-[3px] border-white shadow-md sm:h-[240px] sm:w-[168px] lg:h-[280px] lg:w-[196px] 2xl:h-[390px] 2xl:w-[273px] 2xl:rounded-2xl 2xl:border-[5px]">
+            <div
+              className={`${PACK_MEDIA_CLASS} overflow-hidden rounded-xl border-2 border-white shadow-md sm:border-[3px] 2xl:rounded-2xl`}
+            >
               <Image
                 src={packImageUrl}
                 alt="Pacotinho"
                 fill
                 className="object-cover"
-                sizes="(max-width: 1024px) 196px, 273px"
+                sizes="(max-width: 1024px) 133px, 168px"
                 priority
                 unoptimized={packImageUrl.endsWith(".gif")}
               />
@@ -227,7 +258,7 @@ export function PackOpener({
               type="button"
               onClick={handleOpen}
               disabled={loading}
-              className="h-10 w-full rounded-pill bg-verde-escuro-500 px-6 text-sm font-medium text-white transition-colors hover:bg-verde-escuro-600 disabled:opacity-60 sm:text-base 2xl:h-11 2xl:px-10 2xl:text-xl"
+              className="h-9 w-full rounded-pill bg-verde-escuro-500 px-5 text-sm font-medium text-white transition-colors hover:bg-verde-escuro-600 disabled:opacity-60 sm:h-10 sm:px-6 2xl:h-11 2xl:text-base"
             >
               {loading ? "Abrindo…" : "Abrir pacotinho"}
             </button>
@@ -246,12 +277,12 @@ export function PackOpener({
               openingSync.current.entered = true;
               tryPlayOpeningGifSound();
             }}
-            className="mx-auto flex max-w-[320px] flex-col items-center gap-4 py-2 sm:max-w-[340px] sm:gap-5 2xl:max-w-[387px] 2xl:gap-8 2xl:py-4"
+            className="mx-auto flex w-full max-w-[320px] flex-col items-center gap-2 py-1 sm:max-w-[360px] sm:gap-2.5 2xl:max-w-[420px] 2xl:gap-3"
           >
-            <p className="font-display text-lg font-bold text-verde-escuro-500 sm:text-xl lg:text-2xl 2xl:text-3xl">
+            <p className="font-display text-base font-bold text-verde-escuro-500 sm:text-lg lg:text-xl 2xl:text-2xl">
               Abrindo pacotinho…
             </p>
-            <div className="relative h-[200px] w-[140px] sm:h-[240px] sm:w-[168px] lg:h-[280px] lg:w-[196px] 2xl:h-[390px] 2xl:w-[273px]">
+            <div className={PACK_MEDIA_CLASS}>
               {openingGifUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -265,13 +296,13 @@ export function PackOpener({
                   }}
                 />
               ) : (
-                <div className="relative size-full overflow-hidden rounded-xl border-[3px] border-white 2xl:rounded-2xl 2xl:border-[5px]">
+                <div className="relative size-full overflow-hidden rounded-xl border-2 border-white sm:border-[3px] 2xl:rounded-2xl">
                   <Image
                     src={packImageUrl}
                     alt="Pacotinho"
                     fill
                     className="animate-pulse object-cover"
-                    sizes="(max-width: 1024px) 196px, 273px"
+                    sizes="(max-width: 1024px) 133px, 168px"
                     unoptimized={packImageUrl.endsWith(".gif")}
                   />
                 </div>
@@ -285,18 +316,18 @@ export function PackOpener({
             key="results"
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col items-center gap-3 pt-1 sm:gap-4 2xl:gap-6 2xl:pt-2"
+            className="flex flex-col items-center gap-2 pt-0.5 sm:gap-2.5 2xl:gap-3"
           >
-            <span className="rounded-pill border border-verde-400 px-4 py-1 text-sm font-medium text-verde-400 sm:text-base 2xl:px-[30px] 2xl:py-2 2xl:text-xl">
+            <span className="rounded-pill border border-verde-400 px-3 py-0.5 text-xs font-medium text-verde-400 sm:px-3.5 sm:py-1 sm:text-sm 2xl:text-base">
               {sourceLabel}
             </span>
 
-            <h2 className="text-center font-display text-lg font-bold text-verde-escuro-500 sm:text-xl lg:text-2xl 2xl:text-[48px] 2xl:leading-tight">
+            <h2 className="text-center font-display text-base font-bold leading-tight text-verde-escuro-500 sm:text-lg lg:text-xl 2xl:text-2xl">
               {stickers.length} nova{stickers.length !== 1 ? "s" : ""} figurinha
               {stickers.length !== 1 ? "s" : ""}
             </h2>
 
-            <div className="flex w-full max-w-[744px] flex-wrap justify-center gap-x-3 gap-y-4 sm:gap-x-4 sm:gap-y-5 2xl:gap-x-[30px] 2xl:gap-y-8">
+            <div className="flex w-full max-w-[520px] flex-wrap justify-center gap-x-2 gap-y-2 sm:max-w-[560px] sm:gap-x-2.5 sm:gap-y-2.5 lg:max-w-[600px] 2xl:max-w-[680px] 2xl:gap-x-3">
               {stickers.map((item) => (
                 <PackResultSticker
                   key={item.position}
@@ -309,7 +340,7 @@ export function PackOpener({
             <button
               type="button"
               onClick={() => onComplete(stickers)}
-              className="h-10 w-full max-w-[320px] rounded-pill border border-verde-300 px-6 text-sm font-medium text-verde-300 transition-colors hover:border-verde-400 hover:text-verde-400 sm:max-w-[340px] sm:text-base 2xl:h-11 2xl:max-w-[387px] 2xl:px-10 2xl:text-xl"
+              className="mt-0.5 h-9 w-full max-w-[320px] rounded-pill border border-verde-300 px-5 text-sm font-medium text-verde-300 transition-colors hover:border-verde-400 hover:text-verde-400 sm:h-10 sm:max-w-[360px] sm:px-6 2xl:max-w-[420px]"
             >
               Fechar
             </button>
