@@ -9,16 +9,6 @@ interface FigurinhaHeroProps {
 export function FigurinhaHero({ firstName, hasSticker }: FigurinhaHeroProps) {
   return (
     <section className="relative w-full overflow-hidden bg-verde-500 2xl:min-h-[280px]">
-      <div className="pointer-events-none absolute inset-0" aria-hidden>
-        <Image
-          src={dashboardAssets.quiz.background}
-          alt=""
-          fill
-          className="object-cover opacity-20"
-          unoptimized
-        />
-      </div>
-
       <div
         aria-hidden
         className="pointer-events-none absolute inset-y-0 right-0 hidden w-[min(52vw,640px)] bg-contain bg-right bg-no-repeat md:block"

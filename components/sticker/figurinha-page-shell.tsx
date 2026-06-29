@@ -38,15 +38,6 @@ export function FigurinhaPageShell({
         className,
       )}
     >
-      <div className="pointer-events-none absolute inset-0" aria-hidden>
-        <Image
-          src={dashboardAssets.quiz.background}
-          alt=""
-          fill
-          className="object-cover opacity-[0.35]"
-          unoptimized
-        />
-      </div>
 
       <div
         aria-hidden

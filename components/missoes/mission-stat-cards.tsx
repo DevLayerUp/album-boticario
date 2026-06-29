@@ -32,15 +32,6 @@ function StatCard({
 }) {
   return (
     <div className="relative flex min-h-[100px] flex-col justify-between overflow-hidden rounded-block bg-verde-escuro-500 p-4 sm:min-h-[110px] sm:p-5 lg:min-h-[120px] 2xl:min-h-[160px] 2xl:p-6">
-      <div className="pointer-events-none absolute inset-0" aria-hidden>
-        <Image
-          src={dashboardAssets.quiz.background}
-          alt=""
-          fill
-          className="object-cover opacity-60"
-          unoptimized
-        />
-      </div>
       <div className="relative z-10 flex items-center gap-2.5 sm:gap-3 2xl:gap-4">
         <Icon className="size-5 shrink-0 text-verde-200 sm:size-5 2xl:size-6" aria-hidden />
         <span className="text-xs font-medium uppercase tracking-wide text-verde-200 sm:text-sm 2xl:text-xl">
