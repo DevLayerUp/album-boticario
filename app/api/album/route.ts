@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { patchAlbumPagesWithUserSticker } from "@/lib/user-sticker";
 
 /**
  * GET /api/album?category_id=1
@@ -35,6 +36,15 @@ export async function GET(request: NextRequest) {
   const { data: pages, error } = await query;
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("sticker_url")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  const userStickerUrl = profile?.sticker_url ?? null;
+  const patchedPages = patchAlbumPagesWithUserSticker(pages, userStickerUrl);
+
   // 2. User album entries (which slots are pasted)
   const { data: userAlbum } = await supabase
     .from("user_album")
@@ -48,7 +58,8 @@ export async function GET(request: NextRequest) {
     .eq("user_id", user.id);
 
   return NextResponse.json({
-    pages: pages ?? [],
+    pages: patchedPages,
+    userStickerUrl,
     userAlbum: userAlbum ?? [],
     userStickers: userStickers ?? [],
   });

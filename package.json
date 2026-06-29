@@ -6,9 +6,11 @@
     "dev": "cross-env NODE_OPTIONS='--max-http-header-size=16384' next dev",
     "build": "next build",
     "start": "cross-env NODE_OPTIONS='--max-http-header-size=16384' next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "postinstall": "node scripts/copy-ort-wasm.mjs"
   },
   "dependencies": {
+    "@imgly/background-removal": "^1.7.0",
     "@supabase/ssr": "^0.5.2",
     "@supabase/supabase-js": "^2.45.4",
     "canvas-confetti": "^1.9.3",
@@ -16,6 +18,7 @@
     "framer-motion": "^11.5.4",
     "lucide-react": "^1.17.0",
     "next": "^15.1.6",
+    "onnxruntime-web": "^1.21.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-icons": "^5.6.0",

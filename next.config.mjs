@@ -2,6 +2,15 @@
 const nextConfig = {
   serverExternalPackages: ["sharp"],
 
+  webpack: (config) => {
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      sharp$: false,
+      "onnxruntime-node$": false,
+    };
+    return config;
+  },
+
   // Middleware clona o body da request; padrão 10MB trunca GIFs grandes no upload admin.
   experimental: {
     middlewareClientMaxBodySize: "40mb",
@@ -39,12 +48,14 @@ const nextConfig = {
             key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval'", // unsafe-eval needed by Next.js dev
+              // blob: — modelo ONNX do imgly (ArrayBuffer, não import dinâmico)
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' blob:",
+              "worker-src 'self' blob:",
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com",
               "img-src 'self' data: blob: https://*.supabase.co https://api.remove.bg",
               "media-src 'self' blob: https://*.supabase.co",
-              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.remove.bg",
+              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.remove.bg https://staticimgly.com",
               "frame-ancestors 'self'",
               "base-uri 'self'",
               "form-action 'self'",

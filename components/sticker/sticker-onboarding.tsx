@@ -11,6 +11,7 @@ import { PhotoUploader } from "./photo-uploader";
 import { RevealStep } from "./reveal-step";
 import { FigurinhaNameTag } from "./figurinha-name-tag";
 import { StickerCard } from "./sticker-card";
+import { StickerSharePanel } from "./sticker-share-panel";
 
 type Step = "existing" | "upload" | "reveal";
 
@@ -91,6 +92,7 @@ export function StickerOnboarding({
           >
             Ver no álbum
           </Link>
+          <StickerSharePanel stickerUrl={stickerUrl} displayName={displayName} />
           <FigurinhaOutlineButton onClick={() => setStep("upload")}>
             Criar nova figurinha
           </FigurinhaOutlineButton>

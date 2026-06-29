@@ -12,6 +12,7 @@ import { StickerRarityEffects } from "@/components/sticker/sticker-rarity-effect
 import { playPasteSound } from "@/lib/play-paste-sound";
 import { rarityColor, rarityTheme, type RarityTheme } from "@/lib/rarity";
 import { stickerTextToPlain } from "@/lib/sticker-text-format";
+import { resolveUserStickerImageUrl } from "@/lib/user-sticker";
 import { cn } from "@/lib/utils";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -37,6 +38,8 @@ export interface StickerSlotProps {
   isPasted: boolean;
   owned: number;
   onPaste?: (slotId: number, stickerId: number) => Promise<void>;
+  /** URL atual da figurinha personalizada (profiles.sticker_url) */
+  userStickerUrl?: string | null;
   /** default 160×229 — large 199×284 (tri3) — duo 267×381 (duo2) — cta 170×243 (grid6cta) */
   size?: "default" | "large" | "duo" | "cta";
   /** Abre o modal de colagem ao montar (deep link do estoque). */
@@ -127,9 +130,11 @@ function RarityBadge({
 // ─── Detail modal — flip frente/verso (Figma 28:1191 / 28:1364) ───────────────
 function StickerDetailModal({
   sticker,
+  userStickerUrl,
   onClose,
 }: {
   sticker: SlotSticker;
+  userStickerUrl?: string | null;
   onClose: () => void;
 }) {
   const [showBack, setShowBack] = useState(false);
@@ -139,6 +144,7 @@ function StickerDetailModal({
   const rarityName = sticker.rarities?.name ?? "Comum";
   const animation  = sticker.rarities?.animation_type ?? "none";
   const materialUrl = sticker.redirect_url?.trim() || null;
+  const imageUrl = resolveUserStickerImageUrl(sticker, userStickerUrl) ?? sticker.image_url;
 
   useEffect(() => {
     setShowBack(false);
@@ -194,7 +200,7 @@ function StickerDetailModal({
               }}
             >
               <Image
-                src={sticker.image_url}
+                src={imageUrl}
                 alt={stickerTextToPlain(sticker.name)}
                 fill
                 className="object-cover"
@@ -298,7 +304,7 @@ function StickerDetailModal({
 
 // ─── Main StickerSlot component ───────────────────────────────────────────────
 export function StickerSlot({
-  slotId, slotNumber, sticker, isPasted, owned, onPaste, size = "default", autoOpenPaste = false,
+  slotId, slotNumber, sticker, isPasted, owned, onPaste, userStickerUrl = null, size = "default", autoOpenPaste = false,
 }: StickerSlotProps) {
   const aspectClass =
     size === "cta"
@@ -333,6 +339,9 @@ export function StickerSlot({
   // Guard: portals need the DOM — only render after mount (avoids SSR mismatch)
   const [mounted, setMounted]                 = useState(false);
   useEffect(() => { setMounted(true); }, []);
+
+  const stickerImageUrl =
+    resolveUserStickerImageUrl(sticker, userStickerUrl) ?? sticker?.image_url ?? null;
 
   const color       = rarityColor(sticker?.rarities?.slug, sticker?.rarities?.color_hex);
   const raritySlug  = sticker?.rarities?.slug ?? "common";
@@ -381,9 +390,9 @@ export function StickerSlot({
       const canFly =
         !reducedMotion && fromRect && toRect && fromRect.width > 0 && toRect.width > 0;
 
-      if (canFly) {
+      if (canFly && stickerImageUrl) {
         setFlightConfig({
-          imageUrl: sticker.image_url,
+          imageUrl: stickerImageUrl,
           borderColor: color,
           from: fromRect,
           to: toRect,
@@ -456,9 +465,9 @@ export function StickerSlot({
               boxShadow: "0 1px 2px rgba(0,0,0,0.12), 0 3px 8px rgba(0,0,0,0.06)",
             }}
           >
-            {sticker && (
+            {sticker && stickerImageUrl && (
               <Image
-                src={sticker.image_url}
+                src={stickerImageUrl}
                 alt={stickerTextToPlain(sticker.name)}
                 fill
                 className="object-cover"
@@ -511,9 +520,9 @@ export function StickerSlot({
 
             {isOwned ? (
               <div className="relative h-full w-full">
-                {sticker ? (
+                {sticker && stickerImageUrl ? (
                   <>
-                    <Image src={sticker.image_url} alt={stickerTextToPlain(sticker.name)} fill
+                    <Image src={stickerImageUrl} alt={stickerTextToPlain(sticker.name)} fill
                       className="object-cover opacity-50" sizes={imageSizes} />
                     <StickerRarityEffects
                       slug={raritySlug}
@@ -539,10 +548,10 @@ export function StickerSlot({
               </div>
             ) : (
               <div className="relative h-full w-full">
-                {sticker ? (
+                {sticker && stickerImageUrl ? (
                   <>
                     <Image
-                      src={sticker.image_url}
+                      src={stickerImageUrl}
                       alt=""
                       fill
                       className="object-cover grayscale opacity-35"
@@ -595,6 +604,7 @@ export function StickerSlot({
           {showDetailModal && sticker && (
             <StickerDetailModal
               sticker={sticker}
+              userStickerUrl={userStickerUrl}
               onClose={() => setShowDetailModal(false)}
             />
           )}
@@ -605,7 +615,7 @@ export function StickerSlot({
       {/* ── PASTE CONFIRMATION MODAL ──────────────────────────────────────────── */}
       {mounted && createPortal(
         <AnimatePresence>
-        {showPasteModal && sticker && (
+        {showPasteModal && sticker && stickerImageUrl && (
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 flex items-center justify-center p-4"
@@ -636,7 +646,7 @@ export function StickerSlot({
                       transformStyle: "preserve-3d",
                     }}
                   >
-                    <Image src={sticker.image_url} alt={stickerTextToPlain(sticker.name)} fill
+                    <Image src={stickerImageUrl} alt={stickerTextToPlain(sticker.name)} fill
                       className="object-cover" sizes="144px" />
                     <StickerRarityEffects
                       slug={raritySlug}

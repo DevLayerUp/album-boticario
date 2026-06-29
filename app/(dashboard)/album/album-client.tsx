@@ -7,6 +7,7 @@ import { ArrowLeftRight, Flag, HelpCircle, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { FlipBook } from "@/components/album/flip-book";
 import type { AlbumPageData } from "@/components/album/album-page";
+import { patchAlbumPagesWithUserSticker } from "@/lib/user-sticker";
 
 interface Category {
   id: number;
@@ -43,7 +44,7 @@ export function AlbumClient({
   initialUserAlbum,
   initialUserStickers,
   totalSlots,
-  userStickerUrl = null,
+  userStickerUrl: initialUserStickerUrl = null,
   userDisplayName = null,
   coverUrl = null,
   focusSlotId = null,
@@ -59,6 +60,29 @@ export function AlbumClient({
   const [loadingPages, setLoadingPages]     = useState(false);
   const [userAlbum, setUserAlbum]           = useState<AlbumEntry[]>(initialUserAlbum);
   const [userStickers, setUserStickers]     = useState<UserSticker[]>(initialUserStickers);
+  const [userStickerUrl, setUserStickerUrl] = useState<string | null>(initialUserStickerUrl);
+
+  const refreshUserStickerUrl = useCallback(async () => {
+    try {
+      const res = await fetch("/api/profile");
+      if (!res.ok) return;
+      const data = (await res.json()) as { profile?: { sticker_url?: string | null } };
+      setUserStickerUrl(data.profile?.sticker_url ?? null);
+    } catch {
+      /* ignora falha de rede */
+    }
+  }, []);
+
+  useEffect(() => {
+    void refreshUserStickerUrl();
+
+    function onVisible() {
+      if (document.visibilityState === "visible") void refreshUserStickerUrl();
+    }
+
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, [refreshUserStickerUrl]);
 
   // Derived sets / maps (re-computed on each render — cheap)
   const pastedSlotIds = new Set(userAlbum.map((e) => e.slot_id));
@@ -72,8 +96,14 @@ export function AlbumClient({
     try {
       const res = await fetch(`/api/album?category_id=${catId}`);
       if (!res.ok) return;
-      const data = await res.json();
+      const data = (await res.json()) as {
+        pages?: AlbumPageData[];
+        userStickerUrl?: string | null;
+      };
       setPages(data.pages ?? []);
+      if (data.userStickerUrl !== undefined) {
+        setUserStickerUrl(data.userStickerUrl);
+      }
     } finally {
       setLoadingPages(false);
     }
@@ -82,6 +112,10 @@ export function AlbumClient({
   useEffect(() => {
     if (activeCatId !== null) loadPages(activeCatId);
   }, [activeCatId, loadPages]);
+
+  useEffect(() => {
+    setPages((prev) => patchAlbumPagesWithUserSticker(prev, userStickerUrl));
+  }, [userStickerUrl]);
 
   async function handlePaste(slotId: number, stickerId: number) {
     const res = await fetch("/api/album/paste", {

@@ -9,6 +9,7 @@ import {
 import { FigurinhaCardScaler } from "./figurinha-card-scaler";
 import { FigurinhaNameTag } from "./figurinha-name-tag";
 import { StickerCard } from "./sticker-card";
+import { StickerSharePanel } from "./sticker-share-panel";
 import { STICKER_CARD } from "@/lib/sticker-card";
 import { cn } from "@/lib/utils";
 
@@ -128,6 +129,12 @@ export function RevealStep({ stickerUrl, displayName, onRecreate }: RevealStepPr
         >
           Ver no álbum
         </Link>
+
+        <StickerSharePanel
+          stickerUrl={stickerUrl}
+          displayName={displayName}
+          className="border-t-0 pt-0"
+        />
 
         {onRecreate ? (
           <FigurinhaOutlineButton onClick={onRecreate}>
