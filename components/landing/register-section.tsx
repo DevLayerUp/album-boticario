@@ -2,6 +2,7 @@
 
 import { LandingImage } from "@/components/landing/landing-image";
 import { GBG_PRIVACY_URL } from "@/lib/landing-urls";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { FormEvent, useState } from "react";
@@ -250,14 +251,23 @@ function RegisterForm({ formTitle, ctaLabel, privacyUrl }: RegisterFormProps) {
           </p>
         )}
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="inline-flex w-full items-center justify-center gap-2 self-center rounded-pill bg-verde-500 px-[34px] py-3 text-lg font-bold text-verde-100 transition-colors hover:bg-verde-400 disabled:cursor-not-allowed disabled:opacity-70 sm:text-xl lg:text-2xl lg:leading-[1.4]"
-        >
-          {loading && <Loader2 size={18} className="animate-spin" />}
-          {ctaLabel}
-        </button>
+        <div className="flex flex-col gap-3">
+          <button
+            type="submit"
+            disabled={loading}
+            className="inline-flex w-full items-center justify-center gap-2 self-center rounded-pill bg-verde-500 px-[34px] py-3 text-lg font-bold text-verde-100 transition-colors hover:bg-verde-400 disabled:cursor-not-allowed disabled:opacity-70 sm:text-xl lg:text-2xl lg:leading-[1.4]"
+          >
+            {loading && <Loader2 size={18} className="animate-spin" />}
+            {ctaLabel}
+          </button>
+
+          <Link
+            href="/login"
+            className="inline-flex w-full items-center justify-center rounded-pill border border-verde-500 bg-transparent px-[34px] py-3 text-center text-lg font-medium text-verde-escuro-500 transition-colors hover:bg-verde-500/10 sm:text-xl"
+          >
+            Já tenho cadastro
+          </Link>
+        </div>
       </form>
     </div>
   );
