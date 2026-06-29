@@ -8,14 +8,13 @@ import {
   Image,
   Layers,
   Package,
-  ShieldAlert,
   Trophy,
   UserX,
-  X,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { PerfilDeleteConfirmModal } from "./perfil-delete-confirm-modal";
 
 const DELETE_CONFIRM_PHRASE = "EXCLUIR";
 
@@ -140,98 +139,6 @@ function DeletePasswordInput({
           <Eye className="size-5" aria-hidden />
         )}
       </button>
-    </div>
-  );
-}
-
-function DeleteConfirmDialog({
-  open,
-  loading,
-  onConfirm,
-  onCancel,
-}: {
-  open: boolean;
-  loading: boolean;
-  onConfirm: () => void;
-  onCancel: () => void;
-}) {
-  if (!open) return null;
-
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center sm:p-6"
-      role="presentation"
-    >
-      <button
-        type="button"
-        className="absolute inset-0 cursor-pointer bg-verde-escuro-500/40 backdrop-blur-[2px]"
-        aria-label="Fechar confirmação"
-        onClick={onCancel}
-        disabled={loading}
-      />
-
-      <div
-        role="alertdialog"
-        aria-modal="true"
-        aria-labelledby="delete-dialog-title"
-        aria-describedby="delete-dialog-desc"
-        className={cn(
-          "relative w-full max-w-md overflow-hidden rounded-block border border-red-200/90 bg-white",
-          "shadow-[0_20px_60px_rgba(5,46,4,0.18)] ring-1 ring-red-100",
-        )}
-      >
-        <div className="border-l-[5px] border-l-red-500 px-5 py-5 sm:px-6 sm:py-6">
-          <div className="flex items-start gap-3 sm:gap-4">
-            <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-red-100 text-red-600 sm:size-12">
-              <ShieldAlert className="size-5 sm:size-6" aria-hidden />
-            </div>
-            <div className="min-w-0 flex-1 pt-0.5">
-              <h4
-                id="delete-dialog-title"
-                className="font-display text-lg font-bold text-verde-escuro-500 sm:text-xl"
-              >
-                Confirmar exclusão
-              </h4>
-              <p
-                id="delete-dialog-desc"
-                className="mt-2 text-sm leading-relaxed text-[#5d5d5d] sm:text-base"
-              >
-                Sua conta e todo o progresso serão apagados de forma permanente.
-                Não será possível recuperar depois.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={onCancel}
-              disabled={loading}
-              className="flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full text-verde-escuro-300 transition-colors hover:bg-verde-100 hover:text-verde-escuro-500 disabled:opacity-50"
-              aria-label="Fechar"
-            >
-              <X className="size-5" aria-hidden />
-            </button>
-          </div>
-
-          <div className="mt-5 flex flex-col-reverse gap-3 sm:mt-6 sm:flex-row sm:justify-end">
-            <button
-              type="button"
-              onClick={onCancel}
-              disabled={loading}
-              className="h-11 cursor-pointer rounded-pill px-6 text-sm font-medium text-verde-escuro-400 transition-colors hover:text-verde-escuro-500 disabled:opacity-60 sm:h-12 sm:px-8 sm:text-base"
-            >
-              Voltar
-            </button>
-            <Button
-              type="button"
-              size="md"
-              loading={loading}
-              onClick={onConfirm}
-              className="w-full cursor-pointer bg-red-600 px-6 text-white hover:bg-red-700 sm:w-auto sm:px-8"
-            >
-              Sim, excluir conta
-            </Button>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }
@@ -473,9 +380,10 @@ export function PerfilDeleteAccount() {
         </div>
       </section>
 
-      <DeleteConfirmDialog
+      <PerfilDeleteConfirmModal
         open={dialogOpen}
         loading={deleting}
+        items={DELETED_ITEMS}
         onConfirm={() => void handleConfirmDelete()}
         onCancel={() => {
           if (!deleting) setDialogOpen(false);
