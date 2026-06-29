@@ -1,21 +1,16 @@
 import {
   ArrowLeftRight,
   Calendar,
-  Camera,
   Package,
   Star,
 } from "lucide-react";
-import Image from "next/image";
-import Link from "next/link";
-import { dashboardAssets } from "@/lib/dashboard-assets";
 import {
   formatMemberSince,
   formatShortDisplayName,
   resolveProfileAvatar,
   type ProfilePageData,
 } from "@/lib/profile";
-import { ProfileAvatarImage } from "@/components/profile/profile-avatar-image";
-import { cn } from "@/lib/utils";
+import { PerfilHeroAvatar } from "./perfil-hero-avatar";
 
 interface PerfilStatCardProps {
   icon: typeof Package;
@@ -60,37 +55,13 @@ export function PerfilHero({ data }: PerfilHeroProps) {
     <section className="@container/hero relative w-full overflow-hidden bg-verde-500 2xl:min-h-[428px]">
       <div className="relative z-10 mx-auto flex w-full max-w-[1680px] flex-col gap-5 px-6 py-6 sm:gap-6 sm:py-8 lg:gap-7 lg:py-10 2xl:flex-row 2xl:items-end 2xl:gap-10 2xl:px-[120px] 2xl:pb-12 2xl:pt-16">
         <div className="flex min-w-0 items-center gap-4 sm:items-end sm:gap-5 md:gap-6 2xl:flex-1">
-          <div className="relative shrink-0">
-            <div
-              className={cn(
-                "relative overflow-hidden rounded-full border-[3px] border-white sm:border-4 2xl:border-[5px]",
-                "size-24 xs:size-28 sm:size-32 md:size-36 lg:size-40 xl:size-44 2xl:size-[275px]",
-              )}
-            >
-              {avatar ? (
-                <ProfileAvatarImage
-                  src={avatar.src}
-                  variant={avatar.variant}
-                  sizes="(max-width: 1536px) 176px, 275px"
-                  priority
-                />
-              ) : (
-                <div className="flex size-full items-center justify-center bg-verde-escuro-500 text-3xl font-bold text-white sm:text-4xl 2xl:text-5xl">
-                  {displayName.charAt(0).toUpperCase()}
-                </div>
-              )}
-            </div>
-            <Link
-              href="/figurinha"
-              aria-label="Atualizar figurinha do perfil"
-              className="absolute -bottom-0.5 -right-0.5 flex size-9 items-center justify-center rounded-full border border-[#c9c9c9] bg-white shadow-sm transition-transform hover:scale-105 sm:size-10 md:size-11 2xl:bottom-1 2xl:right-0 2xl:size-[61px]"
-            >
-              <Camera
-                className="size-4 text-verde-escuro-500 sm:size-5 2xl:size-8"
-                aria-hidden
-              />
-            </Link>
-          </div>
+          <PerfilHeroAvatar
+            avatarSrc={avatar?.src ?? null}
+            avatarVariant={avatar?.variant ?? null}
+            stickerUrl={profile.sticker_url}
+            displayName={displayName}
+            fallbackInitial={displayName.charAt(0).toUpperCase()}
+          />
 
           <div className="min-w-0 flex-1 space-y-1 sm:space-y-1.5 sm:pb-0.5 2xl:max-w-md">
             <p className="text-[10px] uppercase tracking-[0.12em] text-verde-100 sm:text-xs 2xl:text-sm">
