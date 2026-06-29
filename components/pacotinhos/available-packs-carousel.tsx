@@ -100,11 +100,6 @@ export function AvailablePacksCarousel({
           </Swiper>
         </div>
 
-        <div
-          className="pointer-events-none absolute inset-y-0 right-0 z-10 w-12 bg-gradient-to-l from-surface via-surface/80 to-transparent sm:w-20 lg:w-28"
-          aria-hidden
-        />
-
         {packs.length > 1 && (
           <button
             type="button"

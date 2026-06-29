@@ -9,6 +9,8 @@ import { PackStatCards } from "./pack-stat-cards";
 import { AvailablePacksCarousel } from "./available-packs-carousel";
 import { OpenedPackRow } from "./opened-pack-row";
 import { OPENED_HISTORY_PAGE_SIZE } from "@/lib/pack-opened-history";
+import { preloadPackOpeningGif } from "@/lib/preload-pack-opening-gif";
+import { preloadPackOpeningGifSound } from "@/lib/play-pack-open-sound";
 import type { OpenedPackHistory, Pack, PackSticker, PackVisualSettings, PacotinhosStats } from "./types";
 
 interface PacotinhosClientProps {
@@ -38,6 +40,11 @@ export function PacotinhosClient({
   const canLoadMoreHistory = historyVisibleCount < stats.opened;
 
   useEffect(() => setPortalReady(true), []);
+
+  useEffect(() => {
+    preloadPackOpeningGifSound();
+    void preloadPackOpeningGif(visual.openingGifUrl);
+  }, [visual.openingGifUrl]);
 
   useEffect(() => {
     if (!activePack) return;
@@ -166,7 +173,7 @@ export function PacotinhosClient({
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 z-[60] flex min-h-dvh items-center justify-center p-2 sm:p-3 lg:p-4"
+                className="fixed inset-0 z-[60] flex min-h-dvh items-center justify-center p-2 sm:p-3"
               >
                 <div
                   className="absolute inset-0 min-h-dvh bg-verde-500/35 backdrop-blur-[2px]"
@@ -177,10 +184,10 @@ export function PacotinhosClient({
                   initial={{ scale: 0.96, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   exit={{ scale: 0.96, opacity: 0 }}
-                  className="relative z-10 mx-auto flex max-h-[min(92dvh,720px)] w-full max-w-[min(100%,520px)] flex-col overflow-hidden rounded-[24px] bg-white px-4 py-5 shadow-2xl sm:max-w-[580px] sm:rounded-[32px] sm:px-6 sm:py-6 md:max-w-[640px] lg:max-w-[720px] lg:px-8 lg:py-7 2xl:max-w-[897px] 2xl:rounded-[40px] 2xl:px-16 2xl:py-12"
+                  className="relative z-10 mx-auto flex max-h-[calc(100dvh-1rem)] w-full max-w-[min(100%,480px)] flex-col overflow-hidden rounded-[20px] bg-white px-4 py-4 shadow-2xl sm:max-w-[520px] sm:rounded-[24px] sm:px-5 sm:py-5 lg:max-w-[600px] lg:px-6 lg:py-5 2xl:max-w-[760px] 2xl:rounded-[32px] 2xl:px-10 2xl:py-7"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pr-1 [-ms-overflow-style:none] [scrollbar-width:thin]">
+                  <div className="flex min-h-0 flex-1 flex-col justify-center overflow-hidden">
                     <PackOpener
                       packId={activePack.id}
                       source={activePack.source}

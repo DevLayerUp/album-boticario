@@ -22,10 +22,10 @@ export function PackResultSticker({ item, compact = false }: PackResultStickerPr
   return (
     <div
       className={cn(
-        "flex shrink-0 flex-col items-center gap-1.5 sm:gap-2 2xl:gap-3",
+        "flex shrink-0 flex-col items-center",
         compact
-          ? "w-[min(36vw,120px)] sm:w-[130px] lg:w-[150px] 2xl:w-[200px]"
-          : "w-[min(36vw,140px)] sm:w-[160px] lg:w-[180px] 2xl:w-[228px]",
+          ? "w-[min(26vw,88px)] gap-0.5 sm:w-[96px] sm:gap-1 lg:w-[104px] 2xl:w-[128px] 2xl:gap-1.5"
+          : "w-[min(30vw,110px)] gap-1 sm:w-[120px] sm:gap-1.5 lg:w-[132px] 2xl:w-[160px] 2xl:gap-2",
       )}
     >
       <div
@@ -57,13 +57,15 @@ export function PackResultSticker({ item, compact = false }: PackResultStickerPr
         name={sticker.rarities?.name ?? "Comum"}
         slug={slug}
         colorHex={sticker.rarities?.color_hex}
-        className="normal-case text-[10px] sm:text-xs 2xl:text-sm"
+        className="normal-case text-[9px] sm:text-[10px] 2xl:text-xs"
       />
 
       <p
         className={cn(
-          "text-center font-bold leading-tight",
-          compact ? "text-xs sm:text-sm 2xl:text-base" : "text-sm sm:text-base 2xl:text-lg",
+          "line-clamp-2 text-center font-bold leading-tight",
+          compact
+            ? "text-[10px] sm:text-xs 2xl:text-sm"
+            : "text-xs sm:text-sm 2xl:text-base",
         )}
         style={{ color: theme.nameTag }}
       >
