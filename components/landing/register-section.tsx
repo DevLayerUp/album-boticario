@@ -153,7 +153,7 @@ function RegisterForm({ formTitle, ctaLabel, privacyUrl }: RegisterFormProps) {
         estado: estado.trim() || undefined,
         cidade: cidade.trim() || undefined,
         birthDate: birthDate || undefined,
-        newsletter: false,
+        newsletter: true,
       });
       router.push("/register/senha");
     } catch {

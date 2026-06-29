@@ -58,21 +58,6 @@ export function PerfilHero({ data }: PerfilHeroProps) {
 
   return (
     <section className="@container/hero relative w-full overflow-hidden bg-verde-500 2xl:min-h-[428px]">
-      <div className="pointer-events-none absolute inset-0" aria-hidden>
-        <Image
-          src={dashboardAssets.quiz.background}
-          alt=""
-          fill
-          className="object-cover opacity-20"
-          unoptimized
-        />
-      </div>
-
-      {/*
-        Layout por faixa:
-        - até 2xl: coluna (perfil em cima, stats em grid 3 colunas embaixo)
-        - 2xl+: linha Figma (perfil à esquerda, stats à direita)
-      */}
       <div className="relative z-10 mx-auto flex w-full max-w-[1680px] flex-col gap-5 px-6 py-6 sm:gap-6 sm:py-8 lg:gap-7 lg:py-10 2xl:flex-row 2xl:items-end 2xl:gap-10 2xl:px-[120px] 2xl:pb-12 2xl:pt-16">
         <div className="flex min-w-0 items-center gap-4 sm:items-end sm:gap-5 md:gap-6 2xl:flex-1">
           <div className="relative shrink-0">

@@ -3,7 +3,7 @@ import Image from "next/image";
 import { Wordmark } from "@/components/brand/wordmark";
 
 const FGB_URL = "https://fundacaogrupoboticario.org.br/";
-const FGB_LOGO = "/images/landing/footer/logo.png";
+const FGB_LOGO = "/images/dashboard/logo-fgb-v2.png";
 
 export function DashboardBrandLogos() {
   return (

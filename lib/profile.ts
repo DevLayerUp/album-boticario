@@ -124,7 +124,7 @@ export async function fetchProfilePageData(
       show_in_ranking: row.show_in_ranking ?? true,
       notify_new_packs: row.notify_new_packs ?? true,
       notify_trades: row.notify_trades ?? true,
-      notify_marketing: row.notify_marketing ?? false,
+      notify_marketing: row.notify_marketing ?? true,
       language: row.language ?? "pt-BR",
       timezone: row.timezone ?? "America/Sao_Paulo",
     },

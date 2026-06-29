@@ -184,26 +184,27 @@ export default async function DashboardPage() {
         </Link>
       </HeroBanner>
 
-      {/* ── Estatísticas ─────────────────────────────────────────────── */}
-      <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-5 lg:grid-cols-5 lg:gap-6">
+      {/* ── Estatísticas (Figma 396:336) ─────────────────────────────── */}
+      <div className="mt-10 grid grid-cols-1 gap-[23px] min-[480px]:grid-cols-2 lg:grid-cols-5">
+        <StatCard
+          label="Álbum"
+          value={`${albumPct}%`}
+          href="/album"
+          icon={BookOpen}
+          variant="album"
+          progress={albumPct}
+        />
         <StatCard
           label="Figurinhas"
           value={totalStickers}
           href="/colecao"
           icon={Layers}
-          variant="solid"
         />
         <StatCard
           label="Pacotinhos"
           value={availPacks}
           href="/pacotinhos"
           icon={Package}
-        />
-        <StatCard
-          label="Álbum"
-          value={`${albumPct}%`}
-          href="/album"
-          icon={BookOpen}
         />
         <StatCard
           label="Trocas"

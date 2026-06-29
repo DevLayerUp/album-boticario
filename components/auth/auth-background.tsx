@@ -124,7 +124,7 @@ export function AuthBackground({ children }: AuthBackgroundProps) {
           animate="visible"
           className="relative z-10 flex items-center gap-[46px] px-[55px] pt-[63px]"
         >
-          <AuthLogoFgb className="h-[66px] w-auto object-contain" />
+          <AuthLogoFgb className="h-[66px] w-[220px] object-contain" />
           <AuthLogoFans
             variant="light"
             className="h-[53px] w-auto object-contain"

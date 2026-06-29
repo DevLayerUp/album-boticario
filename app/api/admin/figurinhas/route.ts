@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { adminGuard } from "@/lib/admin-guard";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { normalizeRedirectUrl } from "@/lib/sticker-redirect-url";
+import {
+  normalizeStickerDescription,
+  validateStickerDescription,
+} from "@/lib/sticker-description";
 
 export async function GET(request: NextRequest) {
   const guard = await adminGuard();
@@ -50,12 +54,17 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Link do material inválido" }, { status: 400 });
   }
 
+  const descriptionError = validateStickerDescription(description);
+  if (descriptionError) {
+    return NextResponse.json({ error: descriptionError }, { status: 400 });
+  }
+
   const supabase = createAdminClient();
   const { data, error } = await supabase
     .from("stickers")
     .insert({
       name: name.trim(),
-      description,
+      description: normalizeStickerDescription(description),
       image_url,
       redirect_url: normalizeRedirectUrl(redirect_url),
       category_id: category_id || null,

@@ -223,11 +223,13 @@ function StickerDetailModal({
             >
               <StickerNameTag name={sticker.name} fullWidth bgColor={theme.nameTag} compact />
 
-              <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-2.5 sm:gap-3">
-                <p className="line-clamp-6 text-center text-sm leading-[1.35] text-white sm:line-clamp-8 sm:text-base lg:text-lg">
-                  {sticker.description ??
-                    "Figurinha exclusiva da coleção Fãs da Natureza."}
-                </p>
+              <div className="flex min-h-0 w-full flex-1 flex-col items-center gap-2 overflow-hidden sm:gap-2.5">
+                <div className="flex min-h-0 w-full flex-1 items-center justify-center overflow-y-auto overscroll-contain [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-white/30">
+                  <p className="wrap-break-word px-0.5 text-center text-[11px] leading-[1.45] text-white sm:text-xs md:text-sm">
+                    {sticker.description ??
+                      "Figurinha exclusiva da coleção Fãs da Natureza."}
+                  </p>
+                </div>
 
                 {materialUrl ? (
                   <a
@@ -464,6 +466,16 @@ export function StickerSlot({
               color={color}
               intensity={isBigCard ? "strong" : "normal"}
             />
+
+            {sticker && (
+              <FigurinhaNameTag
+                name={sticker.name}
+                bgColor={theme.nameTag}
+                overlay
+                compact
+                pinBottom
+              />
+            )}
 
             <AnimatePresence>
               {showLandRing && <PasteLandRing color={color} />}

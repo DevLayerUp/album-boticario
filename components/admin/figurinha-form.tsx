@@ -5,6 +5,10 @@ import { useRouter } from "next/navigation";
 import { Loader2, Trash2 } from "lucide-react";
 import { ImageUploader } from "./image-uploader";
 import { ConfirmDialog } from "./confirm-dialog";
+import {
+  STICKER_DESCRIPTION_MAX_LENGTH,
+  validateStickerDescription,
+} from "@/lib/sticker-description";
 
 interface Category { id: number; name: string }
 interface Rarity { id: number; name: string; color_hex: string }
@@ -67,6 +71,12 @@ export function FigurinhaForm({
         setError("Informe um link válido para o material");
         return;
       }
+    }
+
+    const descriptionError = validateStickerDescription(form.description);
+    if (descriptionError) {
+      setError(descriptionError);
+      return;
     }
 
     setSaving(true);
@@ -151,11 +161,15 @@ export function FigurinhaForm({
             <label className="mb-1 block text-sm font-medium text-gray-700">Descrição</label>
             <textarea
               rows={3}
+              maxLength={STICKER_DESCRIPTION_MAX_LENGTH}
               value={form.description}
               onChange={(e) => set("description", e.target.value)}
               className="w-full resize-none rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gb-green focus:ring-1 focus:ring-gb-green"
               placeholder="Texto do verso / tooltip"
             />
+            <p className="mt-1 text-xs text-gray-500">
+              {form.description.length}/{STICKER_DESCRIPTION_MAX_LENGTH} caracteres — texto exibido no verso da figurinha no álbum.
+            </p>
           </div>
 
           <div className="sm:col-span-2">
