@@ -28,6 +28,9 @@ import type { LandingFandomProps } from "@/components/landing/fandom-section";
 import type { LandingFaqProps } from "@/components/landing/faq-section";
 import type { LandingFooterProps } from "@/components/landing/footer-section";
 
+/** SEO vem do painel (Supabase) — evita HTML/OG cacheados no deploy. */
+export const dynamic = "force-dynamic";
+
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await fetchSeoSettings();
   return buildRouteMetadata(settings, "home", "/");

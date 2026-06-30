@@ -270,6 +270,22 @@ export function applyTitleTemplate(template: string, pageTitle: string): string 
   return template.replace("%s", pageTitle);
 }
 
+/** Prévia dos valores globais (aba Geral) — reflete os inputs, sem override da rota Home. */
+export function resolveGlobalSeoPreview(settings: SeoSettings): {
+  title: string;
+  description: string;
+  ogImageUrl: string | null;
+  siteName: string;
+} {
+  return {
+    title: settings.defaultTitle.trim() || DEFAULT_SEO_SETTINGS.defaultTitle,
+    description:
+      settings.defaultDescription.trim() || DEFAULT_SEO_SETTINGS.defaultDescription,
+    ogImageUrl: settings.defaultOgImageUrl,
+    siteName: settings.siteName.trim() || DEFAULT_SEO_SETTINGS.siteName,
+  };
+}
+
 export function resolveSeoRoute(
   settings: SeoSettings,
   route: SeoRouteKey,

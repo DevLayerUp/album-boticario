@@ -7,6 +7,7 @@ import { ImageUploader } from "@/components/admin/image-uploader";
 import {
   DEFAULT_SEO_SETTINGS,
   resolveAppPageFullTitle,
+  resolveGlobalSeoPreview,
   resolveSeoRoute,
   SEO_APP_PAGE_LABELS,
   SEO_ROUTE_LABELS,
@@ -183,9 +184,13 @@ function RouteEditor({
   onChange: (route: SeoRouteConfig) => void;
 }) {
   const { path, usesTitleTemplate } = SEO_ROUTE_LABELS[routeKey];
-  const preview = resolveSeoRoute(
-    { ...settings, routes: { ...settings.routes, [routeKey]: route } },
-    routeKey,
+  const preview = useMemo(
+    () =>
+      resolveSeoRoute(
+        { ...settings, routes: { ...settings.routes, [routeKey]: route } },
+        routeKey,
+      ),
+    [settings, route, routeKey],
   );
 
   return (
@@ -267,12 +272,6 @@ function RouteEditor({
           <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
             Compartilhamento (WhatsApp, redes sociais)
           </h3>
-          <SharePreview
-            title={preview.ogTitle}
-            description={preview.ogDescription}
-            imageUrl={preview.ogImageUrl}
-            siteName={settings.siteName}
-          />
           <ImageUploader
             label="Imagem ao compartilhar (og:image)"
             value={route.ogImageUrl}
@@ -292,6 +291,12 @@ function RouteEditor({
             value={route.ogDescription}
             onChange={(ogDescription) => onChange({ ...route, ogDescription })}
             multiline
+          />
+          <SharePreview
+            title={preview.ogTitle}
+            description={preview.ogDescription}
+            imageUrl={preview.ogImageUrl}
+            siteName={settings.siteName}
           />
         </div>
 
@@ -376,7 +381,7 @@ export function SeoAdminClient({ initial }: SeoAdminClientProps) {
   const isDirty = JSON.stringify(settings) !== savedSnapshot;
 
   const globalPreview = useMemo(
-    () => resolveSeoRoute(settings, "home"),
+    () => resolveGlobalSeoPreview(settings),
     [settings],
   );
 
@@ -462,23 +467,6 @@ export function SeoAdminClient({ initial }: SeoAdminClientProps) {
       {activeTab === "global" ? (
         <div className="space-y-6">
           <section className="space-y-4 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-            <div>
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
-                Prévia ao compartilhar
-              </h2>
-              <p className="mt-1 text-sm text-gray-500">
-                Visualização com os valores globais (landing usa a aba específica).
-              </p>
-            </div>
-            <SharePreview
-              title={globalPreview.ogTitle}
-              description={globalPreview.ogDescription}
-              imageUrl={globalPreview.ogImageUrl}
-              siteName={settings.siteName}
-            />
-          </section>
-
-          <section className="space-y-4 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
             <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
               Identidade do site
             </h2>
@@ -518,6 +506,15 @@ export function SeoAdminClient({ initial }: SeoAdminClientProps) {
               }
               multiline
             />
+            <CharCount value={settings.defaultDescription} max={160} />
+            <div className="grid gap-4 lg:grid-cols-2">
+              <GoogleSerpPreview
+                title={globalPreview.title}
+                description={globalPreview.description}
+                path="/"
+              />
+              <BrowserTabPreview title={globalPreview.title} />
+            </div>
           </section>
 
           <section className="space-y-4 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
@@ -526,7 +523,8 @@ export function SeoAdminClient({ initial }: SeoAdminClientProps) {
             </h2>
             <p className="text-sm text-gray-500">
               Imagem padrão ao compartilhar links. Recomendado: 1200×630 px (PNG ou JPG).
-              Usada quando a página não define imagem própria.
+              Usada quando a página não define imagem própria. A aba Landing (início) pode
+              sobrescrever título, descrição e imagem.
             </p>
             <ImageUploader
               label="Imagem padrão (og:image)"
@@ -561,6 +559,17 @@ export function SeoAdminClient({ initial }: SeoAdminClientProps) {
                 value={settings.twitterSite}
                 onChange={(twitterSite) => setSettings((p) => ({ ...p, twitterSite }))}
                 placeholder="@grupoboticario"
+              />
+            </div>
+            <div>
+              <p className="mb-3 text-[10px] font-semibold uppercase tracking-wide text-gray-400">
+                Prévia ao compartilhar (valores globais)
+              </p>
+              <SharePreview
+                title={globalPreview.title}
+                description={globalPreview.description}
+                imageUrl={globalPreview.ogImageUrl}
+                siteName={globalPreview.siteName}
               />
             </div>
           </section>
