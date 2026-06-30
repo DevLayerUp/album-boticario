@@ -5,6 +5,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PerfilDeleteAccount } from "./perfil-delete-account";
 import { PerfilFormActions } from "./perfil-form-actions";
+import { usePerfilToast } from "./perfil-toast";
 
 interface PerfilSecurityPanelProps {
   saving: boolean;
@@ -66,31 +67,31 @@ export function PerfilSecurityPanel({
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
+  const { showToast } = usePerfilToast();
 
   function handleCancel() {
     setCurrentPassword("");
     setNewPassword("");
     setConfirmPassword("");
-    setError(null);
-    setSuccess(null);
   }
 
   async function handleSave() {
-    setError(null);
-    setSuccess(null);
-
     if (!currentPassword || !newPassword || !confirmPassword) {
-      setError("Preencha todos os campos de senha.");
+      showToast({ message: "Preencha todos os campos de senha.", variant: "warning" });
       return;
     }
     if (newPassword.length < 8) {
-      setError("A nova senha deve ter pelo menos 8 caracteres.");
+      showToast({
+        message: "A nova senha deve ter pelo menos 8 caracteres.",
+        variant: "warning",
+      });
       return;
     }
     if (newPassword !== confirmPassword) {
-      setError("A confirmação não coincide com a nova senha.");
+      showToast({
+        message: "A confirmação não coincide com a nova senha.",
+        variant: "warning",
+      });
       return;
     }
 
@@ -112,10 +113,13 @@ export function PerfilSecurityPanel({
         throw new Error(payload.error ?? "Não foi possível atualizar a senha.");
       }
 
-      setSuccess("Senha atualizada com sucesso.");
+      showToast("Senha atualizada com sucesso.");
       handleCancel();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Não foi possível atualizar a senha.");
+      showToast({
+        message: err instanceof Error ? err.message : "Não foi possível atualizar a senha.",
+        variant: "error",
+      });
     } finally {
       onSavingChange(false);
     }
@@ -144,17 +148,6 @@ export function PerfilSecurityPanel({
           </div>
         </div>
       </div>
-
-      {error ? (
-        <p className="text-sm font-medium text-red-600" role="alert">
-          {error}
-        </p>
-      ) : null}
-      {success ? (
-        <p className="text-sm font-medium text-verde-500" role="status">
-          {success}
-        </p>
-      ) : null}
 
       <PerfilFormActions
         saving={saving}

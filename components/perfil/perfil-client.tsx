@@ -7,6 +7,7 @@ import { PerfilNotificationsPanel } from "./perfil-notifications-panel";
 import { PerfilPersonalPanel } from "./perfil-personal-panel";
 import { PerfilPrivacyPanel } from "./perfil-privacy-panel";
 import { PerfilSecurityPanel } from "./perfil-security-panel";
+import { PerfilToastProvider } from "./perfil-toast";
 import { getPerfilPanelId, PerfilTabs } from "./perfil-tabs";
 import type { PerfilClientProps, PerfilTab } from "./types";
 
@@ -23,7 +24,7 @@ async function patchProfile(body: Record<string, unknown>): Promise<ProfilePageD
   return json;
 }
 
-export function PerfilClient({ initialData }: PerfilClientProps) {
+function PerfilClientContent({ initialData }: PerfilClientProps) {
   const [data, setData] = useState(initialData);
   const [activeTab, setActiveTab] = useState<PerfilTab>("personal");
   const [saving, setSaving] = useState(false);
@@ -93,5 +94,13 @@ export function PerfilClient({ initialData }: PerfilClientProps) {
         </div>
       </div>
     </>
+  );
+}
+
+export function PerfilClient({ initialData }: PerfilClientProps) {
+  return (
+    <PerfilToastProvider>
+      <PerfilClientContent initialData={initialData} />
+    </PerfilToastProvider>
   );
 }

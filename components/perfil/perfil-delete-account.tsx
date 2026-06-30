@@ -15,6 +15,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { PerfilDeleteConfirmModal } from "./perfil-delete-confirm-modal";
+import { usePerfilToast } from "./perfil-toast";
 
 const DELETE_CONFIRM_PHRASE = "EXCLUIR";
 
@@ -151,9 +152,9 @@ export function PerfilDeleteAccount() {
   const [password, setPassword] = useState("");
   const [confirmPhrase, setConfirmPhrase] = useState("");
   const [understood, setUnderstood] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const { showToast } = usePerfilToast();
 
   const phraseMatches =
     confirmPhrase.trim().toUpperCase() === DELETE_CONFIRM_PHRASE;
@@ -164,25 +165,28 @@ export function PerfilDeleteAccount() {
     setPassword("");
     setConfirmPhrase("");
     setUnderstood(false);
-    setError(null);
     setDialogOpen(false);
   }
 
   function handleRequestDelete() {
-    setError(null);
-
     if (!password) {
-      setError("Informe sua senha para confirmar a exclusão.");
+      showToast({ message: "Informe sua senha para confirmar a exclusão.", variant: "warning" });
       return;
     }
 
     if (!phraseMatches) {
-      setError(`Digite ${DELETE_CONFIRM_PHRASE} para confirmar a exclusão da conta.`);
+      showToast({
+        message: `Digite ${DELETE_CONFIRM_PHRASE} para confirmar a exclusão da conta.`,
+        variant: "warning",
+      });
       return;
     }
 
     if (!understood) {
-      setError("Marque que você entende que esta ação é permanente.");
+      showToast({
+        message: "Marque que você entende que esta ação é permanente.",
+        variant: "warning",
+      });
       return;
     }
 
@@ -191,7 +195,6 @@ export function PerfilDeleteAccount() {
 
   async function handleConfirmDelete() {
     setDeleting(true);
-    setError(null);
 
     try {
       const response = await fetch("/api/profile/delete-account", {
@@ -214,9 +217,10 @@ export function PerfilDeleteAccount() {
       window.location.href = "/login";
     } catch (err) {
       setDialogOpen(false);
-      setError(
-        err instanceof Error ? err.message : "Não foi possível excluir a conta.",
-      );
+      showToast({
+        message: err instanceof Error ? err.message : "Não foi possível excluir a conta.",
+        variant: "error",
+      });
     } finally {
       setDeleting(false);
     }
@@ -343,15 +347,6 @@ export function PerfilDeleteAccount() {
               minha conta depois.
             </span>
           </label>
-
-          {error ? (
-            <p
-              className="rounded-block border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700"
-              role="alert"
-            >
-              {error}
-            </p>
-          ) : null}
 
           <div className="flex flex-col-reverse gap-3 pt-1 sm:flex-row sm:items-center sm:justify-end sm:gap-6">
             <button

@@ -5,6 +5,7 @@ import { ChevronDown, Globe } from "lucide-react";
 import type { ProfilePageData } from "@/lib/profile";
 import { cn } from "@/lib/utils";
 import { PerfilFormActions } from "./perfil-form-actions";
+import { usePerfilToast } from "./perfil-toast";
 import { PerfilToggle } from "./perfil-toggle";
 import { LANGUAGE_OPTIONS, TIMEZONE_OPTIONS } from "./types";
 
@@ -70,27 +71,28 @@ export function PerfilPrivacyPanel({ data, saving, onSave }: PerfilPrivacyPanelP
   const [showInRanking, setShowInRanking] = useState(data.profile.show_in_ranking);
   const [language, setLanguage] = useState(data.profile.language);
   const [timezone, setTimezone] = useState(data.profile.timezone);
-  const [error, setError] = useState<string | null>(null);
+  const { showToast } = usePerfilToast();
 
   function handleCancel() {
     setShowInRanking(data.profile.show_in_ranking);
     setLanguage(data.profile.language);
     setTimezone(data.profile.timezone);
-    setError(null);
   }
 
   async function handleSave() {
-    setError(null);
     try {
       await onSave({
         show_in_ranking: showInRanking,
         language,
         timezone,
       });
+      showToast("Privacidade e idioma atualizados.");
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Não foi possível salvar as alterações.",
-      );
+      showToast({
+        message:
+          err instanceof Error ? err.message : "Não foi possível salvar as alterações.",
+        variant: "error",
+      });
     }
   }
 
@@ -137,12 +139,6 @@ export function PerfilPrivacyPanel({ data, saving, onSave }: PerfilPrivacyPanelP
           />
         </div>
       </div>
-
-      {error ? (
-        <p className="text-sm font-medium text-red-600" role="alert">
-          {error}
-        </p>
-      ) : null}
 
       <PerfilFormActions
         saving={saving}
