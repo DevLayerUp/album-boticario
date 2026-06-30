@@ -11,7 +11,7 @@ imagem, basta substituir o arquivo (mantendo o nome) ou editar o caminho no mapa
 
 ```
 hero.png            → banner do topo
-logo.png            → logotipo "Fãs da Natureza" do header
+logo.png            → logotipo "Fãs por Natureza" do header
 cards/figurinha.png → card "Minha figurinha"  (tema verde)
 cards/album.png     → card "Meu Álbum"         (tema azul)
 cards/colecao.png   → card "Coleção"           (tema gold)

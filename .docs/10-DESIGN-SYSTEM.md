@@ -1,4 +1,4 @@
-# Design System FGB — Fãs da Natureza
+# Design System FGB — Fãs por Natureza
 
 Identidade visual da plataforma, derivada do arquivo Figma **"Design System FGB"**
 (`Plataforma troca de figurinhas`, node `18:816`). Esta é a fonte de verdade para
@@ -151,7 +151,7 @@ Arquivos esperados (nomes sugeridos):
 ```
 public/images/dashboard/
   hero.png              → banner do topo (figurinhas + padrão)
-  logo.png              → logotipo "Fãs da Natureza" do header
+  logo.png              → logotipo "Fãs por Natureza" do header
   cards/
     figurinha.png       → header do card "Minha figurinha"  (tema green)
     album.png           → header do card "Meu Álbum"        (tema blue)

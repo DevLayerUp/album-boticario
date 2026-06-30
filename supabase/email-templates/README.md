@@ -26,7 +26,7 @@ Não remova `{{ .ConfirmationURL }}` — é obrigatório para o fluxo de auth.
 
 ```env
 RESEND_API_KEY=re_...
-RESEND_FROM_EMAIL="Fãs da Natureza <noreply@seudominio.com.br>"
+RESEND_FROM_EMAIL="Fãs por Natureza <noreply@seudominio.com.br>"
 NEXT_PUBLIC_SITE_URL=https://www.faspornatureza.com.br
 
 # Secret do hook Send Email (Supabase → Authentication → Hooks)
@@ -63,8 +63,8 @@ Não usa mais `resetPasswordForEmail` do cliente.
 
 ## Assuntos dos e-mails
 
-- **Confirm signup:** `Confirme sua conta — Fãs da Natureza`
-- **Reset password:** `Redefinir sua senha — Fãs da Natureza`
+- **Confirm signup:** `Confirme sua conta — Fãs por Natureza`
+- **Reset password:** `Redefinir sua senha — Fãs por Natureza`
 
 Definidos em `lib/email/templates.ts`.
 
