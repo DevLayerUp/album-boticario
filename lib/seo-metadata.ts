@@ -70,9 +70,13 @@ export function buildRootMetadata(settings: SeoSettings): Metadata {
   const siteUrl = getSiteUrl();
   const resolved = resolveSeoRoute(settings, "home");
   const favicon = settings.faviconUrl ?? "/images/favicon.png";
+  const googleVerification = process.env.GOOGLE_SITE_VERIFICATION?.trim();
 
   return {
     metadataBase: new URL(siteUrl),
+    ...(googleVerification
+      ? { verification: { google: googleVerification } }
+      : {}),
     title: {
       default: settings.defaultTitle,
       template: settings.titleTemplate,

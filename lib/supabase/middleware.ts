@@ -62,11 +62,17 @@ function purgeStaleAuthChunks(
 export async function updateSession(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // Arquivos de verificação de propriedade (Google Search Console, Bing, etc.)
+  // Ex.: /google1a2b3c4d5e6f.html — precisam ser acessíveis sem sessão.
+  const isVerificationFile = /^\/(google[\w-]+|BingSiteAuth)\.html$/.test(
+    pathname,
+  );
+
   // Sempre deixa passar: recursos do browser/sistema (sem chamar getUser)
   const isAlwaysPublic = ALWAYS_PUBLIC.some(
     (p) => pathname === p || pathname.startsWith(p),
   );
-  if (isAlwaysPublic) {
+  if (isAlwaysPublic || isVerificationFile) {
     return NextResponse.next({ request });
   }
 
