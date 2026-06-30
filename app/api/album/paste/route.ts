@@ -5,7 +5,8 @@ import { incrementMissionProgress } from "@/lib/missions";
 /**
  * POST /api/album/paste
  * Body: { slot_id: number, sticker_id: number }
- * Pastes a sticker the user owns into an empty slot and decrements inventory.
+ * Pastes a sticker the user owns into an empty slot.
+ * Inventory quantity is unchanged — duplicates for trade stay at quantity > 1.
  */
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
@@ -24,7 +25,7 @@ export async function POST(request: NextRequest) {
   // 1. Check ownership
   const { data: owned } = await supabase
     .from("user_stickers")
-    .select("id, quantity")
+    .select("quantity")
     .eq("user_id", user.id)
     .eq("sticker_id", sticker_id)
     .single();
@@ -54,20 +55,7 @@ export async function POST(request: NextRequest) {
 
   if (pasteErr) return NextResponse.json({ error: pasteErr.message }, { status: 500 });
 
-  // 4. Decrement inventory — remove row if quantity reaches 0
-  if (owned.quantity <= 1) {
-    await supabase
-      .from("user_stickers")
-      .delete()
-      .eq("id", owned.id);
-  } else {
-    await supabase
-      .from("user_stickers")
-      .update({ quantity: owned.quantity - 1 })
-      .eq("id", owned.id);
-  }
-
-  // 5. Increment mission progress for album_paste
+  // 4. Increment mission progress for album_paste
   await incrementMissionProgress(supabase, user.id, "complete_album_page", 0); // tracked per page elsewhere
   await incrementMissionProgress(supabase, user.id, "paste_sticker", 1);
 

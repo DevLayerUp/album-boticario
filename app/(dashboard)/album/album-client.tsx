@@ -128,22 +128,11 @@ export function AlbumClient({
       throw new Error((err as { error?: string }).error ?? "Erro ao colar figurinha");
     }
 
-    // Update album entries
+    // Update album entries (inventory quantity unchanged — paste does not consume copies)
     setUserAlbum((prev) => [
       ...prev,
       { slot_id: slotId, sticker_id: stickerId, pasted_at: new Date().toISOString() },
     ]);
-
-    // Decrement sticker quantity in local state
-    setUserStickers((prev) =>
-      prev
-        .map((s) =>
-          s.sticker_id === stickerId
-            ? { ...s, quantity: s.quantity - 1 }
-            : s
-        )
-        .filter((s) => s.quantity > 0)
-    );
   }
 
   // Progress
