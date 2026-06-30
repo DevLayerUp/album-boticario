@@ -2,7 +2,7 @@
  * Dimensões e posicionamento do card de figurinha (Figma).
  * Usado no preview (client) e na composição final (server/sharp).
  */
-export const STICKER_CARD_BG = "/images/dashboard/bg-minha-figurinha.png";
+export const STICKER_CARD_BG = "/images/dashboard/new-bg-figurinha.png";
 
 export const STICKER_CARD = {
   width: 352,
