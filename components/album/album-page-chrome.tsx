@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { dashboardAssets } from "@/lib/dashboard-assets";
 import { cn } from "@/lib/utils";
+import { FlipBookLink } from "./flip-book-link";
 
 export type PageSide = "left" | "right";
 
@@ -17,24 +18,43 @@ export function AlbumLeftPageLogos({ inFlipBook }: { inFlipBook?: boolean }) {
         inFlipBook ? "gap-4 sm:gap-6" : "gap-5 sm:gap-7",
       )}
     >
-      <a
-        href={FGB_URL}
-        target="_blank"
-        rel="noopener noreferrer"
-        aria-label="Fundação Grupo Boticário — site oficial"
-        className="shrink-0"
-      >
-        <Image
-          src={dashboardAssets.auth.logoFgb}
-          alt="Fundação Grupo Boticário"
-          width={125}
-          height={27}
-          className={cn(
-            "h-auto w-auto object-contain",
-            inFlipBook ? "max-h-[22px] max-w-[108px] sm:max-h-[27px] sm:max-w-[125px]" : "max-h-[27px] max-w-[125px]",
-          )}
-        />
-      </a>
+      {inFlipBook ? (
+        <FlipBookLink
+          href={FGB_URL}
+          ariaLabel="Fundação Grupo Boticário — site oficial"
+          className="shrink-0"
+        >
+          <Image
+            src={dashboardAssets.auth.logoFgb}
+            alt="Fundação Grupo Boticário"
+            width={125}
+            height={27}
+            className={cn(
+              "h-auto w-auto object-contain",
+              "max-h-[22px] max-w-[108px] sm:max-h-[27px] sm:max-w-[125px]",
+            )}
+          />
+        </FlipBookLink>
+      ) : (
+        <a
+          href={FGB_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Fundação Grupo Boticário — site oficial"
+          className="shrink-0"
+        >
+          <Image
+            src={dashboardAssets.auth.logoFgb}
+            alt="Fundação Grupo Boticário"
+            width={125}
+            height={27}
+            className={cn(
+              "h-auto w-auto object-contain",
+              "max-h-[27px] max-w-[125px]",
+            )}
+          />
+        </a>
+      )}
       <span
         aria-hidden
         className={cn("w-px shrink-0 bg-white/25", inFlipBook ? "h-4 sm:h-5" : "h-5")}

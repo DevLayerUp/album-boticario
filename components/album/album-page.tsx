@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { memo } from "react";
 import { Camera } from "lucide-react";
 import { StickerSlot, type SlotSticker } from "./sticker-slot";
 import {
@@ -27,6 +28,7 @@ import { cn } from "@/lib/utils";
 import { AlbumPageShell, type PageSide } from "./album-page-chrome";
 import { AlbumSocialPage } from "./album-social-page";
 import { AlbumPageCta } from "./album-page-cta";
+import { FlipBookLink, FlipBookHtmlContent } from "./flip-book-link";
 
 export type { PageSide };
 
@@ -129,13 +131,23 @@ function Title3Page({ page, side, pastedSlotIds, ownedMap, onPaste, userStickerU
         )}
 
         {text && (
-          <div
-            className={cn(
-              "max-w-[450px] leading-[1.4] text-white **:text-white [&_p]:mb-3 [&_strong]:font-semibold",
-              inFlipBook ? "mt-2 text-sm sm:mt-4 sm:text-base" : "mt-4 text-base",
-            )}
-            dangerouslySetInnerHTML={{ __html: text }}
-          />
+          inFlipBook ? (
+            <FlipBookHtmlContent
+              html={text}
+              className={cn(
+                "max-w-[450px] leading-[1.4] text-white **:text-white [&_p]:mb-3 [&_strong]:font-semibold",
+                "mt-2 text-sm sm:mt-4 sm:text-base",
+              )}
+            />
+          ) : (
+            <div
+              className={cn(
+                "max-w-[450px] leading-[1.4] text-white **:text-white [&_p]:mb-3 [&_strong]:font-semibold",
+                "mt-4 text-base",
+              )}
+              dangerouslySetInnerHTML={{ __html: text }}
+            />
+          )
         )}
 
         {assignedSlots.length > 0 ? (
@@ -217,6 +229,36 @@ function ProfilePage({ page, side, userStickerUrl, userDisplayName, inFlipBook }
                 <FigurinhaNameTag name={userDisplayName} overlay />
               ) : null}
             </div>
+          ) : inFlipBook ? (
+            <FlipBookLink
+              href="/figurinha"
+              className="group flex flex-col items-center gap-4 transition-transform duration-200 hover:scale-[1.01]"
+              ariaLabel="Criar figurinha personalizada"
+            >
+              <div
+                className="relative flex items-center justify-center bg-white shadow-2xl shadow-black/25"
+                style={{
+                  width: "clamp(160px, 38vw, 280px)",
+                  aspectRatio: "352 / 503",
+                  borderRadius: 16,
+                  border: "5px solid #98D622",
+                }}
+              >
+                <div
+                  className="flex flex-col items-center justify-center gap-3 border border-dashed border-neutral-300"
+                  style={{
+                    width: "calc(100% - 32px)",
+                    height: "calc(100% - 80px)",
+                    borderRadius: 12,
+                  }}
+                >
+                  <Camera className="size-8 text-neutral-400" strokeWidth={1.5} aria-hidden />
+                  <span className="text-[10px] font-bold uppercase tracking-wide text-verde-500 sm:text-xs">
+                    Carregar imagem
+                  </span>
+                </div>
+              </div>
+            </FlipBookLink>
           ) : (
             <Link
               href="/figurinha"
@@ -578,13 +620,23 @@ function InfoPage({ page, side, inFlipBook }: AlbumPageProps) {
             </h2>
           ) : null}
           {html ? (
-            <div
-              className={cn(
-                "max-w-[520px] text-center leading-[1.45] text-white **:text-white [&_a]:underline [&_p]:mb-2.5 [&_strong]:font-semibold",
-                inFlipBook ? "text-sm sm:text-base" : "text-base",
-              )}
-              dangerouslySetInnerHTML={{ __html: html }}
-            />
+            inFlipBook ? (
+              <FlipBookHtmlContent
+                html={html}
+                className={cn(
+                  "max-w-[520px] text-center leading-[1.45] text-white **:text-white [&_a]:underline [&_p]:mb-2.5 [&_strong]:font-semibold",
+                  "text-sm sm:text-base",
+                )}
+              />
+            ) : (
+              <div
+                className={cn(
+                  "max-w-[520px] text-center leading-[1.45] text-white **:text-white [&_a]:underline [&_p]:mb-2.5 [&_strong]:font-semibold",
+                  "text-base",
+                )}
+                dangerouslySetInnerHTML={{ __html: html }}
+              />
+            )
           ) : null}
         </div>
       </div>
@@ -596,7 +648,7 @@ function SocialPage(props: AlbumPageProps) {
   return <AlbumSocialPage {...props} />;
 }
 
-export function AlbumPage(props: AlbumPageProps) {
+export const AlbumPage = memo(function AlbumPage(props: AlbumPageProps) {
   if (props.page.page_type === "info") {
     return <InfoPage {...props} />;
   }
@@ -628,4 +680,4 @@ export function AlbumPage(props: AlbumPageProps) {
     return <Grid3x3Page {...props} />;
   }
   return <Grid3x3Page {...props} />;
-}
+});

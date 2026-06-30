@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import type { AlbumPageProps } from "./album-page";
 import { AlbumPageShell } from "./album-page-chrome";
 import { AlbumSocialLinks } from "./album-social-links";
+import { FlipBookHtmlContent } from "./flip-book-link";
 
 export function AlbumSocialPage({
   page,
@@ -48,20 +49,29 @@ export function AlbumSocialPage({
           )}
 
           {data.text ? (
-            <div
-              className={cn(
-                "max-w-[92%] text-center leading-[1.35] text-white **:text-white [&_a]:underline [&_p]:mb-2 [&_strong]:font-semibold",
-                inFlipBook
-                  ? "text-sm sm:text-base md:text-lg lg:text-xl"
-                  : "text-base sm:text-lg md:text-xl",
-              )}
-              dangerouslySetInnerHTML={{ __html: data.text }}
-            />
+            inFlipBook ? (
+              <FlipBookHtmlContent
+                html={data.text}
+                className={cn(
+                  "max-w-[92%] text-center leading-[1.35] text-white **:text-white [&_a]:underline [&_p]:mb-2 [&_strong]:font-semibold",
+                  "text-sm sm:text-base md:text-lg lg:text-xl",
+                )}
+              />
+            ) : (
+              <div
+                className={cn(
+                  "max-w-[92%] text-center leading-[1.35] text-white **:text-white [&_a]:underline [&_p]:mb-2 [&_strong]:font-semibold",
+                  "text-base sm:text-lg md:text-xl",
+                )}
+                dangerouslySetInnerHTML={{ __html: data.text }}
+              />
+            )
           ) : null}
 
           <AlbumSocialLinks
             links={data.social_links ?? []}
             size={inFlipBook ? "sm" : "md"}
+            inFlipBook={inFlipBook}
             className="pt-0.5 sm:pt-1"
           />
         </div>

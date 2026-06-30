@@ -1,7 +1,14 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useRef, useState, useEffect, type KeyboardEvent, type ReactNode } from "react";
+import {
+  useRef,
+  useState,
+  useEffect,
+  useCallback,
+  type KeyboardEvent,
+  type ReactNode,
+} from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AlbumPage, type AlbumPageData, type PageSide } from "./album-page";
@@ -9,12 +16,10 @@ import { AlbumCover } from "./album-cover";
 
 type BookOrientation = "portrait" | "landscape";
 
-/**
- * Maps content page index to physical left/right in the flipbook.
- * With showCover, flipbook index 0 is the cover; content starts at index 1.
- * In portrait mode the library renders every page on the right except the last,
- * which is shown on the left — so index % 2 is wrong there.
- */
+const MOBILE_MQ = "(max-width: 767px)";
+const MOBILE_NAV_RESERVE_PX = 72;
+const MOBILE_HEADER_RESERVE_PX = 200;
+
 function getAlbumPageSide(
   contentIndex: number,
   totalContentPages: number,
@@ -40,18 +45,13 @@ interface HTMLFlipBookHandle {
   pageFlip: () => PageFlipApi;
 }
 
-/* ─────────────────────────────────────────────────────────────────────────────
- * react-pageflip uses browser-only APIs at initialisation time.
- * Dynamic import with ssr: false keeps it out of the server render pass.
- * ───────────────────────────────────────────────────────────────────────── */
 const HTMLFlipBook = dynamic(() => import("react-pageflip"), {
   ssr: false,
   loading: () => (
-    <div className="h-[560px] animate-pulse rounded-card bg-verde-escuro-500/10" />
+    <div className="h-[min(58dvh,520px)] min-h-[380px] animate-pulse rounded-card bg-verde-escuro-500/10 max-md:h-[min(52dvh,480px)]" />
   ),
 }) as HTMLFlipBookComponent;
 
-/* ─── Public props ───────────────────────────────────────────────────────── */
 interface FlipBookProps {
   pages: AlbumPageData[];
   pastedSlotIds: Set<number>;
@@ -59,119 +59,81 @@ interface FlipBookProps {
   onPaste: (slotId: number, stickerId: number) => Promise<void>;
   userStickerUrl?: string | null;
   userDisplayName?: string | null;
-  /** URL of the album cover image from Supabase storage (uploaded by admin) */
   coverUrl?: string | null;
-  /** Abre a página do slot e destaca para colagem (vindo do estoque). */
   focusSlotId?: number | null;
 }
 
-/* Shared style for the circular nav buttons */
-const navBtn = (disabled: boolean) =>
+const navBtn = (disabled: boolean, overlay = false) =>
   cn(
-    "flex h-14 w-14 shrink-0 items-center justify-center rounded-full",
-    "bg-verde-escuro-500 text-white",
-    "shadow-[0_4px_16px_rgba(13,102,50,0.38)]",
-    "transition-all duration-200 ease-out",
+    "flex shrink-0 items-center justify-center rounded-full text-white transition-all duration-200 ease-out touch-manipulation",
+    overlay
+      ? "h-11 w-11 bg-verde-escuro-500/90 shadow-[0_4px_14px_rgba(13,102,50,0.45)] backdrop-blur-sm"
+      : "h-14 w-14 bg-verde-escuro-500 shadow-[0_4px_16px_rgba(13,102,50,0.38)]",
     disabled
-      ? "cursor-not-allowed opacity-20 shadow-none"
-      : "cursor-pointer hover:scale-105 hover:bg-verde-500 hover:shadow-[0_6px_20px_rgba(66,165,42,0.45)]",
+      ? "pointer-events-none opacity-20 shadow-none"
+      : overlay
+        ? "cursor-pointer active:scale-95 hover:bg-verde-500"
+        : "cursor-pointer hover:scale-105 hover:bg-verde-500 hover:shadow-[0_6px_20px_rgba(66,165,42,0.45)]",
   );
 
-/**
- * Renders all album pages as a realistic page-flip book.
- *
- * Gesture strategy:
- *  - The library owns all gesture/touch detection (useMouseEvents defaults to true).
- *    This is the only way the native "finger-follows-page" animation works on mobile.
- *  - disableFlipByClick prevents zero-movement taps from flipping pages.
- *  - swipeDistance={80} requires an intentional 80px drag — accidental short nudges
- *    won't flip.
- *  - Sticker slots add onPointerDown/onTouchStart stopPropagation so interactions
- *    with figurinhas near the page edges never reach the flip engine.
- *  - Arrow buttons call flipPrev/flipNext programmatically.
- */
-function useFlipBookSize() {
+function useFlipBookSize(containerRef: React.RefObject<HTMLElement | null>) {
   const [size, setSize] = useState({
-    height: 780,
-    minHeight: 480,
-    maxHeight: 920,
+    height: 520,
+    minHeight: 400,
+    maxHeight: 640,
     isMobile: false,
   });
 
+  const measure = useCallback(() => {
+    const mobile = window.matchMedia(MOBILE_MQ).matches;
+
+    if (!mobile) {
+      setSize({
+        height: 780,
+        minHeight: 480,
+        maxHeight: 920,
+        isMobile: false,
+      });
+      return;
+    }
+
+    const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
+    const containerTop = containerRef.current?.getBoundingClientRect().top ?? 0;
+    const chromeAbove = Math.max(containerTop, MOBILE_HEADER_RESERVE_PX * 0.45);
+    const available =
+      viewportHeight - chromeAbove - MOBILE_NAV_RESERVE_PX - 24;
+    const height = Math.min(560, Math.max(360, Math.round(available)));
+
+    setSize({
+      height,
+      minHeight: Math.round(height * 0.94),
+      maxHeight: height,
+      isMobile: true,
+    });
+  }, [containerRef]);
+
   useEffect(() => {
-    const mq = window.matchMedia("(max-width: 767px)");
-    const apply = () => {
-      const mobile = mq.matches;
-      setSize(
-        mobile
-          ? { height: 900, minHeight: 520, maxHeight: 980, isMobile: true }
-          : { height: 780, minHeight: 480, maxHeight: 920, isMobile: false },
-      );
+    measure();
+    const mq = window.matchMedia(MOBILE_MQ);
+    mq.addEventListener("change", measure);
+    window.addEventListener("resize", measure);
+    window.visualViewport?.addEventListener("resize", measure);
+    return () => {
+      mq.removeEventListener("change", measure);
+      window.removeEventListener("resize", measure);
+      window.visualViewport?.removeEventListener("resize", measure);
     };
-    apply();
-    mq.addEventListener("change", apply);
-    return () => mq.removeEventListener("change", apply);
-  }, []);
+  }, [measure]);
 
   return size;
 }
-
-/** Freeze document scroll during page-flip on mobile only. */
-function useScrollLock() {
-  const lockedY = useRef(0);
-  const isLocked = useRef(false);
-
-  const lock = () => {
-    if (isLocked.current) return;
-    isLocked.current = true;
-    lockedY.current = window.scrollY;
-    const { style } = document.body;
-    style.position = "fixed";
-    style.top = `-${lockedY.current}px`;
-    style.left = "0";
-    style.right = "0";
-    style.width = "100%";
-    style.overflow = "hidden";
-  };
-
-  const forceUnlock = () => {
-    if (!isLocked.current) return;
-    isLocked.current = false;
-    const y = lockedY.current;
-    const { style } = document.body;
-    style.position = "";
-    style.top = "";
-    style.left = "";
-    style.right = "";
-    style.width = "";
-    style.overflow = "";
-    window.scrollTo({ top: y, left: 0, behavior: "instant" });
-  };
-
-  useEffect(() => {
-    return () => {
-      isLocked.current = false;
-      const { style } = document.body;
-      style.position = "";
-      style.top = "";
-      style.left = "";
-      style.right = "";
-      style.width = "";
-      style.overflow = "";
-    };
-  }, []);
-
-  return { lock, forceUnlock };
-}
-
-const FLIP_DURATION_MS = 720;
 
 interface FlipNavControlProps {
   direction: "prev" | "next";
   disabled: boolean;
   label: string;
   className: string;
-  isMobile: boolean;
+  overlay?: boolean;
   onFlip: (direction: "prev" | "next") => void;
   children: ReactNode;
 }
@@ -181,7 +143,7 @@ function FlipNavControl({
   disabled,
   label,
   className,
-  isMobile,
+  overlay = false,
   onFlip,
   children,
 }: FlipNavControlProps) {
@@ -193,29 +155,14 @@ function FlipNavControl({
     }
   };
 
-  if (isMobile) {
-    return (
-      <div
-        role="button"
-        tabIndex={disabled ? -1 : 0}
-        aria-disabled={disabled}
-        aria-label={label}
-        onPointerDown={(e) => e.preventDefault()}
-        onClick={() => !disabled && onFlip(direction)}
-        onKeyDown={handleKeyDown}
-        className={cn(className, "touch-manipulation")}
-      >
-        {children}
-      </div>
-    );
-  }
-
   return (
     <button
       type="button"
       disabled={disabled}
       aria-label={label}
+      onPointerDown={(e) => overlay && e.stopPropagation()}
       onClick={() => onFlip(direction)}
+      onKeyDown={handleKeyDown}
       className={className}
     >
       {children}
@@ -233,16 +180,13 @@ export function FlipBook({
   coverUrl,
   focusSlotId = null,
 }: FlipBookProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
   const bookRef = useRef<HTMLFlipBookHandle | null>(null);
-  const unlockFallbackRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const { height, minHeight, maxHeight, isMobile } = useFlipBookSize();
-  const { lock: lockScroll, forceUnlock } = useScrollLock();
+  const { height, minHeight, maxHeight, isMobile } = useFlipBookSize(containerRef);
 
-  // currentPage = index of the currently visible page (0 = cover, 1+ = content)
   const [currentPage, setCurrentPage] = useState(0);
-  const [bookOrientation, setBookOrientation] = useState<BookOrientation>("landscape");
+  const [bookOrientation, setBookOrientation] = useState<BookOrientation>("portrait");
 
-  // Reset when category changes (pages[0] id changes)
   const firstPageId = pages[0]?.id;
   useEffect(() => {
     setCurrentPage(0);
@@ -275,37 +219,9 @@ export function FlipBook({
     return () => window.clearTimeout(timeout);
   }, [focusSlotId, firstPageId, pages]);
 
-  const clearUnlockFallback = () => {
-    if (unlockFallbackRef.current) {
-      clearTimeout(unlockFallbackRef.current);
-      unlockFallbackRef.current = null;
-    }
-  };
-
-  useEffect(
-    () => () => {
-      if (unlockFallbackRef.current) clearTimeout(unlockFallbackRef.current);
-    },
-    [],
-  );
-
-  const releaseMobileScroll = () => {
-    if (!isMobile) return;
-    clearUnlockFallback();
-    forceUnlock();
-  };
-
   const flipPage = (direction: "prev" | "next") => {
     const api = bookRef.current?.pageFlip();
     if (!api) return;
-
-    if (isMobile) {
-      lockScroll();
-      clearUnlockFallback();
-      // Safety net if onFlip never fires (e.g. interrupted animation).
-      unlockFallbackRef.current = setTimeout(releaseMobileScroll, FLIP_DURATION_MS + 150);
-    }
-
     if (direction === "prev") api.flipPrev();
     else api.flipNext();
   };
@@ -320,128 +236,132 @@ export function FlipBook({
     );
   }
 
-  // With showCover=true: page 0 is the cover; content starts at page 1.
-  // Total children = 1 (cover) + pages.length (content pages).
   const totalChildren = 1 + pages.length;
   const isFirst = currentPage === 0;
-  // On the last spread: current page is the second-to-last or last content page
   const isLast = currentPage + 2 >= totalChildren;
+  const effectiveOrientation = isMobile ? "portrait" : bookOrientation;
 
   return (
-    <div className="select-none">
-      {/* ── Layout ──────────────────────────────────────────────────────────
-           Mobile  : book full-width on row 1, both buttons centred on row 2.
-           Desktop : [◀]  [book]  [▶]  — arrows flanking the album.
-           flex-wrap + CSS order achieves this without duplicating the book.
-       ──────────────────────────────────────────────────────────────────── */}
-      <div className="mx-auto flex w-full max-w-[1340px] flex-wrap items-center justify-center gap-4 md:flex-nowrap md:gap-3">
-
-        {/* ← Previous — row 2 on mobile (below book), left column on desktop */}
+    <div ref={containerRef} className="select-none max-md:pb-2">
+      <div className="relative mx-auto flex w-full max-w-[1340px] items-center justify-center gap-3 max-md:gap-0">
         <FlipNavControl
           direction="prev"
           disabled={isFirst}
           label="Página anterior"
-          isMobile={isMobile}
           onFlip={flipPage}
-          className={cn("order-2 md:order-1", navBtn(isFirst))}
+          className={cn(
+            navBtn(isFirst),
+            "max-md:absolute max-md:left-1 max-md:top-1/2 max-md:z-20 max-md:-translate-y-1/2 max-md:hidden",
+          )}
         >
           <ChevronLeft size={22} strokeWidth={2.5} />
         </FlipNavControl>
 
-        {/* Book — w-full is required so page-flip measures a wide enough block
-            for landscape (two-page) mode. Without it the wrapper shrink-wraps
-            and the library falls back to portrait (single tiny page).
-            On desktop with showCover, the closed cover sits on the RIGHT half;
-            -translate-x-1/4 centres that single visible page. */}
-        <div className="order-1 flex w-full min-w-0 cursor-grab justify-center max-md:[overflow-anchor:none] active:cursor-grabbing md:order-2 md:min-w-[560px] md:flex-1">
+        <FlipNavControl
+          direction="prev"
+          disabled={isFirst}
+          label="Página anterior"
+          overlay
+          onFlip={flipPage}
+          className={cn(
+            "absolute left-1 top-1/2 z-20 -translate-y-1/2 md:hidden",
+            navBtn(isFirst, true),
+          )}
+        >
+          <ChevronLeft size={20} strokeWidth={2.5} />
+        </FlipNavControl>
+
+        <div className="relative flex w-full min-w-0 cursor-grab justify-center max-md:[overflow-anchor:none] active:cursor-grabbing md:min-w-[560px] md:flex-1">
           <div
             className={cn(
               "flex w-full justify-center transition-transform duration-700 ease-out",
-              isFirst && "md:-translate-x-1/4",
+              isFirst && !isMobile && "md:-translate-x-1/4",
             )}
           >
-          <HTMLFlipBook
-            ref={bookRef}
-            key={firstPageId ?? "empty"}
-            width={560}
-            height={height}
-            size="stretch"
-            minWidth={280}
-            maxWidth={560}
-            minHeight={minHeight}
-            maxHeight={maxHeight}
-            drawShadow
-            flippingTime={700}
-            usePortrait
-            startZIndex={0}
-            autoSize
-            maxShadowOpacity={0.4}
-            /* showCover=true renders page 0 as a hard single-page cover */
-            showCover
-            /* mobileScrollSupport=false lets the library own horizontal swipes
-               so they drive the page flip instead of scrolling the page. */
-            mobileScrollSupport={false}
-            /* clickEventForward makes the library ignore taps on <a>/<button>
-               targets — sticker slots are buttons, so tapping them opens the
-               modal and never flips. Empty page areas still flip on tap/swipe. */
-            clickEventForward
-            useMouseEvents
-            /* 80 px drag required — prevents accidental flips from short nudges */
-            swipeDistance={80}
-            showPageCorners={false}
-            /* disableFlipByClick=false: when true the library cannot flip
-               BACKWARD in portrait/mobile. Sticker slots are <button> elements
-               so taps on them are ignored by clickEventForward. */
-            disableFlipByClick={false}
-            startPage={0}
-            className=""
-            style={{}}
-            onInit={(e: { data: { mode: BookOrientation } }) => {
-              setBookOrientation(e.data.mode);
-            }}
-            onFlip={(e: { data: number }) => {
-              setCurrentPage(e.data);
-              releaseMobileScroll();
-            }}
-            onChangeOrientation={(e: { data: BookOrientation }) => {
-              setBookOrientation(e.data);
-            }}
-          >
-            {/* ── Cover page (index 0) — hard page shown alone ── */}
-            <div key="cover" className="h-full overflow-hidden">
-              <AlbumCover coverUrl={coverUrl} />
-            </div>
-
-            {/* ── Content pages (index 1+) ── */}
-            {pages.map((page, index) => (
-              <div key={page.id} className="h-full overflow-hidden">
-                <AlbumPage
-                  page={page}
-                  side={getAlbumPageSide(index, pages.length, bookOrientation)}
-                  pastedSlotIds={pastedSlotIds}
-                  ownedMap={ownedMap}
-                  onPaste={onPaste}
-                  userStickerUrl={userStickerUrl}
-                  userDisplayName={userDisplayName}
-                  inFlipBook
-                  focusSlotId={focusSlotId}
-                />
+            <HTMLFlipBook
+              ref={bookRef}
+              key={firstPageId ?? "empty"}
+              width={560}
+              height={height}
+              size="stretch"
+              minWidth={280}
+              maxWidth={560}
+              minHeight={minHeight}
+              maxHeight={maxHeight}
+              drawShadow
+              flippingTime={700}
+              usePortrait
+              startZIndex={0}
+              autoSize
+              maxShadowOpacity={0.4}
+              showCover
+              mobileScrollSupport={false}
+              clickEventForward
+              useMouseEvents
+              swipeDistance={80}
+              showPageCorners={false}
+              disableFlipByClick={false}
+              startPage={0}
+              className=""
+              style={{}}
+              onInit={(e: { data: { mode: BookOrientation } }) => {
+                setBookOrientation(isMobile ? "portrait" : e.data.mode);
+              }}
+              onFlip={(e: { data: number }) => {
+                setCurrentPage(e.data);
+              }}
+              onChangeOrientation={(e: { data: BookOrientation }) => {
+                if (!isMobile) setBookOrientation(e.data);
+              }}
+            >
+              <div key="cover" className="h-full overflow-hidden">
+                <AlbumCover coverUrl={coverUrl} />
               </div>
-            ))}
-          </HTMLFlipBook>
+
+              {pages.map((page, index) => (
+                <div key={page.id} className="h-full overflow-hidden">
+                  <AlbumPage
+                    page={page}
+                    side={getAlbumPageSide(index, pages.length, effectiveOrientation)}
+                    pastedSlotIds={pastedSlotIds}
+                    ownedMap={ownedMap}
+                    onPaste={onPaste}
+                    userStickerUrl={userStickerUrl}
+                    userDisplayName={userDisplayName}
+                    inFlipBook
+                    focusSlotId={focusSlotId}
+                  />
+                </div>
+              ))}
+            </HTMLFlipBook>
           </div>
         </div>
 
-        {/* → Next — always order-3 (right of prev on mobile, right column on desktop) */}
         <FlipNavControl
           direction="next"
           disabled={isLast}
           label="Próxima página"
-          isMobile={isMobile}
           onFlip={flipPage}
-          className={cn("order-3", navBtn(isLast))}
+          className={cn(
+            navBtn(isLast),
+            "max-md:absolute max-md:right-1 max-md:top-1/2 max-md:z-20 max-md:-translate-y-1/2 max-md:hidden",
+          )}
         >
           <ChevronRight size={22} strokeWidth={2.5} />
+        </FlipNavControl>
+
+        <FlipNavControl
+          direction="next"
+          disabled={isLast}
+          label="Próxima página"
+          overlay
+          onFlip={flipPage}
+          className={cn(
+            "absolute right-1 top-1/2 z-20 -translate-y-1/2 md:hidden",
+            navBtn(isLast, true),
+          )}
+        >
+          <ChevronRight size={20} strokeWidth={2.5} />
         </FlipNavControl>
       </div>
     </div>
