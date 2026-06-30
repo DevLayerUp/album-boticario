@@ -23,12 +23,13 @@ export function AlbumSocialPage({
       side={side}
       pageNumber={page.page_number}
       inFlipBook={inFlipBook}
-      scrollableContent={inFlipBook}
     >
       <div
         className={cn(
           "flex w-full flex-col",
-          inFlipBook ? "px-3 py-2 sm:px-[8%] sm:py-4" : "px-6 py-6 sm:px-[10%]",
+          inFlipBook
+            ? "min-h-full justify-center px-3 py-2 sm:px-[8%] sm:py-4"
+            : "justify-center px-6 py-6 sm:px-[10%]",
         )}
       >
         <div
