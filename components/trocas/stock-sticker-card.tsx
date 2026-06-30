@@ -18,6 +18,7 @@ export type StockCardState = "missing" | "owned" | "pasted";
 interface StockStickerCardProps {
   sticker: Sticker;
   quantity: number;
+  spareQuantity?: number;
   isPasted?: boolean;
   blocked?: boolean;
   hasOpenWish?: boolean;
@@ -37,6 +38,7 @@ function resolveState(quantity: number, isPasted: boolean): StockCardState {
 export function StockStickerCard({
   sticker,
   quantity,
+  spareQuantity = 0,
   isPasted = false,
   blocked = false,
   hasOpenWish = false,
@@ -47,6 +49,9 @@ export function StockStickerCard({
   tradeBlockedNoDuplicates = false,
 }: StockStickerCardProps) {
   const state = resolveState(quantity, isPasted);
+  const totalCopies =
+    quantity > 1 ? quantity : isPasted ? 1 + spareQuantity : quantity;
+  const showCopiesBadge = totalCopies > 1;
   const slug = sticker.rarities?.slug ?? "common";
   const borderColor = rarityColor(slug, sticker.rarities?.color_hex);
   const nameColor =
@@ -178,12 +183,12 @@ export function StockStickerCard({
           )}
         </div>
 
-        {quantity > 1 && (
+        {showCopiesBadge && (
           <span
             className="absolute -right-0.5 -top-1.5 z-30 flex size-7 min-w-7 items-center justify-center rounded-full bg-amarelo px-1 text-[10px] font-bold text-verde-escuro-500 shadow-md sm:-top-2 sm:size-8 sm:text-xs"
-            aria-label={`${quantity} cópias`}
+            aria-label={`${totalCopies} cópias`}
           >
-            {quantity}×
+            {totalCopies}×
           </span>
         )}
       </div>

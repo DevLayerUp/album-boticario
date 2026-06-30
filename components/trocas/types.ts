@@ -60,6 +60,7 @@ export interface StockPasteTarget {
 export interface StockItem {
   sticker: Sticker;
   quantity: number;
+  spareQuantity?: number;
   isPasted: boolean;
   blocked: boolean;
   hasOpenWish: boolean;

@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import {
+  tradeableSpareCount,
+} from "@/lib/sticker-inventory";
 import { collectPastedStickerIds } from "@/lib/user-album-pasted";
 
 type RarityRow = {
@@ -20,8 +23,16 @@ export async function GET() {
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const [stickersRes, inventoryRes, pastedRes, wishesRes, sentRes, receivedRes, slotsRes] =
-    await Promise.all([
+  const [
+    stickersRes,
+    inventoryRes,
+    pastedRes,
+    wishesRes,
+    sentRes,
+    receivedRes,
+    slotsRes,
+    openedPacksRes,
+  ] = await Promise.all([
     supabase
       .from("stickers")
       .select("id, name, image_url, rarities ( name, slug, color_hex, animation_type )")
@@ -56,6 +67,11 @@ export async function GET() {
       .from("album_slots")
       .select("id, sticker_id, album_pages ( category_id )")
       .not("sticker_id", "is", null),
+    supabase
+      .from("packs")
+      .select("id")
+      .eq("user_id", user.id)
+      .not("opened_at", "is", null),
   ]);
 
   if (stickersRes.error) {
@@ -65,6 +81,23 @@ export async function GET() {
   const quantityBySticker = new Map<number, number>();
   for (const row of inventoryRes.data ?? []) {
     quantityBySticker.set(row.sticker_id, row.quantity);
+  }
+
+  const openedPackIds = (openedPacksRes.data ?? []).map((row) => row.id);
+  const packAcquiredBySticker = new Map<number, number>();
+  if (openedPackIds.length > 0) {
+    const { data: packStickerRows } = await supabase
+      .from("pack_stickers")
+      .select("sticker_id")
+      .in("pack_id", openedPackIds);
+
+    for (const row of packStickerRows ?? []) {
+      if (row.sticker_id == null) continue;
+      packAcquiredBySticker.set(
+        row.sticker_id,
+        (packAcquiredBySticker.get(row.sticker_id) ?? 0) + 1,
+      );
+    }
   }
 
   const pastedStickerIds = collectPastedStickerIds(pastedRes.data ?? []);
@@ -98,17 +131,21 @@ export async function GET() {
       rarities: Array.isArray(rarities) ? (rarities[0] ?? null) : rarities,
     };
     const quantity = quantityBySticker.get(row.id) ?? 0;
+    const isPasted = pastedStickerIds.has(row.id);
+    const packAcquired = packAcquiredBySticker.get(row.id) ?? 0;
+    const spareQuantity = tradeableSpareCount(quantity, isPasted, packAcquired);
     return {
       sticker,
       quantity,
-      isPasted: pastedStickerIds.has(row.id),
+      spareQuantity,
+      isPasted,
       blocked: blockedStickerIds.has(row.id),
       hasOpenWish: openWishStickerIds.has(row.id),
       pasteTarget: pasteTargetBySticker.get(row.id) ?? null,
     };
   });
 
-  const hasTradeableDuplicates = (inventoryRes.data ?? []).some((row) => row.quantity > 1);
+  const hasTradeableDuplicates = items.some((item) => item.spareQuantity > 0);
 
   return NextResponse.json({ items, hasTradeableDuplicates });
 }

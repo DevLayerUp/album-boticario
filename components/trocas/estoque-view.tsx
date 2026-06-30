@@ -59,7 +59,7 @@ export function EstoqueView({ onTradeActivity }: EstoqueViewProps) {
       else if (slug === "rare") base.rare += 1;
       else if (slug === "super_rare") base.super_rare += 1;
       if (item.blocked && item.quantity > 0) base.blocked += 1;
-      if (item.quantity > 1) base.repetidas += 1;
+      if ((item.spareQuantity ?? 0) > 0) base.repetidas += 1;
       if (item.quantity === 0 && !item.isPasted) base.faltando += 1;
       if (item.isPasted) base.no_album += 1;
     }
@@ -81,7 +81,7 @@ export function EstoqueView({ onTradeActivity }: EstoqueViewProps) {
         case "blocked":
           return item.blocked && item.quantity > 0;
         case "repetidas":
-          return item.quantity > 1;
+          return (item.spareQuantity ?? 0) > 0;
         case "faltando":
           return item.quantity === 0 && !item.isPasted;
         case "no_album":
@@ -93,11 +93,14 @@ export function EstoqueView({ onTradeActivity }: EstoqueViewProps) {
   }, [items, filter]);
 
   const pastedCount = items.filter((i) => i.isPasted).length;
-  const duplicateCopies = items.reduce((acc, i) => acc + (i.quantity > 1 ? i.quantity - 1 : 0), 0);
+  const duplicateCopies = items.reduce(
+    (acc, i) => acc + (i.spareQuantity ?? 0),
+    0,
+  );
   const openWishCount = items.filter((i) => i.hasOpenWish).length;
 
   const hasTradeableDuplicatesFromItems = useMemo(
-    () => items.some((item) => item.quantity > 1),
+    () => items.some((item) => (item.spareQuantity ?? 0) > 0),
     [items],
   );
 
@@ -218,6 +221,7 @@ export function EstoqueView({ onTradeActivity }: EstoqueViewProps) {
                   key={item.sticker.id}
                   sticker={item.sticker}
                   quantity={item.quantity}
+                  spareQuantity={item.spareQuantity ?? 0}
                   isPasted={item.isPasted}
                   blocked={item.blocked}
                   hasOpenWish={item.hasOpenWish}
