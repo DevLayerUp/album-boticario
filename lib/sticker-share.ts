@@ -7,13 +7,34 @@ export function buildStickerShareText(displayName: string): string {
 
 export function buildStickerShareTextWithUrl(
   displayName: string,
-  stickerUrl: string,
+  publicShareUrl: string,
 ): string {
-  return `${buildStickerShareText(displayName)} ${stickerUrl}`;
+  return buildStickerShareMessage(displayName, publicShareUrl);
 }
 
 export function buildStickerSharePageUrl(origin: string): string {
   return `${origin.replace(/\/$/, "")}/figurinha`;
+}
+
+/** URL pública com og:image da figurinha — Facebook, X, LinkedIn, Telegram. */
+export function buildStickerPublicShareUrl(origin: string, userId: string): string {
+  return `${origin.replace(/\/$/, "")}/share/figurinha/${userId}`;
+}
+
+export function buildStickerShareMessage(
+  displayName: string,
+  publicShareUrl: string,
+): string {
+  return `${buildStickerShareText(displayName)} ${publicShareUrl}`;
+}
+
+/** Texto do WhatsApp — URL da imagem para preview inline + link público. */
+export function buildStickerWhatsAppShareText(
+  displayName: string,
+  publicShareUrl: string,
+  stickerImageUrl: string,
+): string {
+  return `${buildStickerShareText(displayName)}\n${stickerImageUrl}\n${publicShareUrl}`;
 }
 
 export async function fetchStickerImageFile(
@@ -51,6 +72,7 @@ export type StickerShareResult =
 export async function shareStickerWithNativeApi(
   stickerUrl: string,
   displayName: string,
+  publicShareUrl?: string,
 ): Promise<StickerShareResult> {
   if (typeof navigator.share !== "function") {
     return "unsupported";
@@ -58,6 +80,7 @@ export async function shareStickerWithNativeApi(
 
   const title = "Minha figurinha — Fãs da Natureza";
   const text = buildStickerShareText(displayName);
+  const linkUrl = publicShareUrl ?? stickerUrl;
 
   try {
     const file = await fetchStickerImageFile(stickerUrl);
@@ -70,8 +93,8 @@ export async function shareStickerWithNativeApi(
 
     await navigator.share({
       title,
-      text: buildStickerShareTextWithUrl(displayName, stickerUrl),
-      url: stickerUrl,
+      text: buildStickerShareTextWithUrl(displayName, linkUrl),
+      url: linkUrl,
     });
     return "shared";
   } catch (err) {

@@ -10,6 +10,7 @@ import type { ProfileAvatarVariant } from "@/lib/profile";
 import { cn } from "@/lib/utils";
 
 interface PerfilHeroAvatarProps {
+  userId: string;
   avatarSrc: string | null;
   avatarVariant: ProfileAvatarVariant | null;
   stickerUrl: string | null;
@@ -18,6 +19,7 @@ interface PerfilHeroAvatarProps {
 }
 
 export function PerfilHeroAvatar({
+  userId,
   avatarSrc,
   avatarVariant,
   stickerUrl,
@@ -60,6 +62,7 @@ export function PerfilHeroAvatar({
 
       {stickerUrl ? (
         <StickerSharePanel
+          userId={userId}
           variant="profile"
           stickerUrl={stickerUrl}
           displayName={displayName}

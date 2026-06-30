@@ -30,6 +30,9 @@ const SOCIAL_SHARE_OPTIONS: {
 interface SocialShareButtonsProps {
   shareUrl: string;
   shareText: string;
+  /** URL direta da imagem (WhatsApp). */
+  imageUrl?: string;
+  whatsAppText?: string;
   disabled?: boolean;
   size?: "sm" | "md";
   tone?: "light" | "on-dark";
@@ -42,6 +45,8 @@ interface SocialShareButtonsProps {
 export function SocialShareButtons({
   shareUrl,
   shareText,
+  imageUrl,
+  whatsAppText,
   disabled = false,
   size = "sm",
   tone = "light",
@@ -64,7 +69,10 @@ export function SocialShareButtons({
       const proceed = await onBeforeShare();
       if (proceed === false) return;
     }
-    const url = buildSocialShareUrl(platform, shareUrl, shareText);
+    const url = buildSocialShareUrl(platform, shareUrl, shareText, {
+      imageUrl,
+      whatsAppText,
+    });
     window.open(url, "_blank", "noopener,noreferrer");
   }
 
