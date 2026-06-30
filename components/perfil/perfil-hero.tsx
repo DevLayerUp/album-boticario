@@ -56,6 +56,7 @@ export function PerfilHero({ data }: PerfilHeroProps) {
       <div className="relative z-10 mx-auto flex w-full max-w-[1680px] flex-col gap-5 px-6 py-6 sm:gap-6 sm:py-8 lg:gap-7 lg:py-10 2xl:flex-row 2xl:items-end 2xl:gap-10 2xl:px-[120px] 2xl:pb-12 2xl:pt-16">
         <div className="flex min-w-0 items-center gap-4 sm:items-end sm:gap-5 md:gap-6 2xl:flex-1">
           <PerfilHeroAvatar
+            userId={profile.id}
             avatarSrc={avatar?.src ?? null}
             avatarVariant={avatar?.variant ?? null}
             stickerUrl={profile.sticker_url}

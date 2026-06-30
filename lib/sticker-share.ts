@@ -1,4 +1,14 @@
 import { registerSocialShareMission } from "@/lib/mission-share";
+import {
+  createStickerStoriesImage,
+  downloadStickerStoriesFile,
+} from "@/lib/sticker-stories-image";
+import {
+  openInstagramStories,
+  openPlatformShareUrl,
+  type SocialSharePlatform,
+  type SocialShareResult,
+} from "@/lib/social-share";
 
 export function buildStickerShareText(displayName: string): string {
   const name = displayName.trim() || "Colecionador";
@@ -7,13 +17,46 @@ export function buildStickerShareText(displayName: string): string {
 
 export function buildStickerShareTextWithUrl(
   displayName: string,
-  stickerUrl: string,
+  publicShareUrl: string,
 ): string {
-  return `${buildStickerShareText(displayName)} ${stickerUrl}`;
+  return buildStickerShareMessage(displayName, publicShareUrl);
 }
 
 export function buildStickerSharePageUrl(origin: string): string {
   return `${origin.replace(/\/$/, "")}/figurinha`;
+}
+
+export function buildAlbumShareUrl(origin: string): string {
+  return `${origin.replace(/\/$/, "")}/album`;
+}
+
+/** URL pública com og:image da figurinha — Facebook, X, LinkedIn, Telegram. */
+export function buildStickerPublicShareUrl(origin: string, userId: string): string {
+  return `${origin.replace(/\/$/, "")}/share/figurinha/${userId}`;
+}
+
+export function buildStickerShareMessage(
+  displayName: string,
+  publicShareUrl: string,
+): string {
+  return `${buildStickerShareText(displayName)} ${publicShareUrl}`;
+}
+
+/**
+ * WhatsApp: texto + links (figurinha e álbum).
+ * A prévia da figurinha vem do OG da página pública — sem URL direta da imagem.
+ */
+export function buildStickerWhatsAppShareText(
+  displayName: string,
+  publicShareUrl: string,
+  albumUrl: string,
+): string {
+  return [
+    buildStickerShareText(displayName),
+    "",
+    `🌿 Minha figurinha: ${publicShareUrl}`,
+    `📖 Álbum Fãs da Natureza: ${albumUrl}`,
+  ].join("\n");
 }
 
 export async function fetchStickerImageFile(
@@ -47,17 +90,22 @@ export type StickerShareResult =
   | "unsupported"
   | "failed";
 
-/** Compartilha via Web Share API (imagem + texto quando suportado). */
+/** Compartilhamento geral — menu nativo do sistema (imagem + texto). */
 export async function shareStickerWithNativeApi(
   stickerUrl: string,
   displayName: string,
+  publicShareUrl?: string,
+  albumUrl?: string,
 ): Promise<StickerShareResult> {
   if (typeof navigator.share !== "function") {
     return "unsupported";
   }
 
   const title = "Minha figurinha — Fãs da Natureza";
-  const text = buildStickerShareText(displayName);
+  const text = albumUrl
+    ? buildStickerWhatsAppShareText(displayName, publicShareUrl ?? stickerUrl, albumUrl)
+    : buildStickerShareText(displayName);
+  const linkUrl = publicShareUrl ?? stickerUrl;
 
   try {
     const file = await fetchStickerImageFile(stickerUrl);
@@ -70,8 +118,8 @@ export async function shareStickerWithNativeApi(
 
     await navigator.share({
       title,
-      text: buildStickerShareTextWithUrl(displayName, stickerUrl),
-      url: stickerUrl,
+      text: buildStickerShareTextWithUrl(displayName, linkUrl),
+      url: linkUrl,
     });
     return "shared";
   } catch (err) {
@@ -88,5 +136,52 @@ export async function registerStickerShareMission(): Promise<boolean> {
     return await registerSocialShareMission();
   } catch {
     return false;
+  }
+}
+
+export interface StickerPlatformShareOutcome {
+  result: SocialShareResult;
+  statusMessage?: string;
+}
+
+/**
+ * Cada botão abre a rede correspondente diretamente.
+ * Instagram: imagem no formato Stories (1080×1920).
+ */
+export async function shareStickerOnPlatform(
+  platform: SocialSharePlatform,
+  options: {
+    stickerUrl: string;
+    shareUrl: string;
+    shareText: string;
+    whatsAppText: string;
+  },
+): Promise<StickerPlatformShareOutcome> {
+  const { stickerUrl, shareUrl, shareText, whatsAppText } = options;
+
+  try {
+    if (platform === "whatsapp") {
+      openPlatformShareUrl("whatsapp", shareUrl, shareText, { whatsAppText });
+      return { result: "shared" };
+    }
+
+    if (platform === "instagram") {
+      const storiesFile = await createStickerStoriesImage(stickerUrl);
+      await downloadStickerStoriesFile(storiesFile);
+      openInstagramStories();
+      return {
+        result: "shared",
+        statusMessage:
+          "Figurinha salva no formato Stories! Abra o Instagram, escolha a imagem na galeria e publique.",
+      };
+    }
+
+    openPlatformShareUrl(platform, shareUrl, shareText);
+    return { result: "shared" };
+  } catch {
+    return {
+      result: "failed",
+      statusMessage: "Não foi possível compartilhar. Tente salvar a imagem.",
+    };
   }
 }

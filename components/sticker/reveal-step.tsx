@@ -14,12 +14,18 @@ import { STICKER_CARD } from "@/lib/sticker-card";
 import { cn } from "@/lib/utils";
 
 interface RevealStepProps {
+  userId: string;
   stickerUrl: string;
   displayName: string;
   onRecreate?: () => void;
 }
 
-export function RevealStep({ stickerUrl, displayName, onRecreate }: RevealStepProps) {
+export function RevealStep({
+  userId,
+  stickerUrl,
+  displayName,
+  onRecreate,
+}: RevealStepProps) {
   const [flipped, setFlipped] = useState(false);
   const [revealed, setRevealed] = useState(false);
   const hasLaunched = useRef(false);
@@ -131,6 +137,7 @@ export function RevealStep({ stickerUrl, displayName, onRecreate }: RevealStepPr
         </Link>
 
         <StickerSharePanel
+          userId={userId}
           stickerUrl={stickerUrl}
           displayName={displayName}
           className="border-t-0 pt-0"

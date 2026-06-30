@@ -16,11 +16,13 @@ import { StickerSharePanel } from "./sticker-share-panel";
 type Step = "existing" | "upload" | "reveal";
 
 interface StickerOnboardingProps {
+  userId: string;
   existingSticker: string | null;
   displayName: string;
 }
 
 export function StickerOnboarding({
+  userId,
   existingSticker,
   displayName,
 }: StickerOnboardingProps) {
@@ -92,7 +94,11 @@ export function StickerOnboarding({
           >
             Ver no álbum
           </Link>
-          <StickerSharePanel stickerUrl={stickerUrl} displayName={displayName} />
+          <StickerSharePanel
+            userId={userId}
+            stickerUrl={stickerUrl}
+            displayName={displayName}
+          />
           <FigurinhaOutlineButton onClick={() => setStep("upload")}>
             Criar nova figurinha
           </FigurinhaOutlineButton>
@@ -123,6 +129,7 @@ export function StickerOnboarding({
   if (step === "reveal" && stickerUrl) {
     return (
       <RevealStep
+        userId={userId}
         stickerUrl={stickerUrl}
         displayName={displayName}
         onRecreate={() => {

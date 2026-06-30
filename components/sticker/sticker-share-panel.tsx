@@ -4,8 +4,10 @@ import { useCallback, useState } from "react";
 import { Download, Loader2, Share2 } from "lucide-react";
 import { SocialShareButtons } from "@/components/ui/social-share-buttons";
 import {
-  buildStickerSharePageUrl,
-  buildStickerShareTextWithUrl,
+  buildAlbumShareUrl,
+  buildStickerPublicShareUrl,
+  buildStickerShareMessage,
+  buildStickerWhatsAppShareText,
   downloadSticker,
   registerStickerShareMission,
   shareStickerWithNativeApi,
@@ -14,6 +16,7 @@ import { FigurinhaOutlineButton, FigurinhaPrimaryButton } from "./figurinha-acti
 import { cn } from "@/lib/utils";
 
 interface StickerSharePanelProps {
+  userId: string;
   stickerUrl: string;
   displayName: string;
   className?: string;
@@ -44,6 +47,7 @@ function ShareDivider({ onDark }: { onDark?: boolean }) {
 }
 
 export function StickerSharePanel({
+  userId,
   stickerUrl,
   displayName,
   className,
@@ -52,11 +56,17 @@ export function StickerSharePanel({
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
 
-  const shareUrl =
-    typeof window !== "undefined"
-      ? buildStickerSharePageUrl(window.location.origin)
-      : "/figurinha";
-  const shareText = buildStickerShareTextWithUrl(displayName, stickerUrl);
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  const publicShareUrl = origin
+    ? buildStickerPublicShareUrl(origin, userId)
+    : `/share/figurinha/${userId}`;
+  const albumUrl = origin ? buildAlbumShareUrl(origin) : "/album";
+  const shareText = buildStickerShareMessage(displayName, publicShareUrl);
+  const whatsAppText = buildStickerWhatsAppShareText(
+    displayName,
+    publicShareUrl,
+    albumUrl,
+  );
   const isProfile = variant === "profile";
 
   const completeShare = useCallback(async () => {
@@ -74,7 +84,12 @@ export function StickerSharePanel({
     setBusy(true);
     setStatus(null);
     try {
-      const result = await shareStickerWithNativeApi(stickerUrl, displayName);
+      const result = await shareStickerWithNativeApi(
+        stickerUrl,
+        displayName,
+        publicShareUrl,
+        albumUrl,
+      );
       if (result === "shared") {
         await registerStickerShareMission();
         showStatus("Compartilhado!");
@@ -127,14 +142,17 @@ export function StickerSharePanel({
 
   const socialRow = (
     <SocialShareButtons
-      shareUrl={shareUrl}
+      shareUrl={publicShareUrl}
       shareText={shareText}
+      imageUrl={stickerUrl}
+      whatsAppText={whatsAppText}
       disabled={busy}
       size={isProfile ? "sm" : "md"}
       tone="on-dark"
       hideNativeShare
       onBeforeShare={completeShare}
       onNativeShare={nativeShare}
+      onShareStatus={showStatus}
     />
   );
 

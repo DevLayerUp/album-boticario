@@ -34,6 +34,7 @@ export default async function FigurinhaPage() {
   return (
     <FigurinhaPageShell>
       <StickerOnboarding
+        userId={user.id}
         existingSticker={existingSticker}
         displayName={displayName}
       />
