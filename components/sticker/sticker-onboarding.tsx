@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import type { StickerPhotoTransform } from "@/lib/sticker-card";
+import { compressCutoutPngForUpload } from "@/lib/normalize-image-file";
 import {
   FigurinhaOutlineButton,
 } from "./figurinha-actions";
@@ -37,13 +38,14 @@ export function StickerOnboarding({
     setApiError(null);
     setGenerating(true);
 
-    const formData = new FormData();
-    formData.append("cutout", cutoutBlob, "cutout.png");
-    formData.append("offset_x", String(transform.offsetX));
-    formData.append("offset_y", String(transform.offsetY));
-    formData.append("scale", String(transform.scale));
-
     try {
+      const cutout = await compressCutoutPngForUpload(cutoutBlob);
+      const formData = new FormData();
+      formData.append("cutout", cutout, "cutout.png");
+      formData.append("offset_x", String(transform.offsetX));
+      formData.append("offset_y", String(transform.offsetY));
+      formData.append("scale", String(transform.scale));
+
       const res = await fetch("/api/sticker/generate", {
         method: "POST",
         body: formData,

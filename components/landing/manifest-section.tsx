@@ -4,12 +4,19 @@ import { useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Play, Volume2, VolumeX } from "lucide-react";
 import { LandingImage } from "@/components/landing/landing-image";
+import { getYoutubeEmbedUrl } from "@/lib/youtube-embed";
+
+/** Vídeo Somos Fãs no YouTube — exibido no lugar do upload; o MP4 do admin permanece oculto. */
+const MANIFEST_YOUTUBE_EMBED_SRC =
+  "https://www.youtube.com/embed/gmqSARA8Svo?si=ucEFfIJv-uMGalUQ";
 
 export interface LandingManifestProps {
   titleRegular?: string;
   titleBold?: string;
   videoUrl?:   string | null;
   posterUrl?:  string | null;
+  /** Se definido (ou padrão Somos Fãs), exibe embed do YouTube em vez do player de upload. */
+  youtubeUrl?: string | null;
 }
 
 export function LandingManifest({
@@ -17,7 +24,10 @@ export function LandingManifest({
   titleBold    = "de mudança",
   videoUrl,
   posterUrl,
+  youtubeUrl = MANIFEST_YOUTUBE_EMBED_SRC,
 }: LandingManifestProps) {
+  const youtubeEmbed =
+    getYoutubeEmbedUrl(youtubeUrl ?? "") ?? MANIFEST_YOUTUBE_EMBED_SRC;
   return (
     <section
       id="manifesto"
@@ -43,7 +53,22 @@ export function LandingManifest({
           transition={{ duration: 0.6, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
           className="w-full max-w-[1116px]"
         >
-          {videoUrl ? (
+          {youtubeEmbed ? (
+            <>
+              <ManifestYoutube src={youtubeEmbed} />
+              {videoUrl ? (
+                <video
+                  src={videoUrl}
+                  poster={posterUrl ?? undefined}
+                  className="hidden"
+                  aria-hidden
+                  preload="none"
+                  muted
+                  playsInline
+                />
+              ) : null}
+            </>
+          ) : videoUrl ? (
             <ManifestVideo src={videoUrl} poster={posterUrl ?? undefined} />
           ) : posterUrl ? (
             <div className="relative aspect-video w-full overflow-hidden rounded-[24px] bg-verde-escuro-500/10 sm:rounded-[30px]">
@@ -68,6 +93,24 @@ export function LandingManifest({
         </motion.div>
       </div>
     </section>
+  );
+}
+
+function ManifestYoutube({ src }: { src: string }) {
+  return (
+    <div className="relative aspect-video w-full overflow-hidden rounded-[24px] bg-black shadow-[0_4px_24px_rgba(13,102,50,0.12)] sm:rounded-[30px]">
+      <iframe
+        width={560}
+        height={315}
+        src={src}
+        title="YouTube video player"
+        frameBorder={0}
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        referrerPolicy="strict-origin-when-cross-origin"
+        allowFullScreen
+        className="absolute inset-0 size-full border-0"
+      />
+    </div>
   );
 }
 

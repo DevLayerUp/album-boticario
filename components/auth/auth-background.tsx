@@ -137,15 +137,13 @@ export function AuthBackground({ children }: AuthBackgroundProps) {
           animate="visible"
           className="relative z-10 px-[55px]"
         >
-          <h1 className="max-w-[550px] font-display text-[2.75rem] leading-[1.11] text-white xl:text-[3.375rem] xl:leading-[60px]">
-            <span className="font-normal">Cuide da natureza,</span>
+          <h1 className="max-w-[550px] font-display text-[2rem] leading-[1.12] text-white lg:text-[2.125rem] xl:text-[2.5rem] xl:leading-[1.12] 2xl:text-[3.375rem] 2xl:leading-[60px]">
+            <span className="font-normal">Complete o álbum.</span>
             <br />
-            <span className="font-bold text-verde-genz">colecione</span>{" "}
-            <span className="font-normal">momentos.</span>
+            <span className="font-bold text-verde-genz">Seja um Fã por natureza!</span>{" "}
           </h1>
-          <p className="mt-6 max-w-[509px] text-lg leading-tight text-white xl:text-2xl xl:leading-[30px]">
-            Descubra a biodiversidade brasileira e complete seu álbum digital dos
-            Fãs por Natureza.
+          <p className="mt-5 max-w-[509px] text-base leading-snug text-white lg:text-[1.0625rem] xl:mt-6 xl:text-lg xl:leading-relaxed 2xl:text-2xl 2xl:leading-[30px]">
+            Descubra a biodiversidade brasileira e colecione figurinhas no seu álbum digital dos Fãs por Natureza.
           </p>
         </motion.div>
 

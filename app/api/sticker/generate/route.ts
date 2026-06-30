@@ -9,7 +9,7 @@ export const runtime = "nodejs";
 export const maxDuration = 60;
 
 const ALLOWED_TYPES = ["image/png", "image/jpeg", "image/jpg", "image/webp"];
-const MAX_SIZE_BYTES = 12 * 1024 * 1024;
+const MAX_SIZE_BYTES = 15 * 1024 * 1024;
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
@@ -42,7 +42,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Formato de recorte inválido." }, { status: 400 });
   }
   if (cutout.size > MAX_SIZE_BYTES) {
-    return NextResponse.json({ error: "Recorte muito grande." }, { status: 400 });
+    return NextResponse.json(
+      {
+        error: `Recorte muito grande (${(cutout.size / (1024 * 1024)).toFixed(1)} MB). Tente outra foto.`,
+      },
+      { status: 400 },
+    );
   }
 
   const transform = parseStickerPhotoTransform(formData);

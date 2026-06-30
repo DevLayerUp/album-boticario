@@ -13,6 +13,8 @@ interface FigurinhaNameTagProps {
   overlay?: boolean;
   /** Cola na base do card (slots do álbum) — evita sobrepor ícone central. */
   pinBottom?: boolean;
+  /** Tag da figurinha personalizada do usuário (template "Minha Figurinha"). */
+  profile?: boolean;
   className?: string;
 }
 
@@ -23,6 +25,7 @@ export function FigurinhaNameTag({
   compact = false,
   overlay = false,
   pinBottom = false,
+  profile = false,
   className,
 }: FigurinhaNameTagProps) {
   const label = stickerTextToPlain(name);
@@ -34,12 +37,14 @@ export function FigurinhaNameTag({
     <span
       className={cn(
         "flex items-end justify-center text-center font-display font-bold uppercase text-white",
-        isAlbumSlot
-          ? "w-full line-clamp-2 rounded-none rounded-tl-input px-1.5 py-0.5 text-[7px] leading-[1.15] sm:px-2 sm:py-1 sm:text-[8px] md:text-[9px]"
-          : compact
-            ? "max-w-full line-clamp-2 rounded-card rounded-br-none px-1.5 py-0.5 text-[7px] leading-[1.15] sm:px-2 sm:py-1 sm:text-[8px] md:text-[9px] lg:text-[10px]"
-            : "rounded-card rounded-br-none px-3 py-1.5 text-sm leading-tight sm:px-4 sm:py-2 sm:text-lg sm:leading-8",
-        fullWidth && !isAlbumSlot && "w-full",
+        profile
+          ? "max-w-full min-h-0 line-clamp-2 overflow-hidden rounded-card rounded-br-none px-1.5 py-0.5 text-[8px] leading-[1.1] sm:px-2 sm:py-1 sm:text-[9px] sm:leading-[1.12] md:px-2.5 md:py-1 md:text-[10px] [&_em]:text-[0.92em] [&_em]:leading-[1.05]"
+          : isAlbumSlot
+            ? "w-full line-clamp-2 rounded-none rounded-tl-input px-1.5 py-0.5 text-[7px] leading-[1.15] sm:px-2 sm:py-1 sm:text-[8px] md:text-[9px]"
+            : compact
+              ? "max-w-full line-clamp-2 rounded-card rounded-br-none px-1.5 py-0.5 text-[7px] leading-[1.15] sm:px-2 sm:py-1 sm:text-[8px] md:text-[9px] lg:text-[10px]"
+              : "rounded-card rounded-br-none px-3 py-1.5 text-sm leading-tight sm:px-4 sm:py-2 sm:text-lg sm:leading-8",
+        fullWidth && !isAlbumSlot && !profile && "w-full",
       )}
       style={{ backgroundColor: bgColor ?? rarityTheme("common").nameTag }}
     >
@@ -53,11 +58,13 @@ export function FigurinhaNameTag({
     <div
       className={cn(
         "pointer-events-none absolute z-10 flex justify-center",
-        isAlbumSlot
-          ? "inset-x-0 bottom-0"
-          : compact
-            ? "inset-x-1 bottom-[6%] sm:inset-x-1.5 sm:bottom-[8%] md:bottom-[10%]"
-            : "inset-x-2 bottom-[10%] sm:inset-x-3 sm:bottom-[12%] md:bottom-16",
+        profile
+          ? "inset-x-2 bottom-0 items-end sm:inset-x-3"
+          : isAlbumSlot
+            ? "inset-x-0 bottom-0"
+            : compact
+              ? "inset-x-1 bottom-[6%] sm:inset-x-1.5 sm:bottom-[8%] md:bottom-[10%]"
+              : "inset-x-2 bottom-[10%] sm:inset-x-3 sm:bottom-[12%] md:bottom-16",
         className,
       )}
     >
