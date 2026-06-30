@@ -41,7 +41,7 @@ const nextConfig = {
           // Disable browser features not in use
           {
             key: "Permissions-Policy",
-            value: "camera=(), microphone=(), geolocation=(), interest-cohort=()",
+            value: "camera=(self), microphone=(), geolocation=(), interest-cohort=()",
           },
           // CSP — allow Supabase, Google Fonts and self
           {

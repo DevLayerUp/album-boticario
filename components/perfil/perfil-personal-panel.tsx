@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Pencil } from "lucide-react";
 import type { ProfilePageData } from "@/lib/profile";
 import { cn } from "@/lib/utils";
+import { formatPhoneBR, isValidPhoneBR } from "@/lib/phone";
 import { PerfilFormActions } from "./perfil-form-actions";
 import { usePerfilToast } from "./perfil-toast";
 
@@ -13,6 +14,7 @@ interface PerfilPersonalPanelProps {
   onSave: (payload: {
     display_name: string;
     bio: string | null;
+    phone: string | null;
   }) => Promise<void>;
 }
 
@@ -47,14 +49,17 @@ export function PerfilPersonalPanel({
 }: PerfilPersonalPanelProps) {
   const initialName = data.profile.display_name ?? "";
   const initialBio = data.profile.bio ?? "";
+  const initialPhone = data.profile.phone ?? "";
 
   const [displayName, setDisplayName] = useState(initialName);
   const [bio, setBio] = useState(initialBio);
+  const [phone, setPhone] = useState(initialPhone);
   const { showToast } = usePerfilToast();
 
   function handleCancel() {
     setDisplayName(initialName);
     setBio(initialBio);
+    setPhone(initialPhone);
   }
 
   async function handleSave() {
@@ -62,10 +67,18 @@ export function PerfilPersonalPanel({
       showToast({ message: "Informe seu nome completo.", variant: "warning" });
       return;
     }
+    if (phone.trim() && !isValidPhoneBR(phone)) {
+      showToast({
+        message: "Informe um telefone válido: (00) 0000-0000 ou (00) 00000-0000.",
+        variant: "warning",
+      });
+      return;
+    }
     try {
       await onSave({
         display_name: displayName.trim(),
         bio: bio.trim() || null,
+        phone: phone.trim() || null,
       });
       showToast("Dados pessoais atualizados.");
     } catch (err) {
@@ -108,6 +121,19 @@ export function PerfilPersonalPanel({
                 aria-hidden
               />
             </div>
+          </div>
+
+          <div className="space-y-3">
+            <FieldLabel>Telefone</FieldLabel>
+            <PillInput
+              value={phone}
+              onChange={(e) => setPhone(formatPhoneBR(e.target.value))}
+              type="tel"
+              inputMode="tel"
+              autoComplete="tel"
+              placeholder="(00) 00000-0000"
+              maxLength={16}
+            />
           </div>
         </div>
 

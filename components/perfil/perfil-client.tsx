@@ -54,7 +54,7 @@ function PerfilClientContent({ initialData }: PerfilClientProps) {
         >
           {activeTab === "personal" ? (
             <PerfilPersonalPanel
-              key={`personal-${data.profile.display_name}-${data.profile.bio}`}
+              key={`personal-${data.profile.display_name}-${data.profile.bio}-${data.profile.phone}`}
               data={data}
               saving={saving}
               onSave={async (payload) => {
