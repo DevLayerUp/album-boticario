@@ -18,7 +18,7 @@ interface WordmarkProps {
 }
 
 /**
- * Marca "Fãs da Natureza".
+ * Marca "Fãs por Natureza".
  *
  * Renderiza o logotipo (`lib/dashboard-assets.ts → logo`) quando disponível e,
  * enquanto a imagem não for importada, exibe um fallback textual on-brand.
@@ -44,7 +44,7 @@ export function Wordmark({
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={dashboardAssets.logo}
-          alt="Fãs da Natureza"
+          alt="Fãs por Natureza"
           className={cn(
             "h-10 w-auto",
             hideLogoBelowLg && "max-lg:hidden",
@@ -60,7 +60,7 @@ export function Wordmark({
               titleColor,
             )}
           >
-            Fãs da Natureza
+            Fãs por Natureza
           </span>
           <span
             className={cn(

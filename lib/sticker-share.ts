@@ -12,7 +12,7 @@ import {
 
 export function buildStickerShareText(displayName: string): string {
   const name = displayName.trim() || "Colecionador";
-  return `Criei minha figurinha no álbum Fãs da Natureza! 🌿 — ${name}`;
+  return `Criei minha figurinha no álbum Fãs por Natureza! 🌿 — ${name}`;
 }
 
 export function buildStickerShareTextWithUrl(
@@ -55,7 +55,7 @@ export function buildStickerWhatsAppShareText(
     buildStickerShareText(displayName),
     "",
     `🌿 Minha figurinha: ${publicShareUrl}`,
-    `📖 Álbum Fãs da Natureza: ${albumUrl}`,
+    `📖 Álbum Fãs por Natureza: ${albumUrl}`,
   ].join("\n");
 }
 
@@ -101,7 +101,7 @@ export async function shareStickerWithNativeApi(
     return "unsupported";
   }
 
-  const title = "Minha figurinha — Fãs da Natureza";
+  const title = "Minha figurinha — Fãs por Natureza";
   const text = albumUrl
     ? buildStickerWhatsAppShareText(displayName, publicShareUrl ?? stickerUrl, albumUrl)
     : buildStickerShareText(displayName);

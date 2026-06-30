@@ -30,7 +30,7 @@ const NOTIFICATION_ITEMS = [
   {
     key: "notify_marketing" as const,
     title: "E-mail de marketing",
-    description: "Novidades, campanhas e conteúdos dos Fãs da Natureza.",
+    description: "Novidades, campanhas e conteúdos dos Fãs por Natureza.",
   },
 ];
 

@@ -26,7 +26,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 
   const displayName = profile.display_name?.trim() || "Colecionador";
-  const title = `Figurinha de ${displayName} — Fãs da Natureza`;
+  const title = `Figurinha de ${displayName} — Fãs por Natureza`;
   const description = buildStickerShareText(displayName);
   const siteUrl = getSiteUrl();
   const pageUrl = `${siteUrl}/share/figurinha/${userId}`;
@@ -42,7 +42,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       url: pageUrl,
       type: "website",
       locale: "pt_BR",
-      siteName: "Fãs da Natureza",
+      siteName: "Fãs por Natureza",
       images: [
         {
           url: ogImageUrl,
@@ -79,7 +79,7 @@ export default async function StickerPublicSharePage({ params }: PageProps) {
     <main className="flex min-h-dvh flex-col items-center justify-center bg-verde-escuro-500 px-4 py-10">
       <div className="flex w-full max-w-sm flex-col items-center gap-6 text-center">
         <p className="text-sm font-medium uppercase tracking-[0.14em] text-verde-100">
-          Fãs da Natureza
+          Fãs por Natureza
         </p>
         <h1 className="font-display text-2xl font-bold text-white sm:text-3xl">
           Figurinha de {displayName}

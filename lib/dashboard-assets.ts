@@ -16,7 +16,7 @@ const BASE = "/images/dashboard";
 export const dashboardAssets = {
   /** Banner do topo da dashboard. */
   hero: `${BASE}/hero.png`,
-  /** Logotipo "Fãs da Natureza" usado no header. */
+  /** Logotipo "Fãs por Natureza" usado no header. */
   logo: `${BASE}/logo.png`,
   /** Páginas de autenticação (login / cadastro). */
   auth: {

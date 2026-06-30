@@ -48,7 +48,7 @@ export function InviteCard({ data, inviterName }: InviteCardProps) {
     }
     try {
       await navigator.share({
-        title: "Álbum Fãs da Natureza",
+        title: "Álbum Fãs por Natureza",
         text: shareText,
         url: data.invite_url,
       });
