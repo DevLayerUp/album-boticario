@@ -2,7 +2,19 @@
 const MAX_EDGE_PX = 1600;
 /** Limite do arquivo bruto da câmera/galeria (antes de comprimir). */
 export const MAX_RAW_INPUT_BYTES = 40 * 1024 * 1024;
-const JPEG_QUALITY = 0.86;
+const JPEG_QUALITY = 0.92;
+const MAX_PREPARED_BYTES = 4 * 1024 * 1024;
+
+function prefersLosslessOutput(file: File): boolean {
+  const type = file.type.toLowerCase();
+  const name = file.name.toLowerCase();
+  return (
+    type === "image/png" ||
+    type === "image/webp" ||
+    name.endsWith(".png") ||
+    name.endsWith(".webp")
+  );
+}
 
 function isAllowedInputType(file: File): boolean {
   const type = file.type.toLowerCase();
@@ -37,9 +49,46 @@ async function canvasToJpegFile(
   return new File([blob], fileName, { type: "image/jpeg" });
 }
 
+async function canvasToPngFile(
+  canvas: HTMLCanvasElement,
+  fileName: string,
+): Promise<File> {
+  const blob = await new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob(
+      (result) =>
+        result ? resolve(result) : reject(new Error("Falha ao preparar a foto.")),
+      "image/png",
+    );
+  });
+
+  return new File([blob], fileName, { type: "image/png" });
+}
+
+async function compressCanvasToFit(
+  canvas: HTMLCanvasElement,
+  baseName: string,
+  preferPng: boolean,
+): Promise<File> {
+  if (preferPng) {
+    const png = await canvasToPngFile(canvas, `${baseName}.png`);
+    if (png.size <= MAX_PREPARED_BYTES) return png;
+  }
+
+  let quality = JPEG_QUALITY;
+  let prepared = await canvasToJpegFile(canvas, `${baseName}.jpg`, quality);
+
+  while (prepared.size > MAX_PREPARED_BYTES && quality > 0.55) {
+    quality -= 0.08;
+    prepared = await canvasToJpegFile(canvas, `${baseName}.jpg`, quality);
+  }
+
+  return prepared;
+}
+
 /**
- * Normaliza selfies da câmera: redimensiona, comprime em JPEG e reduz peso
- * para caber no fluxo de remoção de fundo e no upload da API.
+ * Normaliza selfies da câmera: redimensiona e comprime para caber no fluxo
+ * de remoção de fundo. PNG/WebP viram PNG (melhor para bordas); JPEG/HEIC
+ * permanecem em JPEG com qualidade mais alta.
  */
 export async function prepareImageFileForUpload(file: File): Promise<File> {
   if (!isAllowedInputType(file)) {
@@ -79,16 +128,7 @@ export async function prepareImageFileForUpload(file: File): Promise<File> {
     ctx.drawImage(bitmap, 0, 0, width, height);
 
     const baseName = file.name.replace(/\.[^.]+$/, "") || "selfie";
-    let quality = JPEG_QUALITY;
-    let prepared = await canvasToJpegFile(canvas, `${baseName}.jpg`, quality);
-
-    // Selfies em alta resolução podem ainda passar de ~4MB — comprime mais se preciso
-    while (prepared.size > 4 * 1024 * 1024 && quality > 0.55) {
-      quality -= 0.08;
-      prepared = await canvasToJpegFile(canvas, `${baseName}.jpg`, quality);
-    }
-
-    return prepared;
+    return compressCanvasToFit(canvas, baseName, prefersLosslessOutput(file));
   } finally {
     bitmap.close();
   }

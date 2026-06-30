@@ -45,7 +45,7 @@ export async function removeBackgroundInBrowser(
 
   const blob = await removeBackground(file, {
     publicPath: IMGLY_PUBLIC_PATH,
-    model: "isnet_quint8",
+    model: "isnet_fp16",
     proxyToWorker: false,
     output: { format: "image/png" },
     progress: (_key: string, current: number, total: number) => {
