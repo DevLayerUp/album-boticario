@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { getSiteUrl } from "@/lib/seo-metadata";
 import { createClient } from "@/lib/supabase/server";
 import { buildStickerShareText } from "@/lib/sticker-share";
+import { dashboardAssets } from "@/lib/dashboard-assets";
 
 interface PageProps {
   params: Promise<{ userId: string }>;
@@ -78,9 +79,14 @@ export default async function StickerPublicSharePage({ params }: PageProps) {
   return (
     <main className="flex min-h-dvh flex-col items-center justify-center bg-verde-escuro-500 px-4 py-10">
       <div className="flex w-full max-w-sm flex-col items-center gap-6 text-center">
-        <p className="text-sm font-medium uppercase tracking-[0.14em] text-verde-100">
-          Fãs da Natureza
-        </p>
+        <Image
+          src={dashboardAssets.auth.logoBranco}
+          alt="Somos Fãs por Natureza"
+          width={140}
+          height={70}
+          className="h-auto w-[min(100%,140px)] object-contain"
+          priority
+        />
         <h1 className="font-display text-2xl font-bold text-white sm:text-3xl">
           Figurinha de {displayName}
         </h1>
