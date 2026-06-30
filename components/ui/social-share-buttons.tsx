@@ -3,6 +3,7 @@
 import { Share2 } from "lucide-react";
 import {
   FaFacebookF,
+  FaInstagram,
   FaLinkedinIn,
   FaTelegram,
   FaWhatsapp,
@@ -10,8 +11,10 @@ import {
 } from "react-icons/fa6";
 import {
   buildSocialShareUrl,
+  shareToInstagram,
   type SocialSharePlatform,
 } from "@/lib/social-share";
+import { downloadSticker, fetchStickerImageFile, shareStickerOnPlatform } from "@/lib/sticker-share";
 import { cn } from "@/lib/utils";
 
 const SOCIAL_SHARE_OPTIONS: {
@@ -21,6 +24,7 @@ const SOCIAL_SHARE_OPTIONS: {
   color: string;
 }[] = [
   { platform: "whatsapp", label: "WhatsApp", Icon: FaWhatsapp, color: "#25D366" },
+  { platform: "instagram", label: "Instagram", Icon: FaInstagram, color: "#E4405F" },
   { platform: "facebook", label: "Facebook", Icon: FaFacebookF, color: "#1877F2" },
   { platform: "twitter", label: "X", Icon: FaXTwitter, color: "#0F172A" },
   { platform: "linkedin", label: "LinkedIn", Icon: FaLinkedinIn, color: "#0A66C2" },
@@ -30,7 +34,7 @@ const SOCIAL_SHARE_OPTIONS: {
 interface SocialShareButtonsProps {
   shareUrl: string;
   shareText: string;
-  /** URL direta da imagem (WhatsApp). */
+  /** Quando informado, compartilha a imagem da figurinha em todas as redes. */
   imageUrl?: string;
   whatsAppText?: string;
   disabled?: boolean;
@@ -40,6 +44,8 @@ interface SocialShareButtonsProps {
   className?: string;
   onBeforeShare?: () => void | Promise<boolean | void>;
   onNativeShare: () => void | Promise<void>;
+  onInstagramShare?: () => void | Promise<void>;
+  onShareStatus?: (message: string) => void;
 }
 
 export function SocialShareButtons({
@@ -54,6 +60,8 @@ export function SocialShareButtons({
   className,
   onBeforeShare,
   onNativeShare,
+  onInstagramShare,
+  onShareStatus,
 }: SocialShareButtonsProps) {
   const buttonSize =
     size === "md" ? "size-11 min-w-11" : "size-10 min-w-10 sm:size-11 sm:min-w-11";
@@ -69,19 +77,62 @@ export function SocialShareButtons({
       const proceed = await onBeforeShare();
       if (proceed === false) return;
     }
+
+    if (imageUrl && whatsAppText) {
+      const { result, statusMessage } = await shareStickerOnPlatform(platform, {
+        stickerUrl: imageUrl,
+        shareUrl,
+        shareText,
+        whatsAppText,
+      });
+
+      if (statusMessage) onShareStatus?.(statusMessage);
+      if (result === "failed") {
+        onShareStatus?.("Não foi possível compartilhar. Tente salvar a imagem.");
+      }
+      return;
+    }
+
+    if (platform === "instagram") {
+      if (onInstagramShare) {
+        await onInstagramShare();
+        return;
+      }
+
+      const result = await shareToInstagram({
+        imageUrl,
+        shareText,
+        fetchImageFile: imageUrl ? fetchStickerImageFile : undefined,
+        downloadImage: imageUrl ? downloadSticker : undefined,
+      });
+
+      if (result === "shared") {
+        onShareStatus?.(
+          imageUrl
+            ? "Imagem pronta! Escolha o Instagram para publicar nos Stories ou no feed."
+            : "Link copiado! Cole no Instagram para compartilhar.",
+        );
+      } else if (result === "failed") {
+        onShareStatus?.("Não foi possível compartilhar no Instagram. Tente salvar a imagem.");
+      }
+      return;
+    }
+
     const url = buildSocialShareUrl(platform, shareUrl, shareText, {
       imageUrl,
       whatsAppText,
     });
-    window.open(url, "_blank", "noopener,noreferrer");
+    if (url) {
+      window.open(url, "_blank", "noopener,noreferrer");
+    }
   }
 
   return (
     <div
       className={cn(
-        "grid w-full grid-cols-5 gap-2",
-        hideNativeShare && "grid-cols-5",
-        !hideNativeShare && "sm:grid-cols-6",
+        "grid w-full grid-cols-6 gap-2",
+        hideNativeShare && "grid-cols-6",
+        !hideNativeShare && "sm:grid-cols-7",
         className,
       )}
       role="group"
@@ -111,7 +162,7 @@ export function SocialShareButtons({
           disabled={disabled}
           aria-label="Mais opções de compartilhamento"
           className={cn(
-            "col-span-5 inline-flex cursor-pointer items-center justify-center gap-2 rounded-full border px-4 py-2.5 text-xs font-semibold transition-all duration-200 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 sm:col-span-1 sm:px-0",
+            "col-span-6 inline-flex cursor-pointer items-center justify-center gap-2 rounded-full border px-4 py-2.5 text-xs font-semibold transition-all duration-200 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 sm:col-span-1 sm:px-0",
             buttonClass,
           )}
         >

@@ -28,12 +28,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const displayName = profile.display_name?.trim() || "Colecionador";
   const title = `Figurinha de ${displayName} — Fãs da Natureza`;
   const description = buildStickerShareText(displayName);
-  const pageUrl = `${getSiteUrl()}/share/figurinha/${userId}`;
+  const siteUrl = getSiteUrl();
+  const pageUrl = `${siteUrl}/share/figurinha/${userId}`;
+  const ogImageUrl = `${siteUrl}/api/share/sticker/${userId}`;
 
   return {
     title,
     description,
-    metadataBase: new URL(getSiteUrl()),
+    metadataBase: new URL(siteUrl),
     openGraph: {
       title,
       description,
@@ -43,7 +45,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       siteName: "Fãs da Natureza",
       images: [
         {
-          url: profile.sticker_url,
+          url: ogImageUrl,
           width: 352,
           height: 503,
           alt: `Figurinha de ${displayName}`,
@@ -54,7 +56,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       card: "summary_large_image",
       title,
       description,
-      images: [profile.sticker_url],
+      images: [ogImageUrl],
     },
     robots: { index: true, follow: true },
   };

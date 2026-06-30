@@ -149,6 +149,7 @@ export function StickerSharePanel({
       hideNativeShare
       onBeforeShare={completeShare}
       onNativeShare={nativeShare}
+      onShareStatus={showStatus}
     />
   );
 

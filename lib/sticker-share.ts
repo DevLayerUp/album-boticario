@@ -1,4 +1,13 @@
 import { registerSocialShareMission } from "@/lib/mission-share";
+import {
+  buildShareTextWithImage,
+  openPlatformShareUrl,
+  shareToInstagram,
+  tryCopyImageFile,
+  tryShareImageFile,
+  type SocialSharePlatform,
+  type SocialShareResult,
+} from "@/lib/social-share";
 
 export function buildStickerShareText(displayName: string): string {
   const name = displayName.trim() || "Colecionador";
@@ -111,5 +120,89 @@ export async function registerStickerShareMission(): Promise<boolean> {
     return await registerSocialShareMission();
   } catch {
     return false;
+  }
+}
+
+export interface StickerPlatformShareOutcome {
+  result: SocialShareResult;
+  statusMessage?: string;
+}
+
+/**
+ * Compartilha figurinha em rede específica com a imagem sempre incluída:
+ * - mobile: Web Share API com arquivo de imagem
+ * - WhatsApp/Telegram/X: URL da imagem no texto (preview inline)
+ * - desktop: salva/copia imagem + abre rede social
+ */
+export async function shareStickerOnPlatform(
+  platform: SocialSharePlatform,
+  options: {
+    stickerUrl: string;
+    shareUrl: string;
+    shareText: string;
+    whatsAppText: string;
+  },
+): Promise<StickerPlatformShareOutcome> {
+  const { stickerUrl, shareUrl, shareText, whatsAppText } = options;
+  const shareTitle = "Minha figurinha — Fãs da Natureza";
+  const textWithImage = buildShareTextWithImage(shareText, stickerUrl);
+
+  try {
+    const file = await fetchStickerImageFile(stickerUrl);
+
+    if (platform === "whatsapp") {
+      openPlatformShareUrl("whatsapp", shareUrl, shareText, {
+        imageUrl: stickerUrl,
+        whatsAppText,
+      });
+      return { result: "shared" };
+    }
+
+    if (platform === "instagram") {
+      const igResult = await shareToInstagram({
+        imageUrl: stickerUrl,
+        shareText: textWithImage,
+        fetchImageFile: fetchStickerImageFile,
+        downloadImage: downloadSticker,
+      });
+      if (igResult === "shared") {
+        return {
+          result: "shared",
+          statusMessage:
+            "Imagem pronta! Publique nos Stories ou no feed do Instagram.",
+        };
+      }
+      return { result: igResult };
+    }
+
+    // Mobile: envia arquivo de imagem pelo compartilhamento nativo
+    const nativeResult = await tryShareImageFile({
+      file,
+      text: textWithImage,
+      title: shareTitle,
+    });
+    if (nativeResult === "shared") return { result: "shared" };
+    if (nativeResult === "cancelled") return { result: "cancelled" };
+
+    // Fallback: imagem no texto + download/cópia para anexar manualmente
+    const copied = await tryCopyImageFile(file);
+    await downloadSticker(stickerUrl);
+
+    openPlatformShareUrl(platform, shareUrl, shareText, { imageUrl: stickerUrl });
+
+    if (copied) {
+      return {
+        result: "shared",
+        statusMessage:
+          "Figurinha copiada e salva! Cole a imagem (Ctrl+V) na publicação.",
+      };
+    }
+
+    return {
+      result: "shared",
+      statusMessage: "Figurinha salva! Anexe a imagem à publicação.",
+    };
+  } catch {
+    return { result: "failed" };
   }
 }

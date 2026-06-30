@@ -26,6 +26,7 @@ const ALWAYS_PUBLIC = [
   "/.well-known/",
   "/opengraph-image",
   "/share/",              // preview pública da figurinha (OG para redes sociais)
+  "/api/share/",          // redirect da imagem OG da figurinha
   "/api/categories",      // endpoint público de categorias
   "/api/leads",           // captura de leads da landing (pré-cadastro)
 ];
