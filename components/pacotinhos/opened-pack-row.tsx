@@ -71,6 +71,10 @@ export function OpenedPackRow({ pack }: OpenedPackRowProps) {
               );
             })}
           </div>
+        ) : pack.historyIncomplete ? (
+          <p className="text-sm text-verde-400 sm:text-base 2xl:text-lg">
+            Abertura sem registro de figurinhas (versão anterior do sistema)
+          </p>
         ) : (
           <p className="text-sm text-verde-400 sm:text-base 2xl:text-lg">
             Figurinhas não registradas neste histórico

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { collectPastedStickerIds } from "@/lib/user-album-pasted";
 
 type RarityRow = {
   name: string;
@@ -32,7 +33,10 @@ export async function GET() {
       .select("sticker_id, quantity")
       .eq("user_id", user.id)
       .gte("quantity", 1),
-    supabase.from("user_album").select("sticker_id").eq("user_id", user.id),
+    supabase
+      .from("user_album")
+      .select("sticker_id, album_slots ( sticker_id )")
+      .eq("user_id", user.id),
     supabase
       .from("trade_wishes")
       .select("sticker_id")
@@ -63,10 +67,7 @@ export async function GET() {
     quantityBySticker.set(row.sticker_id, row.quantity);
   }
 
-  const pastedStickerIds = new Set<number>();
-  for (const row of pastedRes.data ?? []) {
-    if (row.sticker_id != null) pastedStickerIds.add(row.sticker_id);
-  }
+  const pastedStickerIds = collectPastedStickerIds(pastedRes.data ?? []);
 
   const openWishStickerIds = new Set<number>();
   for (const row of wishesRes.data ?? []) {

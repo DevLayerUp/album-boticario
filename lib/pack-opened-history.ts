@@ -36,17 +36,22 @@ export function normalizePackStickerRows(rows: PackSticker[]): PackSticker[] {
 }
 
 export function mapOpenedPackHistory(rows: OpenedPackRow[]): OpenedPackHistory[] {
-  return rows.map((row) => ({
-    id: row.id,
-    source: row.source,
-    opened_at: row.opened_at,
-    stickers: (row.pack_stickers ?? [])
+  return rows.map((row) => {
+    const stickers = (row.pack_stickers ?? [])
       .sort((a, b) => a.position - b.position)
       .map((ps) => ({
         position: ps.position,
         stickers: normalizePackSticker(ps.stickers),
-      })),
-  }));
+      }));
+
+    return {
+      id: row.id,
+      source: row.source,
+      opened_at: row.opened_at,
+      stickers,
+      historyIncomplete: stickers.every((ps) => !ps.stickers),
+    };
+  });
 }
 
 export const OPENED_HISTORY_PAGE_SIZE = 10;

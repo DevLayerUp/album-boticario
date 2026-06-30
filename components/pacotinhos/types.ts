@@ -27,6 +27,8 @@ export interface OpenedPackHistory {
   source: string;
   opened_at: string;
   stickers: PackSticker[];
+  /** True when the pack was opened before pack_stickers were persisted. */
+  historyIncomplete?: boolean;
 }
 
 export interface PackVisualSettings {
