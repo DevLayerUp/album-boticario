@@ -8,7 +8,7 @@ import { PackOpener } from "@/components/pack/pack-opener";
 import { PackStatCards } from "./pack-stat-cards";
 import { AvailablePacksCarousel } from "./available-packs-carousel";
 import { OpenedPackRow } from "./opened-pack-row";
-import { OPENED_HISTORY_PAGE_SIZE } from "@/lib/pack-opened-history";
+import { OPENED_HISTORY_PAGE_SIZE, normalizePackStickerRows } from "@/lib/pack-opened-history";
 import { preloadPackOpeningGif } from "@/lib/preload-pack-opening-gif";
 import { preloadPackOpeningGifSound } from "@/lib/play-pack-open-sound";
 import type { OpenedPackHistory, Pack, PackSticker, PackVisualSettings, PacotinhosStats } from "./types";
@@ -83,9 +83,9 @@ export function PacotinhosClient({
           id: activePack.id,
           source: activePack.source,
           opened_at: openedAt,
-          stickers: revealed,
+          stickers: normalizePackStickerRows(revealed),
         },
-        ...prev,
+        ...prev.filter((entry) => entry.id !== activePack.id),
       ]);
 
       setStats((prev) => ({

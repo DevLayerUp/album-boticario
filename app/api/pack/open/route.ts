@@ -88,7 +88,13 @@ export async function POST(request: NextRequest) {
     .eq("pack_id", pack_id);
 
   if (!count || count === 0) {
-    await generateStickersForPack(pack_id);
+    const generated = await generateStickersForPack(pack_id);
+    if (!generated) {
+      return NextResponse.json(
+        { error: "Não foi possível sortear as figurinhas deste pacotinho" },
+        { status: 500 },
+      );
+    }
   }
 
   // 3. Fetch the stickers in this pack (now guaranteed to exist or empty if no stickers in DB)
@@ -105,6 +111,13 @@ export async function POST(request: NextRequest) {
     .order("position");
 
   if (psErr) return NextResponse.json({ error: psErr.message }, { status: 500 });
+
+  if (!packStickers?.length) {
+    return NextResponse.json(
+      { error: "Este pacotinho não possui figurinhas registradas" },
+      { status: 500 },
+    );
+  }
 
   // 4. Mark pack as opened
   await supabase

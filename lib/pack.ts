@@ -100,7 +100,11 @@ export async function createPacksForUser(
     }));
 
     const { error: insertErr } = await admin.from("pack_stickers").insert(packStickers);
-    if (!insertErr) packsCreated++;
+    if (insertErr) {
+      await admin.from("packs").delete().eq("id", pack.id);
+      continue;
+    }
+    packsCreated++;
   }
 
   return { success: packsCreated > 0, packsCreated };

@@ -20,7 +20,7 @@ export function OpenedPackRow({ pack }: OpenedPackRowProps) {
   const entries = pack.stickers.filter(
     (ps): ps is PackStickerEntry => Boolean(ps.stickers),
   );
-  const preview = entries.slice(0, 3);
+  const preview = entries;
   const names = entries.map((ps) => stickerTextToPlain(ps.stickers.name)).join(" • ");
 
   return (
@@ -36,7 +36,7 @@ export function OpenedPackRow({ pack }: OpenedPackRowProps) {
           {SOURCE_LABEL[pack.source] ?? pack.source}
         </span>
 
-        {preview.length > 0 && (
+        {preview.length > 0 ? (
           <div className="flex items-center gap-2 sm:gap-3 2xl:gap-4">
             {preview.map((ps) => {
               const sticker = ps.stickers;
@@ -71,6 +71,10 @@ export function OpenedPackRow({ pack }: OpenedPackRowProps) {
               );
             })}
           </div>
+        ) : (
+          <p className="text-sm text-verde-400 sm:text-base 2xl:text-lg">
+            Figurinhas não registradas neste histórico
+          </p>
         )}
 
         {names && (

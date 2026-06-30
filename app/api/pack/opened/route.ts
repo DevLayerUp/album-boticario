@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import {
-  mapOpenedPackHistory,
+  fetchOpenedPackHistory,
   OPENED_HISTORY_PAGE_SIZE,
 } from "@/lib/pack-opened-history";
 
@@ -20,21 +21,8 @@ export async function GET(request: Request) {
     OPENED_HISTORY_PAGE_SIZE,
   );
 
-  const { data, error } = await supabase
-    .from("packs")
-    .select(
-      `id, source, opened_at,
-       pack_stickers (
-         position,
-         stickers (id, name, image_url, rarities (name, slug, color_hex, animation_type))
-       )`,
-    )
-    .eq("user_id", user.id)
-    .not("opened_at", "is", null)
-    .order("opened_at", { ascending: false })
-    .range(offset, offset + limit - 1);
+  const admin = createAdminClient();
+  const history = await fetchOpenedPackHistory(admin, user.id, offset, limit);
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-
-  return NextResponse.json(mapOpenedPackHistory(data ?? []));
+  return NextResponse.json(history);
 }

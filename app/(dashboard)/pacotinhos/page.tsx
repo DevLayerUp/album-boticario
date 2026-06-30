@@ -4,9 +4,9 @@ import { buildAppPageMetadata } from "@/lib/seo-metadata";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { resolvePackVisualSettings, STICKERS_PER_PACK } from "@/lib/pack-settings";
-import { mapOpenedPackHistory, OPENED_HISTORY_PAGE_SIZE } from "@/lib/pack-opened-history";
+import { fetchOpenedPackHistory, OPENED_HISTORY_PAGE_SIZE } from "@/lib/pack-opened-history";
 import { PacotinhosClient } from "@/components/pacotinhos/pacotinhos-client";
-import type { OpenedPackHistory, Pack } from "@/components/pacotinhos/types";
+import type { Pack } from "@/components/pacotinhos/types";
 
 export async function generateMetadata(): Promise<Metadata> {
   return buildAppPageMetadata("pacotinhos");
@@ -21,16 +21,6 @@ type PackRow = {
   pack_stickers: { position: number }[] | null;
 };
 
-type OpenedRow = {
-  id: number;
-  source: string;
-  opened_at: string;
-  pack_stickers: {
-    position: number;
-    stickers: unknown;
-  }[] | null;
-};
-
 export default async function PacotinhosPage() {
   const supabase = await createClient();
   const {
@@ -42,7 +32,7 @@ export default async function PacotinhosPage() {
 
   const [
     { data: packRows },
-    { data: openedRows },
+    openedHistory,
     { data: stickerRows },
     { data: settings },
   ] = await Promise.all([
@@ -51,19 +41,7 @@ export default async function PacotinhosPage() {
       .select("id, source, source_ref, opened_at, created_at, pack_stickers(position)")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false }),
-    supabase
-      .from("packs")
-      .select(
-        `id, source, opened_at,
-         pack_stickers (
-           position,
-           stickers (id, name, image_url, rarities (name, slug, color_hex, animation_type))
-         )`,
-      )
-      .eq("user_id", user.id)
-      .not("opened_at", "is", null)
-      .order("opened_at", { ascending: false })
-      .limit(OPENED_HISTORY_PAGE_SIZE),
+    fetchOpenedPackHistory(admin, user.id, 0, OPENED_HISTORY_PAGE_SIZE),
     supabase.from("user_stickers").select("quantity").eq("user_id", user.id),
     admin
       .from("app_settings")
@@ -85,10 +63,6 @@ export default async function PacotinhosPage() {
     created_at: row.created_at,
     sticker_count: row.pack_stickers?.length ?? STICKERS_PER_PACK,
   }));
-
-  const openedHistory: OpenedPackHistory[] = mapOpenedPackHistory(
-    (openedRows ?? []) as OpenedRow[],
-  );
 
   const available = packs.filter((p) => !p.opened_at).length;
   const opened = packs.filter((p) => p.opened_at).length;
