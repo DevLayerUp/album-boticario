@@ -53,9 +53,17 @@ export function MissionCompletedModal({
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.94, opacity: 0, y: 12 }}
         transition={{ type: "spring", stiffness: 320, damping: 28 }}
-        className="relative w-full max-w-[min(100%,400px)] overflow-hidden rounded-card bg-verde-escuro-500 px-4 py-3 sm:max-w-[440px] sm:px-4 sm:py-4 md:max-w-[460px] lg:max-w-[480px] 2xl:max-w-[900px] 2xl:px-8 2xl:py-10"
+        className="relative w-full max-w-[min(100%,400px)] overflow-hidden rounded-card px-4 py-3 sm:max-w-[440px] sm:px-4 sm:py-4 md:max-w-[460px] lg:max-w-[480px] 2xl:max-w-[900px] 2xl:px-8 2xl:py-10"
         onClick={(e) => e.stopPropagation()}
       >
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 z-0 bg-verde-escuro-500 bg-cover bg-center bg-no-repeat"
+          style={{
+            backgroundImage: `url(${dashboardAssets.missoes.modalBackground})`,
+          }}
+        />
+
         <div className="relative z-10 flex flex-col items-center gap-2.5 sm:gap-3 lg:gap-4 2xl:gap-12">
           <div className="space-y-0.5 text-center text-white 2xl:space-y-2">
             <h2

@@ -43,6 +43,10 @@ export const dashboardAssets = {
   ranking: {
     background: `${BASE}/ranking/bg-ranking.png`,
   },
+  /** Modal de missão concluída (/missoes). */
+  missoes: {
+    modalBackground: `${BASE}/missoes/bg-modal-missao.png`,
+  },
   /** Card de criação de figurinha personalizada. */
   figurinhaCard: `${BASE}/bg-minha-figurinha.png`,
   /** Headers dos feature cards da seção "Explorar". */
