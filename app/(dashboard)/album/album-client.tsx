@@ -140,20 +140,19 @@ export function AlbumClient({
   const progressPct  = totalSlots > 0 ? Math.round((filledCount / totalSlots) * 100) : 0;
 
   return (
-    <div className="flex flex-col gap-10 md:gap-[60px]">
-      {/* ── Header ─────────────────────────────────────────────────────── */}
-      <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-        {/* Título + progresso */}
+    <div className="flex min-h-0 flex-1 flex-col gap-3 md:gap-10 lg:gap-[60px]">
+      {/* ── Header (compacto no mobile — o álbum ocupa o restante da tela) ─ */}
+      <div className="flex shrink-0 flex-col gap-3 max-md:gap-2 lg:flex-row lg:items-end lg:justify-between lg:gap-6">
         <div className="min-w-0 flex-1">
-          <h1 className="font-display text-4xl font-bold leading-[1.4] text-verde-escuro-500 md:text-5xl">
+          <h1 className="font-display text-2xl font-bold leading-tight text-verde-escuro-500 sm:text-3xl md:text-5xl">
             Meu Álbum
           </h1>
-          <p className="mt-2 text-lg text-black md:text-xl">
+          <p className="mt-1 text-sm text-black max-md:text-xs sm:text-lg md:mt-2 md:text-xl">
             {filledCount} de {totalSlots} figurinhas coladas
           </p>
 
-          <div className="mt-4 flex items-center gap-4">
-            <div className="h-2 w-full max-w-[525px] overflow-hidden rounded-pill bg-verde-100">
+          <div className="mt-2 flex items-center gap-3 max-md:mt-1.5 md:mt-4 md:gap-4">
+            <div className="h-1.5 w-full max-w-[525px] overflow-hidden rounded-pill bg-verde-100 md:h-2">
               <motion.div
                 className="h-full rounded-pill bg-verde-500"
                 initial={{ width: 0 }}
@@ -166,14 +165,13 @@ export function AlbumClient({
                 aria-label={`${progressPct}% do álbum completo`}
               />
             </div>
-            <span className="shrink-0 text-lg font-bold text-verde-escuro-500 md:text-xl">
-              {progressPct}% concluído
+            <span className="shrink-0 text-sm font-bold text-verde-escuro-500 md:text-xl">
+              {progressPct}%
             </span>
           </div>
         </div>
 
-        {/* CTAs — conquiste mais figurinhas */}
-        <div className="flex shrink-0 flex-col gap-3">
+        <div className="hidden shrink-0 flex-col gap-3 md:flex">
           <p className="text-base font-medium text-[#3d3d3d]">
             Conquiste mais figurinhas:
           </p>
@@ -209,7 +207,7 @@ export function AlbumClient({
           Nenhuma categoria cadastrada ainda. O admin precisa criar as categorias e páginas do álbum.
         </div>
       ) : (
-        <>
+        <div className="flex min-h-0 flex-1 flex-col gap-3 md:gap-4">
           {categories.length > 1 && (
             <div
               className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 md:mx-0 md:px-0"
@@ -244,13 +242,14 @@ export function AlbumClient({
             </div>
           )}
 
-          {/* FlipBook */}
-          {loadingPages ? (
-            <div className="flex h-72 items-center justify-center">
-              <Loader2 size={28} className="animate-spin text-verde-500" />
-            </div>
-          ) : (
-            <FlipBook
+          {/* FlipBook — altura ~tela no mobile */}
+          <div className="flex w-full shrink-0 flex-col max-md:overflow-hidden md:min-h-0 md:flex-1">
+            {loadingPages ? (
+              <div className="flex flex-1 items-center justify-center min-h-[280px]">
+                <Loader2 size={28} className="animate-spin text-verde-500" />
+              </div>
+            ) : (
+              <FlipBook
               pages={pages}
               pastedSlotIds={pastedSlotIds}
               ownedMap={ownedMap}
@@ -261,9 +260,10 @@ export function AlbumClient({
               focusSlotId={
                 focusCategoryId == null || activeCatId === focusCategoryId ? focusSlotId : null
               }
-            />
-          )}
-        </>
+              />
+            )}
+          </div>
+        </div>
       )}
     </div>
   );

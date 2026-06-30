@@ -166,7 +166,7 @@ export function AlbumPageShell({
         <div
           className={cn(
             "mt-auto shrink-0",
-            inFlipBook ? "px-4 pb-4 pt-2 sm:px-[8%] sm:pb-5 sm:pt-3" : "px-6 pb-6 pt-3 sm:px-[8%]",
+            inFlipBook ? "px-3 pb-3 pt-1 sm:px-[8%] sm:pb-4 sm:pt-2" : "px-6 pb-6 pt-3 sm:px-[8%]",
           )}
         >
           {side === "left" ? (

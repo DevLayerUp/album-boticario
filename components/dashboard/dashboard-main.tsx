@@ -17,11 +17,11 @@ export function DashboardMain({ children }: DashboardMainProps) {
       id="main-content"
       tabIndex={-1}
       className={cn(
-        "mx-auto w-full flex-1",
+        "mx-auto flex w-full flex-1 flex-col min-h-0",
         isFullBleed
           ? "max-w-none px-0 pt-0 pb-24 md:pb-8"
           : isAlbum
-            ? "max-w-[1680px] px-4 pt-6 pb-28 md:px-12 md:pb-8 md:pt-8 2xl:px-[120px]"
+            ? "max-w-[1680px] px-3 pt-2 pb-20 md:px-12 md:pb-8 md:pt-8 2xl:px-[120px]"
             : "max-w-[1680px] px-6 pt-8 pb-24 md:px-12 md:pb-8 2xl:px-[120px]",
       )}
     >

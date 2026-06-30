@@ -38,6 +38,7 @@ export function MobileNav() {
   return (
     <nav
       aria-label="Navegação"
+      data-mobile-nav
       className="sticky bottom-0 z-20 border-t border-border bg-surface/95 backdrop-blur-md md:hidden"
     >
       <ul className="grid grid-cols-8 px-1 pt-1.5 pb-[max(0.375rem,env(safe-area-inset-bottom))] sm:px-2">

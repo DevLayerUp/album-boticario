@@ -17,8 +17,7 @@ import { AlbumCover } from "./album-cover";
 type BookOrientation = "portrait" | "landscape";
 
 const MOBILE_MQ = "(max-width: 767px)";
-const MOBILE_NAV_RESERVE_PX = 72;
-const MOBILE_HEADER_RESERVE_PX = 200;
+const DESKTOP_BOOK = { width: 560, height: 780, minHeight: 480, maxHeight: 920 };
 
 function getAlbumPageSide(
   contentIndex: number,
@@ -48,7 +47,7 @@ interface HTMLFlipBookHandle {
 const HTMLFlipBook = dynamic(() => import("react-pageflip"), {
   ssr: false,
   loading: () => (
-    <div className="h-[min(58dvh,520px)] min-h-[380px] animate-pulse rounded-card bg-verde-escuro-500/10 max-md:h-[min(52dvh,480px)]" />
+    <div className="h-full min-h-[280px] w-full animate-pulse rounded-card bg-verde-escuro-500/10" />
   ),
 }) as HTMLFlipBookComponent;
 
@@ -63,6 +62,108 @@ interface FlipBookProps {
   focusSlotId?: number | null;
 }
 
+interface BookDimensions {
+  width: number;
+  height: number;
+  minHeight: number;
+  maxHeight: number;
+  isMobile: boolean;
+}
+
+function readMobileNavHeight(): number {
+  const nav = document.querySelector<HTMLElement>("[data-mobile-nav]");
+  return nav?.getBoundingClientRect().height ?? 72;
+}
+
+function measureMobileBook(host: HTMLElement): { width: number; height: number } {
+  const viewportWidth = window.innerWidth;
+  const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
+  const width = Math.min(560, Math.max(260, Math.floor(viewportWidth - 36)));
+
+  const top = host.getBoundingClientRect().top;
+  const navHeight = readMobileNavHeight();
+  const height = Math.floor(viewportHeight - top - navHeight - 4);
+
+  return {
+    width,
+    height: Math.max(360, height),
+  };
+}
+
+function useBookDimensions(hostRef: React.RefObject<HTMLElement | null>): BookDimensions {
+  const [dims, setDims] = useState<BookDimensions>({
+    width: DESKTOP_BOOK.width,
+    height: DESKTOP_BOOK.height,
+    minHeight: DESKTOP_BOOK.minHeight,
+    maxHeight: DESKTOP_BOOK.maxHeight,
+    isMobile: false,
+  });
+
+  const measure = useCallback(() => {
+    const mobile = window.matchMedia(MOBILE_MQ).matches;
+    const host = hostRef.current;
+
+    if (!mobile) {
+      setDims({
+        width: DESKTOP_BOOK.width,
+        height: DESKTOP_BOOK.height,
+        minHeight: DESKTOP_BOOK.minHeight,
+        maxHeight: DESKTOP_BOOK.maxHeight,
+        isMobile: false,
+      });
+      return;
+    }
+
+    if (!host) return;
+
+    const { width, height } = measureMobileBook(host);
+    setDims({
+      width,
+      height,
+      minHeight: height,
+      maxHeight: height,
+      isMobile: true,
+    });
+  }, [hostRef]);
+
+  useEffect(() => {
+    measure();
+    const raf = requestAnimationFrame(() => {
+      requestAnimationFrame(measure);
+    });
+
+    const host = hostRef.current;
+    if (!host) return () => cancelAnimationFrame(raf);
+
+    const mq = window.matchMedia(MOBILE_MQ);
+    const onMqChange = () => measure();
+
+    mq.addEventListener("change", onMqChange);
+    window.addEventListener("resize", measure);
+    window.visualViewport?.addEventListener("resize", measure);
+    window.visualViewport?.addEventListener("scroll", measure);
+
+    const ro = new ResizeObserver(() => {
+      window.requestAnimationFrame(measure);
+    });
+    ro.observe(host);
+
+    const outer = host.parentElement;
+    if (outer) ro.observe(outer);
+
+    return () => {
+      cancelAnimationFrame(raf);
+      mq.removeEventListener("change", onMqChange);
+      window.removeEventListener("resize", measure);
+      window.visualViewport?.removeEventListener("resize", measure);
+      window.visualViewport?.removeEventListener("scroll", measure);
+      ro.disconnect();
+    };
+  }, [measure, hostRef]);
+
+  return dims;
+}
+
 const navBtn = (disabled: boolean, overlay = false) =>
   cn(
     "flex shrink-0 items-center justify-center rounded-full text-white transition-all duration-200 ease-out touch-manipulation",
@@ -75,58 +176,6 @@ const navBtn = (disabled: boolean, overlay = false) =>
         ? "cursor-pointer active:scale-95 hover:bg-verde-500"
         : "cursor-pointer hover:scale-105 hover:bg-verde-500 hover:shadow-[0_6px_20px_rgba(66,165,42,0.45)]",
   );
-
-function useFlipBookSize(containerRef: React.RefObject<HTMLElement | null>) {
-  const [size, setSize] = useState({
-    height: 520,
-    minHeight: 400,
-    maxHeight: 640,
-    isMobile: false,
-  });
-
-  const measure = useCallback(() => {
-    const mobile = window.matchMedia(MOBILE_MQ).matches;
-
-    if (!mobile) {
-      setSize({
-        height: 780,
-        minHeight: 480,
-        maxHeight: 920,
-        isMobile: false,
-      });
-      return;
-    }
-
-    const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
-    const containerTop = containerRef.current?.getBoundingClientRect().top ?? 0;
-    const chromeAbove = Math.max(containerTop, MOBILE_HEADER_RESERVE_PX * 0.45);
-    const available =
-      viewportHeight - chromeAbove - MOBILE_NAV_RESERVE_PX - 24;
-    const height = Math.min(560, Math.max(360, Math.round(available)));
-
-    setSize({
-      height,
-      minHeight: Math.round(height * 0.94),
-      maxHeight: height,
-      isMobile: true,
-    });
-  }, [containerRef]);
-
-  useEffect(() => {
-    measure();
-    const mq = window.matchMedia(MOBILE_MQ);
-    mq.addEventListener("change", measure);
-    window.addEventListener("resize", measure);
-    window.visualViewport?.addEventListener("resize", measure);
-    return () => {
-      mq.removeEventListener("change", measure);
-      window.removeEventListener("resize", measure);
-      window.visualViewport?.removeEventListener("resize", measure);
-    };
-  }, [measure]);
-
-  return size;
-}
 
 interface FlipNavControlProps {
   direction: "prev" | "next";
@@ -180,14 +229,19 @@ export function FlipBook({
   coverUrl,
   focusSlotId = null,
 }: FlipBookProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
+  const hostRef = useRef<HTMLDivElement>(null);
   const bookRef = useRef<HTMLFlipBookHandle | null>(null);
-  const { height, minHeight, maxHeight, isMobile } = useFlipBookSize(containerRef);
+  const { width, height, minHeight, maxHeight, isMobile } = useBookDimensions(hostRef);
 
   const [currentPage, setCurrentPage] = useState(0);
   const [bookOrientation, setBookOrientation] = useState<BookOrientation>("portrait");
 
   const firstPageId = pages[0]?.id;
+  const stickerKey = userStickerUrl ? userStickerUrl.slice(-32) : "none";
+  const sizeKey = isMobile
+    ? `${Math.round(width / 12)}x${Math.round(height / 12)}`
+    : "desktop";
+
   useEffect(() => {
     setCurrentPage(0);
   }, [firstPageId]);
@@ -242,17 +296,22 @@ export function FlipBook({
   const effectiveOrientation = isMobile ? "portrait" : bookOrientation;
 
   return (
-    <div ref={containerRef} className="select-none max-md:pb-2">
-      <div className="relative mx-auto flex w-full max-w-[1340px] items-center justify-center gap-3 max-md:gap-0">
+    <div className="flex min-h-0 w-full flex-1 flex-col">
+      <div
+        ref={hostRef}
+        className="relative mx-auto flex w-full max-w-[1340px] items-stretch justify-center md:min-h-0 md:flex-1 md:items-center md:gap-3"
+        style={
+          isMobile
+            ? { height, minHeight: height, maxHeight: height, width: "100%" }
+            : undefined
+        }
+      >
         <FlipNavControl
           direction="prev"
           disabled={isFirst}
           label="Página anterior"
           onFlip={flipPage}
-          className={cn(
-            navBtn(isFirst),
-            "max-md:absolute max-md:left-1 max-md:top-1/2 max-md:z-20 max-md:-translate-y-1/2 max-md:hidden",
-          )}
+          className={cn(navBtn(isFirst), "max-md:hidden")}
         >
           <ChevronLeft size={22} strokeWidth={2.5} />
         </FlipNavControl>
@@ -271,28 +330,34 @@ export function FlipBook({
           <ChevronLeft size={20} strokeWidth={2.5} />
         </FlipNavControl>
 
-        <div className="relative flex w-full min-w-0 cursor-grab justify-center max-md:[overflow-anchor:none] active:cursor-grabbing md:min-w-[560px] md:flex-1">
+        <div className="relative flex h-full min-h-0 w-full min-w-0 cursor-grab justify-center max-md:[overflow-anchor:none] active:cursor-grabbing md:min-w-[560px] md:flex-1">
           <div
             className={cn(
-              "flex w-full justify-center transition-transform duration-700 ease-out",
+              "flex h-full w-full justify-center",
+              !isMobile && "transition-transform duration-700 ease-out",
               isFirst && !isMobile && "md:-translate-x-1/4",
             )}
+            style={
+              isMobile
+                ? { width: "100%", height: "100%", maxWidth: width, maxHeight: height }
+                : undefined
+            }
           >
             <HTMLFlipBook
               ref={bookRef}
-              key={firstPageId ?? "empty"}
-              width={560}
+              key={`${firstPageId ?? "empty"}-${sizeKey}-${stickerKey}`}
+              width={width}
               height={height}
-              size="stretch"
-              minWidth={280}
-              maxWidth={560}
+              size={isMobile ? "fixed" : "stretch"}
+              minWidth={isMobile ? width : 280}
+              maxWidth={isMobile ? width : 560}
               minHeight={minHeight}
               maxHeight={maxHeight}
               drawShadow
               flippingTime={700}
               usePortrait
               startZIndex={0}
-              autoSize
+              autoSize={!isMobile}
               maxShadowOpacity={0.4}
               showCover
               mobileScrollSupport={false}
@@ -302,8 +367,8 @@ export function FlipBook({
               showPageCorners={false}
               disableFlipByClick={false}
               startPage={0}
-              className=""
-              style={{}}
+              className="album-flipbook h-full w-full"
+              style={isMobile ? { width: "100%", height: "100%" } : {}}
               onInit={(e: { data: { mode: BookOrientation } }) => {
                 setBookOrientation(isMobile ? "portrait" : e.data.mode);
               }}
@@ -342,10 +407,7 @@ export function FlipBook({
           disabled={isLast}
           label="Próxima página"
           onFlip={flipPage}
-          className={cn(
-            navBtn(isLast),
-            "max-md:absolute max-md:right-1 max-md:top-1/2 max-md:z-20 max-md:-translate-y-1/2 max-md:hidden",
-          )}
+          className={cn(navBtn(isLast), "max-md:hidden")}
         >
           <ChevronRight size={22} strokeWidth={2.5} />
         </FlipNavControl>

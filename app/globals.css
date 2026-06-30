@@ -207,3 +207,20 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* Álbum mobile — flipbook preenche o host flex sem distorcer páginas */
+@media (max-width: 767px) {
+  .album-flipbook.stf__parent,
+  .album-flipbook .stf__parent,
+  .album-flipbook .stf__wrapper,
+  .album-flipbook .stf__block {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+  }
+
+  .album-flipbook .stf__item {
+    height: 100% !important;
+  }
+}

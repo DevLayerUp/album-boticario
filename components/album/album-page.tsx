@@ -29,6 +29,7 @@ import { AlbumPageShell, type PageSide } from "./album-page-chrome";
 import { AlbumSocialPage } from "./album-social-page";
 import { AlbumPageCta } from "./album-page-cta";
 import { FlipBookLink, FlipBookHtmlContent } from "./flip-book-link";
+import { AlbumUserStickerImage } from "./album-user-sticker-image";
 
 export type { PageSide };
 
@@ -191,15 +192,15 @@ function ProfilePage({ page, side, userStickerUrl, userDisplayName, inFlipBook }
         className={cn(
           "flex w-full flex-col items-center",
           inFlipBook
-            ? "px-4 py-3 sm:px-[10%] sm:py-5"
+            ? "px-3 py-2 sm:px-[8%] sm:py-4"
             : "px-6 py-6 sm:px-[10%]",
         )}
       >
         {title && (
           <h2
             className={cn(
-              "text-center font-display font-bold leading-[1.4] text-white",
-              inFlipBook ? "mb-4 text-xl sm:mb-6 sm:text-2xl md:text-3xl" : "mb-8 text-2xl md:text-3xl",
+              "text-center font-display font-bold leading-[1.3] text-white",
+              inFlipBook ? "mb-2 text-lg sm:mb-3 sm:text-xl md:text-2xl" : "mb-8 text-2xl md:text-3xl",
             )}
           >
             {title}
@@ -211,30 +212,19 @@ function ProfilePage({ page, side, userStickerUrl, userDisplayName, inFlipBook }
             inFlipBook ? (
               <FlipBookLink
                 href="/figurinha"
-                className="group flex flex-col items-center gap-2 transition-transform duration-200 active:scale-[0.99]"
+                className="group relative flex flex-col items-center gap-1.5 transition-transform duration-200 active:scale-[0.99]"
                 ariaLabel="Alterar figurinha personalizada"
               >
-                <div
-                  className="relative overflow-hidden shadow-2xl shadow-black/30"
-                  style={{
-                    width: "clamp(160px, 38vw, 280px)",
-                    aspectRatio: "352 / 503",
-                    borderRadius: 16,
-                  }}
-                >
-                  <Image
-                    key={userStickerUrl}
+                <div className="relative">
+                  <AlbumUserStickerImage
                     src={userStickerUrl!}
                     alt="Sua figurinha personalizada"
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 768px) 38vw, 280px"
-                    priority
+                    inFlipBook
                   />
                   {userDisplayName ? (
                     <FigurinhaNameTag name={userDisplayName} overlay />
                   ) : null}
-                  <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-verde-escuro-capa/90 to-transparent px-3 pb-3 pt-8 text-center text-[10px] font-bold uppercase tracking-wide text-white opacity-90 sm:text-xs">
+                  <span className="pointer-events-none absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-verde-escuro-capa/90 to-transparent px-3 pb-3 pt-8 text-center text-[10px] font-bold uppercase tracking-wide text-white opacity-90 sm:text-xs">
                     Toque para alterar
                   </span>
                 </div>
@@ -242,25 +232,13 @@ function ProfilePage({ page, side, userStickerUrl, userDisplayName, inFlipBook }
             ) : (
               <Link
                 href="/figurinha"
-                className="group flex flex-col items-center gap-2 transition-transform duration-200 hover:scale-[1.01]"
+                className="group relative flex flex-col items-center gap-2 transition-transform duration-200 hover:scale-[1.01]"
                 aria-label="Alterar figurinha personalizada"
               >
-                <div
-                  className="relative overflow-hidden shadow-2xl shadow-black/30"
-                  style={{
-                    width: "clamp(160px, 38vw, 280px)",
-                    aspectRatio: "352 / 503",
-                    borderRadius: 16,
-                  }}
-                >
-                  <Image
-                    key={userStickerUrl}
+                <div className="relative">
+                  <AlbumUserStickerImage
                     src={userStickerUrl!}
                     alt="Sua figurinha personalizada"
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 768px) 38vw, 280px"
-                    priority
                   />
                   {userDisplayName ? (
                     <FigurinhaNameTag name={userDisplayName} overlay />
@@ -271,17 +249,11 @@ function ProfilePage({ page, side, userStickerUrl, userDisplayName, inFlipBook }
           ) : inFlipBook ? (
             <FlipBookLink
               href="/figurinha"
-              className="group flex flex-col items-center gap-4 transition-transform duration-200 hover:scale-[1.01]"
+              className="group flex flex-col items-center gap-2 transition-transform duration-200 active:scale-[0.99]"
               ariaLabel="Criar figurinha personalizada"
             >
               <div
-                className="relative flex items-center justify-center bg-white shadow-2xl shadow-black/25"
-                style={{
-                  width: "clamp(160px, 38vw, 280px)",
-                  aspectRatio: "352 / 503",
-                  borderRadius: 16,
-                  border: "5px solid #98D622",
-                }}
+                className="relative flex h-[286px] w-[200px] items-center justify-center rounded-2xl border-[5px] border-[#98D622] bg-white shadow-2xl shadow-black/25"
               >
                 <div
                   className="flex flex-col items-center justify-center gap-3 border border-dashed border-neutral-300"
