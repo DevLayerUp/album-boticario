@@ -55,21 +55,18 @@ supabase db reset
 
 ## Recuperação de senha (Auth)
 
-O fluxo usa **Supabase Auth** (`resetPasswordForEmail` + `updateUser`). Não há migration SQL — configure no Dashboard:
+O fluxo usa **Supabase Auth** (`generateLink` + sessão no callback + `updateUser`). Os e-mails saem pelo **Resend** com os templates em `supabase/email-templates/`.
 
 1. **Authentication → URL Configuration**
    - **Site URL**: URL de produção (ex.: `https://seu-dominio.com`)
    - **Redirect URLs** (adicione todas as origens usadas):
      - `http://localhost:3000/auth/callback`
      - `https://seu-dominio.com/auth/callback`
-     - (opcional) `http://localhost:3000/redefinir-senha` e produção equivalente
 
-2. **Authentication → Providers → Email**
-   - Mantenha **Email** habilitado.
-   - Em **Email Templates → Reset Password**, o link deve apontar para `{{ .ConfirmationURL }}` (padrão).
+2. **Variáveis de ambiente** — `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, `SEND_EMAIL_HOOK_SECRET` (ver `supabase/email-templates/README.md`).
 
 3. **Fluxo no app**
-   - `/esqueci-senha` → envia e-mail com redirect para `/auth/callback?next=/redefinir-senha`
+   - `/esqueci-senha` → `POST /api/auth/password-reset` → e-mail Resend com `reset-password.html`
    - Callback troca o `code` por sessão e redireciona para `/redefinir-senha`
    - Usuário define nova senha com `auth.updateUser({ password })`
 
@@ -79,13 +76,11 @@ Em desenvolvimento local, use `http://localhost:3000` como Site URL ou inclua lo
 
 ## Templates de e-mail (Auth)
 
-HTML prontos em `supabase/email-templates/`:
+HTML em `supabase/email-templates/` — enviados via **Resend**, não pelo Dashboard Supabase.
 
-| Template | Arquivo | Onde colar no Dashboard |
+| Template | Arquivo | Disparo |
 |---|---|---|
-| Confirmação de conta | `confirm-signup.html` | Email Templates → **Confirm signup** |
-| Redefinir senha | `reset-password.html` | Email Templates → **Reset password** |
+| Confirmação de conta | `confirm-signup.html` | Auth Hook Send Email (após `signUp`) |
+| Redefinir senha | `reset-password.html` | `POST /api/auth/password-reset` |
 
-Detalhes, assuntos sugeridos e variáveis: `supabase/email-templates/README.md`.
-
-Os templates incluem os logotipos da Fundação e do Fãs da Natureza via `{{ .SiteURL }}/images/dashboard/`.
+Configuração completa: `supabase/email-templates/README.md`.

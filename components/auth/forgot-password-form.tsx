@@ -3,9 +3,7 @@
 import { useId, useState } from "react";
 import Link from "next/link";
 import { AlertCircle, ArrowLeft, ArrowRight, CheckCircle2, Mail } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
 import { traduzErroAuth } from "@/lib/auth-errors";
-import { buildPasswordResetRedirectUrl } from "@/lib/password-reset";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -24,15 +22,19 @@ export function ForgotPasswordForm() {
     setError(null);
     setLoading(true);
 
-    const supabase = createClient();
-    const redirectTo = buildPasswordResetRedirectUrl(window.location.origin);
-
     try {
-      const { error: resetError } = await supabase.auth.resetPasswordForEmail(
-        email.trim(),
-        { redirectTo },
-      );
-      if (resetError) throw resetError;
+      const res = await fetch("/api/auth/password-reset", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim() }),
+      });
+
+      const payload = (await res.json()) as { error?: string };
+
+      if (!res.ok) {
+        throw new Error(payload.error ?? "Não foi possível enviar o e-mail.");
+      }
+
       setSent(true);
     } catch (err) {
       setError(
