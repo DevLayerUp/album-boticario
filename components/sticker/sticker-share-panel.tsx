@@ -4,6 +4,7 @@ import { useCallback, useState } from "react";
 import { Download, Loader2, Share2 } from "lucide-react";
 import { SocialShareButtons } from "@/components/ui/social-share-buttons";
 import {
+  buildAlbumShareUrl,
   buildStickerPublicShareUrl,
   buildStickerShareMessage,
   buildStickerWhatsAppShareText,
@@ -59,11 +60,12 @@ export function StickerSharePanel({
   const publicShareUrl = origin
     ? buildStickerPublicShareUrl(origin, userId)
     : `/share/figurinha/${userId}`;
+  const albumUrl = origin ? buildAlbumShareUrl(origin) : "/album";
   const shareText = buildStickerShareMessage(displayName, publicShareUrl);
   const whatsAppText = buildStickerWhatsAppShareText(
     displayName,
     publicShareUrl,
-    stickerUrl,
+    albumUrl,
   );
   const isProfile = variant === "profile";
 
@@ -86,6 +88,7 @@ export function StickerSharePanel({
         stickerUrl,
         displayName,
         publicShareUrl,
+        albumUrl,
       );
       if (result === "shared") {
         await registerStickerShareMission();

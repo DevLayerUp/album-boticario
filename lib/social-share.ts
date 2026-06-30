@@ -20,13 +20,9 @@ export function buildSocialShareUrl(
   options?: { imageUrl?: string; whatsAppText?: string },
 ): string | null {
   const encodedUrl = encodeURIComponent(shareUrl);
-  const textWithImage =
-    options?.imageUrl && platform !== "whatsapp"
-      ? buildShareTextWithImage(shareText, options.imageUrl)
-      : shareText;
-  const encodedText = encodeURIComponent(textWithImage);
+  const encodedText = encodeURIComponent(shareText);
   const waText = encodeURIComponent(
-    options?.whatsAppText ?? `${shareText} ${shareUrl}`,
+    options?.whatsAppText ?? `${shareText}\n${shareUrl}`,
   );
 
   switch (platform) {
@@ -50,96 +46,13 @@ function isMobileUserAgent(): boolean {
   return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 }
 
-function openInstagramApp(): void {
+/** Abre o Instagram para publicar Stories (após salvar imagem 9:16). */
+export function openInstagramStories(): void {
   if (isMobileUserAgent()) {
-    window.location.href = "instagram://camera";
+    window.location.href = "instagram://story-camera";
     return;
   }
   window.open("https://www.instagram.com/", "_blank", "noopener,noreferrer");
-}
-
-/** Instagram não tem sharer web — compartilha imagem (Stories/feed) ou link copiado. */
-export async function shareToInstagram(options: {
-  imageUrl?: string;
-  shareText: string;
-  fetchImageFile?: (url: string) => Promise<File>;
-  downloadImage?: (url: string) => Promise<void>;
-}): Promise<SocialShareResult> {
-  const { imageUrl, shareText, fetchImageFile, downloadImage } = options;
-
-  if (imageUrl && fetchImageFile && downloadImage) {
-    const fileShare = await tryShareImageFile({
-      file: await fetchImageFile(imageUrl),
-      text: shareText,
-      title: "Minha figurinha — Fãs da Natureza",
-    });
-    if (fileShare === "shared") return "shared";
-    if (fileShare === "cancelled") return "cancelled";
-
-    try {
-      await downloadImage(imageUrl);
-      openInstagramApp();
-      return "shared";
-    } catch {
-      return "failed";
-    }
-  }
-
-  try {
-    if (typeof navigator.clipboard?.writeText === "function") {
-      await navigator.clipboard.writeText(shareText);
-    }
-    openInstagramApp();
-    return "shared";
-  } catch {
-    return "failed";
-  }
-}
-
-/** Compartilha arquivo de imagem via Web Share API (mobile). */
-export async function tryShareImageFile(options: {
-  file: File;
-  text: string;
-  title?: string;
-}): Promise<SocialShareResult> {
-  if (typeof navigator.share !== "function") {
-    return "unsupported";
-  }
-
-  const payload: ShareData = {
-    title: options.title ?? "Compartilhar",
-    text: options.text,
-    files: [options.file],
-  };
-
-  if (typeof navigator.canShare === "function" && !navigator.canShare(payload)) {
-    return "unsupported";
-  }
-
-  try {
-    await navigator.share(payload);
-    return "shared";
-  } catch (err) {
-    if (err instanceof DOMException && err.name === "AbortError") {
-      return "cancelled";
-    }
-    return "failed";
-  }
-}
-
-export async function tryCopyImageFile(file: File): Promise<boolean> {
-  if (typeof ClipboardItem === "undefined" || !navigator.clipboard?.write) {
-    return false;
-  }
-
-  try {
-    await navigator.clipboard.write([
-      new ClipboardItem({ [file.type || "image/png"]: file }),
-    ]);
-    return true;
-  } catch {
-    return false;
-  }
 }
 
 export function openPlatformShareUrl(
@@ -149,7 +62,12 @@ export function openPlatformShareUrl(
   options?: { imageUrl?: string; whatsAppText?: string },
 ): void {
   const url = buildSocialShareUrl(platform, shareUrl, shareText, options);
-  if (url) {
-    window.open(url, "_blank", "noopener,noreferrer");
+  if (!url) return;
+
+  if (isMobileUserAgent()) {
+    window.location.href = url;
+    return;
   }
+
+  window.open(url, "_blank", "noopener,noreferrer");
 }

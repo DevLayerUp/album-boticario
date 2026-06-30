@@ -9,12 +9,8 @@ import {
   FaWhatsapp,
   FaXTwitter,
 } from "react-icons/fa6";
-import {
-  buildSocialShareUrl,
-  shareToInstagram,
-  type SocialSharePlatform,
-} from "@/lib/social-share";
-import { downloadSticker, fetchStickerImageFile, shareStickerOnPlatform } from "@/lib/sticker-share";
+import { buildSocialShareUrl, type SocialSharePlatform } from "@/lib/social-share";
+import { shareStickerOnPlatform } from "@/lib/sticker-share";
 import { cn } from "@/lib/utils";
 
 const SOCIAL_SHARE_OPTIONS: {
@@ -24,7 +20,12 @@ const SOCIAL_SHARE_OPTIONS: {
   color: string;
 }[] = [
   { platform: "whatsapp", label: "WhatsApp", Icon: FaWhatsapp, color: "#25D366" },
-  { platform: "instagram", label: "Instagram", Icon: FaInstagram, color: "#E4405F" },
+  {
+    platform: "instagram",
+    label: "Instagram Stories",
+    Icon: FaInstagram,
+    color: "#E4405F",
+  },
   { platform: "facebook", label: "Facebook", Icon: FaFacebookF, color: "#1877F2" },
   { platform: "twitter", label: "X", Icon: FaXTwitter, color: "#0F172A" },
   { platform: "linkedin", label: "LinkedIn", Icon: FaLinkedinIn, color: "#0A66C2" },
@@ -34,7 +35,7 @@ const SOCIAL_SHARE_OPTIONS: {
 interface SocialShareButtonsProps {
   shareUrl: string;
   shareText: string;
-  /** Quando informado, compartilha a imagem da figurinha em todas as redes. */
+  /** Quando informado, compartilha a figurinha em todas as redes. */
   imageUrl?: string;
   whatsAppText?: string;
   disabled?: boolean;
@@ -44,7 +45,6 @@ interface SocialShareButtonsProps {
   className?: string;
   onBeforeShare?: () => void | Promise<boolean | void>;
   onNativeShare: () => void | Promise<void>;
-  onInstagramShare?: () => void | Promise<void>;
   onShareStatus?: (message: string) => void;
 }
 
@@ -60,7 +60,6 @@ export function SocialShareButtons({
   className,
   onBeforeShare,
   onNativeShare,
-  onInstagramShare,
   onShareStatus,
 }: SocialShareButtonsProps) {
   const buttonSize =
@@ -93,35 +92,7 @@ export function SocialShareButtons({
       return;
     }
 
-    if (platform === "instagram") {
-      if (onInstagramShare) {
-        await onInstagramShare();
-        return;
-      }
-
-      const result = await shareToInstagram({
-        imageUrl,
-        shareText,
-        fetchImageFile: imageUrl ? fetchStickerImageFile : undefined,
-        downloadImage: imageUrl ? downloadSticker : undefined,
-      });
-
-      if (result === "shared") {
-        onShareStatus?.(
-          imageUrl
-            ? "Imagem pronta! Escolha o Instagram para publicar nos Stories ou no feed."
-            : "Link copiado! Cole no Instagram para compartilhar.",
-        );
-      } else if (result === "failed") {
-        onShareStatus?.("Não foi possível compartilhar no Instagram. Tente salvar a imagem.");
-      }
-      return;
-    }
-
-    const url = buildSocialShareUrl(platform, shareUrl, shareText, {
-      imageUrl,
-      whatsAppText,
-    });
+    const url = buildSocialShareUrl(platform, shareUrl, shareText, { whatsAppText });
     if (url) {
       window.open(url, "_blank", "noopener,noreferrer");
     }
