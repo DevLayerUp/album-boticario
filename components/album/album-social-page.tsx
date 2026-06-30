@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import type { AlbumPageProps } from "./album-page";
 import { AlbumPageShell } from "./album-page-chrome";
 import { AlbumSocialLinks } from "./album-social-links";
+import { AlbumShareSection } from "./album-share-section";
 import { FlipBookHtmlContent } from "./flip-book-link";
 
 export function AlbumSocialPage({
@@ -90,6 +91,8 @@ export function AlbumSocialPage({
               inFlipBook ? "pb-1 pt-0.5" : "pt-0.5 sm:pt-1",
             )}
           />
+
+          <AlbumShareSection inFlipBook={inFlipBook} />
         </div>
       </div>
     </AlbumPageShell>

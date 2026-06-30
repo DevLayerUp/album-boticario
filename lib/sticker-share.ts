@@ -12,7 +12,7 @@ import {
 
 export function buildStickerShareText(displayName: string): string {
   const name = displayName.trim() || "Colecionador";
-  return `Criei minha figurinha no álbum Fãs da Natureza! 🌿 — ${name}`;
+  return `Criei minha figurinha no álbum Fãs por Natureza! 🌿 — ${name}`;
 }
 
 export function buildStickerShareTextWithUrl(
