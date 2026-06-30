@@ -2,10 +2,12 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { fetchProfilePageData } from "@/lib/profile";
 import { validarMissoes } from "@/lib/missions";
+import { formatPhoneBR, isValidPhoneBR } from "@/lib/phone";
 
 const PROFILE_FIELDS = [
   "display_name",
   "bio",
+  "phone",
   "show_in_ranking",
   "notify_new_packs",
   "notify_trades",
@@ -22,6 +24,17 @@ function pickProfileUpdates(body: Record<string, unknown>) {
   for (const key of PROFILE_FIELDS) {
     if (!(key in body)) continue;
     const value = body[key];
+
+    if (key === "phone") {
+      if (value === null) {
+        updates.phone = null;
+        continue;
+      }
+      if (typeof value !== "string") continue;
+      const trimmed = value.trim();
+      updates.phone = trimmed ? formatPhoneBR(trimmed) : null;
+      continue;
+    }
 
     if (key === "display_name" || key === "bio" || key === "language" || key === "timezone") {
       if (value !== null && typeof value !== "string") continue;
@@ -88,6 +101,13 @@ export async function PATCH(request: Request) {
         { status: 400 },
       );
     }
+  }
+
+  if (typeof updates.phone === "string" && !isValidPhoneBR(updates.phone)) {
+    return NextResponse.json(
+      { error: "Informe um telefone válido: (00) 0000-0000 ou (00) 00000-0000" },
+      { status: 400 },
+    );
   }
 
   const { error } = await supabase

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Pencil } from "lucide-react";
 import type { ProfilePageData } from "@/lib/profile";
 import { cn } from "@/lib/utils";
+import { formatPhoneBR, isValidPhoneBR } from "@/lib/phone";
 import { PerfilFormActions } from "./perfil-form-actions";
 
 interface PerfilPersonalPanelProps {
@@ -12,6 +13,7 @@ interface PerfilPersonalPanelProps {
   onSave: (payload: {
     display_name: string;
     bio: string | null;
+    phone: string | null;
   }) => Promise<void>;
 }
 
@@ -46,14 +48,17 @@ export function PerfilPersonalPanel({
 }: PerfilPersonalPanelProps) {
   const initialName = data.profile.display_name ?? "";
   const initialBio = data.profile.bio ?? "";
+  const initialPhone = data.profile.phone ?? "";
 
   const [displayName, setDisplayName] = useState(initialName);
   const [bio, setBio] = useState(initialBio);
+  const [phone, setPhone] = useState(initialPhone);
   const [error, setError] = useState<string | null>(null);
 
   function handleCancel() {
     setDisplayName(initialName);
     setBio(initialBio);
+    setPhone(initialPhone);
     setError(null);
   }
 
@@ -63,10 +68,15 @@ export function PerfilPersonalPanel({
       setError("Informe seu nome completo.");
       return;
     }
+    if (phone.trim() && !isValidPhoneBR(phone)) {
+      setError("Informe um telefone válido: (00) 0000-0000 ou (00) 00000-0000.");
+      return;
+    }
     try {
       await onSave({
         display_name: displayName.trim(),
         bio: bio.trim() || null,
+        phone: phone.trim() || null,
       });
     } catch (err) {
       setError(
@@ -106,6 +116,19 @@ export function PerfilPersonalPanel({
                 aria-hidden
               />
             </div>
+          </div>
+
+          <div className="space-y-3">
+            <FieldLabel>Telefone</FieldLabel>
+            <PillInput
+              value={phone}
+              onChange={(e) => setPhone(formatPhoneBR(e.target.value))}
+              type="tel"
+              inputMode="tel"
+              autoComplete="tel"
+              placeholder="(00) 00000-0000"
+              maxLength={16}
+            />
           </div>
         </div>
 
