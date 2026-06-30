@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { ProfilePageData } from "@/lib/profile";
 import { PerfilFormActions } from "./perfil-form-actions";
+import { usePerfilToast } from "./perfil-toast";
 import { PerfilToggle } from "./perfil-toggle";
 
 interface PerfilNotificationsPanelProps {
@@ -43,7 +44,7 @@ export function PerfilNotificationsPanel({
     notify_trades: data.profile.notify_trades,
     notify_marketing: data.profile.notify_marketing,
   });
-  const [error, setError] = useState<string | null>(null);
+  const { showToast } = usePerfilToast();
 
   function handleCancel() {
     setPrefs({
@@ -51,17 +52,18 @@ export function PerfilNotificationsPanel({
       notify_trades: data.profile.notify_trades,
       notify_marketing: data.profile.notify_marketing,
     });
-    setError(null);
   }
 
   async function handleSave() {
-    setError(null);
     try {
       await onSave(prefs);
+      showToast("Preferências de notificação salvas.");
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Não foi possível salvar as preferências.",
-      );
+      showToast({
+        message:
+          err instanceof Error ? err.message : "Não foi possível salvar as preferências.",
+        variant: "error",
+      });
     }
   }
 
@@ -96,12 +98,6 @@ export function PerfilNotificationsPanel({
           </div>
         ))}
       </div>
-
-      {error ? (
-        <p className="text-sm font-medium text-red-600" role="alert">
-          {error}
-        </p>
-      ) : null}
 
       <PerfilFormActions
         saving={saving}

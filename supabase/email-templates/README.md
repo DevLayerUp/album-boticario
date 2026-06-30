@@ -1,51 +1,74 @@
-# Templates de e-mail (Supabase Auth)
+# Templates de e-mail transacionais (Resend)
 
-Templates HTML alinhados ao design system do projeto (verde `#0d6632`, amarelo `#deda00`, fundo `#f9f8f7`, Barlow).
+HTML alinhados ao design system do projeto (verde `#0d6632`, amarelo `#deda00`, fundo `#f9f8f7`, Barlow).
+
+Os envios são feitos pelo **Resend** no app Next.js — **não** pelo SMTP/templates do Dashboard Supabase.
 
 ## Arquivos
 
-| Arquivo | Uso no Supabase |
+| Arquivo | Uso |
 |---|---|
-| `confirm-signup.html` | **Authentication → Email Templates → Confirm signup** |
-| `reset-password.html` | **Authentication → Email Templates → Reset password** |
+| `confirm-signup.html` | Confirmação de conta (cadastro) |
+| `reset-password.html` | Redefinir senha |
 
-## Como aplicar
+## Variáveis nos templates
 
-1. Abra o [Dashboard Supabase](https://supabase.com/dashboard) → **Authentication** → **Email Templates**.
-2. Selecione o template desejado.
-3. Cole o conteúdo HTML do arquivo correspondente no campo **Message body**.
-4. Defina o **Subject** sugerido abaixo.
-5. Salve.
+| Placeholder | Substituído por |
+|---|---|
+| `{{ .ConfirmationURL }}` | Link de confirmação ou redefinição |
+| `{{ .SiteURL }}` | `NEXT_PUBLIC_SITE_URL` (logotipos no header) |
 
-### Assuntos recomendados
+Não remova `{{ .ConfirmationURL }}` — é obrigatório para o fluxo de auth.
+
+## Configuração
+
+### 1. Variáveis de ambiente
+
+```env
+RESEND_API_KEY=re_...
+RESEND_FROM_EMAIL="Fãs da Natureza <noreply@seudominio.com.br>"
+NEXT_PUBLIC_SITE_URL=https://www.faspornatureza.com.br
+
+# Secret do hook Send Email (Supabase → Authentication → Hooks)
+SEND_EMAIL_HOOK_SECRET=v1,whsec_...
+```
+
+O domínio em `RESEND_FROM_EMAIL` precisa estar verificado no [Resend](https://resend.com/domains).
+
+### 2. Confirmação de cadastro — Auth Hook
+
+1. Supabase Dashboard → **Authentication** → **Hooks** → **Send Email** → habilitar.
+2. URL: `https://SEU_DOMINIO/api/auth/hooks/send-email`
+3. Gere o secret e copie para `SEND_EMAIL_HOOK_SECRET`.
+4. Desative envio SMTP padrão do Supabase (o hook substitui os templates do Dashboard).
+
+Fluxos que disparam o hook:
+
+- `signUp` em `/register` e `/register/senha`
+- Qualquer confirmação de e-mail do Supabase Auth
+
+### 3. Redefinir senha — API dedicada
+
+`/esqueci-senha` chama `POST /api/auth/password-reset`, que:
+
+1. Gera o link com `auth.admin.generateLink` (recovery)
+2. Envia `reset-password.html` via Resend
+
+Não usa mais `resetPasswordForEmail` do cliente.
+
+### 4. URLs de auth (Supabase)
+
+- **Site URL** = produção (`NEXT_PUBLIC_SITE_URL`)
+- **Redirect URLs**: `https://SEU_DOMINIO/auth/callback` e `http://localhost:3000/auth/callback`
+
+## Assuntos dos e-mails
 
 - **Confirm signup:** `Confirme sua conta — Fãs da Natureza`
 - **Reset password:** `Redefinir sua senha — Fãs da Natureza`
 
-## Variáveis Supabase
-
-Os templates usam a sintaxe Go do Supabase:
-
-| Variável | Descrição |
-|---|---|
-| `{{ .ConfirmationURL }}` | Link de confirmação ou redefinição de senha |
-| `{{ .SiteURL }}` | URL base do site (para carregar os logotipos) |
-
-Não remova `{{ .ConfirmationURL }}` — é obrigatório para o fluxo de auth funcionar.
+Definidos em `lib/email/templates.ts`.
 
 ## Logotipos
 
-As imagens são servidas pelo app em `public/images/dashboard/`:
-
-- `logo-fgb.png` — Fundação Grupo Boticário
-- `logo-branco.png` — Fãs da Natureza (header verde)
-
-Elas são referenciadas como `{{ .SiteURL }}/images/dashboard/...`. Por isso:
-
-1. **Authentication → URL Configuration → Site URL** deve apontar para o domínio público (ex.: `https://album.exemplo.com`), não apenas `localhost`, em produção.
-2. Os arquivos de logo precisam estar publicados nesse domínio.
-
-## Pré-requisitos no projeto
-
-- **Site URL** e **Redirect URLs** configurados (ver `supabase/README.md` → Recuperação de senha).
-- Fluxo de cadastro com confirmação de e-mail habilitado em **Providers → Email**.
+Referenciados como `{{ .SiteURL }}/images/dashboard/logo-fgb.png` e `logo-branco.png`.
+Certifique-se de que esses arquivos estão publicados no domínio de produção.

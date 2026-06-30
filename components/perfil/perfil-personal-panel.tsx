@@ -6,6 +6,7 @@ import type { ProfilePageData } from "@/lib/profile";
 import { cn } from "@/lib/utils";
 import { formatPhoneBR, isValidPhoneBR } from "@/lib/phone";
 import { PerfilFormActions } from "./perfil-form-actions";
+import { usePerfilToast } from "./perfil-toast";
 
 interface PerfilPersonalPanelProps {
   data: ProfilePageData;
@@ -52,20 +53,26 @@ export function PerfilPersonalPanel({
 
   const [displayName, setDisplayName] = useState(initialName);
   const [bio, setBio] = useState(initialBio);
+<<<<<<< HEAD
   const [phone, setPhone] = useState(initialPhone);
   const [error, setError] = useState<string | null>(null);
+=======
+  const { showToast } = usePerfilToast();
+>>>>>>> bfeb93f0f65c4f60ed052a1d1153f78e463f8b74
 
   function handleCancel() {
     setDisplayName(initialName);
     setBio(initialBio);
+<<<<<<< HEAD
     setPhone(initialPhone);
     setError(null);
+=======
+>>>>>>> bfeb93f0f65c4f60ed052a1d1153f78e463f8b74
   }
 
   async function handleSave() {
-    setError(null);
     if (!displayName.trim()) {
-      setError("Informe seu nome completo.");
+      showToast({ message: "Informe seu nome completo.", variant: "warning" });
       return;
     }
     if (phone.trim() && !isValidPhoneBR(phone)) {
@@ -78,10 +85,13 @@ export function PerfilPersonalPanel({
         bio: bio.trim() || null,
         phone: phone.trim() || null,
       });
+      showToast("Dados pessoais atualizados.");
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Não foi possível salvar as alterações.",
-      );
+      showToast({
+        message:
+          err instanceof Error ? err.message : "Não foi possível salvar as alterações.",
+        variant: "error",
+      });
     }
   }
 
@@ -143,12 +153,6 @@ export function PerfilPersonalPanel({
           />
         </div>
       </div>
-
-      {error ? (
-        <p className="text-sm font-medium text-red-600" role="alert">
-          {error}
-        </p>
-      ) : null}
 
       <PerfilFormActions saving={saving} onCancel={handleCancel} onSave={() => void handleSave()} />
     </div>

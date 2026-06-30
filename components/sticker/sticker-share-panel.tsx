@@ -3,6 +3,7 @@
 import { useCallback, useState } from "react";
 import { Download, Loader2, Share2 } from "lucide-react";
 import { SocialShareButtons } from "@/components/ui/social-share-buttons";
+import { useFeedbackToastOptional } from "@/components/ui/feedback-toast";
 import {
   buildAlbumShareUrl,
   buildStickerPublicShareUrl,
@@ -54,7 +55,8 @@ export function StickerSharePanel({
   variant = "figurinha",
 }: StickerSharePanelProps) {
   const [busy, setBusy] = useState(false);
-  const [status, setStatus] = useState<string | null>(null);
+  const [inlineStatus, setInlineStatus] = useState<string | null>(null);
+  const feedbackToast = useFeedbackToastOptional();
 
   const origin = typeof window !== "undefined" ? window.location.origin : "";
   const publicShareUrl = origin
@@ -74,15 +76,22 @@ export function StickerSharePanel({
     return true;
   }, []);
 
-  const showStatus = useCallback((message: string) => {
-    setStatus(message);
-    window.setTimeout(() => setStatus(null), 3000);
-  }, []);
+  const showStatus = useCallback(
+    (message: string, variant: "success" | "error" | "info" = "info") => {
+      if (feedbackToast) {
+        feedbackToast.showToast({ message, variant });
+        return;
+      }
+      setInlineStatus(message);
+      window.setTimeout(() => setInlineStatus(null), 3000);
+    },
+    [feedbackToast],
+  );
 
   async function nativeShare() {
     if (busy) return;
     setBusy(true);
-    setStatus(null);
+    setInlineStatus(null);
     try {
       const result = await shareStickerWithNativeApi(
         stickerUrl,
@@ -92,16 +101,16 @@ export function StickerSharePanel({
       );
       if (result === "shared") {
         await registerStickerShareMission();
-        showStatus("Compartilhado!");
+        showStatus("Compartilhado!", "success");
         return;
       }
       if (result === "cancelled") return;
 
       await downloadSticker(stickerUrl);
       await registerStickerShareMission();
-      showStatus("Imagem salva! Envie pelo app da rede social.");
+      showStatus("Imagem salva! Envie pelo app da rede social.", "info");
     } catch {
-      showStatus("Não foi possível compartilhar. Tente salvar a imagem.");
+      showStatus("Não foi possível compartilhar. Tente salvar a imagem.", "error");
     } finally {
       setBusy(false);
     }
@@ -110,13 +119,13 @@ export function StickerSharePanel({
   async function handleDownload() {
     if (busy) return;
     setBusy(true);
-    setStatus(null);
+    setInlineStatus(null);
     try {
       await downloadSticker(stickerUrl);
       await registerStickerShareMission();
-      showStatus("Figurinha salva!");
+      showStatus("Figurinha salva!", "success");
     } catch {
-      showStatus("Não foi possível salvar. Tente novamente.");
+      showStatus("Não foi possível salvar. Tente novamente.", "error");
     } finally {
       setBusy(false);
     }
@@ -198,12 +207,12 @@ export function StickerSharePanel({
 
           <div className="flex justify-center pt-0.5">{downloadAction}</div>
 
-          {status ? (
+          {inlineStatus && !feedbackToast ? (
             <p
               className="rounded-pill bg-verde-escuro-500/40 px-3 py-1.5 text-center text-[11px] font-medium text-amarelo"
               role="status"
             >
-              {status}
+              {inlineStatus}
             </p>
           ) : null}
         </div>
@@ -230,9 +239,9 @@ export function StickerSharePanel({
 
       {downloadAction}
 
-      {status ? (
+      {inlineStatus && !feedbackToast ? (
         <p className="text-center text-xs font-medium text-amarelo" role="status">
-          {status}
+          {inlineStatus}
         </p>
       ) : null}
     </div>
