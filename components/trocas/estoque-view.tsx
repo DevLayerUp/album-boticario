@@ -159,11 +159,11 @@ export function EstoqueView({ onTradeActivity }: EstoqueViewProps) {
           id="estoque-heading"
           className="max-w-3xl text-sm leading-relaxed text-verde-escuro-500 sm:text-base lg:leading-relaxed 2xl:text-xl 2xl:leading-[33px]"
         >
-          Todas as figurinhas do álbum em um só lugar. Toque nas faltantes para solicitar troca
-          {!loading && !canTrade
-            ? " (você precisa de repetidas para solicitar)"
-            : ""}
-          , nas que você já tem (com +) para ir colar no álbum, e veja repetidas com a quantidade.
+          Todas as figurinhas do álbum em um só lugar. Para colar as figurinhas que você já tem,
+          basta tocar nos cards que exibem o símbolo (+). Se quiser completar o álbum mais rápido,
+          toque nas figurinhas que estão faltando para solicitar uma troca com a comunidade —
+          lembrando que você precisa ter repetidas em estoque para negociar. O número indicado em
+          cada card mostra exatamente a quantidade de cópias repetidas que você possui.
         </p>
 
         {!loading && items.length > 0 ? (
