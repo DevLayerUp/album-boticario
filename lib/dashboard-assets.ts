@@ -48,7 +48,7 @@ export const dashboardAssets = {
     modalBackground: `${BASE}/missoes/bg-modal-missao.png`,
   },
   /** Card de criação de figurinha personalizada. */
-  figurinhaCard: `${BASE}/bg-minha-figurinha.png`,
+  figurinhaCard: `${BASE}/new-bg-figurinha.png`,
   /** Headers dos feature cards da seção "Explorar". */
   cards: {
     figurinha: `${BASE}/cards/figurinha.png`,

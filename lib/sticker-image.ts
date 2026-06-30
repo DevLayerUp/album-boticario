@@ -3,16 +3,14 @@ import path from "path";
 import sharp from "sharp";
 import {
   STICKER_CARD,
+  STICKER_CARD_BG,
   STICKER_EXPORT,
   getStickerFrameExport,
   getStickerPhotoPlacement,
   type StickerPhotoTransform,
 } from "@/lib/sticker-card";
 
-const BG_PATH = path.join(
-  process.cwd(),
-  "public/images/dashboard/bg-minha-figurinha.png",
-);
+const BG_PATH = path.join(process.cwd(), "public", STICKER_CARD_BG.replace(/^\//, ""));
 
 const DISPLAY_TO_EXPORT = STICKER_EXPORT.width / STICKER_CARD.width;
 
