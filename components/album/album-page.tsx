@@ -222,7 +222,12 @@ function ProfilePage({ page, side, userStickerUrl, userDisplayName, inFlipBook }
                     inFlipBook
                   />
                   {userDisplayName ? (
-                    <FigurinhaNameTag name={userDisplayName} overlay />
+                    <FigurinhaNameTag
+                      name={userDisplayName}
+                      overlay
+                      profile
+                      className="bottom-7 sm:bottom-8"
+                    />
                   ) : null}
                   <span className="pointer-events-none absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-verde-escuro-capa/90 to-transparent px-3 pb-3 pt-8 text-center text-[10px] font-bold uppercase tracking-wide text-white opacity-90 sm:text-xs">
                     Toque para alterar
@@ -241,7 +246,7 @@ function ProfilePage({ page, side, userStickerUrl, userDisplayName, inFlipBook }
                     alt="Sua figurinha personalizada"
                   />
                   {userDisplayName ? (
-                    <FigurinhaNameTag name={userDisplayName} overlay />
+                    <FigurinhaNameTag name={userDisplayName} overlay profile />
                   ) : null}
                 </div>
               </Link>
