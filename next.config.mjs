@@ -56,6 +56,7 @@ const nextConfig = {
               "img-src 'self' data: blob: https://*.supabase.co https://api.remove.bg",
               "media-src 'self' blob: https://*.supabase.co",
               "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.remove.bg https://staticimgly.com",
+              "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com",
               "frame-ancestors 'self'",
               "base-uri 'self'",
               "form-action 'self'",
