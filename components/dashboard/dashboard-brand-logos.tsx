@@ -11,7 +11,7 @@ export function DashboardBrandLogos() {
       <Link
         href="/dashboard"
         className="flex shrink-0 items-center"
-        aria-label="Fãs da Natureza — início"
+        aria-label="Fãs por Natureza — início"
       >
         <Wordmark
           tone="dark"

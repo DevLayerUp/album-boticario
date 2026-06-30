@@ -5,8 +5,8 @@ import { getSiteUrl } from "@/lib/seo-metadata";
 export type AuthEmailTemplateId = "confirm-signup" | "reset-password";
 
 const SUBJECTS: Record<AuthEmailTemplateId, string> = {
-  "confirm-signup": "Confirme sua conta — Fãs da Natureza",
-  "reset-password": "Redefinir sua senha — Fãs da Natureza",
+  "confirm-signup": "Confirme sua conta — Fãs por Natureza",
+  "reset-password": "Redefinir sua senha — Fãs por Natureza",
 };
 
 const templateCache = new Map<AuthEmailTemplateId, string>();

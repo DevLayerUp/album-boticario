@@ -45,7 +45,7 @@ export async function createStickerStoriesImage(stickerUrl: string): Promise<Fil
   ctx.fillStyle = "rgba(255,255,255,0.92)";
   ctx.font = "600 40px system-ui, sans-serif";
   ctx.textAlign = "center";
-  ctx.fillText("Fãs da Natureza", STORIES_WIDTH / 2, STORIES_HEIGHT - 140);
+  ctx.fillText("Fãs por Natureza", STORIES_WIDTH / 2, STORIES_HEIGHT - 140);
 
   ctx.fillStyle = "rgba(255,255,255,0.65)";
   ctx.font = "500 28px system-ui, sans-serif";

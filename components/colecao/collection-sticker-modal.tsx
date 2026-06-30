@@ -231,7 +231,7 @@ export function CollectionStickerModal({
                       <StickerFormattedText
                         text={
                           sticker.description ??
-                          "Figurinha exclusiva da coleção Fãs da Natureza."
+                          "Figurinha exclusiva da coleção Fãs por Natureza."
                         }
                       />
                     </p>

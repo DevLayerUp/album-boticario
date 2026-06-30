@@ -61,12 +61,12 @@ function AuthLogoFans({
   return (
     <Link
       href="/"
-      aria-label="Fãs da Natureza — página inicial"
+      aria-label="Fãs por Natureza — página inicial"
       className="shrink-0"
     >
       <Image
         src={src}
-        alt="Fãs da Natureza"
+        alt="Fãs por Natureza"
         width={variant === "light" ? 108 : 140}
         height={variant === "light" ? 53 : 40}
         className={className}
@@ -148,7 +148,7 @@ export function AuthBackground({ children }: AuthBackgroundProps) {
         </motion.div>
 
         <p className="relative z-10 px-[55px] pb-10 text-base text-verde-300">
-          © {year} Grupo Boticário · Fãs da Natureza
+          © {year} Grupo Boticário · Fãs por Natureza
         </p>
       </aside>
 

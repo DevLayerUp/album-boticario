@@ -2,10 +2,10 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Álbum de Figurinhas — Grupo Boticário",
-    short_name: "Álbum GB",
+    name: "Álbum de Figurinhas — Fãs por Natureza",
+    short_name: "Fãs por Natureza",
     description:
-      "Crie sua figurinha personalizada, abra pacotinhos e complete o álbum digital do Grupo Boticário.",
+      "O maior fandom da nossa biodiversidade! Abra pacotes diários, troque figurinhas repetidas e complete seu álbum.",
     start_url: "/dashboard",
     display: "standalone",
     background_color: "#f7f3ec",

@@ -27,7 +27,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 
   const displayName = profile.display_name?.trim() || "Colecionador";
-  const title = `Figurinha de ${displayName} — Fãs da Natureza`;
+  const title = `Figurinha de ${displayName} — Fãs por Natureza`;
   const description = buildStickerShareText(displayName);
   const siteUrl = getSiteUrl();
   const pageUrl = `${siteUrl}/share/figurinha/${userId}`;
@@ -43,7 +43,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       url: pageUrl,
       type: "website",
       locale: "pt_BR",
-      siteName: "Fãs da Natureza",
+      siteName: "Fãs por Natureza",
       images: [
         {
           url: ogImageUrl,

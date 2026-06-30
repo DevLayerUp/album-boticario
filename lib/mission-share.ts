@@ -3,7 +3,7 @@ export function buildAlbumShareUrl(origin: string): string {
 }
 
 export function buildAlbumShareText(shareUrl: string): string {
-  return `Confira meu álbum de figurinhas Fãs da Natureza! ${shareUrl}`;
+  return `Confira meu álbum de figurinhas Fãs por Natureza! ${shareUrl}`;
 }
 
 export async function registerSocialShareMission(): Promise<boolean> {
@@ -20,7 +20,7 @@ export async function shareAlbumCollection(
   if (typeof navigator.share === "function") {
     try {
       await navigator.share({
-        title: "Meu Álbum — Fãs da Natureza",
+        title: "Meu Álbum — Fãs por Natureza",
         text: shareText,
         url: shareUrl,
       });

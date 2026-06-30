@@ -61,7 +61,7 @@ export function AlbumLeftPageLogos({ inFlipBook }: { inFlipBook?: boolean }) {
       />
       <Image
         src={dashboardAssets.auth.logoBranco}
-        alt="Fãs da Natureza"
+        alt="Fãs por Natureza"
         width={66}
         height={33}
         className={cn(

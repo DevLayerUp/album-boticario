@@ -14,7 +14,7 @@ export function buildInviteUrl(code: string, origin: string): string {
 
 export function buildShareText(inviteUrl: string, inviterName?: string | null): string {
   const who = inviterName?.trim() ? `${inviterName.trim()} te convidou` : "Te convido";
-  return `${who} para colecionar figurinhas no álbum Fãs da Natureza! Crie sua conta: ${inviteUrl}`;
+  return `${who} para colecionar figurinhas no álbum Fãs por Natureza! Crie sua conta: ${inviteUrl}`;
 }
 
 export interface ReferralSummary {

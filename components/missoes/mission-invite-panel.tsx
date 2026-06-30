@@ -79,7 +79,7 @@ export function MissionInvitePanel({ progress, targetValue }: MissionInvitePanel
     if (typeof navigator.share === "function") {
       try {
         await navigator.share({
-          title: "Álbum Fãs da Natureza",
+          title: "Álbum Fãs por Natureza",
           text: shareText,
           url: data.invite_url,
         });

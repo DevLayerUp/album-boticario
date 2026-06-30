@@ -54,7 +54,7 @@ export function MissionSharePanel({ onComplete }: MissionSharePanelProps) {
     if (typeof navigator.share === "function") {
       try {
         await navigator.share({
-          title: "Meu Álbum — Fãs da Natureza",
+          title: "Meu Álbum — Fãs por Natureza",
           text: shareText,
           url: shareUrl,
         });
