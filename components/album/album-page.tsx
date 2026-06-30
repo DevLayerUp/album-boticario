@@ -208,27 +208,66 @@ function ProfilePage({ page, side, userStickerUrl, userDisplayName, inFlipBook }
 
         <div className="flex flex-col items-center justify-center">
           {hasSticker ? (
-            <div
-              className="relative overflow-hidden shadow-2xl shadow-black/30"
-              style={{
-                width: "clamp(160px, 38vw, 280px)",
-                aspectRatio: "352 / 503",
-                borderRadius: 16,
-              }}
-            >
-              <Image
-                key={userStickerUrl}
-                src={userStickerUrl!}
-                alt="Sua figurinha personalizada"
-                fill
-                className="object-cover"
-                sizes="(max-width: 768px) 38vw, 280px"
-                priority
-              />
-              {userDisplayName ? (
-                <FigurinhaNameTag name={userDisplayName} overlay />
-              ) : null}
-            </div>
+            inFlipBook ? (
+              <FlipBookLink
+                href="/figurinha"
+                className="group flex flex-col items-center gap-2 transition-transform duration-200 active:scale-[0.99]"
+                ariaLabel="Alterar figurinha personalizada"
+              >
+                <div
+                  className="relative overflow-hidden shadow-2xl shadow-black/30"
+                  style={{
+                    width: "clamp(160px, 38vw, 280px)",
+                    aspectRatio: "352 / 503",
+                    borderRadius: 16,
+                  }}
+                >
+                  <Image
+                    key={userStickerUrl}
+                    src={userStickerUrl!}
+                    alt="Sua figurinha personalizada"
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 38vw, 280px"
+                    priority
+                  />
+                  {userDisplayName ? (
+                    <FigurinhaNameTag name={userDisplayName} overlay />
+                  ) : null}
+                  <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-verde-escuro-capa/90 to-transparent px-3 pb-3 pt-8 text-center text-[10px] font-bold uppercase tracking-wide text-white opacity-90 sm:text-xs">
+                    Toque para alterar
+                  </span>
+                </div>
+              </FlipBookLink>
+            ) : (
+              <Link
+                href="/figurinha"
+                className="group flex flex-col items-center gap-2 transition-transform duration-200 hover:scale-[1.01]"
+                aria-label="Alterar figurinha personalizada"
+              >
+                <div
+                  className="relative overflow-hidden shadow-2xl shadow-black/30"
+                  style={{
+                    width: "clamp(160px, 38vw, 280px)",
+                    aspectRatio: "352 / 503",
+                    borderRadius: 16,
+                  }}
+                >
+                  <Image
+                    key={userStickerUrl}
+                    src={userStickerUrl!}
+                    alt="Sua figurinha personalizada"
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 38vw, 280px"
+                    priority
+                  />
+                  {userDisplayName ? (
+                    <FigurinhaNameTag name={userDisplayName} overlay />
+                  ) : null}
+                </div>
+              </Link>
+            )
           ) : inFlipBook ? (
             <FlipBookLink
               href="/figurinha"

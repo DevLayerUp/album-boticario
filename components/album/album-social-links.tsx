@@ -25,18 +25,27 @@ export function AlbumSocialLinks({
   );
   if (visible.length === 0) return null;
 
-  const iconSize = size === "sm" ? 44 : 52;
+  const iconSize = size === "sm" ? 48 : 52;
   const iconClassName = cn(
     "h-auto w-auto object-contain",
-    size === "sm" ? "max-h-10 max-w-10 sm:max-h-11 sm:max-w-11" : "max-h-11 max-w-11 sm:max-h-[52px] sm:max-w-[52px] 2xl:max-h-14 2xl:max-w-14",
+    size === "sm"
+      ? "max-h-11 max-w-11 sm:max-h-12 sm:max-w-12"
+      : "max-h-11 max-w-11 sm:max-h-[52px] sm:max-w-[52px] 2xl:max-h-14 2xl:max-w-14",
   );
-  const linkClassName =
-    "block shrink-0 transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 focus-visible:ring-offset-verde-escuro-500";
+  const linkClassName = cn(
+    "relative z-30 block shrink-0 p-1 transition-transform hover:scale-105 active:scale-95",
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 focus-visible:ring-offset-verde-escuro-500",
+    inFlipBook && "touch-manipulation [touch-action:manipulation]",
+  );
 
   return (
     <nav
       aria-label="Redes sociais"
-      className={cn("flex flex-wrap items-center justify-center gap-2.5 sm:gap-3", className)}
+      className={cn(
+        "flex flex-wrap items-center justify-center",
+        inFlipBook ? "gap-3" : "gap-2.5 sm:gap-3",
+        className,
+      )}
     >
       {visible.map((link, index) => {
         const image = (

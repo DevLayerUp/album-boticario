@@ -98,6 +98,8 @@ interface AlbumPageShellProps {
   side: PageSide;
   pageNumber: number;
   inFlipBook?: boolean;
+  /** Permite rolar o conteúdo dentro da página (ex.: redes sociais no mobile). */
+  scrollableContent?: boolean;
   children: React.ReactNode;
 }
 
@@ -105,6 +107,7 @@ export function AlbumPageShell({
   side,
   pageNumber,
   inFlipBook = false,
+  scrollableContent = false,
   children,
 }: AlbumPageShellProps) {
   const decoration =
@@ -140,8 +143,24 @@ export function AlbumPageShell({
         }}
       />
       <div className="relative z-10 flex min-h-0 flex-1 flex-col">
-        <div className="flex min-h-0 flex-1 flex-col justify-center overflow-hidden">
-          <div className="min-h-0 w-full max-h-full overflow-hidden">{children}</div>
+        <div
+          className={cn(
+            "flex min-h-0 flex-1 flex-col",
+            scrollableContent && inFlipBook
+              ? "justify-start overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]"
+              : "justify-center overflow-hidden",
+          )}
+        >
+          <div
+            className={cn(
+              "min-h-0 w-full",
+              scrollableContent && inFlipBook
+                ? "overflow-visible py-1"
+                : "max-h-full overflow-hidden",
+            )}
+          >
+            {children}
+          </div>
         </div>
 
         <div

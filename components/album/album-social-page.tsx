@@ -22,16 +22,27 @@ export function AlbumSocialPage({
       side={side}
       pageNumber={page.page_number}
       inFlipBook={inFlipBook}
+      scrollableContent={inFlipBook}
     >
       <div
         className={cn(
           "flex w-full flex-col",
-          inFlipBook ? "px-4 py-3 sm:px-[10%] sm:py-5" : "px-6 py-6 sm:px-[10%]",
+          inFlipBook ? "px-3 py-2 sm:px-[8%] sm:py-4" : "px-6 py-6 sm:px-[10%]",
         )}
       >
-        <div className="flex flex-col items-center justify-center gap-4 sm:gap-5 md:gap-6">
+        <div
+          className={cn(
+            "flex flex-col items-center justify-center",
+            inFlipBook ? "gap-2.5 sm:gap-4" : "gap-4 sm:gap-5 md:gap-6",
+          )}
+        >
           {imageUrl ? (
-            <div className="relative w-[min(88%,380px)]">
+            <div
+              className={cn(
+                "relative shrink-0",
+                inFlipBook ? "w-[min(68%,220px)]" : "w-[min(88%,380px)]",
+              )}
+            >
               <Image
                 src={imageUrl}
                 alt={title ?? "Imagem da página"}
@@ -53,8 +64,10 @@ export function AlbumSocialPage({
               <FlipBookHtmlContent
                 html={data.text}
                 className={cn(
-                  "max-w-[92%] text-center leading-[1.35] text-white **:text-white [&_a]:underline [&_p]:mb-2 [&_strong]:font-semibold",
-                  "text-sm sm:text-base md:text-lg lg:text-xl",
+                  "max-w-[92%] text-center leading-[1.3] text-white **:text-white [&_a]:underline [&_p]:mb-1.5 [&_strong]:font-semibold",
+                  inFlipBook
+                    ? "text-xs sm:text-sm md:text-base"
+                    : "text-base sm:text-lg md:text-xl",
                 )}
               />
             ) : (
@@ -72,7 +85,10 @@ export function AlbumSocialPage({
             links={data.social_links ?? []}
             size={inFlipBook ? "sm" : "md"}
             inFlipBook={inFlipBook}
-            className="pt-0.5 sm:pt-1"
+            className={cn(
+              "shrink-0",
+              inFlipBook ? "pb-1 pt-0.5" : "pt-0.5 sm:pt-1",
+            )}
           />
         </div>
       </div>
