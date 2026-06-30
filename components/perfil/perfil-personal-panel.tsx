@@ -53,21 +53,13 @@ export function PerfilPersonalPanel({
 
   const [displayName, setDisplayName] = useState(initialName);
   const [bio, setBio] = useState(initialBio);
-<<<<<<< HEAD
   const [phone, setPhone] = useState(initialPhone);
-  const [error, setError] = useState<string | null>(null);
-=======
   const { showToast } = usePerfilToast();
->>>>>>> bfeb93f0f65c4f60ed052a1d1153f78e463f8b74
 
   function handleCancel() {
     setDisplayName(initialName);
     setBio(initialBio);
-<<<<<<< HEAD
     setPhone(initialPhone);
-    setError(null);
-=======
->>>>>>> bfeb93f0f65c4f60ed052a1d1153f78e463f8b74
   }
 
   async function handleSave() {
@@ -76,7 +68,10 @@ export function PerfilPersonalPanel({
       return;
     }
     if (phone.trim() && !isValidPhoneBR(phone)) {
-      setError("Informe um telefone válido: (00) 0000-0000 ou (00) 00000-0000.");
+      showToast({
+        message: "Informe um telefone válido: (00) 0000-0000 ou (00) 00000-0000.",
+        variant: "warning",
+      });
       return;
     }
     try {
