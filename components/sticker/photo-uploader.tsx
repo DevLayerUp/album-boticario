@@ -2,7 +2,7 @@
 
 import { useCallback, useRef, useState } from "react";
 import { Camera } from "lucide-react";
-import { normalizeImageFileForUpload } from "@/lib/normalize-image-file";
+import { prepareImageFileForUpload } from "@/lib/normalize-image-file";
 import { STICKER_UPLOAD_ZONE, type StickerPhotoTransform } from "@/lib/sticker-card";
 import { removeBackgroundInBrowser } from "@/lib/remove-background-client";
 import { assertCutoutHasTransparency } from "@/lib/validate-cutout-client";
@@ -29,7 +29,6 @@ const ALLOWED_TYPES = [
   "image/heic",
   "image/heif",
 ];
-const MAX_MB = 10;
 
 /** Inputs ocultos mas acionáveis no iOS/Android (sr-only quebra câmera em alguns devices). */
 const HIDDEN_FILE_INPUT_CLASS =
@@ -68,7 +67,6 @@ export function PhotoUploader({
       name.endsWith(".heif");
 
     if (!allowed) return "Use uma foto JPG, PNG ou WebP.";
-    if (file.size > MAX_MB * 1024 * 1024) return `A foto deve ter menos de ${MAX_MB} MB.`;
     return null;
   };
 
@@ -94,7 +92,7 @@ export function PhotoUploader({
     setLoadingHint("Preparando recorte…");
 
     try {
-      const normalized = await normalizeImageFileForUpload(file);
+      const normalized = await prepareImageFileForUpload(file);
       const blob = await removeBackgroundInBrowser(normalized, (fraction) => {
         setLoadingHint(
           fraction < 0.2
