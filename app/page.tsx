@@ -11,9 +11,12 @@ import { LandingFandom } from "@/components/landing/fandom-section";
 import { LandingFaq } from "@/components/landing/faq-section";
 import { LandingFooter } from "@/components/landing/footer-section";
 import { LandingCookieConsent } from "@/components/landing/cookie-consent";
+import { LandingStructuredData } from "@/components/landing/structured-data";
+import { DEFAULT_FAQ_ITEMS } from "@/components/landing/faq-section";
+import { DEFAULT_SOCIAL_LINKS } from "@/components/landing/footer-section";
 import type { Metadata } from "next";
 import { GBG_PRIVACY_URL } from "@/lib/landing-urls";
-import { buildRouteMetadata, fetchSeoSettings } from "@/lib/seo-metadata";
+import { buildRouteMetadata, fetchSeoSettings, getSiteUrl } from "@/lib/seo-metadata";
 import type { LandingNavbarProps } from "@/components/landing/navbar";
 import type { LandingHeroProps } from "@/components/landing/hero";
 import type { LandingWelcomeProps } from "@/components/landing/welcome-section";
@@ -69,8 +72,22 @@ export default async function HomePage() {
   const footerSettings     = safeParse<LandingFooterProps>(settingsMap["landing_footer"], {});
   const privacyHref = registerSettings.privacyUrl ?? GBG_PRIVACY_URL;
 
+  const seoSettings = await fetchSeoSettings();
+  const faqItems = faqSettings.items?.length ? faqSettings.items : DEFAULT_FAQ_ITEMS;
+  const socialLinks = footerSettings.socialLinks?.length
+    ? footerSettings.socialLinks
+    : DEFAULT_SOCIAL_LINKS;
+
   return (
     <>
+    <LandingStructuredData
+      siteUrl={getSiteUrl()}
+      siteName={seoSettings.siteName}
+      description={seoSettings.defaultDescription}
+      logoUrl={footerSettings.logoUrl ?? "/images/landing/footer/logo.png"}
+      faqItems={faqItems}
+      socialLinks={socialLinks}
+    />
     <main id="main-content">
       <LandingNavbar     {...navbarSettings} />
       <LandingHero       {...heroSettings} />

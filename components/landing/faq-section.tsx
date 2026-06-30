@@ -17,7 +17,7 @@ export interface LandingFaqProps {
 }
 
 /* ─── Defaults ───────────────────────────────────────────────────────────── */
-const DEFAULT_ITEMS: FaqItem[] = [
+export const DEFAULT_FAQ_ITEMS: FaqItem[] = [
   {
     question: "O álbum é gratuito?",
     answer:   "Sim. Basta realizar seu cadastro para começar a colecionar.",
@@ -50,7 +50,7 @@ export function LandingFaq({
   title   = "Perguntas frequentes",
   items,
 }: LandingFaqProps) {
-  const faqItems = items?.length ? items : DEFAULT_ITEMS;
+  const faqItems = items?.length ? items : DEFAULT_FAQ_ITEMS;
   const [openIndex, setOpenIndex] = useState(0);
 
   function toggle(index: number) {

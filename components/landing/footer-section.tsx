@@ -69,7 +69,7 @@ const SOCIAL_ICON_MAP = {
   tiktok:    FaTiktok,
 } as const;
 
-const DEFAULT_SOCIAL_LINKS: FooterSocialLink[] = [
+export const DEFAULT_SOCIAL_LINKS: FooterSocialLink[] = [
   { platform: "youtube",   label: "YouTube",   href: "https://www.youtube.com/user/fundacaoboticario" },
   { platform: "linkedin",  label: "LinkedIn",  href: "https://www.linkedin.com/company/fundacaogrupoboticario/" },
   { platform: "instagram", label: "Instagram", href: "https://www.instagram.com/fundacaogrupoboticario/" },

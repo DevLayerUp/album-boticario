@@ -1,3 +1,4 @@
+import { cache } from "react";
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -12,11 +13,19 @@ import {
   type SeoSettings,
 } from "@/lib/seo-settings";
 
+const PRODUCTION_SITE_URL = "https://www.faspornatureza.com.br";
+
 export function getSiteUrl(): string {
-  return process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const url = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+  if (url) return url.replace(/\/+$/, "");
+  return PRODUCTION_SITE_URL;
 }
 
-export async function fetchSeoSettings(): Promise<SeoSettings> {
+/**
+ * `cache` deduplica a leitura por request: layout + page chamam isto, mas só
+ * dispara uma consulta ao Supabase por renderização.
+ */
+export const fetchSeoSettings = cache(async (): Promise<SeoSettings> => {
   const supabase = await createClient();
   const { data } = await supabase
     .from("app_settings")
@@ -25,7 +34,7 @@ export async function fetchSeoSettings(): Promise<SeoSettings> {
     .maybeSingle();
 
   return data?.value ? parseSeoSettings(data.value) : DEFAULT_SEO_SETTINGS;
-}
+});
 
 function buildOpenGraphImages(ogImageUrl: string | null | undefined) {
   if (!ogImageUrl) return undefined;
@@ -69,6 +78,9 @@ export function buildRootMetadata(settings: SeoSettings): Metadata {
       template: settings.titleTemplate,
     },
     description: settings.defaultDescription,
+    alternates: {
+      canonical: "/",
+    },
     openGraph: {
       title: resolved.ogTitle,
       description: resolved.ogDescription,
@@ -100,6 +112,9 @@ export function buildRouteMetadata(
   return {
     title: resolved.title,
     description: resolved.metaDescription,
+    alternates: {
+      canonical: path ?? "/",
+    },
     openGraph: {
       title: resolved.ogTitle,
       description: resolved.ogDescription,
