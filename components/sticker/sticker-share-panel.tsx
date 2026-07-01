@@ -234,10 +234,6 @@ export function StickerSharePanel({
 
       {primaryButton}
 
-      <ShareDivider />
-
-      {socialRow}
-
       {downloadAction}
 
       {inlineStatus && !feedbackToast ? (
