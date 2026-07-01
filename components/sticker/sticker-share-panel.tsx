@@ -24,29 +24,6 @@ interface StickerSharePanelProps {
   variant?: "figurinha" | "profile";
 }
 
-function ShareDivider({ onDark }: { onDark?: boolean }) {
-  return (
-    <div className="flex w-full items-center gap-3">
-      <span
-        className={cn("h-px flex-1", onDark ? "bg-white/20" : "bg-white/15")}
-        aria-hidden
-      />
-      <span
-        className={cn(
-          "shrink-0 text-[10px] font-medium uppercase tracking-[0.14em]",
-          onDark ? "text-white/55" : "text-white/50",
-        )}
-      >
-        ou envie por
-      </span>
-      <span
-        className={cn("h-px flex-1", onDark ? "bg-white/20" : "bg-white/15")}
-        aria-hidden
-      />
-    </div>
-  );
-}
-
 export function StickerSharePanel({
   userId,
   stickerUrl,
@@ -202,8 +179,6 @@ export function StickerSharePanel({
 
           {primaryButton}
 
-          <ShareDivider onDark />
-
           {socialRow}
 
           <div className="flex justify-center pt-0.5">{downloadAction}</div>
@@ -229,14 +204,10 @@ export function StickerSharePanel({
       )}
     >
       <p className="text-center text-sm text-white/80">
-        Compartilhe sua figurinha nas redes sociais
+        Compartilhe ou salve sua figurinha
       </p>
 
       {primaryButton}
-
-      <ShareDivider />
-
-      {socialRow}
 
       {downloadAction}
 

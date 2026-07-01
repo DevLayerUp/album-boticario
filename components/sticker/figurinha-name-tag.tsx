@@ -59,12 +59,12 @@ export function FigurinhaNameTag({
       className={cn(
         "pointer-events-none absolute z-10 flex justify-center",
         profile
-          ? "inset-x-2 bottom-0 items-end sm:inset-x-3"
+          ? "inset-x-2 bottom-0 translate-y-1 items-end sm:inset-x-3 sm:translate-y-1.5"
           : isAlbumSlot
             ? "inset-x-0 bottom-0"
             : compact
-              ? "inset-x-1 bottom-[6%] sm:inset-x-1.5 sm:bottom-[8%] md:bottom-[10%]"
-              : "inset-x-2 bottom-[10%] sm:inset-x-3 sm:bottom-[12%] md:bottom-16",
+              ? "inset-x-1 bottom-[4%] sm:inset-x-1.5 sm:bottom-[6%] md:bottom-[8%]"
+              : "inset-x-2 bottom-[7%] sm:inset-x-3 sm:bottom-[9%] md:bottom-12",
         className,
       )}
     >
