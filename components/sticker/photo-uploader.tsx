@@ -185,7 +185,7 @@ export function PhotoUploader({
             if (phase === "pick") setDragOver(true);
           }}
           onDragLeave={() => setDragOver(false)}
-          className="relative w-full"
+          className="relative flex w-full justify-center"
         >
           <FigurinhaCardScaler>
             <button
@@ -235,7 +235,8 @@ export function PhotoUploader({
               className="inline-flex h-11 min-h-11 cursor-pointer items-center justify-center gap-2 rounded-pill border border-white/40 px-6 text-sm font-medium text-white/90 transition-colors duration-200 hover:border-white/70 hover:bg-white/5 active:scale-[0.98]"
             >
               <Camera className="size-4" aria-hidden />
-              Tirar selfie
+              <span className="sm:hidden">Tirar selfie</span>
+              <span className="hidden sm:inline">Enviar Foto</span>
             </button>
 
             {hasExistingSticker && onCancelRecreate ? (

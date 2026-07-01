@@ -23,7 +23,7 @@ export function AlbumUserStickerImage({
   return (
     <div
       className={cn(
-        "relative shrink-0 overflow-hidden rounded-2xl shadow-2xl shadow-black/30",
+        "relative shrink-0 overflow-hidden rounded-[15px] shadow-lg shadow-black/25",
         inFlipBook ? "h-[286px] w-[200px]" : "aspect-[352/503] w-[min(100%,280px)]",
         className,
       )}
@@ -35,7 +35,7 @@ export function AlbumUserStickerImage({
           alt={alt}
           width={STICKER_W}
           height={STICKER_H}
-          className="h-full w-full object-cover"
+          className="h-full w-full rounded-[15px] object-cover"
           decoding="async"
           draggable={false}
         />
@@ -44,7 +44,7 @@ export function AlbumUserStickerImage({
           src={src}
           alt={alt}
           fill
-          className="object-cover"
+          className="rounded-[15px] object-cover"
           sizes="(max-width: 768px) 200px, 280px"
           priority
         />
