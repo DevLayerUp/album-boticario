@@ -14,6 +14,7 @@ import {
   Target,
   Users,
   Megaphone,
+  MessageSquare,
   LogOut,
   ChevronRight,
   ImageIcon,
@@ -38,6 +39,7 @@ const NAV = [
   { href: "/admin/quiz",         label: "Quiz",          icon: HelpCircle },
   { href: "/admin/missoes",      label: "Missões",       icon: Target },
   { href: "/admin/avisos",       label: "Avisos",        icon: Megaphone },
+  { href: "/admin/feedback",     label: "Feedbacks",     icon: MessageSquare },
   { href: "/admin/usuarios",     label: "Usuários",      icon: Users },
 ];
 

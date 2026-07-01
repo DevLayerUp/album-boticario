@@ -11,6 +11,7 @@ import { DashboardMain } from "@/components/dashboard/dashboard-main";
 import { ReferralClaimOnLoad } from "@/components/referral/referral-claim-on-load";
 import { FirstStepsOnLoad } from "@/components/first-steps/first-steps-on-load";
 import { NotificationBell } from "@/components/notifications/notification-bell";
+import { FeedbackFloatingButton } from "@/components/feedback/feedback-floating-button";
 import { cn } from "@/lib/utils";
 
 const NAV = [
@@ -69,6 +70,7 @@ export default async function DashboardLayout({
 
       <DashboardMain>{children}</DashboardMain>
 
+      <FeedbackFloatingButton />
       <MobileNav />
     </DashboardShell>
   );
