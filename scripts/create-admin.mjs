@@ -90,7 +90,12 @@ async function main() {
 
   // 4. Upsert profile row (trigger may already have created it)
   const { error: profileErr } = await supabase.from("profiles").upsert(
-    { id: userId, display_name: ADMIN_NAME, username: "admin" },
+    {
+      id: userId,
+      display_name: ADMIN_NAME,
+      username: "admin",
+      show_in_ranking: false,
+    },
     { onConflict: "id" },
   );
   if (profileErr) {
