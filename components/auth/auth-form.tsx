@@ -11,6 +11,8 @@ import {
   EyeOff,
   User,
   CalendarDays,
+  MapPin,
+  Building2,
   AlertCircle,
   CheckCircle2,
   ArrowRight,
@@ -174,6 +176,8 @@ export function AuthForm({ mode }: { mode: Mode }) {
     : "/dashboard";
 
   const [fullName, setFullName] = useState("");
+  const [estado, setEstado] = useState("");
+  const [cidade, setCidade] = useState("");
   const [birthDate, setBirthDate] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -237,6 +241,8 @@ export function AuthForm({ mode }: { mode: Mode }) {
           full_name: nome,
           birth_date: birthDate,
         };
+        if (estado.trim()) signUpData.state = estado.trim();
+        if (cidade.trim()) signUpData.city = cidade.trim();
         if (referralCode) signUpData.referral_code = referralCode;
 
         const { error } = await supabase.auth.signUp({
@@ -317,6 +323,29 @@ export function AuthForm({ mode }: { mode: Mode }) {
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="Maria da Silva"
+                />
+              </motion.div>
+
+              <motion.div variants={item} className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <IconInput
+                  icon={MapPin}
+                  label="Estado"
+                  type="text"
+                  name="state"
+                  autoComplete="address-level1"
+                  value={estado}
+                  onChange={(e) => setEstado(e.target.value)}
+                  placeholder="Inserir texto"
+                />
+                <IconInput
+                  icon={Building2}
+                  label="Cidade"
+                  type="text"
+                  name="city"
+                  autoComplete="address-level2"
+                  value={cidade}
+                  onChange={(e) => setCidade(e.target.value)}
+                  placeholder="Inserir texto"
                 />
               </motion.div>
 
