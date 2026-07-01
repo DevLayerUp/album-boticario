@@ -109,6 +109,84 @@ export function buildSalesforceLeadWebhookBody(
   };
 }
 
+/** CloudPage (Code Resource JSON) do Salesforce que dispara o e-mail de boas-vindas. */
+const CLOUDPAGE_SIGNUP_URL =
+  "https://cloud.contato.fundacaogrupoboticario.org.br/cadastro-album";
+
+export function getCloudPageSignupUrl(): string {
+  return process.env.SALESFORCE_CLOUDPAGE_URL?.trim() || CLOUDPAGE_SIGNUP_URL;
+}
+
+/**
+ * Converte a data do input (YYYY-MM-DD) para DD/MM/YYYY exigido pela CloudPage.
+ * Se já vier em outro formato, repassa como texto.
+ */
+export function formatBirthDateBR(value?: string): string {
+  if (!value) return "";
+  const iso = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value.trim());
+  if (iso) return `${iso[3]}/${iso[2]}/${iso[1]}`;
+  return value.trim();
+}
+
+/**
+ * Envia o cadastro para a CloudPage do Salesforce (x-www-form-urlencoded),
+ * que gera a SubscriberKey, injeta na Data Extension e dispara o e-mail de
+ * boas-vindas de forma síncrona. Retorna a mensagem estruturada da resposta.
+ */
+export async function forwardLeadToCloudPage(
+  payload: SalesforceLeadPayload,
+): Promise<{ ok: true; message: string } | { ok: false; error: string }> {
+  const url = getCloudPageSignupUrl();
+
+  const params = new URLSearchParams();
+  params.set("Email", payload.email);
+  params.set("Name", payload.name);
+  params.set("DataNascimento", formatBirthDateBR(payload.birthDate));
+  params.set("Estado", payload.estado ?? "");
+  params.set("Cidade", payload.cidade ?? "");
+
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        Accept: "application/json",
+      },
+      body: params.toString(),
+      cache: "no-store",
+    });
+
+    const text = await res.text().catch(() => "");
+    let json: { status?: string; message?: string } | null = null;
+    try {
+      json = text ? (JSON.parse(text) as { status?: string; message?: string }) : null;
+    } catch {
+      json = null;
+    }
+
+    if (!res.ok) {
+      return {
+        ok: false,
+        error: json?.message || `CloudPage respondeu com status ${res.status}.`,
+      };
+    }
+
+    if (json?.status === "success") {
+      return {
+        ok: true,
+        message: json.message ?? "Cadastro realizado e email disparado com sucesso!",
+      };
+    }
+
+    return {
+      ok: false,
+      error: json?.message || "CloudPage retornou um erro não identificado.",
+    };
+  } catch {
+    return { ok: false, error: "Falha ao contatar a CloudPage do Salesforce." };
+  }
+}
+
 export async function forwardLeadToSalesforceWebhook(
   payload: SalesforceLeadPayload,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
