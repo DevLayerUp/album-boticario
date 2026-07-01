@@ -27,6 +27,7 @@ import {
   REFERRAL_STORAGE_KEY,
   normalizeReferralCode,
 } from "@/lib/referrals";
+import { sendAccountCreatedEmail } from "@/lib/email/send-account-created-email";
 
 const INPUT_BASE =
   "h-12 w-full rounded-xl border border-border bg-surface text-base text-gb-ink placeholder:text-muted/70 transition-colors duration-200 focus:border-gb-green focus:outline-none focus-visible:outline-2 focus-visible:outline-gb-green";
@@ -200,11 +201,12 @@ export function LandingPasswordForm() {
         email: draft.email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
           data: signUpData,
         },
       });
       if (signUpError) throw signUpError;
+
+      void sendAccountCreatedEmail(draft.email, draft.name);
 
       clearLandingSignupDraft();
       try {
@@ -214,7 +216,7 @@ export function LandingPasswordForm() {
       }
 
       setMessage(
-        "Conta criada! Verifique seu e-mail para confirmar o cadastro.",
+        "Conta criada! Enviamos um e-mail de boas-vindas. Você já pode entrar.",
       );
     } catch (err) {
       setError(

@@ -42,7 +42,7 @@ const DEFAULT_BG = dashboardAssets.quiz.background;
 export const DEFAULT_FIRST_STEPS_CONFIG: FirstStepsConfig = {
   enabled: true,
   skipLabel: "Pular introdução",
-  footerText: "© 2026 Grupo Boticário · Fãs por Natureza",
+  footerText: "© 2026 Fundação Grupo Boticário · Fãs por Natureza",
   backLabel: "Voltar",
   nextLabel: "Avançar",
   finishLabel: "Começar a colecionar",

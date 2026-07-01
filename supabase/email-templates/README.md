@@ -8,17 +8,17 @@ Os envios são feitos pelo **Resend** no app Next.js — **não** pelo SMTP/temp
 
 | Arquivo | Uso |
 |---|---|
-| `confirm-signup.html` | Confirmação de conta (cadastro) |
+| `account-created.html` | Boas-vindas após cadastro |
 | `reset-password.html` | Redefinir senha |
 
 ## Variáveis nos templates
 
 | Placeholder | Substituído por |
 |---|---|
-| `{{ .ConfirmationURL }}` | Link de confirmação ou redefinição |
 | `{{ .SiteURL }}` | `NEXT_PUBLIC_SITE_URL` (logotipos no header) |
-
-Não remova `{{ .ConfirmationURL }}` — é obrigatório para o fluxo de auth.
+| `{{ .LoginURL }}` | `{{ .SiteURL }}/login` (apenas conta criada) |
+| `{{ .DisplayName }}` | Nome do usuário com vírgula (ex.: `, Maria`) ou vazio |
+| `{{ .ConfirmationURL }}` | Link de redefinição de senha (apenas reset) |
 
 ## Configuração
 
@@ -28,42 +28,46 @@ Não remova `{{ .ConfirmationURL }}` — é obrigatório para o fluxo de auth.
 RESEND_API_KEY=re_...
 RESEND_FROM_EMAIL="Fãs por Natureza <noreply@seudominio.com.br>"
 NEXT_PUBLIC_SITE_URL=https://www.faspornatureza.com.br
-
-# Secret do hook Send Email (Supabase → Authentication → Hooks)
-SEND_EMAIL_HOOK_SECRET=v1,whsec_...
 ```
 
 O domínio em `RESEND_FROM_EMAIL` precisa estar verificado no [Resend](https://resend.com/domains).
 
-### 2. Confirmação de cadastro — Auth Hook
+### 2. Supabase Auth — desativar confirmação por e-mail
 
-1. Supabase Dashboard → **Authentication** → **Hooks** → **Send Email** → habilitar.
-2. URL: `https://SEU_DOMINIO/api/auth/hooks/send-email`
-3. Gere o secret e copie para `SEND_EMAIL_HOOK_SECRET`.
-4. Desative envio SMTP padrão do Supabase (o hook substitui os templates do Dashboard).
+Dashboard → **Authentication** → **Providers** → **Email**:
 
-Fluxos que disparam o hook:
+- Desative **Confirm email** (cadastro entra direto, sem link de confirmação do Supabase)
+- **Não** configure o hook Send Email — os e-mails saem só pelo Resend
 
-- `signUp` em `/register` e `/register/senha`
-- Qualquer confirmação de e-mail do Supabase Auth
+### 3. Conta criada — API dedicada
 
-### 3. Redefinir senha — API dedicada
+Após `signUp` em `/register` e `/register/senha`, o app chama:
+
+`POST /api/auth/account-created` → envia `account-created.html` via Resend.
+
+### 4. Redefinir senha — API dedicada
 
 `/esqueci-senha` chama `POST /api/auth/password-reset`, que:
 
-1. Gera o link com `auth.admin.generateLink` (recovery)
-2. Envia `reset-password.html` via Resend
+1. Gera o token com `auth.admin.generateLink` (recovery)
+2. Envia `reset-password.html` via Resend com link no **domínio do app**:
 
-Não usa mais `resetPasswordForEmail` do cliente.
+   `https://www.faspornatureza.com.br/auth/recuperar-senha?token=...`
 
-### 4. URLs de auth (Supabase)
+3. A rota `/auth/recuperar-senha` valida o token, abre a sessão e redireciona para `/redefinir-senha`
+
+### 5. URLs de auth (Supabase)
 
 - **Site URL** = produção (`NEXT_PUBLIC_SITE_URL`)
-- **Redirect URLs**: `https://SEU_DOMINIO/auth/callback` e `http://localhost:3000/auth/callback`
+- **Redirect URLs** (Authentication → URL Configuration):
+  - `https://SEU_DOMINIO/auth/callback`
+  - `https://SEU_DOMINIO/auth/recuperar-senha`
+  - `https://SEU_DOMINIO/redefinir-senha`
+  - `http://localhost:3000/auth/callback` (dev)
 
 ## Assuntos dos e-mails
 
-- **Confirm signup:** `Confirme sua conta — Fãs por Natureza`
+- **Conta criada:** `Conta criada — Fãs por Natureza`
 - **Reset password:** `Redefinir sua senha — Fãs por Natureza`
 
 Definidos em `lib/email/templates.ts`.

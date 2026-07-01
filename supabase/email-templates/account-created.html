@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <title>Confirme sua conta</title>
+  <title>Conta criada</title>
   <!--[if mso]>
   <noscript>
     <xml>
@@ -17,14 +17,13 @@
 </head>
 <body style="margin:0;padding:0;background-color:#f9f8f7;font-family:Barlow,Arial,Helvetica,sans-serif;-webkit-font-smoothing:antialiased;">
   <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;mso-hide:all;">
-    Confirme seu e-mail para começar a colecionar figurinhas no álbum Fãs por Natureza.
+    Sua conta no álbum Fãs por Natureza foi criada. Entre e comece a colecionar figurinhas!
   </div>
 
   <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#f9f8f7;">
     <tr>
       <td align="center" style="padding:32px 16px;">
         <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width:600px;background-color:#ffffff;border-radius:24px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.08);">
-          <!-- Header -->
           <tr>
             <td align="center" style="background-color:#0d6632;padding:28px 24px;">
               <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
@@ -54,54 +53,43 @@
             </td>
           </tr>
 
-          <!-- Body -->
           <tr>
             <td style="padding:40px 32px 32px;">
               <h1 style="margin:0 0 16px;font-size:28px;line-height:1.3;font-weight:700;color:#0d6632;">
-                Confirme seu e-mail
+                Conta criada com sucesso!
               </h1>
               <p style="margin:0 0 12px;font-size:16px;line-height:1.5;color:#1a1a1a;">
-                Olá!
+                Olá{{ .DisplayName }}!
               </p>
               <p style="margin:0 0 28px;font-size:16px;line-height:1.5;color:#4a4a4a;">
-                Obrigado por se cadastrar no nosso <strong style="color:#0d6632;">Fandom - Fãs Por Natureza</strong>.
-                Para ativar sua conta e começar a colecionar figurinhas, confirme seu endereço de e-mail.
+                Bem-vindo ao <strong style="color:#0d6632;">Fandom — Fãs por Natureza</strong>.
+                Sua conta está pronta para você abrir pacotinhos, colar figurinhas no álbum e completar missões.
               </p>
 
               <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
                 <tr>
                   <td align="center" style="padding-bottom:28px;">
                     <a
-                      href="{{ .ConfirmationURL }}"
+                      href="{{ .LoginURL }}"
                       target="_blank"
                       style="display:inline-block;background-color:#deda00;color:#0d6632;font-size:16px;font-weight:700;line-height:1;text-decoration:none;padding:14px 32px;border-radius:999px;mso-padding-alt:0;"
                     >
-                      <!--[if mso]><i style="letter-spacing:32px;mso-font-width:-100%;mso-text-raise:21pt">&nbsp;</i><![endif]-->
-                      <span style="mso-text-raise:10pt;">Confirmar minha conta</span>
-                      <!--[if mso]><i style="letter-spacing:32px;mso-font-width:-100%">&nbsp;</i><![endif]-->
+                      <span style="mso-text-raise:10pt;">Entrar no álbum</span>
                     </a>
                   </td>
                 </tr>
               </table>
 
-              <p style="margin:0 0 8px;font-size:14px;line-height:1.5;color:#6b7280;">
-                Se o botão não funcionar, copie e cole este link no navegador:
-              </p>
-              <p style="margin:0 0 24px;font-size:13px;line-height:1.5;word-break:break-all;">
-                <a href="{{ .ConfirmationURL }}" style="color:#0d6632;text-decoration:underline;">{{ .ConfirmationURL }}</a>
-              </p>
-
               <p style="margin:0;font-size:13px;line-height:1.5;color:#9ca3af;">
-                Se você não criou uma conta, pode ignorar este e-mail com segurança.
+                Se você não criou esta conta, ignore este e-mail com segurança.
               </p>
             </td>
           </tr>
 
-          <!-- Footer -->
           <tr>
             <td style="background-color:#f9f8f7;padding:20px 32px;border-top:1px solid #e8e6e4;">
               <p style="margin:0;font-size:12px;line-height:1.5;color:#0d6632;text-align:center;font-weight:500;">
-                © 2026 Grupo Boticário · Fãs por Natureza
+                © 2026 Fundação Grupo Boticário · Fãs por Natureza
               </p>
             </td>
           </tr>

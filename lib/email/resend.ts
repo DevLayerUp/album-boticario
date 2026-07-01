@@ -2,6 +2,7 @@ import { Resend } from "resend";
 import {
   renderAuthEmailTemplate,
   type AuthEmailTemplateId,
+  type AuthEmailTemplateVariables,
 } from "@/lib/email/templates";
 
 let resendClient: Resend | null = null;
@@ -28,13 +29,20 @@ function getFromAddress(): string {
 export async function sendAuthEmail(options: {
   to: string;
   templateId: AuthEmailTemplateId;
-  confirmationUrl: string;
+  variables?: AuthEmailTemplateVariables;
+  /** @deprecated use variables.confirmationUrl */
+  confirmationUrl?: string;
+  /** @deprecated use variables.siteUrl */
   siteUrl?: string;
 }): Promise<void> {
-  const { subject, html } = renderAuthEmailTemplate(options.templateId, {
-    confirmationUrl: options.confirmationUrl,
-    siteUrl: options.siteUrl,
-  });
+  const variables: AuthEmailTemplateVariables = {
+    ...options.variables,
+    confirmationUrl:
+      options.variables?.confirmationUrl ?? options.confirmationUrl,
+    siteUrl: options.variables?.siteUrl ?? options.siteUrl,
+  };
+
+  const { subject, html } = renderAuthEmailTemplate(options.templateId, variables);
 
   const resend = getResendClient();
   const { error } = await resend.emails.send({

@@ -148,7 +148,7 @@ export function AuthBackground({ children }: AuthBackgroundProps) {
         </motion.div>
 
         <p className="relative z-10 px-[55px] pb-10 text-base text-verde-300">
-          © {year} Grupo Boticário · Fãs por Natureza
+          © {year} Fundação Grupo Boticário · Fãs por Natureza
         </p>
       </aside>
 

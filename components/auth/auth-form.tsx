@@ -25,6 +25,7 @@ import {
   REFERRAL_STORAGE_KEY,
   normalizeReferralCode,
 } from "@/lib/referrals";
+import { sendAccountCreatedEmail } from "@/lib/email/send-account-created-email";
 
 const INPUT_BASE =
   "h-12 w-full rounded-xl border border-transparent bg-verde-100 text-base text-gb-ink placeholder:text-muted/70 transition-colors duration-200 focus:border-verde-500 focus:bg-surface focus:outline-none focus-visible:outline-2 focus-visible:outline-verde-500";
@@ -249,18 +250,18 @@ export function AuthForm({ mode }: { mode: Mode }) {
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/auth/callback`,
             data: signUpData,
           },
         });
         if (error) throw error;
+        void sendAccountCreatedEmail(email, nome);
         try {
           localStorage.removeItem(REFERRAL_STORAGE_KEY);
         } catch {
           /* ignore */
         }
         setMessage(
-          "Conta criada! Verifique seu e-mail para confirmar o cadastro.",
+          "Conta criada! Enviamos um e-mail de boas-vindas. Você já pode entrar.",
         );
       }
     } catch (err) {

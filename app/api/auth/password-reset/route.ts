@@ -1,6 +1,9 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { sendAuthEmail } from "@/lib/email/resend";
-import { buildPasswordResetRedirectUrl } from "@/lib/password-reset";
+import {
+  buildPasswordRecoveryEmailUrl,
+  REDEFINIR_SENHA_PATH,
+} from "@/lib/password-reset";
 import { getSiteUrl } from "@/lib/seo-metadata";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -39,27 +42,31 @@ export async function POST(request: NextRequest) {
   }
 
   const siteUrl = getSiteUrl();
-  const redirectTo = buildPasswordResetRedirectUrl(siteUrl);
 
   try {
     const admin = createAdminClient();
     const { data, error } = await admin.auth.admin.generateLink({
       type: "recovery",
       email,
-      options: { redirectTo },
+      options: {
+        redirectTo: `${siteUrl}${REDEFINIR_SENHA_PATH}`,
+      },
     });
 
     if (error) {
       console.error("[auth/password-reset] generateLink:", error.message);
     }
 
-    const actionLink = data?.properties?.action_link;
-    if (actionLink) {
+    const tokenHash = data?.properties?.hashed_token;
+    if (tokenHash) {
+      const recoveryUrl = buildPasswordRecoveryEmailUrl(siteUrl, tokenHash);
       await sendAuthEmail({
         to: email,
         templateId: "reset-password",
-        confirmationUrl: actionLink,
-        siteUrl,
+        variables: {
+          confirmationUrl: recoveryUrl,
+          siteUrl,
+        },
       });
     }
   } catch (err) {

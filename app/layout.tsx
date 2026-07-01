@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Barlow } from "next/font/google";
 import Script from "next/script";
+import { AuthHashErrorRedirect } from "@/components/auth/auth-hash-error-redirect";
 import { buildRootMetadata, fetchSeoSettings } from "@/lib/seo-metadata";
 import "./globals.css";
 
@@ -66,6 +67,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         >
           Pular para o conteúdo
         </a>
+        <AuthHashErrorRedirect />
         {children}
       </body>
     </html>
