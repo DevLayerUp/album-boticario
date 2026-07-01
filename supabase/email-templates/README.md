@@ -49,13 +49,21 @@ Após `signUp` em `/register` e `/register/senha`, o app chama:
 
 `/esqueci-senha` chama `POST /api/auth/password-reset`, que:
 
-1. Gera o link com `auth.admin.generateLink` (recovery)
-2. Envia `reset-password.html` via Resend
+1. Gera o token com `auth.admin.generateLink` (recovery)
+2. Envia `reset-password.html` via Resend com link no **domínio do app**:
+
+   `https://www.faspornatureza.com.br/auth/recuperar-senha?token=...`
+
+3. A rota `/auth/recuperar-senha` valida o token, abre a sessão e redireciona para `/redefinir-senha`
 
 ### 5. URLs de auth (Supabase)
 
 - **Site URL** = produção (`NEXT_PUBLIC_SITE_URL`)
-- **Redirect URLs**: `https://SEU_DOMINIO/auth/callback` e `http://localhost:3000/auth/callback` (recuperação de senha)
+- **Redirect URLs** (Authentication → URL Configuration):
+  - `https://SEU_DOMINIO/auth/callback`
+  - `https://SEU_DOMINIO/auth/recuperar-senha`
+  - `https://SEU_DOMINIO/redefinir-senha`
+  - `http://localhost:3000/auth/callback` (dev)
 
 ## Assuntos dos e-mails
 

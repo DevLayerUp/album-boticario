@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { REDEFINIR_SENHA_PATH } from "@/lib/password-reset";
+import { createRouteHandlerClient } from "@/lib/supabase/route-handler";
 
 const SAFE_REDIRECT_PREFIXES = [
   "/dashboard",
@@ -38,15 +39,22 @@ export async function GET(request: NextRequest) {
   );
 
   if (code) {
-    const supabase = await createClient();
+    const successUrl = `${origin}${redirectTo}`;
+    const response = NextResponse.redirect(successUrl);
+    const supabase = createRouteHandlerClient(request, response);
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
-      return NextResponse.redirect(`${origin}${redirectTo}`);
+      return response;
     }
   }
 
   const authError =
     searchParams.get("error_description") ?? searchParams.get("error");
+  if (redirectTo === REDEFINIR_SENHA_PATH || redirectTo.startsWith(`${REDEFINIR_SENHA_PATH}/`)) {
+    const url = new URL("/esqueci-senha", origin);
+    url.searchParams.set("error", "link-expirado");
+    return NextResponse.redirect(url);
+  }
   const loginUrl = new URL("/login", origin);
   loginUrl.searchParams.set("error", "auth");
   if (authError) {

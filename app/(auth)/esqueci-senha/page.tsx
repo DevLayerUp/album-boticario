@@ -8,7 +8,13 @@ export async function generateMetadata(): Promise<Metadata> {
   return buildRouteMetadata(settings, "esqueciSenha", "/esqueci-senha");
 }
 
-export default function EsqueciSenhaPage() {
+type EsqueciSenhaPageProps = {
+  searchParams: Promise<{ error?: string }>;
+};
+
+export default async function EsqueciSenhaPage({ searchParams }: EsqueciSenhaPageProps) {
+  const { error } = await searchParams;
+
   return (
     <>
       <Wordmark
@@ -18,7 +24,7 @@ export default function EsqueciSenhaPage() {
         className="mb-6 flex flex-col items-center text-center lg:mb-10"
         logoClassName="h-14 w-auto"
       />
-      <ForgotPasswordForm />
+      <ForgotPasswordForm linkError={error} />
     </>
   );
 }

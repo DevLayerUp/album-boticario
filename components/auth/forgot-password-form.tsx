@@ -10,11 +10,24 @@ import { Button } from "@/components/ui/button";
 const INPUT_BASE =
   "h-12 w-full rounded-xl border border-transparent bg-verde-100 pl-11 pr-4 text-base text-gb-ink placeholder:text-muted/70 transition-colors duration-200 focus:border-verde-500 focus:bg-surface focus:outline-none focus-visible:outline-2 focus-visible:outline-verde-500";
 
-export function ForgotPasswordForm() {
+const LINK_ERROR_MESSAGES: Record<string, string> = {
+  "link-expirado":
+    "Este link expirou ou já foi usado. Solicite um novo e-mail de recuperação abaixo.",
+  "link-invalido":
+    "Link inválido. Informe seu e-mail para receber um novo link de recuperação.",
+};
+
+export function ForgotPasswordForm({
+  linkError,
+}: {
+  linkError?: string;
+}) {
   const inputId = useId();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(
+    linkError ? (LINK_ERROR_MESSAGES[linkError] ?? null) : null,
+  );
   const [sent, setSent] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
