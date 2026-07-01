@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { listAdminUserIds } from "@/lib/admin-users";
 
 export interface RankingEntry {
   user_id: string;
@@ -101,6 +102,7 @@ export async function buildLeaderboard(
 
   if (profilesRes.error) throw new Error(profilesRes.error.message);
 
+  const adminUserIds = await listAdminUserIds(admin);
   const totalSlots = Math.max(slotsRes.count ?? 1, 1);
 
   const filledByUser = new Map<string, number>();
@@ -144,7 +146,10 @@ export async function buildLeaderboard(
   }
 
   const entries = (profilesRes.data ?? [])
-    .filter((profile) => profile.show_in_ranking !== false)
+    .filter(
+      (profile) =>
+        profile.show_in_ranking !== false && !adminUserIds.has(profile.id),
+    )
     .map((profile) => {
     const filled_slots = filledByUser.get(profile.id) ?? 0;
     const album_pct = Math.round((filled_slots / totalSlots) * 100);
