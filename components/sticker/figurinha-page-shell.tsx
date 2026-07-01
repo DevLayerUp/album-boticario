@@ -38,17 +38,6 @@ export function FigurinhaPageShell({
         className,
       )}
     >
-
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-[min(55vh,420px)] bg-no-repeat"
-        style={{
-          backgroundImage: `url(${dashboardAssets.album.left}), url(${dashboardAssets.album.right})`,
-          backgroundPosition: "left bottom, right bottom",
-          backgroundSize: "auto 100%, auto 100%",
-        }}
-      />
-
       <div className="relative z-10 mx-auto flex w-full max-w-lg flex-1 flex-col items-center px-6 py-8 sm:py-10">
         <h1 className="font-display text-2xl font-bold text-white sm:text-3xl">
           {title}
