@@ -171,16 +171,19 @@ export async function forwardLeadToCloudPage(
       };
     }
 
-    if (json?.status === "success") {
+    // A CloudPage só é considerada falha quando devolve explicitamente
+    // status "error". Um 2xx (inclusive com corpo vazio) é tratado como
+    // sucesso, pois o processamento/disparo é síncrono no lado do Salesforce.
+    if (json?.status === "error") {
       return {
-        ok: true,
-        message: json.message ?? "Cadastro realizado e email disparado com sucesso!",
+        ok: false,
+        error: json.message || "CloudPage retornou um erro.",
       };
     }
 
     return {
-      ok: false,
-      error: json?.message || "CloudPage retornou um erro não identificado.",
+      ok: true,
+      message: json?.message ?? "Cadastro realizado e email disparado com sucesso!",
     };
   } catch {
     return { ok: false, error: "Falha ao contatar a CloudPage do Salesforce." };
