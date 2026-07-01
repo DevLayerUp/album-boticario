@@ -63,9 +63,10 @@ O fluxo usa **Supabase Auth** (`generateLink` + sessão no callback + `updateUse
      - `http://localhost:3000/auth/callback`
      - `https://seu-dominio.com/auth/callback`
 
-2. **Variáveis de ambiente** — `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, `SEND_EMAIL_HOOK_SECRET` (ver `supabase/email-templates/README.md`).
+2. **Variáveis de ambiente** — `RESEND_API_KEY`, `RESEND_FROM_EMAIL` (ver `supabase/email-templates/README.md`).
 
 3. **Fluxo no app**
+   - Cadastro (`/register`, `/register/senha`) → `POST /api/auth/account-created` → e-mail Resend com `account-created.html`
    - `/esqueci-senha` → `POST /api/auth/password-reset` → e-mail Resend com `reset-password.html`
    - Callback troca o `code` por sessão e redireciona para `/redefinir-senha`
    - Usuário define nova senha com `auth.updateUser({ password })`
@@ -80,7 +81,7 @@ HTML em `supabase/email-templates/` — enviados via **Resend**, não pelo Dashb
 
 | Template | Arquivo | Disparo |
 |---|---|---|
-| Confirmação de conta | `confirm-signup.html` | Auth Hook Send Email (após `signUp`) |
+| Conta criada | `account-created.html` | `POST /api/auth/account-created` (após `signUp`) |
 | Redefinir senha | `reset-password.html` | `POST /api/auth/password-reset` |
 
 Configuração completa: `supabase/email-templates/README.md`.

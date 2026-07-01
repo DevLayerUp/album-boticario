@@ -58,8 +58,10 @@ export async function POST(request: NextRequest) {
       await sendAuthEmail({
         to: email,
         templateId: "reset-password",
-        confirmationUrl: actionLink,
-        siteUrl,
+        variables: {
+          confirmationUrl: actionLink,
+          siteUrl,
+        },
       });
     }
   } catch (err) {

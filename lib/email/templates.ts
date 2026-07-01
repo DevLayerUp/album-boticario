@@ -2,10 +2,10 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { getSiteUrl } from "@/lib/seo-metadata";
 
-export type AuthEmailTemplateId = "confirm-signup" | "reset-password";
+export type AuthEmailTemplateId = "account-created" | "reset-password";
 
 const SUBJECTS: Record<AuthEmailTemplateId, string> = {
-  "confirm-signup": "Confirme sua conta — Fãs por Natureza",
+  "account-created": "Conta criada — Fãs por Natureza",
   "reset-password": "Redefinir sua senha — Fãs por Natureza",
 };
 
@@ -21,47 +21,33 @@ function loadTemplate(id: AuthEmailTemplateId): string {
   return html;
 }
 
-export function mapSupabaseEmailActionType(
-  actionType: string,
-): AuthEmailTemplateId {
-  if (actionType === "recovery") return "reset-password";
-  return "confirm-signup";
+export interface AuthEmailTemplateVariables {
+  siteUrl?: string;
+  confirmationUrl?: string;
+  displayName?: string;
 }
 
 export function renderAuthEmailTemplate(
   templateId: AuthEmailTemplateId,
-  variables: { confirmationUrl: string; siteUrl?: string },
+  variables: AuthEmailTemplateVariables,
 ): { subject: string; html: string } {
   const siteUrl = (variables.siteUrl ?? getSiteUrl()).replace(/\/$/, "");
-  const html = loadTemplate(templateId)
-    .replace(/\{\{\s*\.ConfirmationURL\s*\}\}/g, variables.confirmationUrl)
-    .replace(/\{\{\s*\.SiteURL\s*\}\}/g, siteUrl);
+  const loginUrl = `${siteUrl}/login`;
+  const displayName = variables.displayName?.trim()
+    ? `, ${variables.displayName.trim()}`
+    : "";
+
+  let html = loadTemplate(templateId)
+    .replace(/\{\{\s*\.SiteURL\s*\}\}/g, siteUrl)
+    .replace(/\{\{\s*\.LoginURL\s*\}\}/g, loginUrl)
+    .replace(/\{\{\s*\.DisplayName\s*\}\}/g, displayName);
+
+  if (variables.confirmationUrl) {
+    html = html.replace(/\{\{\s*\.ConfirmationURL\s*\}\}/g, variables.confirmationUrl);
+  }
 
   return {
     subject: SUBJECTS[templateId],
     html,
   };
-}
-
-/** URL de verificação compatível com o fluxo do Supabase Auth (signup / recovery). */
-export function buildSupabaseAuthVerifyUrl(options: {
-  tokenHash: string;
-  emailActionType: string;
-  redirectTo: string;
-}): string {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "");
-  if (!supabaseUrl) {
-    throw new Error("NEXT_PUBLIC_SUPABASE_URL não configurada.");
-  }
-
-  const type =
-    options.emailActionType === "recovery" ? "recovery" : "signup";
-
-  const params = new URLSearchParams({
-    token: options.tokenHash,
-    type,
-    redirect_to: options.redirectTo,
-  });
-
-  return `${supabaseUrl}/auth/v1/verify?${params.toString()}`;
 }

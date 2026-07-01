@@ -30,7 +30,7 @@ const ALWAYS_PUBLIC = [
   "/api/share/",          // redirect da imagem OG da figurinha
   "/api/categories",      // endpoint público de categorias
   "/api/leads",           // captura de leads da landing (pré-cadastro)
-  "/api/auth/hooks/",     // webhook Send Email do Supabase Auth
+  "/api/auth/account-created", // e-mail de conta criada via Resend
   "/api/auth/password-reset", // recuperação de senha via Resend
 ];
 
