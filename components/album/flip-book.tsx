@@ -18,6 +18,8 @@ type BookOrientation = "portrait" | "landscape";
 
 const MOBILE_MQ = "(max-width: 767px)";
 const DESKTOP_BOOK = { width: 560, height: 780, minHeight: 480, maxHeight: 920 };
+/** Altura reservada para a barra de navegação no mobile (botão 30px + espaçamento). */
+const MOBILE_CONTROLS_H = 42;
 
 function getAlbumPageSide(
   contentIndex: number,
@@ -82,11 +84,11 @@ function measureMobileBook(host: HTMLElement): { width: number; height: number }
 
   const top = host.getBoundingClientRect().top;
   const navHeight = readMobileNavHeight();
-  const height = Math.floor(viewportHeight - top - navHeight - 4);
+  const height = Math.floor(viewportHeight - top - navHeight - MOBILE_CONTROLS_H - 4);
 
   return {
     width,
-    height: Math.max(360, height),
+    height: Math.max(320, height),
   };
 }
 
@@ -164,17 +166,22 @@ function useBookDimensions(hostRef: React.RefObject<HTMLElement | null>): BookDi
   return dims;
 }
 
-const navBtn = (disabled: boolean, overlay = false) =>
+type NavBtnVariant = "default" | "overlay" | "compact";
+
+const navBtn = (disabled: boolean, variant: NavBtnVariant = "default") =>
   cn(
     "flex shrink-0 items-center justify-center rounded-full text-white transition-all duration-200 ease-out touch-manipulation",
-    overlay
-      ? "h-11 w-11 bg-verde-escuro-500/90 shadow-[0_4px_14px_rgba(13,102,50,0.45)] backdrop-blur-sm"
-      : "h-14 w-14 bg-verde-escuro-500 shadow-[0_4px_16px_rgba(13,102,50,0.38)]",
+    variant === "overlay" &&
+      "h-11 w-11 bg-verde-escuro-500/90 shadow-[0_4px_14px_rgba(13,102,50,0.45)] backdrop-blur-sm",
+    variant === "compact" &&
+      "h-[30px] w-[30px] bg-verde-escuro-500 shadow-[0_2px_8px_rgba(13,102,50,0.35)]",
+    variant === "default" &&
+      "h-14 w-14 bg-verde-escuro-500 shadow-[0_4px_16px_rgba(13,102,50,0.38)]",
     disabled
       ? "pointer-events-none opacity-20 shadow-none"
-      : overlay
-        ? "cursor-pointer active:scale-95 hover:bg-verde-500"
-        : "cursor-pointer hover:scale-105 hover:bg-verde-500 hover:shadow-[0_6px_20px_rgba(66,165,42,0.45)]",
+      : variant === "default"
+        ? "cursor-pointer hover:scale-105 hover:bg-verde-500 hover:shadow-[0_6px_20px_rgba(66,165,42,0.45)]"
+        : "cursor-pointer active:scale-95 hover:bg-verde-500",
   );
 
 interface FlipNavControlProps {
@@ -316,20 +323,6 @@ export function FlipBook({
           <ChevronLeft size={22} strokeWidth={2.5} />
         </FlipNavControl>
 
-        <FlipNavControl
-          direction="prev"
-          disabled={isFirst}
-          label="Página anterior"
-          overlay
-          onFlip={flipPage}
-          className={cn(
-            "absolute left-1 top-1/2 z-20 -translate-y-1/2 md:hidden",
-            navBtn(isFirst, true),
-          )}
-        >
-          <ChevronLeft size={20} strokeWidth={2.5} />
-        </FlipNavControl>
-
         <div className="relative flex h-full min-h-0 w-full min-w-0 cursor-grab justify-center max-md:[overflow-anchor:none] active:cursor-grabbing md:min-w-[560px] md:flex-1">
           <div
             className={cn(
@@ -412,18 +405,35 @@ export function FlipBook({
           <ChevronRight size={22} strokeWidth={2.5} />
         </FlipNavControl>
 
+      </div>
+
+      {/* Navegação — mobile: barra abaixo do álbum, sem sobrepor o conteúdo */}
+      <div className="mt-1.5 flex shrink-0 items-center justify-center gap-4 md:hidden">
+        <FlipNavControl
+          direction="prev"
+          disabled={isFirst}
+          label="Página anterior"
+          onFlip={flipPage}
+          className={navBtn(isFirst, "compact")}
+        >
+          <ChevronLeft size={18} strokeWidth={2.5} />
+        </FlipNavControl>
+
+        <span
+          className="min-w-[56px] text-center text-sm font-semibold text-verde-escuro-500"
+          aria-live="polite"
+        >
+          {Math.min(currentPage + 1, totalChildren)} / {totalChildren}
+        </span>
+
         <FlipNavControl
           direction="next"
           disabled={isLast}
           label="Próxima página"
-          overlay
           onFlip={flipPage}
-          className={cn(
-            "absolute right-1 top-1/2 z-20 -translate-y-1/2 md:hidden",
-            navBtn(isLast, true),
-          )}
+          className={navBtn(isLast, "compact")}
         >
-          <ChevronRight size={20} strokeWidth={2.5} />
+          <ChevronRight size={18} strokeWidth={2.5} />
         </FlipNavControl>
       </div>
     </div>
