@@ -226,7 +226,11 @@ export function TradeCard({
             Oferece
           </span>
           <span className="max-w-[90px] truncate text-center text-[11px] leading-tight text-verde-escuro-400">
-            {trade.offered_sticker?.name ?? "—"}
+            {trade.offered_sticker?.name ? (
+              <StickerFormattedText text={trade.offered_sticker.name} />
+            ) : (
+              "—"
+            )}
           </span>
         </div>
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-verde-escuro-500 text-white shadow-md">
@@ -238,7 +242,11 @@ export function TradeCard({
             Quer
           </span>
           <span className="max-w-[90px] truncate text-center text-[11px] leading-tight text-verde-escuro-400">
-            {trade.requested_sticker?.name ?? "—"}
+            {trade.requested_sticker?.name ? (
+              <StickerFormattedText text={trade.requested_sticker.name} />
+            ) : (
+              "—"
+            )}
           </span>
         </div>
       </div>

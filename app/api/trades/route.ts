@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { sanitizeId, sanitizeUuid, sanitizeText } from "@/lib/sanitize";
 import { createNotification } from "@/lib/notifications";
+import { stickerTextToPlain } from "@/lib/sticker-text-format";
 import { NO_DUPLICATES_TRADE_MESSAGE, userHasDuplicateStickers, userHasTradeableSpareForSticker } from "@/lib/trade-duplicates";
 
 const STICKER_SELECT = `
@@ -164,7 +165,7 @@ export async function POST(request: NextRequest) {
     userId: receiver_id,
     type: "trade_request",
     title: "Nova solicitação de troca",
-    body: `${requesterProfile?.display_name ?? "Um colecionador"} quer trocar ${offeredSticker?.name ?? "uma figurinha"} com você.`,
+    body: `${requesterProfile?.display_name ?? "Um colecionador"} quer trocar ${offeredSticker?.name ? stickerTextToPlain(offeredSticker.name) : "uma figurinha"} com você.`,
     href: "/trocas",
     dedupeKey: `trade_request:${trade.id}`,
     payload: { trade_id: trade.id },

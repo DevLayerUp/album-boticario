@@ -11,6 +11,7 @@ import {
 } from "./shared";
 import { parseTradeApiError, useTradeToast } from "./trade-toast";
 import { NO_DUPLICATES_TRADE_MESSAGE } from "@/lib/trade-duplicates";
+import { stickerTextToPlain } from "@/lib/sticker-text-format";
 import type { MyWish, Trade, TradeableEntry, Wish } from "./types";
 
 interface SolicitarViewProps {
@@ -78,7 +79,9 @@ export function SolicitarView({
   }, {});
 
   const filteredWishes = wishes.filter((w) =>
-    (w.stickers?.name ?? "").toLowerCase().includes(wishSearch.toLowerCase()),
+    stickerTextToPlain(w.stickers?.name ?? "")
+      .toLowerCase()
+      .includes(wishSearch.toLowerCase()),
   );
 
   const emptyListMessage =

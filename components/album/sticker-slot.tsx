@@ -355,8 +355,10 @@ export function StickerSlot({
 
   const slotLabel = isComplete
     ? sticker?.name
+      ? stickerTextToPlain(sticker.name)
+      : `Espaço ${slotNumber}`
     : canPaste
-      ? `Colar ${sticker?.name ?? `figurinha ${slotNumber}`}`
+      ? `Colar ${sticker?.name ? stickerTextToPlain(sticker.name) : `figurinha ${slotNumber}`}`
       : isMissing
         ? `${stickerTextToPlain(sticker.name)}, ainda não obtida`
         : `Espaço ${slotNumber}`;

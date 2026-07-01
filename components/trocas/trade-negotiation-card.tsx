@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ArrowLeftRight, Loader2 } from "lucide-react";
+import { StickerFormattedText } from "@/components/sticker/sticker-formatted-text";
 import { rarityColor } from "@/lib/rarity";
 import { cn } from "@/lib/utils";
 import { StickerThumb } from "./shared";
@@ -69,7 +70,11 @@ export function TradeNegotiationCard({
                   ),
                 }}
               >
-                {gainSticker?.name ?? "—"}
+                {gainSticker?.name ? (
+                  <StickerFormattedText text={gainSticker.name} />
+                ) : (
+                  "—"
+                )}
               </p>
             </div>
           </div>
@@ -95,7 +100,11 @@ export function TradeNegotiationCard({
                   ),
                 }}
               >
-                {giveSticker?.name ?? "—"}
+                {giveSticker?.name ? (
+                  <StickerFormattedText text={giveSticker.name} />
+                ) : (
+                  "—"
+                )}
               </p>
             </div>
             <StickerThumb sticker={giveSticker} width={60} height={86} className="sm:w-[72px] sm:h-[103px] 2xl:!w-[94px] 2xl:!h-[134px]" />

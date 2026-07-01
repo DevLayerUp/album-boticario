@@ -23,6 +23,7 @@ import type {
   CollectionRarity,
   CollectionSticker,
 } from "@/components/colecao/types";
+import { stickerTextToPlain } from "@/lib/sticker-text-format";
 import { rarityColor } from "@/lib/rarity";
 import { cn } from "@/lib/utils";
 
@@ -88,7 +89,7 @@ export function ColecaoClient({
   const filtered = useMemo(
     () =>
       allStickers.filter((s) => {
-        if (search && !s.name.toLowerCase().includes(search.toLowerCase())) return false;
+        if (search && !stickerTextToPlain(s.name).toLowerCase().includes(search.toLowerCase())) return false;
         if (catFilter && s.sticker_categories?.id !== catFilter) return false;
         if (rarFilter && s.rarities?.id !== rarFilter) return false;
         if (onlyOwned && !ownedMap[s.id]) return false;
