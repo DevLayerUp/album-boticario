@@ -118,7 +118,10 @@ export function SolicitarView({
   }
 
   function canOffer(wantedId: number) {
-    return hasDuplicates && myAvailable.some((m) => m.sticker?.id === wantedId);
+    return (
+      hasDuplicates &&
+      myAvailable.some((m) => m.sticker?.id === wantedId && (m.spareQuantity ?? m.tradeable ?? 0) > 0)
+    );
   }
 
   const canCreateEvent = metaLoaded && hasDuplicates;

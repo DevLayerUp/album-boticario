@@ -122,6 +122,7 @@ export function AlbumShareSection({ inFlipBook, className }: AlbumShareSectionPr
         size={inFlipBook ? "sm" : "md"}
         tone="on-dark"
         hideNativeShare
+        hidePlatforms={["instagram"]}
         onBeforeShare={onBeforeShare}
         onNativeShare={handleNativeShare}
         onShareStatus={(message) => showStatus(message, "info")}

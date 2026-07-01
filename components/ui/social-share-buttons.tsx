@@ -42,6 +42,8 @@ interface SocialShareButtonsProps {
   size?: "sm" | "md";
   tone?: "light" | "on-dark";
   hideNativeShare?: boolean;
+  /** Redes que não devem aparecer (ex.: ocultar Instagram no compartilhar figurinha/álbum). */
+  hidePlatforms?: SocialSharePlatform[];
   className?: string;
   onBeforeShare?: () => void | Promise<boolean | void>;
   onNativeShare: () => void | Promise<void>;
@@ -57,11 +59,24 @@ export function SocialShareButtons({
   size = "sm",
   tone = "light",
   hideNativeShare = false,
+  hidePlatforms,
   className,
   onBeforeShare,
   onNativeShare,
   onShareStatus,
 }: SocialShareButtonsProps) {
+  const visibleOptions = SOCIAL_SHARE_OPTIONS.filter(
+    (option) => !hidePlatforms?.includes(option.platform),
+  );
+  const socialCount = visibleOptions.length;
+  const gridColsClass =
+    socialCount <= 5 ? "grid-cols-5" : socialCount <= 6 ? "grid-cols-6" : "grid-cols-7";
+  const nativeColSpanClass =
+    socialCount <= 5 ? "col-span-5" : socialCount <= 6 ? "col-span-6" : "col-span-7";
+  const smGridColsClass =
+    !hideNativeShare &&
+    (socialCount <= 5 ? "sm:grid-cols-6" : socialCount <= 6 ? "sm:grid-cols-7" : "sm:grid-cols-8");
+
   const buttonSize =
     size === "md" ? "size-11 min-w-11" : "size-10 min-w-10 sm:size-11 sm:min-w-11";
   const iconSize = size === "md" ? "size-4" : "size-3.5 sm:size-4";
@@ -100,16 +115,11 @@ export function SocialShareButtons({
 
   return (
     <div
-      className={cn(
-        "grid w-full grid-cols-6 gap-2",
-        hideNativeShare && "grid-cols-6",
-        !hideNativeShare && "sm:grid-cols-7",
-        className,
-      )}
+      className={cn("grid w-full gap-2", gridColsClass, smGridColsClass, className)}
       role="group"
       aria-label="Redes sociais"
     >
-      {SOCIAL_SHARE_OPTIONS.map(({ platform, label, Icon, color }) => (
+      {visibleOptions.map(({ platform, label, Icon, color }) => (
         <button
           key={platform}
           type="button"
@@ -133,7 +143,8 @@ export function SocialShareButtons({
           disabled={disabled}
           aria-label="Mais opções de compartilhamento"
           className={cn(
-            "col-span-6 inline-flex cursor-pointer items-center justify-center gap-2 rounded-full border px-4 py-2.5 text-xs font-semibold transition-all duration-200 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 sm:col-span-1 sm:px-0",
+            "inline-flex cursor-pointer items-center justify-center gap-2 rounded-full border px-4 py-2.5 text-xs font-semibold transition-all duration-200 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 sm:col-span-1 sm:px-0",
+            nativeColSpanClass,
             buttonClass,
           )}
         >

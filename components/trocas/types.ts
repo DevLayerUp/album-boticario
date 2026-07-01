@@ -37,7 +37,7 @@ export interface Wish {
   created_at: string;
   sticker: Sticker | null;
   user: Profile | null;
-  user_stickers: { sticker: Sticker | null; quantity: number }[];
+  user_stickers: { sticker: Sticker | null; quantity: number; spareQuantity?: number }[];
 }
 
 export interface MyWish {
@@ -50,6 +50,8 @@ export interface MyWish {
 export interface TradeableEntry {
   sticker: Sticker | null;
   quantity: number;
+  spareQuantity?: number;
+  tradeable?: number;
 }
 
 export interface StockPasteTarget {

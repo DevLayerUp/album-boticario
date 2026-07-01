@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { sanitizeId, sanitizeUuid, sanitizeText } from "@/lib/sanitize";
 import { createNotification } from "@/lib/notifications";
-import { NO_DUPLICATES_TRADE_MESSAGE, userHasDuplicateStickers } from "@/lib/trade-duplicates";
+import { NO_DUPLICATES_TRADE_MESSAGE, userHasDuplicateStickers, userHasTradeableSpareForSticker } from "@/lib/trade-duplicates";
 
 const STICKER_SELECT = `
   id, name, image_url,
@@ -91,33 +91,29 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: NO_DUPLICATES_TRADE_MESSAGE }, { status: 403 });
   }
 
-  // 1. Requester must have at least 1 copy of the offered sticker
-  const { data: offeredOwned } = await supabase
-    .from("user_stickers")
-    .select("quantity")
-    .eq("user_id", user.id)
-    .eq("sticker_id", offered_sticker_id)
-    .maybeSingle();
-
-  if (!offeredOwned || offeredOwned.quantity < 1) {
+  // 1. Requester must have a spare copy of the offered sticker (not only pasted in album)
+  const requesterCanOffer = await userHasTradeableSpareForSticker(
+    supabase,
+    user.id,
+    offered_sticker_id,
+  );
+  if (!requesterCanOffer) {
     return NextResponse.json(
-      { error: "Você não possui essa figurinha para oferecer" },
-      { status: 400 }
+      { error: "Você não tem repetida dessa figurinha para oferecer" },
+      { status: 400 },
     );
   }
 
-  // 2. Receiver must have a duplicate (qty >= 2) of the requested sticker
-  const { data: requestedOwned } = await supabase
-    .from("user_stickers")
-    .select("quantity")
-    .eq("user_id", receiver_id)
-    .eq("sticker_id", requested_sticker_id)
-    .maybeSingle();
-
-  if (!requestedOwned || requestedOwned.quantity < 2) {
+  // 2. Receiver must have a spare copy of the requested sticker
+  const receiverCanTrade = await userHasTradeableSpareForSticker(
+    supabase,
+    receiver_id,
+    requested_sticker_id,
+  );
+  if (!receiverCanTrade) {
     return NextResponse.json(
       { error: "Esse usuário não tem repetida dessa figurinha para trocar" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 

@@ -445,8 +445,8 @@ export function FulfillWishModal({
     wish.sticker != null
       ? myAvailable.find((m) => m.sticker?.id === wish.sticker!.id)
       : undefined;
-  const canOffer = myEntry != null;
-  const isLastCopy = myEntry != null && myEntry.quantity === 1;
+  const spareQuantity = myEntry?.spareQuantity ?? myEntry?.tradeable ?? 0;
+  const canOffer = spareQuantity > 0;
 
   async function send() {
     if (!selected || !wish.sticker || !wish.user) return;
@@ -499,14 +499,16 @@ export function FulfillWishModal({
               ) : null}
             </p>
             {!canOffer ? (
-              <p className="mt-1 text-xs text-red-500">Você não possui esta figurinha</p>
-            ) : isLastCopy ? (
-              <p className="mt-1 text-xs text-amber-600">
-                Você só tem 1 cópia — ela será enviada na troca
+              <p className="mt-1 text-xs text-red-500">
+                {myEntry
+                  ? "Só é possível oferecer repetidas que não estão reservadas no álbum"
+                  : "Você não possui esta figurinha"}
               </p>
             ) : (
               <p className="mt-1 text-xs text-verde-escuro-500">
-                Você tem {myEntry!.quantity} cópias
+                {spareQuantity === 1
+                  ? "1 repetida disponível para troca"
+                  : `${spareQuantity} repetidas disponíveis para troca`}
               </p>
             )}
           </div>
@@ -527,8 +529,9 @@ export function FulfillWishModal({
           </div>
         ) : (
           <div className="grid max-h-32 grid-cols-4 gap-1 overflow-y-auto pr-1 sm:max-h-40 sm:gap-1.5 lg:max-h-44 lg:gap-2">
-            {wish.user_stickers.map(({ sticker: st, quantity }) => {
+            {wish.user_stickers.map(({ sticker: st, spareQuantity, quantity }) => {
               if (!st) return null;
+              const spare = spareQuantity ?? 0;
               return (
                 <button
                   key={st.id}
@@ -545,7 +548,7 @@ export function FulfillWishModal({
                     width={52}
                     height={74}
                     selected={selected === st.id}
-                    badge={quantity > 1 ? quantity : undefined}
+                    badge={spare > 1 ? spare : quantity > 1 ? quantity : undefined}
                   />
                   <p className="line-clamp-2 text-center text-[9px] font-medium leading-tight text-verde-escuro-capa">
                     <StickerFormattedText text={st.name} />

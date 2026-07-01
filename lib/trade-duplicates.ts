@@ -1,9 +1,21 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { hasTradeableSpare, tradeableSpareCount } from "@/lib/sticker-inventory";
-import { collectPastedStickerIds } from "@/lib/user-album-pasted";
+import {
+  collectPastedStickerIds,
+  type UserAlbumPastedRow,
+} from "@/lib/user-album-pasted";
 
 export const NO_DUPLICATES_TRADE_MESSAGE =
   "Você precisa de figurinhas repetidas para trocar. Abra pacotinhos ou complete missões para conseguir mais cópias.";
+
+export const NO_TRADEABLE_SPARE_MESSAGE =
+  "Só é possível trocar figurinhas repetidas que não estão reservadas no álbum.";
+
+export interface UserTradeInventoryContext {
+  quantityBySticker: Map<number, number>;
+  pastedStickerIds: Set<number>;
+  packAcquiredBySticker: Map<number, number>;
+}
 
 async function loadPackAcquiredBySticker(
   supabase: SupabaseClient,
@@ -32,64 +44,164 @@ async function loadPackAcquiredBySticker(
   return acquired;
 }
 
+async function loadPackAcquiredByStickerForUsers(
+  supabase: SupabaseClient,
+  userIds: string[],
+): Promise<Map<string, Map<number, number>>> {
+  const result = new Map<string, Map<number, number>>();
+  for (const userId of userIds) {
+    result.set(userId, new Map());
+  }
+  if (userIds.length === 0) return result;
+
+  const { data: packs } = await supabase
+    .from("packs")
+    .select("id, user_id")
+    .in("user_id", userIds)
+    .not("opened_at", "is", null);
+
+  if (!packs?.length) return result;
+
+  const packIdToUser = new Map(packs.map((pack) => [pack.id, pack.user_id as string]));
+  const { data: rows } = await supabase
+    .from("pack_stickers")
+    .select("pack_id, sticker_id")
+    .in("pack_id", packs.map((pack) => pack.id));
+
+  for (const row of rows ?? []) {
+    const userId = packIdToUser.get(row.pack_id);
+    if (!userId || row.sticker_id == null) continue;
+    const acquired = result.get(userId)!;
+    acquired.set(row.sticker_id, (acquired.get(row.sticker_id) ?? 0) + 1);
+  }
+
+  return result;
+}
+
+export async function loadUserTradeInventoryContext(
+  supabase: SupabaseClient,
+  userId: string,
+): Promise<UserTradeInventoryContext> {
+  const contexts = await loadTradeInventoryContextForUsers(supabase, [userId]);
+  return (
+    contexts.get(userId) ?? {
+      quantityBySticker: new Map(),
+      pastedStickerIds: new Set(),
+      packAcquiredBySticker: new Map(),
+    }
+  );
+}
+
+export async function loadTradeInventoryContextForUsers(
+  supabase: SupabaseClient,
+  userIds: string[],
+): Promise<Map<string, UserTradeInventoryContext>> {
+  const uniqueUserIds = [...new Set(userIds)];
+  const contexts = new Map<string, UserTradeInventoryContext>();
+
+  for (const userId of uniqueUserIds) {
+    contexts.set(userId, {
+      quantityBySticker: new Map(),
+      pastedStickerIds: new Set(),
+      packAcquiredBySticker: new Map(),
+    });
+  }
+
+  if (uniqueUserIds.length === 0) return contexts;
+
+  const [{ data: inventory }, { data: pasted }, packAcquiredByUser] = await Promise.all([
+    supabase
+      .from("user_stickers")
+      .select("user_id, sticker_id, quantity")
+      .in("user_id", uniqueUserIds)
+      .gte("quantity", 1),
+    supabase
+      .from("user_album")
+      .select("user_id, sticker_id, album_slots ( sticker_id )")
+      .in("user_id", uniqueUserIds),
+    loadPackAcquiredByStickerForUsers(supabase, uniqueUserIds),
+  ]);
+
+  for (const row of inventory ?? []) {
+    const context = contexts.get(row.user_id as string);
+    if (!context) continue;
+    context.quantityBySticker.set(row.sticker_id, row.quantity);
+  }
+
+  const pastedRowsByUser = new Map<string, UserAlbumPastedRow[]>();
+  for (const row of pasted ?? []) {
+    const userId = row.user_id as string;
+    if (!pastedRowsByUser.has(userId)) pastedRowsByUser.set(userId, []);
+    pastedRowsByUser.get(userId)!.push(row);
+  }
+
+  for (const [userId, rows] of pastedRowsByUser) {
+    const context = contexts.get(userId);
+    if (!context) continue;
+    for (const stickerId of collectPastedStickerIds(rows)) {
+      context.pastedStickerIds.add(stickerId);
+    }
+  }
+
+  for (const [userId, packAcquired] of packAcquiredByUser) {
+    const context = contexts.get(userId);
+    if (context) context.packAcquiredBySticker = packAcquired;
+  }
+
+  return contexts;
+}
+
+export function getTradeableSpareForSticker(
+  stickerId: number,
+  context: UserTradeInventoryContext,
+): number {
+  return tradeableSpareCount(
+    context.quantityBySticker.get(stickerId) ?? 0,
+    context.pastedStickerIds.has(stickerId),
+    context.packAcquiredBySticker.get(stickerId) ?? 0,
+  );
+}
+
+export function userHasTradeableSpareInContext(
+  stickerId: number,
+  context: UserTradeInventoryContext,
+): boolean {
+  return getTradeableSpareForSticker(stickerId, context) > 0;
+}
+
+export async function userHasTradeableSpareForSticker(
+  supabase: SupabaseClient,
+  userId: string,
+  stickerId: number,
+): Promise<boolean> {
+  const context = await loadUserTradeInventoryContext(supabase, userId);
+  return userHasTradeableSpareInContext(stickerId, context);
+}
+
 export async function userHasDuplicateStickers(
   supabase: SupabaseClient,
   userId: string,
 ): Promise<boolean> {
-  const [{ data: inventory, error }, { data: pasted }] = await Promise.all([
-    supabase
-      .from("user_stickers")
-      .select("sticker_id, quantity")
-      .eq("user_id", userId)
-      .gte("quantity", 1),
-    supabase
-      .from("user_album")
-      .select("sticker_id, album_slots ( sticker_id )")
-      .eq("user_id", userId),
-  ]);
+  const context = await loadUserTradeInventoryContext(supabase, userId);
 
-  if (error) return false;
+  for (const stickerId of context.quantityBySticker.keys()) {
+    if (userHasTradeableSpareInContext(stickerId, context)) return true;
+  }
 
-  const pastedIds = collectPastedStickerIds(pasted ?? []);
-  const packAcquired = await loadPackAcquiredBySticker(supabase, userId);
-
-  return (inventory ?? []).some((row) =>
-    hasTradeableSpare(
-      row.quantity,
-      pastedIds.has(row.sticker_id),
-      packAcquired.get(row.sticker_id) ?? 0,
-    ),
-  );
+  return false;
 }
 
 export async function countUserTradeableSpares(
   supabase: SupabaseClient,
   userId: string,
 ): Promise<{ duplicateTypes: number; extraCopies: number }> {
-  const [{ data: inventory }, { data: pasted }] = await Promise.all([
-    supabase
-      .from("user_stickers")
-      .select("sticker_id, quantity")
-      .eq("user_id", userId)
-      .gte("quantity", 1),
-    supabase
-      .from("user_album")
-      .select("sticker_id, album_slots ( sticker_id )")
-      .eq("user_id", userId),
-  ]);
-
-  const pastedIds = collectPastedStickerIds(pasted ?? []);
-  const packAcquired = await loadPackAcquiredBySticker(supabase, userId);
+  const context = await loadUserTradeInventoryContext(supabase, userId);
 
   let duplicateTypes = 0;
   let extraCopies = 0;
 
-  for (const row of inventory ?? []) {
-    const spare = tradeableSpareCount(
-      row.quantity,
-      pastedIds.has(row.sticker_id),
-      packAcquired.get(row.sticker_id) ?? 0,
-    );
+  for (const stickerId of context.quantityBySticker.keys()) {
+    const spare = getTradeableSpareForSticker(stickerId, context);
     if (spare > 0) {
       duplicateTypes += 1;
       extraCopies += spare;
@@ -97,4 +209,17 @@ export async function countUserTradeableSpares(
   }
 
   return { duplicateTypes, extraCopies };
+}
+
+export function listTradeableInventoryRows<TSticker>(
+  rows: { sticker_id: number; quantity: number; stickers: TSticker }[],
+  context: UserTradeInventoryContext,
+): { sticker: TSticker; quantity: number; spareQuantity: number }[] {
+  return rows
+    .map((row) => ({
+      sticker: row.stickers,
+      quantity: row.quantity,
+      spareQuantity: getTradeableSpareForSticker(row.sticker_id, context),
+    }))
+    .filter((row) => row.spareQuantity > 0);
 }
