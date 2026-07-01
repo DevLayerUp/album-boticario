@@ -76,3 +76,32 @@ Definidos em `lib/email/templates.ts`.
 
 Referenciados como `{{ .SiteURL }}/images/dashboard/logo-fgb.png` e `logo-branco.png`.
 Certifique-se de que esses arquivos estão publicados no domínio de produção.
+
+## BIMI (logo na caixa de entrada)
+
+O Gmail e outros provedores exibem o logo do remetente apenas com **BIMI** configurado (DMARC em `quarantine` ou `reject`, registro DNS e certificado VMC/CMC).
+
+### Arquivos no site
+
+| URL | Arquivo no repositório |
+|---|---|
+| `https://www.faspornatureza.com.br/images/favicon.svg` | `public/images/favicon.svg` |
+| `https://www.faspornatureza.com.br/.well-known/bimi/certificate.pem` | `public/.well-known/bimi/certificate.pem` |
+
+Após obter o certificado na CA (DigiCert, Entrust, etc.), copie o `.pem` para `public/.well-known/bimi/certificate.pem` e faça deploy.
+
+### DNS
+
+**DMARC** (obrigatório antes do BIMI):
+
+```txt
+_dmarc.faspornatureza.com.br TXT "v=DMARC1; p=quarantine; rua=mailto:dmarc@faspornatureza.com.br"
+```
+
+**BIMI**:
+
+```txt
+default._bimi.faspornatureza.com.br TXT "v=BIMI1; l=https://www.faspornatureza.com.br/images/favicon.svg; a=https://www.faspornatureza.com.br/.well-known/bimi/certificate.pem;"
+```
+
+O endereço em `RESEND_FROM_EMAIL` deve usar o mesmo domínio (`@faspornatureza.com.br`).
