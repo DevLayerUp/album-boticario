@@ -2,36 +2,13 @@
 
 import { useCallback, useState } from "react";
 import { Loader2, Share2 } from "lucide-react";
-import { SocialShareButtons } from "@/components/ui/social-share-buttons";
 import { useFeedbackToastOptional } from "@/components/ui/feedback-toast";
-import {
-  buildAlbumShareText,
-  buildAlbumShareUrl,
-  registerSocialShareMission,
-  shareAlbumCollection,
-} from "@/lib/mission-share";
+import { shareAlbumCollection } from "@/lib/mission-share";
 import { cn } from "@/lib/utils";
 
 interface AlbumShareSectionProps {
   inFlipBook?: boolean;
   className?: string;
-}
-
-function ShareDivider({ compact }: { compact?: boolean }) {
-  return (
-    <div className={cn("flex w-full items-center", compact ? "gap-2" : "gap-3")}>
-      <span className="h-px flex-1 bg-white/20" aria-hidden />
-      <span
-        className={cn(
-          "shrink-0 font-medium uppercase tracking-[0.12em] text-white/55",
-          compact ? "text-[9px]" : "text-[10px]",
-        )}
-      >
-        ou envie por
-      </span>
-      <span className="h-px flex-1 bg-white/20" aria-hidden />
-    </div>
-  );
 }
 
 export function AlbumShareSection({ inFlipBook, className }: AlbumShareSectionProps) {
@@ -40,8 +17,6 @@ export function AlbumShareSection({ inFlipBook, className }: AlbumShareSectionPr
   const feedbackToast = useFeedbackToastOptional();
 
   const origin = typeof window !== "undefined" ? window.location.origin : "";
-  const albumUrl = origin ? buildAlbumShareUrl(origin) : "/album";
-  const shareText = buildAlbumShareText(albumUrl);
 
   const showStatus = useCallback(
     (message: string, variant: "success" | "error" | "info" = "info") => {
@@ -70,11 +45,6 @@ export function AlbumShareSection({ inFlipBook, className }: AlbumShareSectionPr
     } finally {
       setBusy(false);
     }
-  }
-
-  async function onBeforeShare() {
-    await registerSocialShareMission();
-    return true;
   }
 
   return (
@@ -111,23 +81,6 @@ export function AlbumShareSection({ inFlipBook, className }: AlbumShareSectionPr
         )}
         Compartilhar álbum
       </button>
-
-      <ShareDivider compact={inFlipBook} />
-
-      <SocialShareButtons
-        shareUrl={albumUrl}
-        shareText={shareText}
-        whatsAppText={shareText}
-        disabled={busy}
-        size={inFlipBook ? "sm" : "md"}
-        tone="on-dark"
-        hideNativeShare
-        hidePlatforms={["instagram"]}
-        onBeforeShare={onBeforeShare}
-        onNativeShare={handleNativeShare}
-        onShareStatus={(message) => showStatus(message, "info")}
-        className={inFlipBook ? "max-w-[280px]" : undefined}
-      />
 
       {inlineStatus && !feedbackToast ? (
         <p
