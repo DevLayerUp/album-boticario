@@ -1,11 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { NO_DUPLICATES_TRADE_MESSAGE, userHasDuplicateStickers } from "@/lib/trade-duplicates";
+import {
+  loadTradeInventoryContextForUsers,
+  listTradeableInventoryRows,
+  NO_DUPLICATES_TRADE_MESSAGE,
+  userHasDuplicateStickers,
+} from "@/lib/trade-duplicates";
 
 /**
  * GET /api/trades/wishes
  * Retorna pedidos abertos de OUTROS usuários, com os stickers que cada um
- * tem disponíveis para troca (qty >= 1) — usados no modal de oferta.
+ * tem disponíveis para troca (repetidas não coladas no álbum).
  */
 export async function GET() {
   const supabase = await createClient();
@@ -34,22 +39,41 @@ export async function GET() {
     ),
   ];
 
-  // Repetidas (qty >= 2) de cada dono do pedido — o ofertante escolhe qual quer em troca
-  let tradeableByUser: Record<string, { sticker: unknown; quantity: number }[]> = {};
+  // Repetidas disponíveis de cada dono do pedido — o ofertante escolhe qual quer em troca
+  let tradeableByUser: Record<string, { sticker: unknown; quantity: number; spareQuantity: number }[]> =
+    {};
   if (ownerIds.length > 0) {
-    const { data: rows } = await supabase
-      .from("user_stickers")
-      .select(`
-        user_id, quantity,
-        stickers ( id, name, image_url, rarities ( name, slug, color_hex ) )
-      `)
-      .in("user_id", ownerIds)
-      .gte("quantity", 2);
+    const [{ data: rows }, contexts] = await Promise.all([
+      supabase
+        .from("user_stickers")
+        .select(`
+          user_id, sticker_id, quantity,
+          stickers ( id, name, image_url, rarities ( name, slug, color_hex ) )
+        `)
+        .in("user_id", ownerIds)
+        .gte("quantity", 1),
+      loadTradeInventoryContextForUsers(supabase, ownerIds),
+    ]);
 
+    const rowsByUser = new Map<string, NonNullable<typeof rows>>();
     for (const row of rows ?? []) {
       const uid = row.user_id as string;
-      if (!tradeableByUser[uid]) tradeableByUser[uid] = [];
-      tradeableByUser[uid].push({ sticker: row.stickers, quantity: row.quantity });
+      if (!rowsByUser.has(uid)) rowsByUser.set(uid, []);
+      rowsByUser.get(uid)!.push(row);
+    }
+
+    for (const [uid, userRows] of rowsByUser) {
+      const context = contexts.get(uid);
+      if (!context) continue;
+      const tradeable = listTradeableInventoryRows(
+        userRows.map((row) => ({
+          sticker_id: row.sticker_id,
+          quantity: row.quantity,
+          stickers: row.stickers,
+        })),
+        context,
+      );
+      if (tradeable.length > 0) tradeableByUser[uid] = tradeable;
     }
   }
 

@@ -159,6 +159,7 @@ export function StickerSharePanel({
       size={isProfile ? "sm" : "md"}
       tone="on-dark"
       hideNativeShare
+      hidePlatforms={["instagram"]}
       onBeforeShare={completeShare}
       onNativeShare={nativeShare}
       onShareStatus={showStatus}

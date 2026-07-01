@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { incrementMissionProgress } from "@/lib/missions";
 import { createNotification } from "@/lib/notifications";
+import {
+  loadUserTradeInventoryContext,
+  NO_TRADEABLE_SPARE_MESSAGE,
+  userHasTradeableSpareInContext,
+} from "@/lib/trade-duplicates";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -82,56 +87,57 @@ export async function POST(request: NextRequest, { params }: Params) {
   }
 
   // ── ACCEPT ──────────────────────────────────────────────────────────────────
-  // Re-verify stock for both parties
-  const [{ data: requesterHas }, { data: receiverHas }] = await Promise.all([
-    supabase
-      .from("user_stickers")
-      .select("quantity")
-      .eq("user_id", trade.requester_id)
-      .eq("sticker_id", trade.offered_sticker_id)
-      .maybeSingle(),
-    supabase
-      .from("user_stickers")
-      .select("quantity")
-      .eq("user_id", user.id)
-      .eq("sticker_id", trade.requested_sticker_id)
-      .maybeSingle(),
+  const [requesterContext, receiverContext] = await Promise.all([
+    loadUserTradeInventoryContext(supabase, trade.requester_id),
+    loadUserTradeInventoryContext(supabase, user.id),
   ]);
 
-  if (!requesterHas || requesterHas.quantity < 1) {
+  const requesterCanOffer = userHasTradeableSpareInContext(
+    trade.offered_sticker_id,
+    requesterContext,
+  );
+  const receiverCanTrade = userHasTradeableSpareInContext(
+    trade.requested_sticker_id,
+    receiverContext,
+  );
+
+  if (!requesterCanOffer) {
     await supabase
       .from("trade_requests")
       .update({ status: "cancelled", resolved_at: new Date().toISOString() })
       .eq("id", tradeId);
     return NextResponse.json(
-      { error: "O proponente não tem mais a figurinha oferecida" },
-      { status: 409 }
+      { error: "O proponente não tem mais repetida da figurinha oferecida" },
+      { status: 409 },
     );
   }
 
-  if (!receiverHas || receiverHas.quantity < 2) {
+  if (!receiverCanTrade) {
     await supabase
       .from("trade_requests")
       .update({ status: "cancelled", resolved_at: new Date().toISOString() })
       .eq("id", tradeId);
     return NextResponse.json(
-      { error: "Você não tem mais repetida da figurinha solicitada" },
-      { status: 409 }
+      { error: NO_TRADEABLE_SPARE_MESSAGE },
+      { status: 409 },
     );
   }
+
+  const requesterHas = requesterContext.quantityBySticker.get(trade.offered_sticker_id) ?? 0;
+  const receiverHas = receiverContext.quantityBySticker.get(trade.requested_sticker_id) ?? 0;
 
   // Execute the swap
   await Promise.all([
     // Decrement offered from requester
     supabase
       .from("user_stickers")
-      .update({ quantity: requesterHas.quantity - 1 })
+      .update({ quantity: requesterHas - 1 })
       .eq("user_id", trade.requester_id)
       .eq("sticker_id", trade.offered_sticker_id),
     // Decrement requested from receiver (self)
     supabase
       .from("user_stickers")
-      .update({ quantity: receiverHas.quantity - 1 })
+      .update({ quantity: receiverHas - 1 })
       .eq("user_id", user.id)
       .eq("sticker_id", trade.requested_sticker_id),
   ]);
