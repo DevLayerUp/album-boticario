@@ -126,7 +126,7 @@ export const DEFAULT_SEO_SETTINGS: SeoSettings = {
   defaultDescription:
     "Crie sua figurinha personalizada, abra pacotinhos e complete o álbum digital do Grupo Boticário.",
   defaultOgImageUrl: null,
-  faviconUrl: "/images/favicon.png",
+  faviconUrl: "/images/favicon.svg",
   themeColor: "#0d6632",
   twitterCard: "summary_large_image",
   twitterSite: "",

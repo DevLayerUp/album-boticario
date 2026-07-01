@@ -23,6 +23,7 @@ const ALWAYS_PUBLIC = [
   "/sitemap-0.xml",
   "/favicon.svg",
   "/favicon.ico",
+  "/images/favicon.svg",
   "/images/favicon.png",
   "/.well-known/",
   "/opengraph-image",

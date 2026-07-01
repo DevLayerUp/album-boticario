@@ -69,7 +69,8 @@ function buildTwitter(settings: SeoSettings, resolved: ResolvedSeoRoute): Metada
 export function buildRootMetadata(settings: SeoSettings): Metadata {
   const siteUrl = getSiteUrl();
   const resolved = resolveSeoRoute(settings, "home");
-  const favicon = settings.faviconUrl ?? "/images/favicon.png";
+  const favicon = settings.faviconUrl ?? "/images/favicon.svg";
+  const faviconType = favicon.endsWith(".svg") ? "image/svg+xml" : "image/png";
   const googleVerification = process.env.GOOGLE_SITE_VERIFICATION?.trim();
 
   return {
@@ -96,9 +97,12 @@ export function buildRootMetadata(settings: SeoSettings): Metadata {
     },
     twitter: buildTwitter(settings, resolved),
     icons: {
-      icon: [{ url: favicon, type: "image/png" }],
+      icon: [
+        { url: favicon, type: faviconType },
+        { url: "/images/favicon.png", type: "image/png", sizes: "64x64" },
+      ],
       shortcut: favicon,
-      apple: favicon,
+      apple: "/images/favicon.png",
     },
     robots: buildRobots(settings, false),
   };
