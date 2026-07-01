@@ -5,6 +5,7 @@ import { parseSocialPageData } from "@/lib/album-templates";
 import { cn } from "@/lib/utils";
 import type { AlbumPageProps } from "./album-page";
 import { AlbumPageShell } from "./album-page-chrome";
+import { AlbumFitScaler } from "./album-grid-frame";
 import { AlbumSocialLinks } from "./album-social-links";
 import { AlbumShareSection } from "./album-share-section";
 import { FlipBookHtmlContent } from "./flip-book-link";
@@ -23,12 +24,14 @@ export function AlbumSocialPage({
       side={side}
       pageNumber={page.page_number}
       inFlipBook={inFlipBook}
+      fillContent
     >
+      <AlbumFitScaler>
       <div
         className={cn(
           "flex w-full flex-col",
           inFlipBook
-            ? "min-h-full justify-center px-3 py-2 sm:px-[8%] sm:py-4"
+            ? "justify-center px-3 py-2 sm:px-[8%] sm:py-4"
             : "justify-center px-6 py-6 sm:px-[10%]",
         )}
       >
@@ -96,6 +99,7 @@ export function AlbumSocialPage({
           <AlbumShareSection inFlipBook={inFlipBook} />
         </div>
       </div>
+      </AlbumFitScaler>
     </AlbumPageShell>
   );
 }

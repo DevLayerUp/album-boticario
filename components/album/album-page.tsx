@@ -19,6 +19,7 @@ import {
 } from "@/lib/album-templates";
 import {
   AlbumDuo2Scaler,
+  AlbumFitScaler,
   AlbumGridFrame,
   AlbumGridSlotCell,
   AlbumStickerGrid,
@@ -90,14 +91,21 @@ function PageShell({
   pageNumber,
   children,
   inFlipBook = false,
+  fillContent = false,
 }: {
   side: PageSide;
   pageNumber: number;
   children: React.ReactNode;
   inFlipBook?: boolean;
+  fillContent?: boolean;
 }) {
   return (
-    <AlbumPageShell side={side} pageNumber={pageNumber} inFlipBook={inFlipBook}>
+    <AlbumPageShell
+      side={side}
+      pageNumber={pageNumber}
+      inFlipBook={inFlipBook}
+      fillContent={fillContent}
+    >
       {children}
     </AlbumPageShell>
   );
@@ -111,7 +119,8 @@ function Title3Page({ page, side, pastedSlotIds, ownedMap, onPaste, userStickerU
   const text  = data.text ?? null;
 
   return (
-    <PageShell side={side} pageNumber={page.page_number} inFlipBook={inFlipBook}>
+    <PageShell side={side} pageNumber={page.page_number} inFlipBook={inFlipBook} fillContent>
+      <AlbumFitScaler>
       <div
         className={cn(
           "flex w-full flex-col",
@@ -177,6 +186,7 @@ function Title3Page({ page, side, pastedSlotIds, ownedMap, onPaste, userStickerU
           </div>
         ) : null}
       </div>
+      </AlbumFitScaler>
     </PageShell>
   );
 }
@@ -187,7 +197,8 @@ function ProfilePage({ page, side, userStickerUrl, userDisplayName, inFlipBook }
   const hasSticker = Boolean(userStickerUrl);
 
   return (
-    <PageShell side={side} pageNumber={page.page_number} inFlipBook={inFlipBook}>
+    <PageShell side={side} pageNumber={page.page_number} inFlipBook={inFlipBook} fillContent>
+      <AlbumFitScaler>
       <div
         className={cn(
           "flex w-full flex-col items-center",
@@ -308,6 +319,7 @@ function ProfilePage({ page, side, userStickerUrl, userDisplayName, inFlipBook }
           )}
         </div>
       </div>
+      </AlbumFitScaler>
     </PageShell>
   );
 }
@@ -460,7 +472,8 @@ function Tri3Page({ page, side, pastedSlotIds, ownedMap, onPaste, userStickerUrl
   }
 
   return (
-    <PageShell side={side} pageNumber={page.page_number} inFlipBook={inFlipBook}>
+    <PageShell side={side} pageNumber={page.page_number} inFlipBook={inFlipBook} fillContent>
+      <AlbumFitScaler>
       <div
         className={cn(
           "flex w-full flex-col",
@@ -485,6 +498,7 @@ function Tri3Page({ page, side, pastedSlotIds, ownedMap, onPaste, userStickerUrl
           </div>
         </div>
       </div>
+      </AlbumFitScaler>
     </PageShell>
   );
 }
@@ -606,7 +620,8 @@ function InfoPage({ page, side, inFlipBook }: AlbumPageProps) {
   const html = page.content ?? "";
 
   return (
-    <PageShell side={side} pageNumber={page.page_number} inFlipBook={inFlipBook}>
+    <PageShell side={side} pageNumber={page.page_number} inFlipBook={inFlipBook} fillContent>
+      <AlbumFitScaler>
       <div
         className={cn(
           "flex w-full flex-col",
@@ -656,6 +671,7 @@ function InfoPage({ page, side, inFlipBook }: AlbumPageProps) {
           ) : null}
         </div>
       </div>
+      </AlbumFitScaler>
     </PageShell>
   );
 }

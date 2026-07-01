@@ -126,6 +126,62 @@ export function AlbumGridSlotCell({
   );
 }
 
+interface AlbumFitScalerProps {
+  className?: string;
+  children: React.ReactNode;
+}
+
+/**
+ * Escala uniformemente o conteúdo para caber inteiro na página (sem cortes)
+ * em telas baixas. Nunca amplia (scale ≤ 1), então em telas grandes o layout
+ * permanece idêntico. Requer um contêiner-pai com altura definida (flex-1).
+ */
+export function AlbumFitScaler({ className, children }: AlbumFitScalerProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(1);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    const content = contentRef.current;
+    if (!container || !content) return;
+
+    const update = () => {
+      const cw = container.clientWidth;
+      const ch = container.clientHeight;
+      const w = content.offsetWidth;
+      const h = content.offsetHeight;
+      if (!cw || !ch || !w || !h) return;
+      const next = Math.min(1, cw / w, ch / h);
+      if (Number.isFinite(next) && next > 0) setScale(next);
+    };
+
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(container);
+    ro.observe(content);
+    return () => ro.disconnect();
+  }, []);
+
+  return (
+    <div
+      ref={containerRef}
+      className={cn(
+        "flex min-h-0 max-h-full w-full flex-1 items-center justify-center overflow-hidden",
+        className,
+      )}
+    >
+      <div
+        ref={contentRef}
+        className="w-full"
+        style={{ transform: `scale(${scale})`, transformOrigin: "center center" }}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
+
 interface AlbumDuo2ScalerProps {
   inFlipBook?: boolean;
   children: React.ReactNode;

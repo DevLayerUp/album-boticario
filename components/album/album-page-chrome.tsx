@@ -100,6 +100,8 @@ interface AlbumPageShellProps {
   inFlipBook?: boolean;
   /** Permite rolar o conteúdo dentro da página (ex.: redes sociais no mobile). */
   scrollableContent?: boolean;
+  /** Faz a área de conteúdo preencher a altura da página (para escalar conteúdo). */
+  fillContent?: boolean;
   children: React.ReactNode;
 }
 
@@ -108,6 +110,7 @@ export function AlbumPageShell({
   pageNumber,
   inFlipBook = false,
   scrollableContent = false,
+  fillContent = false,
   children,
 }: AlbumPageShellProps) {
   const decoration =
@@ -156,7 +159,9 @@ export function AlbumPageShell({
               "min-h-0 w-full",
               scrollableContent && inFlipBook
                 ? "overflow-visible py-1"
-                : "max-h-full overflow-hidden",
+                : fillContent
+                  ? "flex min-h-0 flex-1 flex-col overflow-hidden"
+                  : "max-h-full overflow-hidden",
             )}
           >
             {children}
