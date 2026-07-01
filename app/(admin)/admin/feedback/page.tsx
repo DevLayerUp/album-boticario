@@ -10,7 +10,7 @@ export default async function FeedbackAdminPage() {
 
   const { data: rows, error } = await supabase
     .from("user_feedback")
-    .select("id, user_id, type, message, created_at")
+    .select("id, user_id, type, message, status, created_at")
     .order("created_at", { ascending: false })
     .limit(500);
 
@@ -51,6 +51,7 @@ export default async function FeedbackAdminPage() {
   const initialData: AdminFeedbackRow[] = feedbackRows.map((row) => ({
     ...row,
     type: row.type as AdminFeedbackRow["type"],
+    status: (row.status ?? "pending") as AdminFeedbackRow["status"],
     display_name: profileMap[row.user_id]?.display_name ?? null,
     username: profileMap[row.user_id]?.username ?? null,
     email: emailMap[row.user_id] ?? null,

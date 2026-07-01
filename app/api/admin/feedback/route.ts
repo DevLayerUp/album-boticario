@@ -12,7 +12,7 @@ export async function GET() {
 
   const { data: rows, error } = await supabase
     .from("user_feedback")
-    .select("id, user_id, type, message, created_at")
+    .select("id, user_id, type, message, status, created_at")
     .order("created_at", { ascending: false })
     .limit(500);
 
@@ -52,6 +52,7 @@ export async function GET() {
 
   const feedback = (rows ?? []).map((row) => ({
     ...row,
+    status: row.status ?? "pending",
     display_name: profileMap[row.user_id]?.display_name ?? null,
     username: profileMap[row.user_id]?.username ?? null,
     email: emailMap[row.user_id] ?? null,
