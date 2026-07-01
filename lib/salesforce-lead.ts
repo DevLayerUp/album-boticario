@@ -138,12 +138,16 @@ export async function forwardLeadToCloudPage(
 ): Promise<{ ok: true; message: string } | { ok: false; error: string }> {
   const url = getCloudPageSignupUrl();
 
+  // Nomes dos campos conforme a Data Extension do Salesforce.
   const params = new URLSearchParams();
-  params.set("Email", payload.email);
-  params.set("Name", payload.name);
+  params.set("EmailAddress", payload.email);
+  params.set("Nome", payload.name);
   params.set("DataNascimento", formatBirthDateBR(payload.birthDate));
   params.set("Estado", payload.estado ?? "");
   params.set("Cidade", payload.cidade ?? "");
+  // SubscriberKey: campo obrigatório na DE, PENDENTE.
+  // Aguardando a equipe do Salesforce informar como gerar/enviar a key.
+  // TODO: params.set("SubscriberKey", <valor da key>);
 
   try {
     const res = await fetch(url, {
