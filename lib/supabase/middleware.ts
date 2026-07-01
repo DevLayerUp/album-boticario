@@ -1,5 +1,6 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { clearStaleAuthSession, isStaleAuthSessionError } from "@/lib/supabase/auth-session";
 
 type CookieToSet = { name: string; value: string; options?: CookieOptions };
 
@@ -102,11 +103,15 @@ export async function updateSession(request: NextRequest) {
   );
 
   const {
-    data: { user },
+    data: { user: authUser },
     error: authError,
   } = await supabase.auth.getUser();
 
-  console.log(`[MIDDLEWARE] ${pathname} — user: ${user?.id ?? "null"} ${authError ? "ERR:" + authError.message : ""}`);
+  let user = authUser;
+  if (isStaleAuthSessionError(authError)) {
+    await clearStaleAuthSession(supabase, authError);
+    user = null;
+  }
 
   const isPublic = PUBLIC_ROUTES.some(
     (route) => pathname === route || pathname.startsWith(`${route}/`),
@@ -114,7 +119,6 @@ export async function updateSession(request: NextRequest) {
 
   // Não autenticado tentando acessar rota protegida → login
   if (!user && !isPublic) {
-    console.log(`[MIDDLEWARE] sem sessão em rota protegida → redirect /login?redirect=${pathname}`);
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.searchParams.set("redirect", pathname);
@@ -141,7 +145,6 @@ export async function updateSession(request: NextRequest) {
       pathname === "/esqueci-senha" ||
       pathname.startsWith("/register/"))
   ) {
-    console.log(`[MIDDLEWARE] usuário autenticado em rota de auth → redirect /dashboard`);
     const url = request.nextUrl.clone();
     url.pathname = "/dashboard";
     return NextResponse.redirect(url);

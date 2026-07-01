@@ -1,14 +1,12 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { getAuthUser } from "@/lib/supabase/auth-session";
 
 type CookieToSet = { name: string; value: string; options?: CookieOptions };
 
 /** Cliente Supabase para Server Components, Server Actions e Route Handlers. */
 export async function createClient() {
   const cookieStore = await cookies();
-  const allCookies = cookieStore.getAll();
-  const authCookies = allCookies.filter((c) => c.name.startsWith("sb-"));
-  console.log(`[SUPABASE SERVER] cookies auth: [${authCookies.map((c) => c.name).join(", ")}]`);
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -31,4 +29,10 @@ export async function createClient() {
       },
     },
   );
+}
+
+/** Obtém o usuário autenticado e limpa cookies de sessão inválidos. */
+export async function getUser() {
+  const supabase = await createClient();
+  return getAuthUser(supabase);
 }

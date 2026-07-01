@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { getUser } from "@/lib/supabase/server";
 import { AdminSidebar } from "@/components/admin/sidebar";
 
 export const metadata: Metadata = { title: { template: "%s — Admin GB", default: "Admin GB" } };
@@ -10,10 +10,7 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { user } = await getUser();
 
   const role =
     (user?.app_metadata?.role ?? user?.user_metadata?.role) as

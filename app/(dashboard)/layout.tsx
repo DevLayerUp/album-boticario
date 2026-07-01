@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { User } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
+import { getUser } from "@/lib/supabase/server";
 import { NavItem } from "@/components/navigation/nav-item";
 import { MobileNav } from "@/components/navigation/mobile-nav";
 import { SignOutButton } from "@/components/auth/sign-out-button";
@@ -31,10 +31,7 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { user } = await getUser();
 
   if (!user) redirect("/login");
 
