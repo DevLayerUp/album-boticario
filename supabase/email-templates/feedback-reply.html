@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>Resposta ao seu feedback</title>
+  <!--[if mso]>
+  <noscript>
+    <xml>
+      <o:OfficeDocumentSettings>
+        <o:PixelsPerInch>96</o:PixelsPerInch>
+      </o:OfficeDocumentSettings>
+    </xml>
+  </noscript>
+  <![endif]-->
+</head>
+<body style="margin:0;padding:0;background-color:#f9f8f7;font-family:Barlow,Arial,Helvetica,sans-serif;-webkit-font-smoothing:antialiased;">
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;mso-hide:all;">
+    Recebemos seu feedback e temos uma resposta para você no Fãs por Natureza.
+  </div>
+
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#f9f8f7;">
+    <tr>
+      <td align="center" style="padding:32px 16px;">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width:600px;background-color:#ffffff;border-radius:24px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.08);">
+          <tr>
+            <td align="center" style="background-color:#0d6632;padding:28px 24px;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                <tr>
+                  <td align="center" style="padding-bottom:16px;">
+                    <img
+                      src="{{ .SiteURL }}/images/dashboard/logo-fgb.png"
+                      alt="Fundação Grupo Boticário"
+                      width="160"
+                      height="58"
+                      style="display:block;border:0;outline:none;text-decoration:none;height:auto;max-width:160px;"
+                    />
+                  </td>
+                </tr>
+                <tr>
+                  <td align="center">
+                    <img
+                      src="{{ .SiteURL }}/images/dashboard/logo-branco.png"
+                      alt="Fãs por Natureza"
+                      width="140"
+                      height="68"
+                      style="display:block;border:0;outline:none;text-decoration:none;height:auto;max-width:140px;"
+                    />
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding:40px 32px 32px;">
+              <h1 style="margin:0 0 16px;font-size:24px;line-height:1.3;font-weight:700;color:#0d6632;">
+                Resposta ao seu feedback
+              </h1>
+              <p style="margin:0 0 20px;font-size:16px;line-height:1.5;color:#1a1a1a;">
+                Olá{{ .DisplayName }}!
+              </p>
+              <p style="margin:0 0 24px;font-size:16px;line-height:1.6;color:#4a4a4a;">
+                Obrigado por entrar em contato conosco. Recebemos seu feedback do tipo
+                <strong style="color:#0d6632;">{{ .FeedbackType }}</strong> e nossa equipe preparou uma resposta para você:
+              </p>
+
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom:24px;">
+                <tr>
+                  <td style="background-color:#f3faf5;border-left:4px solid #0d6632;border-radius:12px;padding:20px 24px;">
+                    <p style="margin:0;font-size:16px;line-height:1.65;color:#1a1a1a;white-space:pre-wrap;">{{ .ReplyMessage }}</p>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="margin:0 0 12px;font-size:14px;line-height:1.5;color:#6b7280;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;">
+                Sua mensagem original
+              </p>
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom:28px;">
+                <tr>
+                  <td style="background-color:#f9f8f7;border-radius:12px;padding:16px 20px;">
+                    <p style="margin:0;font-size:14px;line-height:1.6;color:#6b7280;white-space:pre-wrap;">{{ .OriginalMessage }}</p>
+                  </td>
+                </tr>
+              </table>
+
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                <tr>
+                  <td align="center" style="padding-bottom:28px;">
+                    <a
+                      href="{{ .LoginURL }}"
+                      target="_blank"
+                      style="display:inline-block;background-color:#deda00;color:#0d6632;font-size:16px;font-weight:700;line-height:1;text-decoration:none;padding:14px 32px;border-radius:999px;mso-padding-alt:0;letter-spacing:0.04em;"
+                    >
+                      <span style="mso-text-raise:10pt;">ACESSAR O FANDOM</span>
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="margin:0;font-size:13px;line-height:1.5;color:#9ca3af;">
+                Se precisar de mais ajuda, responda este e-mail ou envie um novo feedback pela plataforma.
+              </p>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="background-color:#f9f8f7;padding:20px 32px;border-top:1px solid #e8e6e4;">
+              <p style="margin:0;font-size:12px;line-height:1.5;color:#0d6632;text-align:center;font-weight:500;">
+                © 2026 Fundação Grupo Boticário · Fãs por Natureza
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

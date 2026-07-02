@@ -1,9 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Loader2, MessageSquare, Search, Trash2 } from "lucide-react";
+import { Loader2, Mail, MessageSquare, Search, Trash2, X } from "lucide-react";
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 import {
+  USER_FEEDBACK_REPLY_MAX_LENGTH,
+  USER_FEEDBACK_REPLY_MIN_LENGTH,
   USER_FEEDBACK_STATUS_LABELS,
   USER_FEEDBACK_STATUSES,
   USER_FEEDBACK_TYPE_LABELS,
@@ -18,6 +20,8 @@ export interface AdminFeedbackRow {
   type: UserFeedbackType;
   status: UserFeedbackStatus;
   message: string;
+  admin_reply: string | null;
+  admin_reply_at: string | null;
   created_at: string;
   display_name: string | null;
   username: string | null;
@@ -57,9 +61,16 @@ export function FeedbackAdminClient({ initialData }: { initialData: AdminFeedbac
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [updatingId, setUpdatingId] = useState<number | null>(null);
+  const [replyTarget, setReplyTarget] = useState<AdminFeedbackRow | null>(null);
+  const [replyText, setReplyText] = useState("");
+  const [replySending, setReplySending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const deleteTarget = deleteId ? items.find((item) => item.id === deleteId) : null;
+  const replyChars = replyText.trim().length;
+  const replyValid =
+    replyChars >= USER_FEEDBACK_REPLY_MIN_LENGTH &&
+    replyChars <= USER_FEEDBACK_REPLY_MAX_LENGTH;
 
   const filtered = useMemo(() => {
     return items.filter((item) => {
@@ -120,6 +131,57 @@ export function FeedbackAdminClient({ initialData }: { initialData: AdminFeedbac
       setError(err instanceof Error ? err.message : "Erro ao excluir feedback.");
     } finally {
       setDeleting(false);
+    }
+  }
+
+  function openReplyModal(item: AdminFeedbackRow) {
+    setReplyTarget(item);
+    setReplyText(item.admin_reply ?? "");
+    setError(null);
+  }
+
+  function closeReplyModal() {
+    if (replySending) return;
+    setReplyTarget(null);
+    setReplyText("");
+  }
+
+  async function handleSendReply() {
+    if (!replyTarget || !replyValid) return;
+    setReplySending(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/admin/feedback/${replyTarget.id}/reply`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reply: replyText.trim() }),
+      });
+      const payload = (await res.json()) as {
+        error?: string;
+        admin_reply?: string;
+        admin_reply_at?: string;
+        status?: UserFeedbackStatus;
+      };
+      if (!res.ok) throw new Error(payload.error ?? "Não foi possível enviar a resposta.");
+
+      setItems((current) =>
+        current.map((item) =>
+          item.id === replyTarget.id
+            ? {
+                ...item,
+                admin_reply: payload.admin_reply ?? replyText.trim(),
+                admin_reply_at: payload.admin_reply_at ?? new Date().toISOString(),
+                status: payload.status ?? "resolved",
+              }
+            : item,
+        ),
+      );
+      setReplyTarget(null);
+      setReplyText("");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erro ao enviar resposta.");
+    } finally {
+      setReplySending(false);
     }
   }
 
@@ -244,6 +306,17 @@ export function FeedbackAdminClient({ initialData }: { initialData: AdminFeedbac
 
                   <button
                     type="button"
+                    onClick={() => openReplyModal(item)}
+                    disabled={!item.email}
+                    title={item.email ? "Responder por e-mail" : "Usuário sem e-mail"}
+                    className="inline-flex size-8 cursor-pointer items-center justify-center rounded-lg border border-gray-200 text-gray-500 transition-colors hover:border-gb-green hover:bg-emerald-50 hover:text-gb-green disabled:cursor-not-allowed disabled:opacity-40"
+                    aria-label={`Responder feedback de ${userLabel(item)}`}
+                  >
+                    <Mail size={15} aria-hidden />
+                  </button>
+
+                  <button
+                    type="button"
                     onClick={() => setDeleteId(item.id)}
                     className="inline-flex size-8 cursor-pointer items-center justify-center rounded-lg border border-gray-200 text-gray-500 transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-600"
                     aria-label={`Excluir feedback de ${userLabel(item)}`}
@@ -256,6 +329,18 @@ export function FeedbackAdminClient({ initialData }: { initialData: AdminFeedbac
               <p className="mt-4 whitespace-pre-wrap text-sm leading-relaxed text-gray-700">
                 {item.message}
               </p>
+
+              {item.admin_reply ? (
+                <div className="mt-4 rounded-lg border border-emerald-100 bg-emerald-50/60 px-4 py-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-emerald-800">
+                    Resposta enviada
+                    {item.admin_reply_at ? ` · ${formatDate(item.admin_reply_at)}` : ""}
+                  </p>
+                  <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-emerald-900">
+                    {item.admin_reply}
+                  </p>
+                </div>
+              ) : null}
             </article>
           ))}
         </div>
@@ -275,6 +360,88 @@ export function FeedbackAdminClient({ initialData }: { initialData: AdminFeedbac
           if (!deleting) setDeleteId(null);
         }}
       />
+
+      {replyTarget ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/30 backdrop-blur-sm"
+            onClick={closeReplyModal}
+          />
+          <div
+            role="dialog"
+            aria-labelledby="reply-dialog-title"
+            className="relative flex max-h-[90dvh] w-full max-w-lg flex-col overflow-hidden rounded-2xl bg-white shadow-xl"
+          >
+            <div className="flex items-start justify-between gap-3 border-b border-gray-100 px-6 py-5">
+              <div className="min-w-0">
+                <h3 id="reply-dialog-title" className="text-base font-semibold text-gray-900">
+                  Responder {userLabel(replyTarget)}
+                </h3>
+                <p className="mt-1 truncate text-sm text-gray-500">
+                  {replyTarget.email ?? "sem e-mail"}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={closeReplyModal}
+                disabled={replySending}
+                className="inline-flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 disabled:opacity-50"
+                aria-label="Fechar"
+              >
+                <X size={18} aria-hidden />
+              </button>
+            </div>
+
+            <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">
+              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                Mensagem original
+              </p>
+              <p className="mt-2 whitespace-pre-wrap rounded-lg bg-gray-50 px-4 py-3 text-sm leading-relaxed text-gray-700">
+                {replyTarget.message}
+              </p>
+
+              <label htmlFor="feedback-reply" className="mt-5 block text-sm font-medium text-gray-900">
+                Sua resposta
+              </label>
+              <textarea
+                id="feedback-reply"
+                value={replyText}
+                onChange={(event) => setReplyText(event.target.value)}
+                rows={6}
+                maxLength={USER_FEEDBACK_REPLY_MAX_LENGTH}
+                placeholder="Escreva a resposta que será enviada por e-mail..."
+                className="mt-2 w-full resize-y rounded-xl border border-gray-200 px-4 py-3 text-sm leading-relaxed text-gray-800 outline-none focus:border-gb-green"
+              />
+              <p className="mt-2 text-xs text-gray-500">
+                {replyChars}/{USER_FEEDBACK_REPLY_MAX_LENGTH} caracteres
+                {replyChars > 0 && replyChars < USER_FEEDBACK_REPLY_MIN_LENGTH
+                  ? ` · mínimo ${USER_FEEDBACK_REPLY_MIN_LENGTH}`
+                  : ""}
+              </p>
+            </div>
+
+            <div className="flex justify-end gap-3 border-t border-gray-100 px-6 py-4">
+              <button
+                type="button"
+                onClick={closeReplyModal}
+                disabled={replySending}
+                className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={() => void handleSendReply()}
+                disabled={replySending || !replyValid}
+                className="inline-flex items-center gap-2 rounded-lg bg-gb-green px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-800 disabled:opacity-50"
+              >
+                {replySending ? <Loader2 size={14} className="animate-spin" /> : <Mail size={14} />}
+                Enviar resposta
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

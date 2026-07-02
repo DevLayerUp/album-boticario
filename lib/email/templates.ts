@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { getSiteUrl } from "@/lib/seo-metadata";
 
 export type AuthEmailTemplateId = "account-created" | "reset-password";
+export type FeedbackEmailTemplateId = "feedback-reply";
 
 const SUBJECTS: Record<AuthEmailTemplateId, string> = {
   "account-created":
@@ -10,9 +11,13 @@ const SUBJECTS: Record<AuthEmailTemplateId, string> = {
   "reset-password": "Redefinir sua senha — Fãs por Natureza",
 };
 
-const templateCache = new Map<AuthEmailTemplateId, string>();
+const FEEDBACK_SUBJECTS: Record<FeedbackEmailTemplateId, string> = {
+  "feedback-reply": "Resposta ao seu feedback — Fãs por Natureza",
+};
 
-function loadTemplate(id: AuthEmailTemplateId): string {
+const templateCache = new Map<string, string>();
+
+function loadTemplate(id: AuthEmailTemplateId | FeedbackEmailTemplateId): string {
   const cached = templateCache.get(id);
   if (cached) return cached;
 
@@ -20,6 +25,19 @@ function loadTemplate(id: AuthEmailTemplateId): string {
   const html = readFileSync(filePath, "utf8");
   templateCache.set(id, html);
   return html;
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function formatMultilineHtml(value: string): string {
+  return escapeHtml(value).replace(/\r\n/g, "\n").replace(/\n/g, "<br />");
 }
 
 export interface AuthEmailTemplateVariables {
@@ -51,6 +69,37 @@ export function renderAuthEmailTemplate(
 
   return {
     subject: SUBJECTS[templateId],
+    html,
+  };
+}
+
+export interface FeedbackReplyEmailVariables {
+  siteUrl?: string;
+  displayName?: string;
+  feedbackType: string;
+  replyMessage: string;
+  originalMessage: string;
+}
+
+export function renderFeedbackReplyEmail(
+  variables: FeedbackReplyEmailVariables,
+): { subject: string; html: string } {
+  const siteUrl = (variables.siteUrl ?? getSiteUrl()).replace(/\/$/, "");
+  const loginUrl = `${siteUrl}/login`;
+  const displayName = variables.displayName?.trim()
+    ? `, ${variables.displayName.trim()}`
+    : "";
+
+  const html = loadTemplate("feedback-reply")
+    .replace(/\{\{\s*\.SiteURL\s*\}\}/g, siteUrl)
+    .replace(/\{\{\s*\.LoginURL\s*\}\}/g, loginUrl)
+    .replace(/\{\{\s*\.DisplayName\s*\}\}/g, displayName)
+    .replace(/\{\{\s*\.FeedbackType\s*\}\}/g, escapeHtml(variables.feedbackType))
+    .replace(/\{\{\s*\.ReplyMessage\s*\}\}/g, formatMultilineHtml(variables.replyMessage))
+    .replace(/\{\{\s*\.OriginalMessage\s*\}\}/g, formatMultilineHtml(variables.originalMessage));
+
+  return {
+    subject: FEEDBACK_SUBJECTS["feedback-reply"],
     html,
   };
 }

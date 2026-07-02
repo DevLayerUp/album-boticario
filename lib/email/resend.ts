@@ -1,8 +1,10 @@
 import { Resend } from "resend";
 import {
   renderAuthEmailTemplate,
+  renderFeedbackReplyEmail,
   type AuthEmailTemplateId,
   type AuthEmailTemplateVariables,
+  type FeedbackReplyEmailVariables,
 } from "@/lib/email/templates";
 
 let resendClient: Resend | null = null;
@@ -54,6 +56,25 @@ export async function sendAuthEmail(options: {
 
   if (error) {
     throw new Error(error.message || "Falha ao enviar e-mail transacional.");
+  }
+}
+
+export async function sendFeedbackReplyEmail(options: {
+  to: string;
+  variables: FeedbackReplyEmailVariables;
+}): Promise<void> {
+  const { subject, html } = renderFeedbackReplyEmail(options.variables);
+
+  const resend = getResendClient();
+  const { error } = await resend.emails.send({
+    from: getFromAddress(),
+    to: options.to,
+    subject,
+    html,
+  });
+
+  if (error) {
+    throw new Error(error.message || "Falha ao enviar resposta por e-mail.");
   }
 }
 

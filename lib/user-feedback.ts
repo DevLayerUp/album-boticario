@@ -17,6 +17,9 @@ export const USER_FEEDBACK_TYPE_LABELS: Record<UserFeedbackType, string> = {
 export const USER_FEEDBACK_MIN_LENGTH = 10;
 export const USER_FEEDBACK_MAX_LENGTH = 2000;
 
+export const USER_FEEDBACK_REPLY_MIN_LENGTH = 10;
+export const USER_FEEDBACK_REPLY_MAX_LENGTH = 2000;
+
 export function isUserFeedbackType(value: string): value is UserFeedbackType {
   return (USER_FEEDBACK_TYPES as readonly string[]).includes(value);
 }
