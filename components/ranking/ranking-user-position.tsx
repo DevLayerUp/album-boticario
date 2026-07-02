@@ -1,6 +1,7 @@
 "use client";
 
 import type { RankingEntry } from "@/lib/ranking";
+import { computeAlbumProgressPct } from "@/lib/ranking";
 import { formatRankingPoints, rankingDisplayName } from "./ranking-utils";
 
 interface RankingUserPositionProps {
@@ -8,9 +9,10 @@ interface RankingUserPositionProps {
 }
 
 export function RankingUserPosition({ entry }: RankingUserPositionProps) {
-  const albumProgress = entry.total_slots > 0
-    ? Math.round((entry.filled_slots / entry.total_slots) * 100)
-    : 0;
+  const albumProgress = computeAlbumProgressPct(
+    entry.filled_slots,
+    entry.total_slots,
+  );
 
   return (
     <section className="flex flex-col rounded-card border border-verde-400 bg-verde-100 px-4 py-5 sm:px-5 sm:py-6 lg:px-6 2xl:h-[248px] 2xl:justify-between 2xl:px-8 2xl:py-8">

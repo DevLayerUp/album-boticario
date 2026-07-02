@@ -8,6 +8,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { createNotification } from "@/lib/notifications";
 import { createPacksForUser } from "@/lib/pack";
 import { RANKING_MISSION_BONUS } from "@/lib/ranking-constants";
+import { fetchAllPages } from "@/lib/supabase/fetch-all-pages";
 import { syncUserRankingScoreById } from "@/lib/sync-ranking-score";
 
 interface MissionRow {
@@ -222,59 +223,88 @@ export async function buildRankingMissionCountsFromActivity(
 
   const [
     profilesRes,
-    referralsRes,
-    quizRes,
-    packsRes,
-    pastedRes,
+    referralRows,
+    quizRows,
+    openedPackRows,
+    pastedRows,
     slotsRes,
-    userAlbumRes,
-    tradesRes,
+    userAlbumRows,
+    tradeRows,
   ] = await Promise.all([
     admin
       .from("profiles")
       .select(
         "id, display_name, avatar_url, sticker_url, bio, phone, city, state, social_shared_at",
       ),
-    admin.from("profiles").select("referred_by").not("referred_by", "is", null),
-    admin.from("user_quiz_answers").select("user_id").eq("is_correct", true),
-    admin.from("packs").select("user_id").not("opened_at", "is", null),
-    admin.from("user_album").select("user_id"),
+    fetchAllPages<{ referred_by: string }>((from, to) =>
+      admin
+        .from("profiles")
+        .select("referred_by")
+        .not("referred_by", "is", null)
+        .range(from, to),
+    ),
+    fetchAllPages<{ user_id: string }>((from, to) =>
+      admin
+        .from("user_quiz_answers")
+        .select("user_id")
+        .eq("is_correct", true)
+        .range(from, to),
+    ),
+    fetchAllPages<{ user_id: string }>((from, to) =>
+      admin
+        .from("packs")
+        .select("user_id")
+        .not("opened_at", "is", null)
+        .range(from, to),
+    ),
+    fetchAllPages<{ user_id: string }>((from, to) =>
+      admin.from("user_album").select("user_id").range(from, to),
+    ),
     admin.from("album_slots").select("id, page_id"),
-    admin
-      .from("user_album")
-      .select("user_id, slot_id, album_slots(page_id)"),
-    admin
-      .from("trade_requests")
-      .select("requester_id, receiver_id")
-      .eq("status", "accepted"),
+    fetchAllPages<{
+      user_id: string;
+      slot_id: number;
+      album_slots: { page_id: number } | { page_id: number }[] | null;
+    }>((from, to) =>
+      admin
+        .from("user_album")
+        .select("user_id, slot_id, album_slots(page_id)")
+        .range(from, to),
+    ),
+    fetchAllPages<{ requester_id: string; receiver_id: string }>((from, to) =>
+      admin
+        .from("trade_requests")
+        .select("requester_id, receiver_id")
+        .eq("status", "accepted")
+        .range(from, to),
+    ),
   ]);
 
   const referralsByUser = new Map<string, number>();
-  for (const row of referralsRes.data ?? []) {
-    const referredBy = row.referred_by as string;
+  for (const row of referralRows) {
     referralsByUser.set(
-      referredBy,
-      (referralsByUser.get(referredBy) ?? 0) + 1,
+      row.referred_by,
+      (referralsByUser.get(row.referred_by) ?? 0) + 1,
     );
   }
 
   const quizByUser = new Map<string, number>();
-  for (const row of quizRes.data ?? []) {
+  for (const row of quizRows) {
     quizByUser.set(row.user_id, (quizByUser.get(row.user_id) ?? 0) + 1);
   }
 
   const packsByUser = new Map<string, number>();
-  for (const row of packsRes.data ?? []) {
+  for (const row of openedPackRows) {
     packsByUser.set(row.user_id, (packsByUser.get(row.user_id) ?? 0) + 1);
   }
 
   const pastedByUser = new Map<string, number>();
-  for (const row of pastedRes.data ?? []) {
+  for (const row of pastedRows) {
     pastedByUser.set(row.user_id, (pastedByUser.get(row.user_id) ?? 0) + 1);
   }
 
   const tradesByUser = new Map<string, number>();
-  for (const row of tradesRes.data ?? []) {
+  for (const row of tradeRows) {
     tradesByUser.set(
       row.requester_id,
       (tradesByUser.get(row.requester_id) ?? 0) + 1,
@@ -292,7 +322,7 @@ export async function buildRankingMissionCountsFromActivity(
   }
 
   const pastedByUserPage = new Map<string, Map<number, number>>();
-  for (const entry of userAlbumRes.data ?? []) {
+  for (const entry of userAlbumRows) {
     const slotData = entry.album_slots as
       | { page_id: number }
       | { page_id: number }[]
