@@ -8,6 +8,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { createNotification } from "@/lib/notifications";
 import { createPacksForUser } from "@/lib/pack";
 import { RANKING_MISSION_BONUS } from "@/lib/ranking-constants";
+import { syncUserRankingScoreById } from "@/lib/sync-ranking-score";
 
 interface MissionRow {
   id: number;
@@ -496,6 +497,8 @@ export async function incrementMissionProgress(
       userMission,
     );
   }
+
+  await syncUserRankingScoreById(userId);
 }
 
 /** Marca a missão de compartilhamento social como concluída para o usuário. */
@@ -509,6 +512,7 @@ export async function markSocialShareMission(
     .eq("id", userId);
 
   await validarMissoes(supabase, userId);
+  await syncUserRankingScoreById(userId);
 }
 
 export interface ClaimMissionRewardResult {

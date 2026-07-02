@@ -134,7 +134,7 @@ export async function buildLeaderboard(
       admin
         .from("profiles")
         .select(
-          "id, display_name, username, sticker_url, avatar_url, show_in_ranking",
+          "id, display_name, username, sticker_url, avatar_url, show_in_ranking, ranking_score, ranking_score_updated_at",
         ),
       admin.from("album_slots").select("id", { count: "exact", head: true }),
       admin.from("user_album").select("user_id"),
@@ -210,13 +210,15 @@ export async function buildLeaderboard(
       packs_unopened,
       missions_completed,
       trades_accepted,
-      score: computeRankingScore({
-        filled_slots,
-        album_pct,
-        packs_opened,
-        missions_completed,
-        trades_accepted,
-      }),
+      score: profile.ranking_score_updated_at
+        ? (profile.ranking_score ?? 0)
+        : computeRankingScore({
+            filled_slots,
+            album_pct,
+            packs_opened,
+            missions_completed,
+            trades_accepted,
+          }),
       rank: 0,
     };
   });
