@@ -30,6 +30,7 @@ export function PacotinhosClient({
   const [history, setHistory] = useState(initialHistory);
   const [stats, setStats] = useState(initialStats);
   const [activePack, setActivePack] = useState<Pack | null>(null);
+  const [packOpening, setPackOpening] = useState(false);
   const [openQueue, setOpenQueue] = useState<Pack[]>([]);
   const [portalReady, setPortalReady] = useState(false);
   const [historyVisibleCount, setHistoryVisibleCount] = useState(OPENED_HISTORY_PAGE_SIZE);
@@ -66,17 +67,26 @@ export function PacotinhosClient({
     setActivePack(available[0]);
   }, [available]);
 
+  const handlePackOpened = useCallback((packId: number, openedAt: string) => {
+    setPacks((prev) =>
+      prev.map((p) => (p.id === packId ? { ...p, opened_at: openedAt } : p)),
+    );
+    setActivePack((prev) =>
+      prev?.id === packId ? { ...prev, opened_at: openedAt } : prev,
+    );
+    setOpenQueue((prev) => prev.filter((p) => p.id !== packId));
+    setStats((prev) => ({
+      available: Math.max(0, prev.available - 1),
+      opened: prev.opened + 1,
+      totalStickers: prev.totalStickers,
+    }));
+  }, []);
+
   const handleComplete = useCallback(
     (revealed: PackSticker[]) => {
       if (!activePack) return;
 
-      const openedAt = new Date().toISOString();
-
-      setPacks((prev) =>
-        prev.map((p) =>
-          p.id === activePack.id ? { ...p, opened_at: openedAt } : p,
-        ),
-      );
+      const openedAt = activePack.opened_at ?? new Date().toISOString();
 
       setHistory((prev) => [
         {
@@ -89,12 +99,12 @@ export function PacotinhosClient({
       ]);
 
       setStats((prev) => ({
-        available: Math.max(0, prev.available - 1),
-        opened: prev.opened + 1,
+        ...prev,
         totalStickers: prev.totalStickers + revealed.length,
       }));
 
       setActivePack(null);
+      setPackOpening(false);
 
       if (openQueue.length > 0) {
         const [next, ...rest] = openQueue;
@@ -178,7 +188,9 @@ export function PacotinhosClient({
                 <div
                   className="absolute inset-0 min-h-dvh bg-verde-500/35 backdrop-blur-[2px]"
                   aria-hidden
-                  onClick={() => setActivePack(null)}
+                  onClick={() => {
+                    if (!packOpening) setActivePack(null);
+                  }}
                 />
                 <motion.div
                   initial={{ scale: 0.96, opacity: 0 }}
@@ -194,8 +206,12 @@ export function PacotinhosClient({
                       stickerCount={activePack.sticker_count}
                       packImageUrl={visual.packImageUrl}
                       openingGifUrl={visual.openingGifUrl}
+                      onOpened={handlePackOpened}
+                      onOpeningChange={setPackOpening}
                       onComplete={handleComplete}
-                      onClose={() => setActivePack(null)}
+                      onClose={() => {
+                        if (!packOpening) setActivePack(null);
+                      }}
                     />
                   </div>
                 </motion.div>

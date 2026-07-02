@@ -30,6 +30,9 @@ interface PackOpenerProps {
   packImageUrl: string;
   openingGifUrl: string | null;
   onComplete: (stickers: PackSticker[]) => void;
+  /** Chamado assim que o servidor confirma a abertura — remove o pacote da lista disponível. */
+  onOpened: (packId: number, openedAt: string) => void;
+  onOpeningChange?: (isOpening: boolean) => void;
   onClose: () => void;
 }
 
@@ -54,6 +57,8 @@ export function PackOpener({
   packImageUrl,
   openingGifUrl,
   onComplete,
+  onOpened,
+  onOpeningChange,
   onClose,
 }: PackOpenerProps) {
   const [phase, setPhase] = useState<Phase>("ready");
@@ -135,6 +140,7 @@ export function PackOpener({
       if (!cancelled) {
         stopPackOpeningGifSound();
         playPackRevealSound();
+        onOpeningChange?.(false);
         setPhase("results");
       }
     }
@@ -163,6 +169,7 @@ export function PackOpener({
     setOpeningDone(false);
     resetOpeningSoundSync();
     openingStartedAt.current = Date.now();
+    onOpeningChange?.(true);
     setPhase("opening");
 
     try {
@@ -175,10 +182,13 @@ export function PackOpener({
 
       if (!res.ok) {
         stopPackOpeningGifSound();
+        onOpeningChange?.(false);
         setError(data.error ?? "Erro ao abrir pacotinho");
         setPhase("ready");
         return;
       }
+
+      onOpened(packId, new Date().toISOString());
 
       const list: PackSticker[] = (data.stickers ?? []).map(
         (ps: Record<string, unknown>) => ({
@@ -192,6 +202,7 @@ export function PackOpener({
       setOpeningDone(true);
     } catch {
       stopPackOpeningGifSound();
+      onOpeningChange?.(false);
       setError("Falha na conexão. Tente novamente.");
       setPhase("ready");
     } finally {
