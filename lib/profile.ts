@@ -1,6 +1,14 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { countRankingEligibleMissionsForUser } from "@/lib/missions";
-import { computeRankingBreakdown, type RankingScoreBreakdown } from "@/lib/ranking";
+import {
+  computeRankingBreakdown,
+  type RankingScoreBreakdown,
+} from "@/lib/ranking";
+import {
+  ensureUserRankingScore,
+  loadRankingScoreInput,
+  syncUserRankingScore,
+} from "@/lib/sync-ranking-score";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export interface ProfileSettings {
   id: string;
@@ -70,15 +78,11 @@ export async function fetchProfilePageData(
     profileRes,
     stickersRes,
     packsRes,
-    albumRes,
-    slotsRes,
-    tradesRes,
-    missions_completed,
   ] = await Promise.all([
     supabase
       .from("profiles")
       .select(
-        "id, display_name, sticker_url, avatar_url, bio, phone, city, state, created_at, show_in_ranking, notify_new_packs, notify_trades, notify_marketing, language, timezone",
+        "id, display_name, sticker_url, avatar_url, bio, phone, city, state, created_at, show_in_ranking, notify_new_packs, notify_trades, notify_marketing, language, timezone, ranking_score, ranking_score_updated_at",
       )
       .eq("id", userId)
       .single(),
@@ -91,35 +95,25 @@ export async function fetchProfilePageData(
       .from("packs")
       .select("opened_at")
       .eq("user_id", userId),
-    supabase.from("user_album").select("id").eq("user_id", userId),
-    supabase.from("album_slots").select("id", { count: "exact", head: true }),
-    supabase
-      .from("trade_requests")
-      .select("requester_id, receiver_id")
-      .eq("status", "accepted")
-      .or(`requester_id.eq.${userId},receiver_id.eq.${userId}`),
-    countRankingEligibleMissionsForUser(supabase, userId),
   ]);
 
   if (profileRes.error) throw new Error(profileRes.error.message);
 
-  const totalSlots = Math.max(slotsRes.count ?? 1, 1);
-  const filled_slots = albumRes.data?.length ?? 0;
-  const album_pct = Math.round((filled_slots / totalSlots) * 100);
+  const row = profileRes.data;
+
+  if (!row.ranking_score_updated_at) {
+    await ensureUserRankingScore(userId);
+    const admin = createAdminClient();
+    const synced = await syncUserRankingScore(admin, userId);
+    row.ranking_score = synced.score;
+    row.ranking_score_updated_at = new Date().toISOString();
+  }
+
+  const admin = createAdminClient();
+  const scoreInput = await loadRankingScoreInput(admin, userId);
+  const score_breakdown = computeRankingBreakdown(scoreInput);
   const packs_opened =
     packsRes.data?.filter((p) => p.opened_at != null).length ?? 0;
-  const trades_accepted = tradesRes.data?.length ?? 0;
-
-  const scoreInput = {
-    filled_slots,
-    album_pct,
-    packs_opened,
-    missions_completed,
-    trades_accepted,
-  };
-  const score_breakdown = computeRankingBreakdown(scoreInput);
-
-  const row = profileRes.data;
 
   return {
     profile: {
@@ -143,7 +137,7 @@ export async function fetchProfilePageData(
     stats: {
       packs_opened,
       stickers_count: stickersRes.count ?? 0,
-      score: score_breakdown.score,
+      score: row.ranking_score ?? score_breakdown.score,
       score_breakdown,
     },
   };

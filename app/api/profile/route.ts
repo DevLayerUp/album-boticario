@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { fetchProfilePageData } from "@/lib/profile";
 import { validarMissoes } from "@/lib/missions";
+import { syncUserRankingScoreById } from "@/lib/sync-ranking-score";
 import { formatPhoneBR, isValidPhoneBR } from "@/lib/phone";
 
 const PROFILE_FIELDS = [
@@ -133,6 +134,7 @@ export async function PATCH(request: Request) {
   }
 
   await validarMissoes(supabase, user.id);
+  await syncUserRankingScoreById(user.id);
 
   try {
     const data = await fetchProfilePageData(supabase, user.id, user.email);

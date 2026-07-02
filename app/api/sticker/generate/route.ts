@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { validarMissoes } from "@/lib/missions";
+import { syncUserRankingScoreById } from "@/lib/sync-ranking-score";
 import { composeSticker } from "@/lib/sticker-image";
 import { parseStickerPhotoTransform } from "@/lib/sticker-card";
 import { NextRequest, NextResponse } from "next/server";
@@ -90,6 +91,7 @@ export async function POST(request: NextRequest) {
     .eq("id", user.id);
 
   await validarMissoes(supabase, user.id);
+  await syncUserRankingScoreById(user.id);
 
   return NextResponse.json({ sticker_url: publicUrl });
 }
