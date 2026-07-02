@@ -11,11 +11,18 @@ interface User {
   sticker_url: string | null;
   created_at: string;
   email: string | null;
+  is_admin: boolean;
 }
 
 export function UsuariosClient({ initialUsers }: { initialUsers: User[] }) {
+  const [users, setUsers] = useState<User[]>(initialUsers);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"all" | "sticker" | "no-sticker">("all");
+  const [roleUpdatingId, setRoleUpdatingId] = useState<string | null>(null);
+  const [confirmRole, setConfirmRole] = useState<{
+    user: User;
+    nextIsAdmin: boolean;
+  } | null>(null);
   const [grantUserId, setGrantUserId] = useState<string | null>(null);
   const [grantQty, setGrantQty] = useState(1);
   const [granting, setGranting] = useState(false);
@@ -23,7 +30,7 @@ export function UsuariosClient({ initialUsers }: { initialUsers: User[] }) {
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
 
-  const filtered = initialUsers.filter((u) => {
+  const filtered = users.filter((u) => {
     const matchSearch =
       !search ||
       u.display_name?.toLowerCase().includes(search.toLowerCase()) ||
@@ -66,6 +73,36 @@ export function UsuariosClient({ initialUsers }: { initialUsers: User[] }) {
       setExportError(err instanceof Error ? err.message : "Erro ao exportar");
     } finally {
       setExporting(false);
+    }
+  }
+
+  function handleToggleAdmin(user: User, nextIsAdmin: boolean) {
+    setConfirmRole({ user, nextIsAdmin });
+  }
+
+  async function confirmRoleChange() {
+    if (!confirmRole) return;
+    const { user, nextIsAdmin } = confirmRole;
+
+    setRoleUpdatingId(user.id);
+    try {
+      const res = await fetch("/api/admin/usuarios/role", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: user.id, is_admin: nextIsAdmin }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Falha ao atualizar");
+      setUsers((prev) =>
+        prev.map((u) =>
+          u.id === user.id ? { ...u, is_admin: Boolean(data.is_admin) } : u,
+        ),
+      );
+      setConfirmRole(null);
+    } catch (err: unknown) {
+      window.alert(err instanceof Error ? err.message : "Erro ao atualizar acesso");
+    } finally {
+      setRoleUpdatingId(null);
     }
   }
 
@@ -145,7 +182,7 @@ export function UsuariosClient({ initialUsers }: { initialUsers: User[] }) {
           <h3 className="mb-3 text-sm font-semibold text-amber-900">
             Conceder pacotinhos para:{" "}
             <span className="font-normal">
-              {initialUsers.find((u) => u.id === grantUserId)?.display_name ?? grantUserId}
+              {users.find((u) => u.id === grantUserId)?.display_name ?? grantUserId}
             </span>
           </h3>
           <div className="flex items-center gap-3">
@@ -194,6 +231,7 @@ export function UsuariosClient({ initialUsers }: { initialUsers: User[] }) {
                 <th className="px-4 py-3 text-left">Usuário</th>
                 <th className="px-4 py-3 text-left">Email</th>
                 <th className="px-4 py-3 text-center">Figurinha</th>
+                <th className="px-4 py-3 text-center">Admin</th>
                 <th className="px-4 py-3 text-left">Cadastro</th>
                 <th className="px-4 py-3 text-right">Ações</th>
               </tr>
@@ -234,6 +272,25 @@ export function UsuariosClient({ initialUsers }: { initialUsers: User[] }) {
                       </span>
                     )}
                   </td>
+                  <td className="px-4 py-3 text-center">
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={u.is_admin}
+                      aria-label={u.is_admin ? "Remover admin" : "Tornar admin"}
+                      disabled={roleUpdatingId === u.id}
+                      onClick={() => handleToggleAdmin(u, !u.is_admin)}
+                      className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors disabled:opacity-50 ${
+                        u.is_admin ? "bg-gb-green" : "bg-gray-300"
+                      }`}
+                    >
+                      <span
+                        className={`inline-block size-4 transform rounded-full bg-white shadow transition-transform ${
+                          u.is_admin ? "translate-x-6" : "translate-x-1"
+                        }`}
+                      />
+                    </button>
+                  </td>
                   <td className="px-4 py-3 text-xs text-gray-500">
                     {new Date(u.created_at).toLocaleDateString("pt-BR")}
                   </td>
@@ -255,6 +312,71 @@ export function UsuariosClient({ initialUsers }: { initialUsers: User[] }) {
           </table>
         )}
       </div>
+
+      {confirmRole && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+          onClick={() => roleUpdatingId === null && setConfirmRole(null)}
+          role="dialog"
+          aria-modal="true"
+        >
+          <div
+            className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-semibold text-gray-900">
+              {confirmRole.nextIsAdmin
+                ? "Tornar administrador"
+                : "Remover acesso de admin"}
+            </h3>
+            <p className="mt-2 text-sm text-gray-600">
+              {confirmRole.nextIsAdmin ? (
+                <>
+                  Tem certeza que quer transformar{" "}
+                  <span className="font-semibold text-gray-900">
+                    {confirmRole.user.display_name ??
+                      confirmRole.user.email ??
+                      "esta pessoa"}
+                  </span>{" "}
+                  em administrador? Ela terá acesso total ao painel.
+                </>
+              ) : (
+                <>
+                  Tem certeza que quer remover o acesso de administrador de{" "}
+                  <span className="font-semibold text-gray-900">
+                    {confirmRole.user.display_name ??
+                      confirmRole.user.email ??
+                      "esta pessoa"}
+                  </span>
+                  ?
+                </>
+              )}
+            </p>
+
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setConfirmRole(null)}
+                disabled={roleUpdatingId !== null}
+                className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-60"
+              >
+                Não
+              </button>
+              <button
+                type="button"
+                onClick={() => void confirmRoleChange()}
+                disabled={roleUpdatingId !== null}
+                className="inline-flex items-center gap-2 rounded-lg bg-gb-green px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-60"
+              >
+                {roleUpdatingId !== null && (
+                  <Loader2 size={14} className="animate-spin" />
+                )}
+                Sim
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

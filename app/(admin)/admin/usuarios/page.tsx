@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { isAdminRole } from "@/lib/admin-users";
 import { UsuariosClient } from "./usuarios-client";
 
 export const metadata: Metadata = { title: "Usuários" };
@@ -17,13 +18,20 @@ export default async function UsuariosPage() {
     supabase.auth.admin.listUsers({ perPage: 1000 }),
   ]);
 
-  const emailMap = Object.fromEntries(
-    (authRes.data?.users ?? []).map((u) => [u.id, u.email]),
+  const authInfoMap = new Map(
+    (authRes.data?.users ?? []).map((u) => [
+      u.id,
+      {
+        email: u.email ?? null,
+        is_admin: isAdminRole(u.app_metadata, u.user_metadata),
+      },
+    ]),
   );
 
   const users = (profilesRes.data ?? []).map((p) => ({
     ...p,
-    email: emailMap[p.id] ?? null,
+    email: authInfoMap.get(p.id)?.email ?? null,
+    is_admin: authInfoMap.get(p.id)?.is_admin ?? false,
   }));
 
   return <UsuariosClient initialUsers={users} />;
