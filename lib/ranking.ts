@@ -1,13 +1,25 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { buildRankingMissionCountsFromActivity } from "@/lib/missions";
+import {
+  RANKING_ALBUM_PCT_MULTIPLIER,
+  RANKING_EFFICIENCY_MULTIPLIER,
+  RANKING_MISSION_BONUS,
+  RANKING_PACK_PENALTY,
+  RANKING_SLOT_POINTS,
+  RANKING_TRADE_BONUS,
+  RANKING_ZERO_PASTE_EFFICIENCY_BONUS,
+} from "@/lib/ranking-constants";
 import { listAdminUserIds } from "@/lib/admin-users";
 
-export const RANKING_SLOT_POINTS = 100;
-export const RANKING_ALBUM_PCT_MULTIPLIER = 5;
-export const RANKING_MISSION_BONUS = 40;
-export const RANKING_TRADE_BONUS = 25;
-export const RANKING_EFFICIENCY_MULTIPLIER = 30;
-export const RANKING_PACK_PENALTY = 3;
-export const RANKING_ZERO_PASTE_EFFICIENCY_BONUS = 2;
+export {
+  RANKING_ALBUM_PCT_MULTIPLIER,
+  RANKING_EFFICIENCY_MULTIPLIER,
+  RANKING_MISSION_BONUS,
+  RANKING_PACK_PENALTY,
+  RANKING_SLOT_POINTS,
+  RANKING_TRADE_BONUS,
+  RANKING_ZERO_PASTE_EFFICIENCY_BONUS,
+} from "@/lib/ranking-constants";
 
 export interface RankingEntry {
   user_id: string;
@@ -117,7 +129,7 @@ export async function buildLeaderboard(
   admin: SupabaseClient,
   currentUserId: string,
 ): Promise<LeaderboardResponse> {
-  const [profilesRes, slotsRes, albumRes, packsRes, missionsRes, tradesRes] =
+  const [profilesRes, slotsRes, albumRes, packsRes, missionsByUser, tradesRes] =
     await Promise.all([
       admin
         .from("profiles")
@@ -127,7 +139,7 @@ export async function buildLeaderboard(
       admin.from("album_slots").select("id", { count: "exact", head: true }),
       admin.from("user_album").select("user_id"),
       admin.from("packs").select("user_id, opened_at"),
-      admin.from("user_missions").select("user_id, completed_at"),
+      buildRankingMissionCountsFromActivity(admin),
       admin
         .from("trade_requests")
         .select("requester_id, receiver_id")
@@ -157,15 +169,7 @@ export async function buildLeaderboard(
     }
   }
 
-  const missionsByUser = new Map<string, number>();
-  for (const row of missionsRes.data ?? []) {
-    if (row.completed_at) {
-      missionsByUser.set(
-        row.user_id,
-        (missionsByUser.get(row.user_id) ?? 0) + 1,
-      );
-    }
-  }
+  const missionsByUserMap = missionsByUser;
 
   const tradesByUser = new Map<string, number>();
   for (const row of tradesRes.data ?? []) {
@@ -189,7 +193,7 @@ export async function buildLeaderboard(
     const album_pct = Math.round((filled_slots / totalSlots) * 100);
     const packs_opened = openedByUser.get(profile.id) ?? 0;
     const packs_unopened = unopenedByUser.get(profile.id) ?? 0;
-    const missions_completed = missionsByUser.get(profile.id) ?? 0;
+    const missions_completed = missionsByUserMap.get(profile.id) ?? 0;
     const trades_accepted = tradesByUser.get(profile.id) ?? 0;
 
     return {

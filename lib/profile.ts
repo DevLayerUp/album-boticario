@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { countRankingEligibleMissionsForUser } from "@/lib/missions";
 import { computeRankingBreakdown, type RankingScoreBreakdown } from "@/lib/ranking";
 
 export interface ProfileSettings {
@@ -69,8 +70,8 @@ export async function fetchProfilePageData(
     packsRes,
     albumRes,
     slotsRes,
-    missionsRes,
     tradesRes,
+    missions_completed,
   ] = await Promise.all([
     supabase
       .from("profiles")
@@ -91,15 +92,11 @@ export async function fetchProfilePageData(
     supabase.from("user_album").select("id").eq("user_id", userId),
     supabase.from("album_slots").select("id", { count: "exact", head: true }),
     supabase
-      .from("user_missions")
-      .select("completed_at")
-      .eq("user_id", userId)
-      .not("completed_at", "is", null),
-    supabase
       .from("trade_requests")
       .select("requester_id, receiver_id")
       .eq("status", "accepted")
       .or(`requester_id.eq.${userId},receiver_id.eq.${userId}`),
+    countRankingEligibleMissionsForUser(supabase, userId),
   ]);
 
   if (profileRes.error) throw new Error(profileRes.error.message);
@@ -109,7 +106,6 @@ export async function fetchProfilePageData(
   const album_pct = Math.round((filled_slots / totalSlots) * 100);
   const packs_opened =
     packsRes.data?.filter((p) => p.opened_at != null).length ?? 0;
-  const missions_completed = missionsRes.data?.length ?? 0;
   const trades_accepted = tradesRes.data?.length ?? 0;
 
   const scoreInput = {

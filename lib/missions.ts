@@ -7,7 +7,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createNotification } from "@/lib/notifications";
 import { createPacksForUser } from "@/lib/pack";
-import { RANKING_MISSION_BONUS } from "@/lib/ranking";
+import { RANKING_MISSION_BONUS } from "@/lib/ranking-constants";
 
 interface MissionRow {
   id: number;
@@ -172,6 +172,168 @@ export function computeMissionActualProgress(
     default:
       return 0;
   }
+}
+
+/** Missões elegíveis para pontuação do ranking (critério atendido na atividade real). */
+export function countRankingEligibleMissions(
+  missions: MissionRow[],
+  metrics: MissionMetrics,
+): number {
+  return missions.reduce((total, mission) => {
+    const target = mission.target_value ?? 1;
+    return computeMissionActualProgress(mission, metrics) >= target ? total + 1 : total;
+  }, 0);
+}
+
+export async function countRankingEligibleMissionsForUser(
+  supabase: SupabaseClient,
+  userId: string,
+): Promise<number> {
+  const { data: missions } = await supabase
+    .from("missions")
+    .select("id, title, type, target_value")
+    .eq("is_active", true);
+
+  if (!missions?.length) return 0;
+
+  const metrics = await loadMissionMetrics(supabase, userId);
+  return countRankingEligibleMissions(missions, metrics);
+}
+
+/**
+ * Conta missões elegíveis por usuário em lote (para o ranking).
+ * Usa métricas reais — não depende de completed_at desatualizado no banco.
+ */
+export async function buildRankingMissionCountsFromActivity(
+  admin: SupabaseClient,
+): Promise<Map<string, number>> {
+  const { data: missions } = await admin
+    .from("missions")
+    .select("id, title, type, target_value")
+    .eq("is_active", true);
+
+  const counts = new Map<string, number>();
+  if (!missions?.length) return counts;
+
+  const [
+    profilesRes,
+    referralsRes,
+    quizRes,
+    packsRes,
+    pastedRes,
+    slotsRes,
+    userAlbumRes,
+    tradesRes,
+  ] = await Promise.all([
+    admin
+      .from("profiles")
+      .select(
+        "id, display_name, avatar_url, sticker_url, bio, phone, social_shared_at",
+      ),
+    admin.from("profiles").select("referred_by").not("referred_by", "is", null),
+    admin.from("user_quiz_answers").select("user_id").eq("is_correct", true),
+    admin.from("packs").select("user_id").not("opened_at", "is", null),
+    admin.from("user_album").select("user_id"),
+    admin.from("album_slots").select("id, page_id"),
+    admin
+      .from("user_album")
+      .select("user_id, slot_id, album_slots(page_id)"),
+    admin
+      .from("trade_requests")
+      .select("requester_id, receiver_id")
+      .eq("status", "accepted"),
+  ]);
+
+  const referralsByUser = new Map<string, number>();
+  for (const row of referralsRes.data ?? []) {
+    const referredBy = row.referred_by as string;
+    referralsByUser.set(
+      referredBy,
+      (referralsByUser.get(referredBy) ?? 0) + 1,
+    );
+  }
+
+  const quizByUser = new Map<string, number>();
+  for (const row of quizRes.data ?? []) {
+    quizByUser.set(row.user_id, (quizByUser.get(row.user_id) ?? 0) + 1);
+  }
+
+  const packsByUser = new Map<string, number>();
+  for (const row of packsRes.data ?? []) {
+    packsByUser.set(row.user_id, (packsByUser.get(row.user_id) ?? 0) + 1);
+  }
+
+  const pastedByUser = new Map<string, number>();
+  for (const row of pastedRes.data ?? []) {
+    pastedByUser.set(row.user_id, (pastedByUser.get(row.user_id) ?? 0) + 1);
+  }
+
+  const tradesByUser = new Map<string, number>();
+  for (const row of tradesRes.data ?? []) {
+    tradesByUser.set(
+      row.requester_id,
+      (tradesByUser.get(row.requester_id) ?? 0) + 1,
+    );
+    tradesByUser.set(
+      row.receiver_id,
+      (tradesByUser.get(row.receiver_id) ?? 0) + 1,
+    );
+  }
+
+  const slotsByPage = new Map<number, number>();
+  for (const slot of slotsRes.data ?? []) {
+    const pageId = slot.page_id as number;
+    slotsByPage.set(pageId, (slotsByPage.get(pageId) ?? 0) + 1);
+  }
+
+  const pastedByUserPage = new Map<string, Map<number, number>>();
+  for (const entry of userAlbumRes.data ?? []) {
+    const slotData = entry.album_slots as
+      | { page_id: number }
+      | { page_id: number }[]
+      | null;
+    const pageId = Array.isArray(slotData) ? slotData[0]?.page_id : slotData?.page_id;
+    if (!pageId) continue;
+    if (!pastedByUserPage.has(entry.user_id)) {
+      pastedByUserPage.set(entry.user_id, new Map());
+    }
+    const pageMap = pastedByUserPage.get(entry.user_id)!;
+    pageMap.set(pageId, (pageMap.get(pageId) ?? 0) + 1);
+  }
+
+  function completedAlbumPagesFor(userId: string): number {
+    const pastedByPage = pastedByUserPage.get(userId) ?? new Map();
+    let completed = 0;
+    for (const [pageId, totalSlots] of slotsByPage) {
+      if (totalSlots > 0 && (pastedByPage.get(pageId) ?? 0) >= totalSlots) {
+        completed++;
+      }
+    }
+    return completed;
+  }
+
+  for (const profile of profilesRes.data ?? []) {
+    const metrics: MissionMetrics = {
+      profile: {
+        display_name: profile.display_name,
+        avatar_url: profile.avatar_url,
+        sticker_url: profile.sticker_url,
+        bio: profile.bio,
+        phone: profile.phone,
+        social_shared_at: profile.social_shared_at,
+      },
+      referralCount: referralsByUser.get(profile.id) ?? 0,
+      tradeCount: tradesByUser.get(profile.id) ?? 0,
+      quizCorrectCount: quizByUser.get(profile.id) ?? 0,
+      openedPacksCount: packsByUser.get(profile.id) ?? 0,
+      pastedStickersCount: pastedByUser.get(profile.id) ?? 0,
+      completedAlbumPages: completedAlbumPagesFor(profile.id),
+    };
+
+    counts.set(profile.id, countRankingEligibleMissions(missions, metrics));
+  }
+
+  return counts;
 }
 
 interface SyncMissionProgressOptions {
