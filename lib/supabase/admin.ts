@@ -1,4 +1,5 @@
 import { createClient, type SupabaseClientOptions } from "@supabase/supabase-js";
+import ws from "ws";
 
 function adminClientOptions(): SupabaseClientOptions<"public"> {
   const auth = { autoRefreshToken: false, persistSession: false };
@@ -7,14 +8,10 @@ function adminClientOptions(): SupabaseClientOptions<"public"> {
     return { auth };
   }
 
-  try {
-    // Node < 22 (scripts CLI, testes locais)
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const ws = require("ws") as typeof import("ws");
-    return { auth, realtime: { transport: ws } };
-  } catch {
-    return { auth };
-  }
+  return {
+    auth,
+    realtime: { transport: ws as never },
+  };
 }
 
 /**
