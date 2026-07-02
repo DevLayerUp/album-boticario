@@ -5,7 +5,8 @@ import { getSiteUrl } from "@/lib/seo-metadata";
 export type AuthEmailTemplateId = "account-created" | "reset-password";
 
 const SUBJECTS: Record<AuthEmailTemplateId, string> = {
-  "account-created": "Conta criada — Fãs por Natureza",
+  "account-created":
+    "Boas-vindas ao time! Seu acesso ao Fandom - Fãs por Natureza está pronto 💚",
   "reset-password": "Redefinir sua senha — Fãs por Natureza",
 };
 
@@ -33,6 +34,7 @@ export function renderAuthEmailTemplate(
 ): { subject: string; html: string } {
   const siteUrl = (variables.siteUrl ?? getSiteUrl()).replace(/\/$/, "");
   const loginUrl = `${siteUrl}/login`;
+  const albumUrl = `${siteUrl}/album`;
   const displayName = variables.displayName?.trim()
     ? `, ${variables.displayName.trim()}`
     : "";
@@ -40,6 +42,7 @@ export function renderAuthEmailTemplate(
   let html = loadTemplate(templateId)
     .replace(/\{\{\s*\.SiteURL\s*\}\}/g, siteUrl)
     .replace(/\{\{\s*\.LoginURL\s*\}\}/g, loginUrl)
+    .replace(/\{\{\s*\.AlbumURL\s*\}\}/g, albumUrl)
     .replace(/\{\{\s*\.DisplayName\s*\}\}/g, displayName);
 
   if (variables.confirmationUrl) {
