@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { buildRankingMissionCountsFromActivity } from "@/lib/missions";
+import { loadRankingScoreInput } from "@/lib/sync-ranking-score";
 import {
   RANKING_ALBUM_PCT_MULTIPLIER,
   RANKING_EFFICIENCY_MULTIPLIER,
@@ -41,6 +42,8 @@ export interface RankingEntry {
 export interface LeaderboardResponse {
   total_slots: number;
   current_user_id: string;
+  /** Card "Sua posição" — sempre do usuário logado, com % do álbum igual à página do álbum. */
+  current_user_entry: RankingEntry | null;
   entries: RankingEntry[];
 }
 
@@ -123,6 +126,63 @@ function sortEntries(
       return b.trades_accepted - a.trades_accepted;
     })
     .map((entry, index) => ({ ...entry, rank: index + 1 }));
+}
+
+async function buildCurrentUserRankingEntry(
+  admin: SupabaseClient,
+  userId: string,
+  sorted: RankingEntry[],
+  totalSlots: number,
+): Promise<RankingEntry | null> {
+  const accurate = await loadRankingScoreInput(admin, userId);
+  const inList = sorted.find((entry) => entry.user_id === userId);
+
+  if (inList) {
+    return {
+      ...inList,
+      filled_slots: accurate.filled_slots,
+      album_pct: accurate.album_pct,
+      total_slots: totalSlots,
+    };
+  }
+
+  const { data: profile, error } = await admin
+    .from("profiles")
+    .select(
+      "display_name, username, sticker_url, avatar_url, ranking_score, ranking_score_updated_at",
+    )
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (error || !profile) return null;
+
+  const score = profile.ranking_score_updated_at
+    ? (profile.ranking_score ?? 0)
+    : computeRankingScore(accurate);
+
+  const rank =
+    sorted.filter(
+      (entry) =>
+        entry.score > score ||
+        (entry.score === score && entry.filled_slots > accurate.filled_slots),
+    ).length + 1;
+
+  return {
+    user_id: userId,
+    display_name: profile.display_name ?? profile.username ?? "Colecionador",
+    username: profile.username,
+    sticker_url: profile.sticker_url,
+    avatar_url: profile.avatar_url,
+    filled_slots: accurate.filled_slots,
+    album_pct: accurate.album_pct,
+    total_slots: totalSlots,
+    packs_opened: accurate.packs_opened,
+    packs_unopened: 0,
+    missions_completed: accurate.missions_completed,
+    trades_accepted: accurate.trades_accepted,
+    score,
+    rank,
+  };
 }
 
 export async function buildLeaderboard(
@@ -223,9 +283,18 @@ export async function buildLeaderboard(
     };
   });
 
+  const sorted = sortEntries(entries);
+  const current_user_entry = await buildCurrentUserRankingEntry(
+    admin,
+    currentUserId,
+    sorted,
+    totalSlots,
+  );
+
   return {
     total_slots: totalSlots,
     current_user_id: currentUserId,
-    entries: sortEntries(entries),
+    current_user_entry,
+    entries: sorted,
   };
 }
