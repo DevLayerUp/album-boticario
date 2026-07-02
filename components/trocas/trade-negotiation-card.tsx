@@ -62,7 +62,7 @@ export function TradeNegotiationCard({
                 {gainLabel}
               </p>
               <p
-                className="mt-0.5 font-display text-base font-bold leading-tight text-verde-escuro-500 sm:mt-1 sm:text-lg lg:text-xl 2xl:text-[32px]"
+                className="mt-0.5 font-display text-sm font-bold leading-tight text-verde-escuro-500 sm:mt-1 sm:text-base lg:text-lg 2xl:text-2xl"
                 style={{
                   color: rarityColor(
                     gainSticker?.rarities?.slug,
@@ -92,7 +92,7 @@ export function TradeNegotiationCard({
                 {giveLabel}
               </p>
               <p
-                className="mt-0.5 font-display text-base font-bold leading-tight text-verde-escuro-500 sm:mt-1 sm:text-lg lg:text-xl 2xl:text-[32px]"
+                className="mt-0.5 font-display text-sm font-bold leading-tight text-verde-escuro-500 sm:mt-1 sm:text-base lg:text-lg 2xl:text-2xl"
                 style={{
                   color: rarityColor(
                     giveSticker?.rarities?.slug,
