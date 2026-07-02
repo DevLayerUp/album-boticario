@@ -6,6 +6,7 @@ export interface Mission {
   target_value: number;
   reward_packs: number;
   reward_points: number;
+  ranking_points: number;
   theme: string;
   instructions: string | null;
   action_label: string | null;

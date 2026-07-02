@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { buildLeaderboard } from "@/lib/ranking";
+import { buildLeaderboard, RANKING_MISSION_BONUS } from "@/lib/ranking";
 import { resolveMissionAction } from "@/lib/mission-actions";
 import { validarMissoes } from "@/lib/missions";
 
@@ -52,6 +52,7 @@ export async function GET() {
       target_value: mission.target_value ?? 1,
       reward_packs: mission.reward_packs,
       reward_points: mission.reward_points ?? 100,
+      ranking_points: RANKING_MISSION_BONUS,
       theme: mission.theme ?? "green",
       instructions: mission.instructions,
       action_label: action.label,

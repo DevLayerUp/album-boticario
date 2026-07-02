@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { computeRankingScore } from "@/lib/ranking";
+import { computeRankingBreakdown, type RankingScoreBreakdown } from "@/lib/ranking";
 
 export interface ProfileSettings {
   id: string;
@@ -22,6 +22,7 @@ export interface ProfileStats {
   packs_opened: number;
   stickers_count: number;
   score: number;
+  score_breakdown: RankingScoreBreakdown;
 }
 
 export interface ProfilePageData {
@@ -111,6 +112,15 @@ export async function fetchProfilePageData(
   const missions_completed = missionsRes.data?.length ?? 0;
   const trades_accepted = tradesRes.data?.length ?? 0;
 
+  const scoreInput = {
+    filled_slots,
+    album_pct,
+    packs_opened,
+    missions_completed,
+    trades_accepted,
+  };
+  const score_breakdown = computeRankingBreakdown(scoreInput);
+
   const row = profileRes.data;
 
   return {
@@ -133,13 +143,8 @@ export async function fetchProfilePageData(
     stats: {
       packs_opened,
       stickers_count: stickersRes.count ?? 0,
-      score: computeRankingScore({
-        filled_slots,
-        album_pct,
-        packs_opened,
-        missions_completed,
-        trades_accepted,
-      }),
+      score: score_breakdown.score,
+      score_breakdown,
     },
   };
 }

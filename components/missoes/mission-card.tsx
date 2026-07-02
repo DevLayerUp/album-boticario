@@ -134,7 +134,10 @@ export function MissionCard({
       </div>
 
       <div className="mt-auto space-y-4 2xl:space-y-8">
-        <MissionRewardBadges packs={mission.reward_packs} points={mission.reward_points} />
+        <MissionRewardBadges
+          packs={mission.reward_packs}
+          points={mission.ranking_points}
+        />
 
         <button
           type="button"

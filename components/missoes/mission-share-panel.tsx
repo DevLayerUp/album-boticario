@@ -29,12 +29,11 @@ export function MissionSharePanel({ onComplete }: MissionSharePanelProps) {
   }, []);
 
   async function completeShare() {
-    if (submitting) return false;
+    if (submitting) return;
     setSubmitting(true);
     try {
-      const ok = await registerSocialShareMission();
+      const ok = await registerSocialShareMission("album");
       if (ok) onComplete?.();
-      return ok;
     } finally {
       setSubmitting(false);
     }
@@ -93,7 +92,7 @@ export function MissionSharePanel({ onComplete }: MissionSharePanelProps) {
         shareUrl={shareUrl}
         shareText={shareText}
         disabled={submitting}
-        onBeforeShare={completeShare}
+        onAfterShare={completeShare}
         onNativeShare={nativeShare}
       />
     </div>

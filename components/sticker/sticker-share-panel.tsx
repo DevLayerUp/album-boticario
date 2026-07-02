@@ -49,8 +49,7 @@ export function StickerSharePanel({
   const isProfile = variant === "profile";
 
   const completeShare = useCallback(async () => {
-    await registerStickerShareMission();
-    return true;
+    await registerStickerShareMission("sticker");
   }, []);
 
   const showStatus = useCallback(
@@ -77,14 +76,14 @@ export function StickerSharePanel({
         albumUrl,
       );
       if (result === "shared") {
-        await registerStickerShareMission();
+        await registerStickerShareMission("native");
         showStatus("Compartilhado!", "success");
         return;
       }
       if (result === "cancelled") return;
 
       await downloadSticker(stickerUrl);
-      await registerStickerShareMission();
+      await registerStickerShareMission("sticker");
       showStatus("Imagem salva! Envie pelo app da rede social.", "info");
     } catch {
       showStatus("Não foi possível compartilhar. Tente salvar a imagem.", "error");
@@ -99,7 +98,7 @@ export function StickerSharePanel({
     setInlineStatus(null);
     try {
       await downloadSticker(stickerUrl);
-      await registerStickerShareMission();
+      await registerStickerShareMission("sticker");
       showStatus("Figurinha salva!", "success");
     } catch {
       showStatus("Não foi possível salvar. Tente novamente.", "error");
@@ -136,8 +135,8 @@ export function StickerSharePanel({
       size={isProfile ? "sm" : "md"}
       tone="on-dark"
       hideNativeShare
-      hidePlatforms={["instagram"]}
-      onBeforeShare={completeShare}
+      hidePlatforms={isProfile ? undefined : ["instagram"]}
+      onAfterShare={completeShare}
       onNativeShare={nativeShare}
       onShareStatus={showStatus}
     />

@@ -94,7 +94,7 @@ export function MissoesClient({ packImageUrl }: MissoesClientProps) {
       setSelectedMission(null);
       setCompletedReward({
         packsEarned: data.packs_earned ?? mission?.reward_packs ?? 1,
-        pointsEarned: data.points_earned ?? mission?.reward_points ?? 100,
+        pointsEarned: data.points_earned ?? mission?.ranking_points ?? 40,
       });
       await loadMissions({ silent: true });
     } catch (err) {

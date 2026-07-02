@@ -16,7 +16,7 @@ export function MissionRewardBadges({ packs, points, className }: MissionRewardB
       </span>
       <span className="inline-flex h-6 items-center gap-1 rounded-pill bg-gradient-to-r from-[#deaa00] to-[#ffe07a] px-2.5 text-[11px] font-medium text-[#71410a] sm:h-7 sm:gap-1.5 sm:px-3 sm:text-xs">
         <Trophy className="size-3.5 sm:size-4" aria-hidden />
-        {points} pontos
+        +{points} pts no ranking
       </span>
     </div>
   );

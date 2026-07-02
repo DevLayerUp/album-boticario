@@ -190,7 +190,7 @@ export function MissionDetailModal({
 
           <MissionRewardBadges
             packs={mission.reward_packs}
-            points={mission.reward_points}
+            points={mission.ranking_points}
           />
         </div>
 

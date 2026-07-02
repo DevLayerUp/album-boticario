@@ -43,6 +43,7 @@ interface PerfilHeroProps {
 
 export function PerfilHero({ data }: PerfilHeroProps) {
   const { profile, stats } = data;
+  const { score_breakdown: breakdown } = stats;
   const displayName =
     profile.display_name?.trim() ||
     profile.email.split("@")[0] ||
@@ -89,18 +90,32 @@ export function PerfilHero({ data }: PerfilHeroProps) {
           </div>
         </div>
 
-        <div className="grid w-full min-w-0 grid-cols-3 gap-2 sm:gap-3 2xl:flex 2xl:w-auto 2xl:shrink-0 2xl:gap-2.5">
-          <PerfilStatCard
-            icon={Package}
-            label="Pacotinhos abertos"
-            value={stats.packs_opened}
-          />
-          <PerfilStatCard
-            icon={ArrowLeftRight}
-            label="Figurinhas"
-            value={stats.stickers_count}
-          />
-          <PerfilStatCard icon={Star} label="Pontos" value={stats.score} />
+        <div className="flex w-full min-w-0 flex-col gap-2 sm:gap-2.5 2xl:w-auto 2xl:shrink-0">
+          <div className="grid grid-cols-3 gap-2 sm:gap-3 2xl:flex 2xl:gap-2.5">
+            <PerfilStatCard
+              icon={Package}
+              label="Pacotinhos abertos"
+              value={stats.packs_opened}
+            />
+            <PerfilStatCard
+              icon={ArrowLeftRight}
+              label="Figurinhas"
+              value={stats.stickers_count}
+            />
+            <PerfilStatCard icon={Star} label="Pontos no ranking" value={stats.score} />
+          </div>
+
+          <p className="text-[10px] leading-relaxed text-verde-100/90 sm:text-xs 2xl:text-sm">
+            Álbum {breakdown.album_score.toLocaleString("pt-BR")} · Missões{" "}
+            {breakdown.mission_bonus.toLocaleString("pt-BR")} · Trocas{" "}
+            {breakdown.trade_bonus.toLocaleString("pt-BR")}
+            {breakdown.efficiency_bonus > 0
+              ? ` · Eficiência ${breakdown.efficiency_bonus.toLocaleString("pt-BR")}`
+              : null}
+            {breakdown.pack_penalty > 0
+              ? ` · Pacotes −${breakdown.pack_penalty.toLocaleString("pt-BR")}`
+              : null}
+          </p>
         </div>
       </div>
     </section>

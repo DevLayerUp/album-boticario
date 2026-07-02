@@ -1,4 +1,4 @@
-import { registerSocialShareMission } from "@/lib/mission-share";
+import { registerSocialShareMission, type SocialShareSource } from "@/lib/mission-share";
 import {
   createStickerStoriesImage,
   downloadStickerStoriesFile,
@@ -131,9 +131,11 @@ export async function shareStickerWithNativeApi(
 }
 
 /** Registra missão de compartilhamento social (se existir). */
-export async function registerStickerShareMission(): Promise<boolean> {
+export async function registerStickerShareMission(
+  source: SocialShareSource = "sticker",
+): Promise<boolean> {
   try {
-    return await registerSocialShareMission();
+    return await registerSocialShareMission(source);
   } catch {
     return false;
   }

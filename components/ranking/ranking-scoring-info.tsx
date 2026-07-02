@@ -1,22 +1,26 @@
 import { BookOpen, Package, Trophy } from "lucide-react";
+import {
+  RANKING_MISSION_BONUS,
+  RANKING_SLOT_POINTS,
+  RANKING_TRADE_BONUS,
+} from "@/lib/ranking";
 
 const RULES = [
   {
     icon: BookOpen,
     title: "Colecione e pontue",
-    description: "Cada figurinha colada no álbum aumenta o seu placar.",
+    description: `Cada figurinha colada no álbum vale ${RANKING_SLOT_POINTS} pontos, mais um bônus pela porcentagem do álbum completo.`,
   },
   {
     icon: Trophy,
     title: "Missões e trocas",
-    description:
-      "Concluir missões, responder corretamente o quiz e trocar figurinhas repetidas multiplica seus pontos.",
+    description: `Cada missão concluída soma +${RANKING_MISSION_BONUS} pts e cada troca aceita soma +${RANKING_TRADE_BONUS} pts no ranking.`,
   },
   {
     icon: Package,
     title: "Abra menos pacotes",
     description:
-      "Quanto menos pacotinhos precisar para completar seu álbum, maior será sua pontuação.",
+      "Depois de colar figurinhas, abrir muitos pacotinhos reduz a pontuação. Quanto mais eficiente for, maior o bônus.",
   },
 ] as const;
 

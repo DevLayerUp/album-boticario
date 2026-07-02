@@ -7,6 +7,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createNotification } from "@/lib/notifications";
 import { createPacksForUser } from "@/lib/pack";
+import { RANKING_MISSION_BONUS } from "@/lib/ranking";
 
 interface MissionRow {
   id: number;
@@ -173,21 +174,48 @@ export function computeMissionActualProgress(
   }
 }
 
+interface SyncMissionProgressOptions {
+  /** Quando true, reconcilia com métricas reais e pode desfazer conclusão sem resgate. */
+  reconcile?: boolean;
+}
+
 async function syncMissionProgress(
   supabase: SupabaseClient,
   userId: string,
   mission: MissionRow,
   actualProgress: number,
   existing: UserMissionRow | null,
+  options: SyncMissionProgressOptions = {},
 ): Promise<boolean> {
   const target = mission.target_value ?? 1;
   const syncedProgress = Math.min(Math.max(actualProgress, 0), target);
   const storedProgress = existing?.progress ?? 0;
   const wasComplete = Boolean(existing?.completed_at);
-  const finalProgress = wasComplete ? Math.max(storedProgress, syncedProgress) : syncedProgress;
-  const isComplete = wasComplete || finalProgress >= target;
+  const rewardClaimed = existing?.reward_claimed ?? false;
 
-  if (finalProgress === storedProgress && wasComplete === isComplete) {
+  let finalProgress: number;
+  let isComplete: boolean;
+
+  if (rewardClaimed) {
+    finalProgress = Math.max(storedProgress, syncedProgress);
+    isComplete = true;
+  } else if (options.reconcile) {
+    finalProgress = syncedProgress;
+    isComplete = finalProgress >= target;
+  } else {
+    finalProgress = wasComplete ? Math.max(storedProgress, syncedProgress) : syncedProgress;
+    isComplete = wasComplete || finalProgress >= target;
+  }
+
+  const completedAt = isComplete
+    ? existing?.completed_at ?? new Date().toISOString()
+    : null;
+
+  if (
+    finalProgress === storedProgress &&
+    wasComplete === isComplete &&
+    (existing?.completed_at ?? null) === completedAt
+  ) {
     return false;
   }
 
@@ -196,8 +224,8 @@ async function syncMissionProgress(
       user_id: userId,
       mission_id: mission.id,
       progress: finalProgress,
-      completed_at: isComplete ? (existing?.completed_at ?? new Date().toISOString()) : null,
-      reward_claimed: existing?.reward_claimed ?? false,
+      completed_at: completedAt,
+      reward_claimed: rewardClaimed,
     },
     { onConflict: "user_id,mission_id" },
   );
@@ -258,6 +286,7 @@ export async function validarMissoes(
       mission,
       actualProgress,
       existing,
+      { reconcile: true },
     );
     if (changed) updated++;
   }
@@ -355,7 +384,6 @@ export async function claimMissionReward(
     ? userMission.missions[0]
     : userMission.missions;
   const rewardPacks = (missionData?.reward_packs as number | undefined) ?? 1;
-  const rewardPoints = (missionData?.reward_points as number | undefined) ?? 100;
   const missionTitle = (missionData?.title as string | undefined) ?? "Missão";
 
   if (rewardPacks > 0) {
@@ -401,7 +429,7 @@ export async function claimMissionReward(
 
   return {
     packs_earned: rewardPacks,
-    points_earned: rewardPoints,
+    points_earned: RANKING_MISSION_BONUS,
     mission_title: missionTitle,
   };
 }

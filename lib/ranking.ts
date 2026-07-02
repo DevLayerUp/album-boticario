@@ -1,6 +1,14 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { listAdminUserIds } from "@/lib/admin-users";
 
+export const RANKING_SLOT_POINTS = 100;
+export const RANKING_ALBUM_PCT_MULTIPLIER = 5;
+export const RANKING_MISSION_BONUS = 40;
+export const RANKING_TRADE_BONUS = 25;
+export const RANKING_EFFICIENCY_MULTIPLIER = 30;
+export const RANKING_PACK_PENALTY = 3;
+export const RANKING_ZERO_PASTE_EFFICIENCY_BONUS = 2;
+
 export interface RankingEntry {
   user_id: string;
   display_name: string;
@@ -32,13 +40,26 @@ export interface RankingScoreInput {
   trades_accepted: number;
 }
 
+export interface RankingScoreBreakdown {
+  album_score: number;
+  mission_bonus: number;
+  trade_bonus: number;
+  efficiency_bonus: number;
+  pack_penalty: number;
+  score: number;
+}
+
 /**
  * Pontuação composta do ranking:
  * - Álbum completo é o fator principal (slots colados + %)
- * - Missões e trocas dão bônus
+ * - Missões e trocas dão bônus fixos
  * - Menos pacotinhos abertos = mais eficiente = mais pontos
+ * - Penalidade por pacote aberto só quando já há figurinhas coladas
+ * - Score mínimo exibido: 0
  */
-export function computeRankingScore(input: RankingScoreInput): number {
+export function computeRankingBreakdown(
+  input: RankingScoreInput,
+): RankingScoreBreakdown {
   const {
     filled_slots,
     album_pct,
@@ -47,20 +68,33 @@ export function computeRankingScore(input: RankingScoreInput): number {
     trades_accepted,
   } = input;
 
-  const albumScore = filled_slots * 100 + album_pct * 5;
-  const missionBonus = missions_completed * 40;
-  const tradeBonus = trades_accepted * 25;
+  const album_score = filled_slots * RANKING_SLOT_POINTS + album_pct * RANKING_ALBUM_PCT_MULTIPLIER;
+  const mission_bonus = missions_completed * RANKING_MISSION_BONUS;
+  const trade_bonus = trades_accepted * RANKING_TRADE_BONUS;
 
-  const efficiencyBonus =
+  const efficiency_bonus =
     packs_opened === 0
-      ? filled_slots * 2
-      : Math.round((filled_slots / packs_opened) * 30);
+      ? filled_slots * RANKING_ZERO_PASTE_EFFICIENCY_BONUS
+      : Math.round((filled_slots / packs_opened) * RANKING_EFFICIENCY_MULTIPLIER);
 
-  const packPenalty = packs_opened * 3;
+  const pack_penalty =
+    filled_slots > 0 ? packs_opened * RANKING_PACK_PENALTY : 0;
 
-  return Math.round(
-    albumScore + missionBonus + tradeBonus + efficiencyBonus - packPenalty,
-  );
+  const raw =
+    album_score + mission_bonus + trade_bonus + efficiency_bonus - pack_penalty;
+
+  return {
+    album_score,
+    mission_bonus,
+    trade_bonus,
+    efficiency_bonus,
+    pack_penalty,
+    score: Math.max(0, Math.round(raw)),
+  };
+}
+
+export function computeRankingScore(input: RankingScoreInput): number {
+  return computeRankingBreakdown(input).score;
 }
 
 function sortEntries(

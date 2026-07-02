@@ -46,6 +46,8 @@ interface SocialShareButtonsProps {
   hidePlatforms?: SocialSharePlatform[];
   className?: string;
   onBeforeShare?: () => void | Promise<boolean | void>;
+  /** Chamado após abrir a rede ou concluir o fluxo de compartilhamento. */
+  onAfterShare?: () => void | Promise<void>;
   onNativeShare: () => void | Promise<void>;
   onShareStatus?: (message: string) => void;
 }
@@ -62,6 +64,7 @@ export function SocialShareButtons({
   hidePlatforms,
   className,
   onBeforeShare,
+  onAfterShare,
   onNativeShare,
   onShareStatus,
 }: SocialShareButtonsProps) {
@@ -103,13 +106,16 @@ export function SocialShareButtons({
       if (statusMessage) onShareStatus?.(statusMessage);
       if (result === "failed") {
         onShareStatus?.("Não foi possível compartilhar. Tente salvar a imagem.");
+        return;
       }
+      await onAfterShare?.();
       return;
     }
 
     const url = buildSocialShareUrl(platform, shareUrl, shareText, { whatsAppText });
     if (url) {
       window.open(url, "_blank", "noopener,noreferrer");
+      await onAfterShare?.();
     }
   }
 

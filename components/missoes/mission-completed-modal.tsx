@@ -76,7 +76,7 @@ export function MissionCompletedModal({
             <p className="text-[11px] leading-snug sm:text-xs md:text-sm 2xl:text-[32px]">
               Você ganhou{" "}
               <span className="font-bold">
-                {packsEarned} pacotinho{packsEarned !== 1 ? "s" : ""} + {pointsEarned} pontos!
+                {packsEarned} pacotinho{packsEarned !== 1 ? "s" : ""} + {pointsEarned} pts no ranking!
               </span>
             </p>
           </div>
@@ -97,7 +97,7 @@ export function MissionCompletedModal({
                 + {pointsEarned}
               </p>
               <p className="font-display text-xs font-bold sm:text-sm md:text-base 2xl:text-[40px]">
-                Pontos
+                pts no ranking
               </p>
             </div>
           </div>
