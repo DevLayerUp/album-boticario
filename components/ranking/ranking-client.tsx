@@ -10,11 +10,15 @@ import { RankingTopThree } from "./ranking-top-three";
 import { RankingUserPosition } from "./ranking-user-position";
 import { formatUpdatedLabel } from "./ranking-utils";
 
+const REST_INITIAL_SIZE = 7;
+const REST_LOAD_MORE_SIZE = 40;
+
 export function RankingClient() {
   const [data, setData] = useState<LeaderboardResponse | null>(null);
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [restVisibleCount, setRestVisibleCount] = useState(REST_INITIAL_SIZE);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -39,10 +43,16 @@ export function RankingClient() {
     void load();
   }, [load]);
 
+  useEffect(() => {
+    setRestVisibleCount(REST_INITIAL_SIZE);
+  }, [data?.entries]);
+
   const currentUser =
     data?.entries.find((entry) => entry.user_id === data.current_user_id) ?? null;
   const topThree = data?.entries.slice(0, 3) ?? [];
   const rest = data?.entries.slice(3) ?? [];
+  const visibleRest = rest.slice(0, restVisibleCount);
+  const canLoadMoreRest = restVisibleCount < rest.length;
   const participantCount = data?.entries.length ?? 0;
   const updatedLabel = updatedAt ? formatUpdatedLabel(updatedAt) : "";
 
@@ -117,7 +127,7 @@ export function RankingClient() {
 
               <div className="overflow-hidden rounded-card border border-verde-200 bg-surface-green px-2 sm:px-4 lg:px-6 2xl:px-8">
                 <div className="divide-y divide-verde-200">
-                  {rest.map((entry) => (
+                  {visibleRest.map((entry) => (
                     <RankingRow
                       key={entry.user_id}
                       entry={entry}
@@ -126,6 +136,22 @@ export function RankingClient() {
                   ))}
                 </div>
               </div>
+
+              {canLoadMoreRest ? (
+                <div className="flex justify-center pt-1 sm:pt-2">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setRestVisibleCount((count) =>
+                        Math.min(count + REST_LOAD_MORE_SIZE, rest.length),
+                      )
+                    }
+                    className="rounded-pill border border-verde-400 px-5 py-2 text-sm font-medium text-verde-escuro-500 transition-all duration-200 hover:border-verde-500 hover:bg-verde-500/10 hover:text-verde-500 active:scale-[0.98] sm:px-6 sm:text-base 2xl:px-8 2xl:py-2.5"
+                  >
+                    Carregar mais
+                  </button>
+                </div>
+              ) : null}
             </section>
           ) : null}
         </motion.div>
