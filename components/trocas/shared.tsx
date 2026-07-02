@@ -533,7 +533,7 @@ export function FulfillWishModal({
         {wish.user_stickers.length === 0 ? (
           <div className="flex flex-col items-center gap-2 rounded-card bg-amber-50 py-6 text-center text-sm text-amber-700">
             <PackageOpen size={24} className="text-amber-400" />
-            Este usuário não tem repetidas disponíveis para trocar no momento.
+            Este usuário não possui figurinhas repetidas ou você já possui todas as figurinhas que ele pode te oferecer.
           </div>
         ) : (
           <div className="grid max-h-32 grid-cols-4 gap-1 overflow-y-auto pr-1 sm:max-h-40 sm:gap-1.5 lg:max-h-44 lg:gap-2">

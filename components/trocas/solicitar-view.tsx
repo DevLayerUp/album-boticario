@@ -14,6 +14,14 @@ import { NO_DUPLICATES_TRADE_MESSAGE } from "@/lib/trade-duplicates";
 import { stickerTextToPlain } from "@/lib/sticker-text-format";
 import type { MyWish, Trade, TradeableEntry, Wish } from "./types";
 
+const EXPLORE_PAGE_SIZE = 12;
+
+interface ExploreWishesResponse {
+  wishes: Wish[];
+  has_more: boolean;
+  total?: number;
+}
+
 interface SolicitarViewProps {
   hasDuplicates: boolean;
   metaLoaded: boolean;
@@ -29,9 +37,11 @@ export function SolicitarView({
   const [wishes, setWishes] = useState<MyWish[]>([]);
   const [receivedOffers, setReceivedOffers] = useState<Trade[]>([]);
   const [exploreWishes, setExploreWishes] = useState<Wish[]>([]);
+  const [exploreHasMore, setExploreHasMore] = useState(false);
   const [myAvailable, setMyAvailable] = useState<TradeableEntry[]>([]);
   const [loadingWishes, setLoadingWishes] = useState(true);
   const [loadingExplore, setLoadingExplore] = useState(true);
+  const [loadingMoreExplore, setLoadingMoreExplore] = useState(false);
   const [creatingEvent, setCreatingEvent] = useState(false);
   const [fulfill, setFulfill] = useState<Wish | null>(null);
   const [busyWishId, setBusyWishId] = useState<number | null>(null);
@@ -54,16 +64,45 @@ export function SolicitarView({
   const loadExplore = useCallback(async () => {
     setLoadingExplore(true);
     try {
-      const [w, a] = await Promise.all([
-        fetch("/api/trades/wishes").then((r) => r.json()).catch(() => []),
+      const [wishesRes, availableRes] = await Promise.all([
+        fetch(`/api/trades/wishes?offset=0&limit=${EXPLORE_PAGE_SIZE}`).then((r) =>
+          r.json(),
+        ) as Promise<ExploreWishesResponse | Wish[]>,
         fetch("/api/trades/available").then((r) => r.json()).catch(() => []),
       ]);
-      setExploreWishes(Array.isArray(w) ? w : []);
-      setMyAvailable(Array.isArray(a) ? a : []);
+
+      const payload = Array.isArray(wishesRes)
+        ? { wishes: wishesRes, has_more: false }
+        : wishesRes;
+
+      setExploreWishes(Array.isArray(payload.wishes) ? payload.wishes : []);
+      setExploreHasMore(Boolean(payload.has_more));
+      setMyAvailable(Array.isArray(availableRes) ? availableRes : []);
     } finally {
       setLoadingExplore(false);
     }
   }, []);
+
+  const loadMoreExplore = useCallback(async () => {
+    if (loadingMoreExplore || !exploreHasMore) return;
+    setLoadingMoreExplore(true);
+    try {
+      const offset = exploreWishes.length;
+      const wishesRes = (await fetch(
+        `/api/trades/wishes?offset=${offset}&limit=${EXPLORE_PAGE_SIZE}`,
+      ).then((r) => r.json())) as ExploreWishesResponse | Wish[];
+
+      const payload = Array.isArray(wishesRes)
+        ? { wishes: wishesRes, has_more: false }
+        : wishesRes;
+
+      const next = Array.isArray(payload.wishes) ? payload.wishes : [];
+      setExploreWishes((prev) => [...prev, ...next]);
+      setExploreHasMore(Boolean(payload.has_more));
+    } finally {
+      setLoadingMoreExplore(false);
+    }
+  }, [exploreHasMore, exploreWishes.length, loadingMoreExplore]);
 
   useEffect(() => {
     loadWishes();
@@ -267,6 +306,19 @@ export function SolicitarView({
               })}
             </div>
           )}
+
+          {exploreHasMore && !loadingExplore ? (
+            <div className="flex justify-center pt-4 sm:pt-5 2xl:pt-6">
+              <button
+                type="button"
+                onClick={() => void loadMoreExplore()}
+                disabled={loadingMoreExplore}
+                className="rounded-pill border border-verde-400 px-5 py-2 text-sm font-medium text-verde-escuro-500 transition-all duration-200 hover:border-verde-500 hover:bg-verde-500/10 hover:text-verde-500 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:border-verde-400 disabled:hover:bg-transparent disabled:hover:text-verde-escuro-500 sm:px-6 sm:text-base 2xl:px-8 2xl:py-2.5"
+              >
+                {loadingMoreExplore ? "Carregando…" : "Carregar mais"}
+              </button>
+            </div>
+          ) : null}
         </div>
       </section>
 
