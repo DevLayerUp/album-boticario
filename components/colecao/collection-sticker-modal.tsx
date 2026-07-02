@@ -17,6 +17,7 @@ import { rarityTheme } from "@/lib/rarity";
 import { stickerTextToPlain } from "@/lib/sticker-text-format";
 import { cn } from "@/lib/utils";
 import { StickerFormattedText } from "@/components/sticker/sticker-formatted-text";
+import { AutoFitText } from "@/components/sticker/auto-fit-text";
 import { StickerRarityEffects } from "@/components/sticker/sticker-rarity-effects";
 import type { CollectionSticker } from "./types";
 
@@ -226,16 +227,21 @@ export function CollectionStickerModal({
                   }}
                 >
                   <StickerNameTag name={sticker.name} fullWidth bgColor={theme.nameTag} />
-                  <div className="flex min-h-0 flex-1 items-center overflow-y-auto">
-                    <p className="text-center text-base leading-[1.4] text-white sm:text-xl">
-                      <StickerFormattedText
-                        text={
-                          sticker.description ??
-                          "Figurinha exclusiva da coleção Fãs por Natureza."
-                        }
-                      />
-                    </p>
-                  </div>
+                  <AutoFitText
+                    contentKey={sticker.description ?? ""}
+                    minFontSize={12}
+                    maxFontSize={20}
+                    lineHeight={1.4}
+                    className="min-h-0 w-full flex-1"
+                    textClassName="text-white"
+                  >
+                    <StickerFormattedText
+                      text={
+                        sticker.description ??
+                        "Figurinha exclusiva da coleção Fãs por Natureza."
+                      }
+                    />
+                  </AutoFitText>
                   <RarityBadge name={rarityName} slug={slug} theme={theme} />
                 </div>
               </motion.div>
