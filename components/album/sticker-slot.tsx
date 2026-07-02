@@ -8,6 +8,7 @@ import { Lock, Plus, Sparkles, ThumbsUp, Trophy, X, ExternalLink } from "lucide-
 import { PasteFlight, type PasteFlightConfig } from "@/components/album/paste-flight";
 import { FigurinhaNameTag } from "@/components/sticker/figurinha-name-tag";
 import { StickerFormattedText } from "@/components/sticker/sticker-formatted-text";
+import { AutoFitText } from "@/components/sticker/auto-fit-text";
 import { StickerRarityEffects } from "@/components/sticker/sticker-rarity-effects";
 import { playPasteSound } from "@/lib/play-paste-sound";
 import { rarityColor, rarityTheme, type RarityTheme } from "@/lib/rarity";
@@ -232,16 +233,21 @@ function StickerDetailModal({
               <StickerNameTag name={sticker.name} fullWidth bgColor={theme.nameTag} compact />
 
               <div className="flex min-h-0 w-full flex-1 flex-col items-center gap-2 overflow-hidden sm:gap-2.5">
-                <div className="flex min-h-0 w-full flex-1 items-center justify-center overflow-y-auto overscroll-contain [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-white/30">
-                  <p className="wrap-break-word px-0.5 text-center text-[11px] leading-[1.45] text-white sm:text-xs md:text-sm">
-                    <StickerFormattedText
-                      text={
-                        sticker.description ??
-                        "Figurinha exclusiva da coleção Fãs por Natureza."
-                      }
-                    />
-                  </p>
-                </div>
+                <AutoFitText
+                  contentKey={sticker.description ?? ""}
+                  minFontSize={9}
+                  maxFontSize={16}
+                  lineHeight={1.45}
+                  className="min-h-0 w-full flex-1 px-0.5"
+                  textClassName="text-white"
+                >
+                  <StickerFormattedText
+                    text={
+                      sticker.description ??
+                      "Figurinha exclusiva da coleção Fãs por Natureza."
+                    }
+                  />
+                </AutoFitText>
 
                 {materialUrl ? (
                   <a
