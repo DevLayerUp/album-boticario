@@ -7,29 +7,49 @@ import {
   userHasDuplicateStickers,
 } from "@/lib/trade-duplicates";
 
+const DEFAULT_EXPLORE_LIMIT = 12;
+const MAX_EXPLORE_LIMIT = 60;
+
 /**
- * GET /api/trades/wishes
+ * GET /api/trades/wishes?offset=0&limit=12
  * Retorna pedidos abertos de OUTROS usuários, com os stickers que cada um
  * tem disponíveis para troca (repetidas não coladas no álbum).
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { data: wishes, error } = await supabase
-    .from("trade_wishes")
-    .select(`
-      id, created_at,
-      stickers ( id, name, image_url, rarities ( name, slug, color_hex ) ),
-      profiles!user_id ( id, display_name, sticker_url )
-    `)
-    .eq("status", "open")
-    .neq("user_id", user.id)
-    .order("created_at", { ascending: false })
-    .limit(60);
+  const { searchParams } = new URL(request.url);
+  const offset = Math.max(0, Number(searchParams.get("offset")) || 0);
+  const limit = Math.min(
+    MAX_EXPLORE_LIMIT,
+    Math.max(1, Number(searchParams.get("limit")) || DEFAULT_EXPLORE_LIMIT),
+  );
+
+  const [{ data: wishes, error }, { count }] = await Promise.all([
+    supabase
+      .from("trade_wishes")
+      .select(`
+        id, created_at,
+        stickers ( id, name, image_url, rarities ( name, slug, color_hex ) ),
+        profiles!user_id ( id, display_name, sticker_url )
+      `)
+      .eq("status", "open")
+      .neq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .range(offset, offset + limit - 1),
+    supabase
+      .from("trade_wishes")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "open")
+      .neq("user_id", user.id),
+  ]);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  const total = count ?? 0;
+  const has_more = offset + (wishes?.length ?? 0) < total;
 
   const ownerIds = [
     ...new Set(
@@ -90,7 +110,7 @@ export async function GET() {
     };
   });
 
-  return NextResponse.json(result);
+  return NextResponse.json({ wishes: result, has_more, total });
 }
 
 /**
