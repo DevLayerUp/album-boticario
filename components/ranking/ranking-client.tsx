@@ -47,8 +47,7 @@ export function RankingClient() {
     setRestVisibleCount(REST_INITIAL_SIZE);
   }, [data?.entries]);
 
-  const currentUser =
-    data?.entries.find((entry) => entry.user_id === data.current_user_id) ?? null;
+  const currentUser = data?.current_user_entry ?? null;
   const topThree = data?.entries.slice(0, 3) ?? [];
   const rest = data?.entries.slice(3) ?? [];
   const visibleRest = rest.slice(0, restVisibleCount);
@@ -93,7 +92,7 @@ export function RankingClient() {
         </p>
       </header>
 
-      {participantCount === 0 ? (
+      {participantCount === 0 && !currentUser ? (
         <div className="rounded-card border border-verde-200 bg-surface-green px-4 py-10 text-center sm:px-6 sm:py-12 2xl:py-16">
           <p className="font-display text-xl font-bold text-verde-escuro-500 sm:text-2xl 2xl:text-[32px]">
             Nenhum colecionador no ranking ainda
@@ -108,14 +107,21 @@ export function RankingClient() {
           animate={{ opacity: 1, y: 0 }}
           className="space-y-5 sm:space-y-6 lg:space-y-8 2xl:space-y-10"
         >
-          <div className="flex flex-col gap-4 lg:gap-5 2xl:flex-row 2xl:items-stretch 2xl:gap-6">
+          <div className="grid grid-cols-1 gap-4 lg:gap-5 2xl:grid-cols-[minmax(0,1099fr)_minmax(0,557fr)] 2xl:gap-6">
             {topThree.length > 0 ? (
-              <div className="min-w-0 overflow-hidden 2xl:flex 2xl:min-w-0 2xl:flex-1 2xl:flex-col">
-                <RankingTopThree entries={topThree} updatedLabel={updatedLabel} />
+              <RankingTopThree entries={topThree} updatedLabel={updatedLabel} />
+            ) : participantCount === 0 ? (
+              <div className="rounded-card border border-verde-200 bg-surface-green px-4 py-10 text-center sm:px-6 sm:py-12 2xl:py-16">
+                <p className="font-display text-xl font-bold text-verde-escuro-500 sm:text-2xl 2xl:text-[32px]">
+                  Nenhum colecionador no ranking ainda
+                </p>
+                <p className="mt-1.5 text-sm text-verde-escuro-500 sm:mt-2 sm:text-base 2xl:text-lg">
+                  Complete seu álbum e apareça aqui.
+                </p>
               </div>
             ) : null}
 
-            <div className="flex min-w-0 flex-col gap-4 lg:gap-5 2xl:w-[557px] 2xl:shrink-0 2xl:gap-6">
+            <div className="flex min-w-0 flex-col gap-4 lg:gap-5 2xl:max-w-[557px] 2xl:justify-self-end 2xl:gap-6">
               {currentUser ? <RankingUserPosition entry={currentUser} /> : null}
               <RankingScoringInfo />
             </div>

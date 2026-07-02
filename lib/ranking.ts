@@ -1,5 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { buildRankingMissionCountsFromActivity } from "@/lib/missions";
+import { loadRankingScoreInput } from "@/lib/sync-ranking-score";
+import { fetchAllPages } from "@/lib/supabase/fetch-all-pages";
 import {
   RANKING_ALBUM_PCT_MULTIPLIER,
   RANKING_EFFICIENCY_MULTIPLIER,
@@ -41,6 +43,8 @@ export interface RankingEntry {
 export interface LeaderboardResponse {
   total_slots: number;
   current_user_id: string;
+  /** Card "Sua posição" — sempre do usuário logado, com % do álbum igual à página do álbum. */
+  current_user_entry: RankingEntry | null;
   entries: RankingEntry[];
 }
 
@@ -109,6 +113,15 @@ export function computeRankingScore(input: RankingScoreInput): number {
   return computeRankingBreakdown(input).score;
 }
 
+/** Mesma fórmula da página do álbum: coladas ÷ total de slots. */
+export function computeAlbumProgressPct(
+  filled_slots: number,
+  total_slots: number,
+): number {
+  if (total_slots <= 0) return 0;
+  return Math.round((filled_slots / total_slots) * 100);
+}
+
 function sortEntries(
   entries: Omit<RankingEntry, "rank">[],
 ): RankingEntry[] {
@@ -125,11 +138,72 @@ function sortEntries(
     .map((entry, index) => ({ ...entry, rank: index + 1 }));
 }
 
+async function buildCurrentUserRankingEntry(
+  admin: SupabaseClient,
+  userId: string,
+  sorted: RankingEntry[],
+  totalSlots: number,
+): Promise<RankingEntry | null> {
+  const accurate = await loadRankingScoreInput(admin, userId);
+  const album_pct = computeAlbumProgressPct(accurate.filled_slots, totalSlots);
+  const inList = sorted.find((entry) => entry.user_id === userId);
+
+  if (inList) {
+    return {
+      ...inList,
+      filled_slots: accurate.filled_slots,
+      album_pct,
+      total_slots: totalSlots,
+      packs_opened: accurate.packs_opened,
+      missions_completed: accurate.missions_completed,
+      trades_accepted: accurate.trades_accepted,
+    };
+  }
+
+  const { data: profile, error } = await admin
+    .from("profiles")
+    .select(
+      "display_name, username, sticker_url, avatar_url, ranking_score, ranking_score_updated_at",
+    )
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (error || !profile) return null;
+
+  const score = profile.ranking_score_updated_at
+    ? (profile.ranking_score ?? 0)
+    : computeRankingScore(accurate);
+
+  const rank =
+    sorted.filter(
+      (entry) =>
+        entry.score > score ||
+        (entry.score === score && entry.filled_slots > accurate.filled_slots),
+    ).length + 1;
+
+  return {
+    user_id: userId,
+    display_name: profile.display_name ?? profile.username ?? "Colecionador",
+    username: profile.username,
+    sticker_url: profile.sticker_url,
+    avatar_url: profile.avatar_url,
+    filled_slots: accurate.filled_slots,
+    album_pct: computeAlbumProgressPct(accurate.filled_slots, totalSlots),
+    total_slots: totalSlots,
+    packs_opened: accurate.packs_opened,
+    packs_unopened: 0,
+    missions_completed: accurate.missions_completed,
+    trades_accepted: accurate.trades_accepted,
+    score,
+    rank,
+  };
+}
+
 export async function buildLeaderboard(
   admin: SupabaseClient,
   currentUserId: string,
 ): Promise<LeaderboardResponse> {
-  const [profilesRes, slotsRes, albumRes, packsRes, missionsByUser, tradesRes] =
+  const [profilesRes, slotsRes, albumRows, packRows, missionsByUser, tradeRows] =
     await Promise.all([
       admin
         .from("profiles")
@@ -137,13 +211,20 @@ export async function buildLeaderboard(
           "id, display_name, username, sticker_url, avatar_url, show_in_ranking, ranking_score, ranking_score_updated_at",
         ),
       admin.from("album_slots").select("id", { count: "exact", head: true }),
-      admin.from("user_album").select("user_id"),
-      admin.from("packs").select("user_id, opened_at"),
+      fetchAllPages<{ user_id: string }>((from, to) =>
+        admin.from("user_album").select("user_id").range(from, to),
+      ),
+      fetchAllPages<{ user_id: string; opened_at: string | null }>((from, to) =>
+        admin.from("packs").select("user_id, opened_at").range(from, to),
+      ),
       buildRankingMissionCountsFromActivity(admin),
-      admin
-        .from("trade_requests")
-        .select("requester_id, receiver_id")
-        .eq("status", "accepted"),
+      fetchAllPages<{ requester_id: string; receiver_id: string }>((from, to) =>
+        admin
+          .from("trade_requests")
+          .select("requester_id, receiver_id")
+          .eq("status", "accepted")
+          .range(from, to),
+      ),
     ]);
 
   if (profilesRes.error) throw new Error(profilesRes.error.message);
@@ -152,13 +233,13 @@ export async function buildLeaderboard(
   const totalSlots = Math.max(slotsRes.count ?? 1, 1);
 
   const filledByUser = new Map<string, number>();
-  for (const row of albumRes.data ?? []) {
+  for (const row of albumRows) {
     filledByUser.set(row.user_id, (filledByUser.get(row.user_id) ?? 0) + 1);
   }
 
   const openedByUser = new Map<string, number>();
   const unopenedByUser = new Map<string, number>();
-  for (const row of packsRes.data ?? []) {
+  for (const row of packRows) {
     if (row.opened_at) {
       openedByUser.set(row.user_id, (openedByUser.get(row.user_id) ?? 0) + 1);
     } else {
@@ -172,7 +253,7 @@ export async function buildLeaderboard(
   const missionsByUserMap = missionsByUser;
 
   const tradesByUser = new Map<string, number>();
-  for (const row of tradesRes.data ?? []) {
+  for (const row of tradeRows) {
     tradesByUser.set(
       row.requester_id,
       (tradesByUser.get(row.requester_id) ?? 0) + 1,
@@ -190,7 +271,7 @@ export async function buildLeaderboard(
     )
     .map((profile) => {
     const filled_slots = filledByUser.get(profile.id) ?? 0;
-    const album_pct = Math.round((filled_slots / totalSlots) * 100);
+    const album_pct = computeAlbumProgressPct(filled_slots, totalSlots);
     const packs_opened = openedByUser.get(profile.id) ?? 0;
     const packs_unopened = unopenedByUser.get(profile.id) ?? 0;
     const missions_completed = missionsByUserMap.get(profile.id) ?? 0;
@@ -223,9 +304,30 @@ export async function buildLeaderboard(
     };
   });
 
+  const sorted = sortEntries(entries);
+  const current_user_entry = await buildCurrentUserRankingEntry(
+    admin,
+    currentUserId,
+    sorted,
+    totalSlots,
+  );
+
+  if (current_user_entry) {
+    const listIndex = sorted.findIndex(
+      (entry) => entry.user_id === currentUserId,
+    );
+    if (listIndex >= 0) {
+      sorted[listIndex] = {
+        ...current_user_entry,
+        rank: sorted[listIndex].rank,
+      };
+    }
+  }
+
   return {
     total_slots: totalSlots,
     current_user_id: currentUserId,
-    entries: sortEntries(entries),
+    current_user_entry,
+    entries: sorted,
   };
 }

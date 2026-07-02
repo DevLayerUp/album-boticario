@@ -3,6 +3,7 @@ import { countRankingEligibleMissionsForUser } from "@/lib/missions";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
   computeRankingBreakdown,
+  computeAlbumProgressPct,
   type RankingScoreBreakdown,
   type RankingScoreInput,
 } from "@/lib/ranking";
@@ -26,7 +27,7 @@ export async function loadRankingScoreInput(
 
   const totalSlots = Math.max(slotsRes.count ?? 1, 1);
   const filled_slots = albumRes.data?.length ?? 0;
-  const album_pct = Math.round((filled_slots / totalSlots) * 100);
+  const album_pct = computeAlbumProgressPct(filled_slots, totalSlots);
   const packs_opened =
     packsRes.data?.filter((pack) => pack.opened_at != null).length ?? 0;
   const trades_accepted = tradesRes.data?.length ?? 0;

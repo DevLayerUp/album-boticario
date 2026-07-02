@@ -1,6 +1,7 @@
 "use client";
 
 import type { RankingEntry } from "@/lib/ranking";
+import { computeAlbumProgressPct } from "@/lib/ranking";
 import { formatRankingPoints, rankingDisplayName } from "./ranking-utils";
 
 interface RankingUserPositionProps {
@@ -8,7 +9,10 @@ interface RankingUserPositionProps {
 }
 
 export function RankingUserPosition({ entry }: RankingUserPositionProps) {
-  const progressWidth = Math.max(entry.album_pct, 4);
+  const albumProgress = computeAlbumProgressPct(
+    entry.filled_slots,
+    entry.total_slots,
+  );
 
   return (
     <section className="flex flex-col rounded-card border border-verde-400 bg-verde-100 px-4 py-5 sm:px-5 sm:py-6 lg:px-6 2xl:h-[248px] 2xl:justify-between 2xl:px-8 2xl:py-8">
@@ -36,17 +40,17 @@ export function RankingUserPosition({ entry }: RankingUserPositionProps) {
       <div className="mt-4 space-y-2 2xl:mt-0 2xl:space-y-2.5">
         <div className="flex items-center justify-between gap-2 text-verde-escuro-500 sm:gap-3">
           <p className="text-sm font-medium sm:text-base 2xl:text-lg">Progresso do álbum</p>
-          <p className="text-base font-bold sm:text-lg 2xl:text-xl">{entry.album_pct}%</p>
+          <p className="text-base font-bold sm:text-lg 2xl:text-xl">{albumProgress}%</p>
         </div>
         <div className="h-2.5 overflow-hidden rounded-pill bg-white sm:h-3 2xl:h-[15px]">
           <div
             className="h-full rounded-pill bg-gradient-to-r from-verde-500 to-amarelo transition-[width] duration-700"
-            style={{ width: `${progressWidth}%` }}
+            style={{ width: `${albumProgress}%` }}
             role="progressbar"
-            aria-valuenow={entry.album_pct}
+            aria-valuenow={albumProgress}
             aria-valuemin={0}
             aria-valuemax={100}
-            aria-label="Progresso do álbum"
+            aria-label={`${albumProgress}% do álbum completo`}
           />
         </div>
       </div>
