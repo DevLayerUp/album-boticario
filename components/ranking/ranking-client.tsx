@@ -108,12 +108,14 @@ export function RankingClient() {
           animate={{ opacity: 1, y: 0 }}
           className="space-y-5 sm:space-y-6 lg:space-y-8 2xl:space-y-10"
         >
-          <div className="grid grid-cols-1 gap-4 lg:gap-5 2xl:grid-cols-[minmax(0,1099fr)_minmax(0,557fr)] 2xl:gap-6">
+          <div className="flex flex-col gap-4 lg:gap-5 2xl:flex-row 2xl:items-stretch 2xl:gap-6">
             {topThree.length > 0 ? (
-              <RankingTopThree entries={topThree} updatedLabel={updatedLabel} />
+              <div className="min-w-0 overflow-hidden 2xl:flex 2xl:min-w-0 2xl:flex-1 2xl:flex-col">
+                <RankingTopThree entries={topThree} updatedLabel={updatedLabel} />
+              </div>
             ) : null}
 
-            <div className="flex min-w-0 flex-col gap-4 lg:gap-5 2xl:max-w-[557px] 2xl:justify-self-end 2xl:gap-6">
+            <div className="flex min-w-0 flex-col gap-4 lg:gap-5 2xl:w-[557px] 2xl:shrink-0 2xl:gap-6">
               {currentUser ? <RankingUserPosition entry={currentUser} /> : null}
               <RankingScoringInfo />
             </div>

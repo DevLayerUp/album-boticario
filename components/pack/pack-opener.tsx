@@ -42,11 +42,7 @@ const OPENING_MAX_WAIT_MS = 12000;
 /** Small buffer after the GIF is on screen so audio matches the first visible frame. */
 const OPENING_GIF_SOUND_DELAY_MS = 40;
 
-/** Scales with viewport height so the modal fits laptops without scroll. */
-const PACK_MEDIA_CLASS =
-  "relative h-[min(30dvh,150px)] w-[min(21dvh,105px)] shrink-0 sm:h-[min(32dvh,170px)] sm:w-[min(22.5dvh,119px)] lg:h-[min(34dvh,190px)] lg:w-[min(24dvh,133px)] 2xl:h-[min(38dvh,240px)] 2xl:w-[min(27dvh,168px)] [@media(max-height:800px)]:h-[min(28dvh,130px)] [@media(max-height:800px)]:w-[min(20dvh,91px)]";
-
-/** Versão ampliada usada só na tela "Pacotinho pronto!" (destaque maior da imagem). */
+/** Scales with viewport height — mesma área na tela "Pacotinho pronto!" e na abertura (GIF). */
 const PACK_MEDIA_CLASS_READY =
   "relative h-[min(38dvh,200px)] w-[min(26.6dvh,140px)] shrink-0 sm:h-[min(40dvh,224px)] sm:w-[min(28dvh,157px)] lg:h-[min(42dvh,250px)] lg:w-[min(30dvh,175px)] 2xl:h-[min(46dvh,312px)] 2xl:w-[min(32dvh,218px)] [@media(max-height:800px)]:h-[min(34dvh,168px)] [@media(max-height:800px)]:w-[min(24dvh,118px)]";
 
@@ -297,27 +293,29 @@ export function PackOpener({
             <p className="font-display text-base font-bold text-verde-escuro-500 sm:text-lg lg:text-xl 2xl:text-2xl">
               Abrindo pacotinho…
             </p>
-            <div className={PACK_MEDIA_CLASS}>
+            <div
+              className={`${PACK_MEDIA_CLASS_READY} overflow-hidden rounded-xl border-2 border-white shadow-md sm:border-[3px] 2xl:rounded-2xl`}
+            >
               {openingGifUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   ref={openingGifRef}
                   src={openingGifUrl}
                   alt="Animação de abertura do pacotinho"
-                  className="size-full object-contain"
+                  className="size-full object-cover"
                   onLoad={() => {
                     openingSync.current.mediaReady = true;
                     tryPlayOpeningGifSound();
                   }}
                 />
               ) : (
-                <div className="relative size-full overflow-hidden rounded-xl border-2 border-white sm:border-[3px] 2xl:rounded-2xl">
+                <div className="relative size-full overflow-hidden">
                   <Image
                     src={packImageUrl}
                     alt="Pacotinho"
                     fill
                     className="animate-pulse object-cover"
-                    sizes="(max-width: 1024px) 133px, 168px"
+                    sizes="(max-width: 1024px) 140px, 218px"
                     unoptimized={packImageUrl.endsWith(".gif")}
                   />
                 </div>

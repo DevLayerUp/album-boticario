@@ -8,6 +8,8 @@ const PROFILE_FIELDS = [
   "display_name",
   "bio",
   "phone",
+  "city",
+  "state",
   "show_in_ranking",
   "notify_new_packs",
   "notify_trades",
@@ -36,9 +38,20 @@ function pickProfileUpdates(body: Record<string, unknown>) {
       continue;
     }
 
-    if (key === "display_name" || key === "bio" || key === "language" || key === "timezone") {
+    if (
+      key === "display_name" ||
+      key === "bio" ||
+      key === "city" ||
+      key === "state" ||
+      key === "language" ||
+      key === "timezone"
+    ) {
       if (value !== null && typeof value !== "string") continue;
-      updates[key] = key === "bio" ? (value?.trim() || null) : value?.trim() ?? null;
+      const trimmed = value?.trim() ?? null;
+      updates[key] =
+        key === "bio" || key === "city" || key === "state"
+          ? trimmed || null
+          : trimmed;
       continue;
     }
 

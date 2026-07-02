@@ -156,7 +156,7 @@ export function RankingTopThree({ entries, updatedLabel }: RankingTopThreeProps)
   const [first, second, third] = entries;
 
   return (
-    <section className="@container/top3 relative overflow-hidden rounded-card bg-verde-escuro-500 @2xl:h-[612px]">
+    <section className="@container/top3 relative min-w-0 max-w-full overflow-hidden rounded-card bg-verde-escuro-500 2xl:h-full">
       <div className="pointer-events-none absolute inset-0" aria-hidden>
         <Image
           src={dashboardAssets.ranking.background}
@@ -198,7 +198,7 @@ export function RankingTopThree({ entries, updatedLabel }: RankingTopThreeProps)
 
         {/* Tablet/desktop — escala com a largura do card (@container) */}
         <div className="hidden min-h-0 flex-1 flex-col justify-end pb-4 pt-4 md:flex @lg:pb-6 @lg:pt-5 @2xl:pb-10 @2xl:pt-8">
-          <div className="flex w-full items-end justify-center gap-2 px-1 @md:gap-3 @lg:gap-5 @xl:gap-8 @2xl:gap-[49px] @2xl:px-[75px]">
+          <div className="flex w-full min-w-0 items-end justify-center gap-2 px-1 @md:gap-3 @lg:gap-5 @xl:gap-8 @2xl:gap-[clamp(1.5rem,3.2cqw,3.0625rem)] @2xl:px-[clamp(1rem,4.2cqw,4.6875rem)]">
             {second ? <PodiumPlace entry={second} place={2} /> : null}
             {first ? <PodiumPlace entry={first} place={1} /> : null}
             {third ? <PodiumPlace entry={third} place={3} /> : null}

@@ -28,6 +28,8 @@ interface ProfileSnapshot {
   sticker_url: string | null;
   bio: string | null;
   phone: string | null;
+  city: string | null;
+  state: string | null;
   social_shared_at: string | null;
 }
 
@@ -54,6 +56,8 @@ function isProfileComplete(profile: ProfileSnapshot | null): boolean {
     profile.display_name?.trim() &&
       profile.bio?.trim() &&
       profile.phone?.trim() &&
+      profile.city?.trim() &&
+      profile.state?.trim() &&
       (profile.avatar_url || profile.sticker_url),
   );
 }
@@ -74,7 +78,7 @@ async function loadMissionMetrics(
   ] = await Promise.all([
     supabase
       .from("profiles")
-      .select("display_name, avatar_url, sticker_url, bio, phone, social_shared_at")
+      .select("display_name, avatar_url, sticker_url, bio, phone, city, state, social_shared_at")
       .eq("id", userId)
       .maybeSingle(),
     supabase
@@ -228,7 +232,7 @@ export async function buildRankingMissionCountsFromActivity(
     admin
       .from("profiles")
       .select(
-        "id, display_name, avatar_url, sticker_url, bio, phone, social_shared_at",
+        "id, display_name, avatar_url, sticker_url, bio, phone, city, state, social_shared_at",
       ),
     admin.from("profiles").select("referred_by").not("referred_by", "is", null),
     admin.from("user_quiz_answers").select("user_id").eq("is_correct", true),
@@ -320,6 +324,8 @@ export async function buildRankingMissionCountsFromActivity(
         sticker_url: profile.sticker_url,
         bio: profile.bio,
         phone: profile.phone,
+        city: profile.city,
+        state: profile.state,
         social_shared_at: profile.social_shared_at,
       },
       referralCount: referralsByUser.get(profile.id) ?? 0,

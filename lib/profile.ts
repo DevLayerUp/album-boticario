@@ -10,6 +10,8 @@ export interface ProfileSettings {
   avatar_url: string | null;
   bio: string | null;
   phone: string | null;
+  city: string | null;
+  state: string | null;
   created_at: string;
   show_in_ranking: boolean;
   notify_new_packs: boolean;
@@ -76,7 +78,7 @@ export async function fetchProfilePageData(
     supabase
       .from("profiles")
       .select(
-        "id, display_name, sticker_url, avatar_url, bio, phone, created_at, show_in_ranking, notify_new_packs, notify_trades, notify_marketing, language, timezone",
+        "id, display_name, sticker_url, avatar_url, bio, phone, city, state, created_at, show_in_ranking, notify_new_packs, notify_trades, notify_marketing, language, timezone",
       )
       .eq("id", userId)
       .single(),
@@ -128,6 +130,8 @@ export async function fetchProfilePageData(
       avatar_url: row.avatar_url,
       bio: row.bio ?? null,
       phone: row.phone ?? null,
+      city: row.city ?? null,
+      state: row.state ?? null,
       created_at: row.created_at,
       show_in_ranking: row.show_in_ranking ?? true,
       notify_new_packs: row.notify_new_packs ?? true,

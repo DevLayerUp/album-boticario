@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { Search, Package, CheckCircle2, Loader2 } from "lucide-react";
+import { Search, Package, CheckCircle2, Loader2, Download } from "lucide-react";
 
 interface User {
   id: string;
@@ -20,6 +20,8 @@ export function UsuariosClient({ initialUsers }: { initialUsers: User[] }) {
   const [grantQty, setGrantQty] = useState(1);
   const [granting, setGranting] = useState(false);
   const [grantMsg, setGrantMsg] = useState<string | null>(null);
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
 
   const filtered = initialUsers.filter((u) => {
     const matchSearch =
@@ -35,6 +37,37 @@ export function UsuariosClient({ initialUsers }: { initialUsers: User[] }) {
 
     return matchSearch && matchFilter;
   });
+
+  async function handleExportCsv() {
+    setExporting(true);
+    setExportError(null);
+    try {
+      const res = await fetch("/api/admin/usuarios/export");
+      if (!res.ok) {
+        let message = "Falha ao exportar";
+        try {
+          const data = await res.json();
+          if (data?.error) message = data.error;
+        } catch {
+          // resposta sem JSON
+        }
+        throw new Error(message);
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `usuarios-${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch (err: unknown) {
+      setExportError(err instanceof Error ? err.message : "Erro ao exportar");
+    } finally {
+      setExporting(false);
+    }
+  }
 
   async function handleGrantPack() {
     if (!grantUserId) return;
@@ -58,9 +91,28 @@ export function UsuariosClient({ initialUsers }: { initialUsers: User[] }) {
 
   return (
     <div className="space-y-5">
-      <div>
-        <h1 className="text-2xl font-semibold text-gray-900">Usuários</h1>
-        <p className="text-sm text-gray-500">{filtered.length} usuário(s)</p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold text-gray-900">Usuários</h1>
+          <p className="text-sm text-gray-500">{filtered.length} usuário(s)</p>
+        </div>
+        <div className="flex flex-col items-end gap-1">
+          <button
+            onClick={handleExportCsv}
+            disabled={exporting}
+            className="inline-flex items-center gap-2 rounded-lg border border-gb-green bg-gb-green px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-60"
+          >
+            {exporting ? (
+              <Loader2 size={14} className="animate-spin" />
+            ) : (
+              <Download size={14} />
+            )}
+            Exportar CSV
+          </button>
+          {exportError && (
+            <p className="text-xs text-red-600">{exportError}</p>
+          )}
+        </div>
       </div>
 
       {/* Filters */}

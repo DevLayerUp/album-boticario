@@ -15,6 +15,8 @@ interface PerfilPersonalPanelProps {
     display_name: string;
     bio: string | null;
     phone: string | null;
+    city: string | null;
+    state: string | null;
   }) => Promise<void>;
 }
 
@@ -50,16 +52,22 @@ export function PerfilPersonalPanel({
   const initialName = data.profile.display_name ?? "";
   const initialBio = data.profile.bio ?? "";
   const initialPhone = data.profile.phone ?? "";
+  const initialCity = data.profile.city ?? "";
+  const initialState = data.profile.state ?? "";
 
   const [displayName, setDisplayName] = useState(initialName);
   const [bio, setBio] = useState(initialBio);
   const [phone, setPhone] = useState(initialPhone);
+  const [city, setCity] = useState(initialCity);
+  const [state, setState] = useState(initialState);
   const { showToast } = usePerfilToast();
 
   function handleCancel() {
     setDisplayName(initialName);
     setBio(initialBio);
     setPhone(initialPhone);
+    setCity(initialCity);
+    setState(initialState);
   }
 
   async function handleSave() {
@@ -79,6 +87,8 @@ export function PerfilPersonalPanel({
         display_name: displayName.trim(),
         bio: bio.trim() || null,
         phone: phone.trim() || null,
+        city: city.trim() || null,
+        state: state.trim() || null,
       });
       showToast("Dados pessoais atualizados.");
     } catch (err) {
@@ -134,6 +144,30 @@ export function PerfilPersonalPanel({
               placeholder="(00) 00000-0000"
               maxLength={16}
             />
+          </div>
+
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6">
+            <div className="space-y-3">
+              <FieldLabel>Estado</FieldLabel>
+              <PillInput
+                value={state}
+                onChange={(e) => setState(e.target.value)}
+                autoComplete="address-level1"
+                placeholder="Ex.: São Paulo"
+                maxLength={60}
+              />
+            </div>
+
+            <div className="space-y-3">
+              <FieldLabel>Cidade</FieldLabel>
+              <PillInput
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+                autoComplete="address-level2"
+                placeholder="Ex.: Curitiba"
+                maxLength={80}
+              />
+            </div>
           </div>
         </div>
 
