@@ -14,6 +14,7 @@ export const EMAIL_CAMPAIGN_AUDIENCES = [
   "incomplete_first_steps",
   "no_sticker",
   "mission_incomplete",
+  "specific_user",
 ] as const;
 
 export type EmailCampaignAudience = (typeof EMAIL_CAMPAIGN_AUDIENCES)[number];
@@ -32,6 +33,9 @@ export type EmailCampaignStatus = (typeof EMAIL_CAMPAIGN_STATUSES)[number];
 export interface EmailCampaignAudienceFilter {
   state?: string;
   mission_id?: number;
+  user_id?: string;
+  /** Rótulo para exibição no admin (nome · e-mail) */
+  user_display?: string;
 }
 
 export interface EmailCampaignStats {
@@ -83,6 +87,7 @@ export const AUDIENCE_LABELS: Record<EmailCampaignAudience, string> = {
   incomplete_first_steps: "Primeiros passos não concluídos",
   no_sticker: "Sem figurinha personalizada",
   mission_incomplete: "Missão não concluída",
+  specific_user: "Usuário específico",
 };
 
 export const AUDIENCE_GROUPS: {
@@ -100,6 +105,10 @@ export const AUDIENCE_GROUPS: {
   {
     label: "Missões",
     audiences: ["mission_incomplete"],
+  },
+  {
+    label: "Usuário",
+    audiences: ["specific_user"],
   },
 ];
 
@@ -126,6 +135,19 @@ export function parseAudienceFilter(value: unknown): EmailCampaignAudienceFilter
     filter.mission_id = missionId;
   }
 
+  if (typeof raw.user_id === "string" && raw.user_id.trim()) {
+    const uuidRe =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const userId = raw.user_id.trim();
+    if (uuidRe.test(userId)) {
+      filter.user_id = userId;
+    }
+  }
+
+  if (typeof raw.user_display === "string" && raw.user_display.trim()) {
+    filter.user_display = raw.user_display.trim().slice(0, 200);
+  }
+
   return filter;
 }
 
@@ -138,11 +160,19 @@ export function resolveAudienceLabel(
     const mission = missions.find((m) => m.id === audienceFilter.mission_id);
     if (mission) return `Missão pendente: ${mission.title}`;
   }
+  if (audience === "specific_user") {
+    if (audienceFilter.user_display) return audienceFilter.user_display;
+    if (audienceFilter.user_id) return `Usuário: ${audienceFilter.user_id.slice(0, 8)}…`;
+  }
   return AUDIENCE_LABELS[audience];
 }
 
 export function audienceRequiresMission(audience: EmailCampaignAudience): boolean {
   return audience === "mission_incomplete";
+}
+
+export function audienceRequiresUser(audience: EmailCampaignAudience): boolean {
+  return audience === "specific_user";
 }
 
 export function validateCampaignAudience(
@@ -151,6 +181,9 @@ export function validateCampaignAudience(
 ): string | null {
   if (audienceRequiresMission(audience) && !audienceFilter.mission_id) {
     return "Selecione uma missão para este segmento.";
+  }
+  if (audienceRequiresUser(audience) && !audienceFilter.user_id) {
+    return "Selecione um usuário para este envio.";
   }
   return null;
 }

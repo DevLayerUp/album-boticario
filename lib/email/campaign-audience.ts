@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { listAdminUserIds } from "@/lib/admin-users";
 import { isProfileComplete } from "@/lib/profile-complete";
+import { getCampaignUserById } from "@/lib/email/campaign-user-search";
 import type {
   CampaignRecipient,
   EmailCampaignAudience,
@@ -122,6 +123,23 @@ export async function buildCampaignAudience(
 
   if (audience === "mission_incomplete" && !audienceFilter.mission_id) {
     throw new Error("Selecione uma missão para este segmento.");
+  }
+
+  if (audience === "specific_user") {
+    if (!audienceFilter.user_id) {
+      throw new Error("Selecione um usuário para este envio.");
+    }
+    const user = await getCampaignUserById(supabase, audienceFilter.user_id);
+    if (!user) {
+      throw new Error("Usuário não encontrado ou sem e-mail cadastrado.");
+    }
+    return [
+      {
+        userId: user.id,
+        email: user.email,
+        displayName: user.display_name ?? user.username,
+      },
+    ];
   }
 
   let query = supabase

@@ -32,6 +32,7 @@ export async function GET(request: NextRequest) {
   const state = searchParams.get("state")?.trim().toUpperCase() || undefined;
   const missionIdRaw = searchParams.get("mission_id");
   const missionId = missionIdRaw ? Number(missionIdRaw) : undefined;
+  const userId = searchParams.get("user_id")?.trim() || undefined;
 
   if (!category || !audience) {
     return NextResponse.json({ error: "category e audience são obrigatórios" }, { status: 400 });
@@ -40,6 +41,7 @@ export async function GET(request: NextRequest) {
   const audienceFilter = parseAudienceFilter({
     state,
     mission_id: Number.isInteger(missionId) && missionId! > 0 ? missionId : undefined,
+    user_id: userId,
   });
 
   const supabase = createAdminClient();

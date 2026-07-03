@@ -16,13 +16,19 @@ import {
 import Link from "next/link";
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 import { CampaignEmailPreviewModal } from "@/components/admin/campaign-email-preview-modal";
+import {
+  CampaignUserSearch,
+  formatUserLabel,
+} from "@/components/admin/campaign-user-search";
 import { RichTextEditor } from "@/components/admin/rich-text-editor";
+import type { CampaignUserSearchResult } from "@/lib/email/campaign-user-search";
 import {
   AUDIENCE_GROUPS,
   AUDIENCE_LABELS,
   CATEGORY_LABELS,
   STATUS_LABELS,
   audienceRequiresMission,
+  audienceRequiresUser,
   resolveAudienceLabel,
   type CampaignMissionOption,
   type EmailCampaign,
@@ -36,6 +42,7 @@ interface FormState {
   category: EmailCampaignCategory;
   audience: EmailCampaignAudience;
   mission_id: string;
+  selected_user: CampaignUserSearchResult | null;
   html_body: string;
   scheduled_at: string;
   status: "draft" | "scheduled";
@@ -46,10 +53,35 @@ const empty: FormState = {
   category: "aviso",
   audience: "marketing_opt_in",
   mission_id: "",
+  selected_user: null,
   html_body: "",
   scheduled_at: "",
   status: "draft",
 };
+
+function userFromAudienceFilter(
+  audience: EmailCampaignAudience,
+  filter: EmailCampaign["audience_filter"],
+): CampaignUserSearchResult | null {
+  if (audience !== "specific_user" || !filter?.user_id) return null;
+  if (filter.user_display) {
+    const sep = filter.user_display.lastIndexOf(" · ");
+    if (sep > 0) {
+      return {
+        id: filter.user_id,
+        display_name: filter.user_display.slice(0, sep),
+        email: filter.user_display.slice(sep + 3),
+        username: null,
+      };
+    }
+  }
+  return {
+    id: filter.user_id,
+    display_name: null,
+    email: "",
+    username: null,
+  };
+}
 
 const STATUS_COLORS: Record<EmailCampaignStatus, string> = {
   draft: "bg-gray-100 text-gray-600",
@@ -97,6 +129,9 @@ export function AutomacoesEmailClient({
       if (form.mission_id) {
         params.set("mission_id", form.mission_id);
       }
+      if (form.selected_user?.id) {
+        params.set("user_id", form.selected_user.id);
+      }
       const res = await fetch(`/api/admin/email-campaigns/audience-count?${params}`);
       const data = await res.json();
       setAudienceCount(res.ok ? data.count : null);
@@ -105,7 +140,7 @@ export function AutomacoesEmailClient({
     } finally {
       setLoadingCount(false);
     }
-  }, [form.category, form.audience, form.mission_id]);
+  }, [form.category, form.audience, form.mission_id, form.selected_user?.id]);
 
   useEffect(() => {
     if (showForm) fetchAudienceCount();
@@ -128,6 +163,7 @@ export function AutomacoesEmailClient({
       mission_id: item.audience_filter?.mission_id
         ? String(item.audience_filter.mission_id)
         : "",
+      selected_user: userFromAudienceFilter(item.audience, item.audience_filter),
       html_body: item.html_body,
       scheduled_at: toDatetimeLocal(item.scheduled_at),
       status: item.status === "scheduled" ? "scheduled" : "draft",
@@ -138,9 +174,17 @@ export function AutomacoesEmailClient({
   }
 
   function buildPayload(status: "draft" | "scheduled") {
-    const audienceFilter: { mission_id?: number } = {};
+    const audienceFilter: {
+      mission_id?: number;
+      user_id?: string;
+      user_display?: string;
+    } = {};
     if (form.mission_id) {
       audienceFilter.mission_id = Number(form.mission_id);
+    }
+    if (form.selected_user) {
+      audienceFilter.user_id = form.selected_user.id;
+      audienceFilter.user_display = formatUserLabel(form.selected_user);
     }
 
     return {
@@ -167,6 +211,10 @@ export function AutomacoesEmailClient({
     }
     if (audienceRequiresMission(form.audience) && !form.mission_id) {
       setError("Selecione uma missão para este segmento");
+      return;
+    }
+    if (audienceRequiresUser(form.audience) && !form.selected_user) {
+      setError("Selecione um usuário para este envio");
       return;
     }
     if (asScheduled && !form.scheduled_at) {
@@ -313,14 +361,16 @@ export function AutomacoesEmailClient({
                 </label>
                 <select
                   value={form.audience}
-                  onChange={(e) =>
+                  onChange={(e) => {
+                    const next = e.target.value as EmailCampaignAudience;
                     setForm((f) => ({
                       ...f,
-                      audience: e.target.value as EmailCampaignAudience,
+                      audience: next,
                       mission_id:
-                        e.target.value === "mission_incomplete" ? f.mission_id : "",
-                    }))
-                  }
+                        next === "mission_incomplete" ? f.mission_id : "",
+                      selected_user: next === "specific_user" ? f.selected_user : null,
+                    }));
+                  }}
                   className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
                 >
                   {AUDIENCE_GROUPS.map((group) => (
@@ -349,6 +399,15 @@ export function AutomacoesEmailClient({
                       </option>
                     ))}
                   </select>
+                )}
+                {audienceRequiresUser(form.audience) && (
+                  <CampaignUserSearch
+                    value={form.selected_user}
+                    onChange={(user) =>
+                      setForm((f) => ({ ...f, selected_user: user }))
+                    }
+                    disabled={saving}
+                  />
                 )}
                 <p className="mt-1 flex items-center gap-1 text-xs text-gray-500">
                   <Users size={12} />
