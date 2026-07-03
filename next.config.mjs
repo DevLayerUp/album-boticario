@@ -101,7 +101,8 @@ const nextConfig = {
       // Disable browser features not in use
       {
         key: "Permissions-Policy",
-        value: "camera=(self), microphone=(), geolocation=(), interest-cohort=()",
+        value:
+          'camera=(self), microphone=(), geolocation=(), interest-cohort=(), compute-pressure=(self "https://www.youtube.com" "https://www.youtube-nocookie.com")',
       },
       // CSP — Supabase, Google Fonts, GTM/GA/Google Ads e pixels do container GTM
       {

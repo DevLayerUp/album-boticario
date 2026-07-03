@@ -105,7 +105,7 @@ function ManifestYoutube({ src }: { src: string }) {
         src={src}
         title="YouTube video player"
         frameBorder={0}
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; compute-pressure"
         referrerPolicy="strict-origin-when-cross-origin"
         allowFullScreen
         className="absolute inset-0 size-full border-0"
