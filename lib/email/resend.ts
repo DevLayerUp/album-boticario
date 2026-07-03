@@ -1,4 +1,3 @@
-import { Resend } from "resend";
 import {
   renderAuthEmailTemplate,
   renderFeedbackReplyEmail,
@@ -6,27 +5,7 @@ import {
   type AuthEmailTemplateVariables,
   type FeedbackReplyEmailVariables,
 } from "@/lib/email/templates";
-
-let resendClient: Resend | null = null;
-
-function getResendClient(): Resend {
-  const apiKey = process.env.RESEND_API_KEY?.trim();
-  if (!apiKey) {
-    throw new Error("RESEND_API_KEY não configurada.");
-  }
-  if (!resendClient) {
-    resendClient = new Resend(apiKey);
-  }
-  return resendClient;
-}
-
-function getFromAddress(): string {
-  const from = process.env.RESEND_FROM_EMAIL?.trim();
-  if (!from) {
-    throw new Error("RESEND_FROM_EMAIL não configurado.");
-  }
-  return from;
-}
+import { getResendClient, getFromAddress } from "@/lib/email/resend-client";
 
 export async function sendAuthEmail(options: {
   to: string;
@@ -59,6 +38,7 @@ export async function sendAuthEmail(options: {
   }
 }
 
+<<<<<<< Updated upstream
 export async function sendFeedbackReplyEmail(options: {
   to: string;
   variables: FeedbackReplyEmailVariables;
@@ -83,3 +63,6 @@ export function isResendConfigured(): boolean {
     process.env.RESEND_API_KEY?.trim() && process.env.RESEND_FROM_EMAIL?.trim(),
   );
 }
+=======
+export { isResendConfigured } from "@/lib/email/resend-client";
+>>>>>>> Stashed changes

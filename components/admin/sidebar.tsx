@@ -22,6 +22,7 @@ import {
   Package,
   Sparkles,
   Search,
+  Mail,
 } from "lucide-react";
 
 const NAV = [
@@ -39,6 +40,7 @@ const NAV = [
   { href: "/admin/quiz",         label: "Quiz",          icon: HelpCircle },
   { href: "/admin/missoes",      label: "Missões",       icon: Target },
   { href: "/admin/avisos",       label: "Avisos",        icon: Megaphone },
+  { href: "/admin/automacoes-email", label: "E-mails", icon: Mail },
   { href: "/admin/feedback",     label: "Feedbacks",     icon: MessageSquare },
   { href: "/admin/usuarios",     label: "Usuários",      icon: Users },
 ];
