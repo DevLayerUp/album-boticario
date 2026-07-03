@@ -28,6 +28,50 @@ const nextConfig = {
 
   // ── Security headers ──────────────────────────────────────────────────
   async headers() {
+    const gtmAndGoogleAdsScripts = [
+      "https://www.googletagmanager.com",
+      "https://*.googletagmanager.com",
+      "https://googleads.g.doubleclick.net",
+      "https://www.googleadservices.com",
+    ].join(" ");
+
+    const adPixelScripts = [
+      "https://connect.facebook.net",
+      "https://snap.licdn.com",
+      "https://analytics.tiktok.com",
+    ].join(" ");
+
+    const googleMarketingConnect = [
+      "https://www.googletagmanager.com",
+      "https://www.google-analytics.com",
+      "https://*.google-analytics.com",
+      "https://*.analytics.google.com",
+      "https://*.g.doubleclick.net",
+      "https://googleads.g.doubleclick.net",
+      "https://ad.doubleclick.net",
+      "https://www.googleadservices.com",
+      "https://www.google.com",
+    ].join(" ");
+
+    const adPixelConnect = [
+      "https://connect.facebook.net",
+      "https://www.facebook.com",
+      "https://px.ads.linkedin.com",
+      "https://snap.licdn.com",
+      "https://analytics.tiktok.com",
+    ].join(" ");
+
+    const googleMarketingImg = [
+      "https://www.googletagmanager.com",
+      "https://www.google-analytics.com",
+      "https://*.google-analytics.com",
+      "https://*.g.doubleclick.net",
+      "https://googleads.g.doubleclick.net",
+      "https://ad.doubleclick.net",
+      "https://www.googleadservices.com",
+      "https://www.google.com",
+    ].join(" ");
+
     const securityHeaders = [
       // Prevent click-jacking
       { key: "X-Frame-Options", value: "SAMEORIGIN" },
@@ -40,20 +84,19 @@ const nextConfig = {
         key: "Permissions-Policy",
         value: "camera=(self), microphone=(), geolocation=(), interest-cohort=()",
       },
-      // CSP — allow Supabase, Google Fonts and self
+      // CSP — Supabase, Google Fonts, GTM/GA/Google Ads e pixels do container GTM
       {
         key: "Content-Security-Policy",
         value: [
           "default-src 'self'",
           // blob: — modelo ONNX do imgly (ArrayBuffer, não import dinâmico)
-          // googletagmanager — Google Tag Manager / GA4
-          "script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' blob: https://www.googletagmanager.com https://*.googletagmanager.com",
+          `script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' blob: ${gtmAndGoogleAdsScripts} ${adPixelScripts}`,
           "worker-src 'self' blob:",
           "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
           "font-src 'self' https://fonts.gstatic.com",
-          "img-src 'self' data: blob: https://*.supabase.co https://api.remove.bg https://www.googletagmanager.com https://www.google-analytics.com https://*.google-analytics.com https://*.g.doubleclick.net",
+          `img-src 'self' data: blob: https://*.supabase.co https://api.remove.bg ${googleMarketingImg}`,
           "media-src 'self' blob: https://*.supabase.co",
-          "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.remove.bg https://staticimgly.com https://www.googletagmanager.com https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://*.g.doubleclick.net",
+          `connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.remove.bg https://staticimgly.com ${googleMarketingConnect} ${adPixelConnect}`,
           "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://www.googletagmanager.com https://*.doubleclick.net",
           "frame-ancestors 'self'",
           "base-uri 'self'",
