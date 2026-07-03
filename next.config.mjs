@@ -51,6 +51,8 @@ const nextConfig = {
       "https://ad.doubleclick.net",
       "https://www.googleadservices.com",
       "https://www.google.com",
+      "https://www.google.com.br",
+      "https://*.google.com.br",
     ].join(" ");
 
     const adPixelConnect = [
@@ -59,6 +61,11 @@ const nextConfig = {
       "https://px.ads.linkedin.com",
       "https://snap.licdn.com",
       "https://analytics.tiktok.com",
+      "https://analytics-ipv6.tiktokw.us",
+      "https://*.tiktokw.us",
+      // Meta Pixel — gateways dinâmicos (Cloud Run / AWS)
+      "https://*.run.app",
+      "https://*.ecs.us-east-1.on.aws",
     ].join(" ");
 
     const googleMarketingImg = [
@@ -70,6 +77,13 @@ const nextConfig = {
       "https://ad.doubleclick.net",
       "https://www.googleadservices.com",
       "https://www.google.com",
+      "https://www.google.com.br",
+      "https://*.google.com.br",
+    ].join(" ");
+
+    const adPixelImg = [
+      "https://px.ads.linkedin.com",
+      "https://www.facebook.com",
     ].join(" ");
 
     const securityHeaders = [
@@ -94,7 +108,7 @@ const nextConfig = {
           "worker-src 'self' blob:",
           "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
           "font-src 'self' https://fonts.gstatic.com",
-          `img-src 'self' data: blob: https://*.supabase.co https://api.remove.bg ${googleMarketingImg}`,
+          `img-src 'self' data: blob: https://*.supabase.co https://api.remove.bg ${googleMarketingImg} ${adPixelImg}`,
           "media-src 'self' blob: https://*.supabase.co",
           `connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.remove.bg https://staticimgly.com ${googleMarketingConnect} ${adPixelConnect}`,
           "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://www.googletagmanager.com https://*.doubleclick.net",
