@@ -86,6 +86,11 @@ const nextConfig = {
       "https://www.facebook.com",
     ].join(" ");
 
+    const metaFrameAndForm = [
+      "https://www.facebook.com",
+      "https://*.facebook.com",
+    ].join(" ");
+
     const securityHeaders = [
       // Prevent click-jacking
       { key: "X-Frame-Options", value: "SAMEORIGIN" },
@@ -111,10 +116,10 @@ const nextConfig = {
           `img-src 'self' data: blob: https://*.supabase.co https://api.remove.bg ${googleMarketingImg} ${adPixelImg}`,
           "media-src 'self' blob: https://*.supabase.co",
           `connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.remove.bg https://staticimgly.com ${googleMarketingConnect} ${adPixelConnect}`,
-          "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://www.googletagmanager.com https://*.doubleclick.net",
+          `frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://www.googletagmanager.com https://*.doubleclick.net ${metaFrameAndForm}`,
           "frame-ancestors 'self'",
           "base-uri 'self'",
-          "form-action 'self'",
+          `form-action 'self' ${metaFrameAndForm}`,
         ].join("; "),
       },
     ];
