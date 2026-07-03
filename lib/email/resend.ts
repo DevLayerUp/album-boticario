@@ -38,7 +38,6 @@ export async function sendAuthEmail(options: {
   }
 }
 
-<<<<<<< Updated upstream
 export async function sendFeedbackReplyEmail(options: {
   to: string;
   variables: FeedbackReplyEmailVariables;
@@ -58,11 +57,4 @@ export async function sendFeedbackReplyEmail(options: {
   }
 }
 
-export function isResendConfigured(): boolean {
-  return Boolean(
-    process.env.RESEND_API_KEY?.trim() && process.env.RESEND_FROM_EMAIL?.trim(),
-  );
-}
-=======
 export { isResendConfigured } from "@/lib/email/resend-client";
->>>>>>> Stashed changes

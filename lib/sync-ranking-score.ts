@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { countRankingEligibleMissionsForUser } from "@/lib/missions";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { fetchAllPages } from "@/lib/supabase/fetch-all-pages";
 import {
   computeRankingBreakdown,
   computeAlbumProgressPct,
@@ -106,12 +107,12 @@ export async function syncUserRankingScores(userIds: string[]): Promise<void> {
 /** Backfill inicial — calcula e grava a pontuação de todos os usuários. */
 export async function backfillAllRankingScores(): Promise<{ synced: number }> {
   const admin = createAdminClient();
-  const { data: profiles, error } = await admin.from("profiles").select("id");
-
-  if (error) throw new Error(error.message);
+  const profiles = await fetchAllPages<{ id: string }>((from, to) =>
+    admin.from("profiles").select("id").range(from, to),
+  );
 
   let synced = 0;
-  for (const profile of profiles ?? []) {
+  for (const profile of profiles) {
     await syncUserRankingScore(admin, profile.id);
     synced++;
   }

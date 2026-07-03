@@ -61,10 +61,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: updateErr.message }, { status: 500 });
   }
 
-  // Admins não aparecem no ranking público.
-  if (makeAdmin) {
-    await admin.from("profiles").update({ show_in_ranking: false }).eq("id", userId);
-  }
+  // Admins não aparecem no ranking público; ao rebaixar, volta a aparecer.
+  await admin
+    .from("profiles")
+    .update({ show_in_ranking: !makeAdmin })
+    .eq("id", userId);
 
   return NextResponse.json({
     ok: true,

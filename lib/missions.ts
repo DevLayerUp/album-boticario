@@ -222,7 +222,7 @@ export async function buildRankingMissionCountsFromActivity(
   if (!missions?.length) return counts;
 
   const [
-    profilesRes,
+    profiles,
     referralRows,
     quizRows,
     openedPackRows,
@@ -231,11 +231,24 @@ export async function buildRankingMissionCountsFromActivity(
     userAlbumRows,
     tradeRows,
   ] = await Promise.all([
-    admin
-      .from("profiles")
-      .select(
-        "id, display_name, avatar_url, sticker_url, bio, phone, city, state, social_shared_at",
-      ),
+    fetchAllPages<{
+      id: string;
+      display_name: string | null;
+      avatar_url: string | null;
+      sticker_url: string | null;
+      bio: string | null;
+      phone: string | null;
+      city: string | null;
+      state: string | null;
+      social_shared_at: string | null;
+    }>((from, to) =>
+      admin
+        .from("profiles")
+        .select(
+          "id, display_name, avatar_url, sticker_url, bio, phone, city, state, social_shared_at",
+        )
+        .range(from, to),
+    ),
     fetchAllPages<{ referred_by: string }>((from, to) =>
       admin
         .from("profiles")
@@ -347,7 +360,7 @@ export async function buildRankingMissionCountsFromActivity(
     return completed;
   }
 
-  for (const profile of profilesRes.data ?? []) {
+  for (const profile of profiles) {
     const metrics: MissionMetrics = {
       profile: {
         display_name: profile.display_name,

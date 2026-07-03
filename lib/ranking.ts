@@ -203,13 +203,25 @@ export async function buildLeaderboard(
   admin: SupabaseClient,
   currentUserId: string,
 ): Promise<LeaderboardResponse> {
-  const [profilesRes, slotsRes, albumRows, packRows, missionsByUser, tradeRows] =
+  const [profiles, slotsRes, albumRows, packRows, missionsByUser, tradeRows] =
     await Promise.all([
-      admin
-        .from("profiles")
-        .select(
-          "id, display_name, username, sticker_url, avatar_url, show_in_ranking, ranking_score, ranking_score_updated_at",
-        ),
+      fetchAllPages<{
+        id: string;
+        display_name: string | null;
+        username: string | null;
+        sticker_url: string | null;
+        avatar_url: string | null;
+        show_in_ranking: boolean;
+        ranking_score: number;
+        ranking_score_updated_at: string | null;
+      }>((from, to) =>
+        admin
+          .from("profiles")
+          .select(
+            "id, display_name, username, sticker_url, avatar_url, show_in_ranking, ranking_score, ranking_score_updated_at",
+          )
+          .range(from, to),
+      ),
       admin.from("album_slots").select("id", { count: "exact", head: true }),
       fetchAllPages<{ user_id: string }>((from, to) =>
         admin.from("user_album").select("user_id").range(from, to),
@@ -226,8 +238,6 @@ export async function buildLeaderboard(
           .range(from, to),
       ),
     ]);
-
-  if (profilesRes.error) throw new Error(profilesRes.error.message);
 
   const adminUserIds = await listAdminUserIds(admin);
   const totalSlots = Math.max(slotsRes.count ?? 1, 1);
@@ -264,7 +274,7 @@ export async function buildLeaderboard(
     );
   }
 
-  const entries = (profilesRes.data ?? [])
+  const entries = profiles
     .filter(
       (profile) =>
         profile.show_in_ranking !== false && !adminUserIds.has(profile.id),
