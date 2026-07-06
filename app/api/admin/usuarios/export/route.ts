@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { adminGuard } from "@/lib/admin-guard";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { fetchAllAuthEmails } from "@/lib/admin-users";
+import { fetchAllPages } from "@/lib/supabase/fetch-all-pages";
 import { formatBirthDateBR } from "@/lib/salesforce-lead";
 
 export const dynamic = "force-dynamic";
@@ -12,6 +14,15 @@ interface ExportRow {
   birth_date: string | null;
   city: string | null;
   state: string | null;
+}
+
+interface ProfileExportRow {
+  id: string;
+  display_name: string | null;
+  birth_date: string | null;
+  city: string | null;
+  state: string | null;
+  phone: string | null;
 }
 
 // Mesmos campos enviados ao Salesforce (CloudPage) + Telefone.
@@ -33,48 +44,34 @@ function csvCell(value: unknown): string {
   return str;
 }
 
-async function fetchAllEmails(
-  supabase: ReturnType<typeof createAdminClient>,
-): Promise<Map<string, string | null>> {
-  const map = new Map<string, string | null>();
-  const perPage = 1000;
-  for (let page = 1; page <= 100; page++) {
-    const { data, error } = await supabase.auth.admin.listUsers({ page, perPage });
-    if (error) throw new Error(error.message);
-    const users = data?.users ?? [];
-    for (const u of users) map.set(u.id, u.email ?? null);
-    if (users.length < perPage) break;
-  }
-  return map;
-}
-
 export async function GET() {
   const guard = await adminGuard();
   if (guard) return guard;
 
   const supabase = createAdminClient();
 
-  const { data: profiles, error } = await supabase
-    .from("profiles")
-    .select("id, display_name, birth_date, city, state, phone")
-    .order("created_at", { ascending: false })
-    .range(0, 99999);
-
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-
+  let profiles: ProfileExportRow[];
   let emailMap: Map<string, string | null>;
+
   try {
-    emailMap = await fetchAllEmails(supabase);
+    [profiles, emailMap] = await Promise.all([
+      fetchAllPages<ProfileExportRow>((from, to) =>
+        supabase
+          .from("profiles")
+          .select("id, display_name, birth_date, city, state, phone")
+          .order("created_at", { ascending: false })
+          .range(from, to),
+      ),
+      fetchAllAuthEmails(supabase),
+    ]);
   } catch (err) {
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Erro ao ler autenticação" },
+      { error: err instanceof Error ? err.message : "Erro ao exportar usuários" },
       { status: 500 },
     );
   }
 
-  const rows: ExportRow[] = (profiles ?? []).map((p) => ({
+  const rows: ExportRow[] = profiles.map((p) => ({
     display_name: p.display_name,
     email: emailMap.get(p.id) ?? null,
     phone: p.phone,
@@ -99,6 +96,7 @@ export async function GET() {
       "Content-Type": "text/csv; charset=utf-8",
       "Content-Disposition": `attachment; filename="${filename}"`,
       "Cache-Control": "no-store",
+      "X-Export-Row-Count": String(rows.length),
     },
   });
 }
