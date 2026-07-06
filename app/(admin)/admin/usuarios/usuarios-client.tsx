@@ -1,26 +1,33 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
-import { Search, Package, CheckCircle2, Loader2, Download } from "lucide-react";
+import {
+  Search,
+  Package,
+  CheckCircle2,
+  Loader2,
+  Download,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
+import type { AdminUsuarioRow } from "@/lib/admin-usuarios-list";
 
-interface User {
-  id: string;
-  display_name: string | null;
-  username: string | null;
-  sticker_url: string | null;
-  created_at: string;
-  email: string | null;
-  is_admin: boolean;
-}
+type StickerFilter = "all" | "sticker" | "no-sticker";
 
-export function UsuariosClient({ initialUsers }: { initialUsers: User[] }) {
-  const [users, setUsers] = useState<User[]>(initialUsers);
+export function UsuariosClient() {
+  const [users, setUsers] = useState<AdminUsuarioRow[]>([]);
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState<"all" | "sticker" | "no-sticker">("all");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [filter, setFilter] = useState<StickerFilter>("all");
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [roleUpdatingId, setRoleUpdatingId] = useState<string | null>(null);
   const [confirmRole, setConfirmRole] = useState<{
-    user: User;
+    user: AdminUsuarioRow;
     nextIsAdmin: boolean;
   } | null>(null);
   const [grantUserId, setGrantUserId] = useState<string | null>(null);
@@ -30,20 +37,47 @@ export function UsuariosClient({ initialUsers }: { initialUsers: User[] }) {
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
 
-  const filtered = users.filter((u) => {
-    const matchSearch =
-      !search ||
-      u.display_name?.toLowerCase().includes(search.toLowerCase()) ||
-      u.email?.toLowerCase().includes(search.toLowerCase()) ||
-      u.username?.toLowerCase().includes(search.toLowerCase());
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search), 350);
+    return () => clearTimeout(timer);
+  }, [search]);
 
-    const matchFilter =
-      filter === "all" ||
-      (filter === "sticker" && !!u.sticker_url) ||
-      (filter === "no-sticker" && !u.sticker_url);
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch, filter]);
 
-    return matchSearch && matchFilter;
-  });
+  const fetchUsers = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const params = new URLSearchParams({
+        page: String(page),
+        filter,
+      });
+      if (debouncedSearch.trim()) {
+        params.set("search", debouncedSearch.trim());
+      }
+
+      const res = await fetch(`/api/admin/usuarios?${params}`);
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error ?? "Erro ao carregar usuários");
+      }
+
+      setUsers(data.users ?? []);
+      setTotal(data.pagination?.total ?? 0);
+      setTotalPages(data.pagination?.totalPages ?? 1);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erro de conexão");
+      setUsers([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [page, debouncedSearch, filter]);
+
+  useEffect(() => {
+    void fetchUsers();
+  }, [fetchUsers]);
 
   async function handleExportCsv() {
     setExporting(true);
@@ -76,7 +110,7 @@ export function UsuariosClient({ initialUsers }: { initialUsers: User[] }) {
     }
   }
 
-  function handleToggleAdmin(user: User, nextIsAdmin: boolean) {
+  function handleToggleAdmin(user: AdminUsuarioRow, nextIsAdmin: boolean) {
     setConfirmRole({ user, nextIsAdmin });
   }
 
@@ -126,12 +160,20 @@ export function UsuariosClient({ initialUsers }: { initialUsers: User[] }) {
     }
   }
 
+  const rangeStart = total === 0 ? 0 : (page - 1) * 100 + 1;
+  const rangeEnd = Math.min(page * 100, total);
+
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold text-gray-900">Usuários</h1>
-          <p className="text-sm text-gray-500">{filtered.length} usuário(s)</p>
+          <p className="text-sm text-gray-500">
+            {total.toLocaleString("pt-BR")} usuário(s) no total
+            {total > 0 && (
+              <> · exibindo {rangeStart}–{rangeEnd}</>
+            )}
+          </p>
         </div>
         <div className="flex flex-col items-end gap-1">
           <button
@@ -152,22 +194,24 @@ export function UsuariosClient({ initialUsers }: { initialUsers: User[] }) {
         </div>
       </div>
 
-      {/* Filters */}
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <Search
+            size={14}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+          />
           <input
             type="text"
             placeholder="Buscar por nome ou e-mail…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="rounded-lg border border-gray-200 py-1.5 pl-8 pr-3 text-sm outline-none focus:border-gb-green w-64"
+            className="w-64 rounded-lg border border-gray-200 py-1.5 pl-8 pr-3 text-sm outline-none focus:border-gb-green"
           />
         </div>
 
         <select
           value={filter}
-          onChange={(e) => setFilter(e.target.value as typeof filter)}
+          onChange={(e) => setFilter(e.target.value as StickerFilter)}
           className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm outline-none focus:border-gb-green"
         >
           <option value="all">Todos</option>
@@ -176,7 +220,6 @@ export function UsuariosClient({ initialUsers }: { initialUsers: User[] }) {
         </select>
       </div>
 
-      {/* Grant pack panel */}
       {grantUserId && (
         <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
           <h3 className="mb-3 text-sm font-semibold text-amber-900">
@@ -200,11 +243,18 @@ export function UsuariosClient({ initialUsers }: { initialUsers: User[] }) {
               disabled={granting}
               className="flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-1.5 text-sm font-medium text-white hover:bg-amber-600 disabled:opacity-60"
             >
-              {granting ? <Loader2 size={13} className="animate-spin" /> : <Package size={13} />}
+              {granting ? (
+                <Loader2 size={13} className="animate-spin" />
+              ) : (
+                <Package size={13} />
+              )}
               Conceder
             </button>
             <button
-              onClick={() => { setGrantUserId(null); setGrantMsg(null); }}
+              onClick={() => {
+                setGrantUserId(null);
+                setGrantMsg(null);
+              }}
               className="text-xs text-amber-700 hover:underline"
             >
               Cancelar
@@ -218,9 +268,24 @@ export function UsuariosClient({ initialUsers }: { initialUsers: User[] }) {
         </div>
       )}
 
-      {/* Table */}
       <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-        {filtered.length === 0 ? (
+        {loading ? (
+          <div className="flex items-center justify-center gap-2 px-6 py-16 text-sm text-gray-500">
+            <Loader2 size={18} className="animate-spin" />
+            Carregando usuários…
+          </div>
+        ) : error ? (
+          <div className="px-6 py-12 text-center">
+            <p className="text-sm text-red-600">{error}</p>
+            <button
+              type="button"
+              onClick={() => void fetchUsers()}
+              className="mt-3 text-sm font-medium text-gb-green hover:underline"
+            >
+              Tentar novamente
+            </button>
+          </div>
+        ) : users.length === 0 ? (
           <div className="px-6 py-12 text-center text-sm text-gray-500">
             Nenhum usuário encontrado.
           </div>
@@ -237,13 +302,18 @@ export function UsuariosClient({ initialUsers }: { initialUsers: User[] }) {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {filtered.map((u) => (
+              {users.map((u) => (
                 <tr key={u.id} className="hover:bg-gray-50">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
                       {u.sticker_url ? (
                         <div className="relative h-8 w-8 overflow-hidden rounded-full bg-gray-100">
-                          <Image src={u.sticker_url} alt="" fill className="object-cover" />
+                          <Image
+                            src={u.sticker_url}
+                            alt=""
+                            fill
+                            className="object-cover"
+                          />
                         </div>
                       ) : (
                         <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-xs font-semibold text-gray-400">
@@ -312,6 +382,34 @@ export function UsuariosClient({ initialUsers }: { initialUsers: User[] }) {
           </table>
         )}
       </div>
+
+      {!loading && !error && totalPages > 1 && (
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="text-xs text-gray-500">
+            Página {page} de {totalPages}
+          </p>
+          <div className="flex gap-1">
+            <button
+              type="button"
+              disabled={page <= 1 || loading}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-600 disabled:opacity-40"
+            >
+              <ChevronLeft size={14} />
+              Anterior
+            </button>
+            <button
+              type="button"
+              disabled={page >= totalPages || loading}
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-600 disabled:opacity-40"
+            >
+              Próxima
+              <ChevronRight size={14} />
+            </button>
+          </div>
+        </div>
+      )}
 
       {confirmRole && (
         <div
