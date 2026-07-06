@@ -18,24 +18,32 @@ export default async function PaginasPage() {
       .select(
         `id, page_number, title, background_url, layout_template, category_id,
          page_type, content,
-         album_slots (id)`
+         album_slots (id, sticker_id)`
       )
       .order("category_id")
       .order("page_number"),
   ]);
 
   // Count slots per page
-  const pagesWithCount = (pages ?? []).map((p) => ({
+  const pagesWithCount = (pages ?? []).map((p) => {
+    const slots = Array.isArray(p.album_slots) ? p.album_slots : [];
+    const assignedSlotCount = slots.filter(
+      (slot) => (slot as { sticker_id: number | null }).sticker_id != null,
+    ).length;
+
+    return {
     id: p.id as number,
     page_number: p.page_number as number,
     title: (p.title ?? null) as string | null,
     background_url: (p.background_url ?? null) as string | null,
     layout_template: (p.layout_template ?? "3x3") as string,
     category_id: p.category_id as number,
-    slot_count: Array.isArray(p.album_slots) ? p.album_slots.length : 0,
+    slot_count: slots.length,
+    assigned_slot_count: assignedSlotCount,
     page_type: ((p.page_type as string) ?? "sticker") as "sticker" | "info",
     content: (p.content ?? null) as string | null,
-  }));
+  };
+  });
 
   return (
     <PaginasClient

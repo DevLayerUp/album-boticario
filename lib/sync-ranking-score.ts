@@ -1,5 +1,9 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { countRankingEligibleMissionsForUser } from "@/lib/missions";
+import {
+  countAssignedAlbumSlots,
+  countUserFilledAssignedSlots,
+} from "@/lib/album-progress";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { fetchAllPages } from "@/lib/supabase/fetch-all-pages";
 import {
@@ -13,10 +17,10 @@ export async function loadRankingScoreInput(
   supabase: SupabaseClient,
   userId: string,
 ): Promise<RankingScoreInput> {
-  const [slotsRes, albumRes, packsRes, tradesRes, missions_completed] =
+  const [totalSlots, filled_slots, packsRes, tradesRes, missions_completed] =
     await Promise.all([
-      supabase.from("album_slots").select("id", { count: "exact", head: true }),
-      supabase.from("user_album").select("id").eq("user_id", userId),
+      countAssignedAlbumSlots(supabase),
+      countUserFilledAssignedSlots(supabase, userId),
       supabase.from("packs").select("opened_at").eq("user_id", userId),
       supabase
         .from("trade_requests")
@@ -26,9 +30,8 @@ export async function loadRankingScoreInput(
       countRankingEligibleMissionsForUser(supabase, userId),
     ]);
 
-  const totalSlots = Math.max(slotsRes.count ?? 1, 1);
-  const filled_slots = albumRes.data?.length ?? 0;
-  const album_pct = computeAlbumProgressPct(filled_slots, totalSlots);
+  const totalSlotsNormalized = Math.max(totalSlots, 1);
+  const album_pct = computeAlbumProgressPct(filled_slots, totalSlotsNormalized);
   const packs_opened =
     packsRes.data?.filter((pack) => pack.opened_at != null).length ?? 0;
   const trades_accepted = tradesRes.data?.length ?? 0;

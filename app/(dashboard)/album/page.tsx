@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { buildAppPageMetadata } from "@/lib/seo-metadata";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { countAssignedAlbumSlots } from "@/lib/album-progress";
 import { AlbumClient } from "./album-client";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -37,8 +38,9 @@ export default async function AlbumPage({
   // User album (pasted slots)
   const { data: userAlbum } = await supabase
     .from("user_album")
-    .select("slot_id, sticker_id, pasted_at")
-    .eq("user_id", user.id);
+    .select("slot_id, sticker_id, pasted_at, album_slots!inner(sticker_id)")
+    .eq("user_id", user.id)
+    .not("album_slots.sticker_id", "is", null);
 
   // User stickers inventory
   const { data: userStickers } = await supabase
@@ -52,10 +54,7 @@ export default async function AlbumPage({
     .eq("id", user.id)
     .single();
 
-  // Total slots for progress
-  const { count: totalSlots } = await supabase
-    .from("album_slots")
-    .select("*", { count: "exact", head: true });
+  const totalSlots = await countAssignedAlbumSlots(supabase);
 
   // Album cover URL (read via service_role to bypass RLS on app_settings)
   const adminSupabase = createAdminClient();
@@ -68,9 +67,15 @@ export default async function AlbumPage({
   return (
     <AlbumClient
       categories={categories ?? []}
-      initialUserAlbum={userAlbum ?? []}
+      initialUserAlbum={(userAlbum ?? [])
+        .filter((entry) => entry.sticker_id != null)
+        .map((entry) => ({
+          slot_id: entry.slot_id,
+          sticker_id: entry.sticker_id as number,
+          pasted_at: entry.pasted_at,
+        }))}
       initialUserStickers={userStickers ?? []}
-      totalSlots={totalSlots ?? 0}
+      totalSlots={totalSlots}
       userStickerUrl={profile?.sticker_url ?? null}
       userDisplayName={profile?.display_name?.trim() || user.user_metadata?.full_name?.trim() || null}
       coverUrl={coverSetting?.value ?? null}

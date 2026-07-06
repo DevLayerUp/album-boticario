@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { buildRankingMissionCountsFromActivity } from "@/lib/missions";
+import { countAssignedAlbumSlots } from "@/lib/album-progress";
 import { loadRankingScoreInput } from "@/lib/sync-ranking-score";
 import { fetchAllPages } from "@/lib/supabase/fetch-all-pages";
 import {
@@ -203,7 +204,7 @@ export async function buildLeaderboard(
   admin: SupabaseClient,
   currentUserId: string,
 ): Promise<LeaderboardResponse> {
-  const [profiles, slotsRes, albumRows, packRows, missionsByUser, tradeRows] =
+  const [profiles, totalSlots, albumRows, packRows, missionsByUser, tradeRows] =
     await Promise.all([
       fetchAllPages<{
         id: string;
@@ -222,9 +223,13 @@ export async function buildLeaderboard(
           )
           .range(from, to),
       ),
-      admin.from("album_slots").select("id", { count: "exact", head: true }),
+      countAssignedAlbumSlots(admin),
       fetchAllPages<{ user_id: string }>((from, to) =>
-        admin.from("user_album").select("user_id").range(from, to),
+        admin
+          .from("user_album")
+          .select("user_id, album_slots!inner(sticker_id)")
+          .not("album_slots.sticker_id", "is", null)
+          .range(from, to),
       ),
       fetchAllPages<{ user_id: string; opened_at: string | null }>((from, to) =>
         admin.from("packs").select("user_id, opened_at").range(from, to),
@@ -240,7 +245,7 @@ export async function buildLeaderboard(
     ]);
 
   const adminUserIds = await listAdminUserIds(admin);
-  const totalSlots = Math.max(slotsRes.count ?? 1, 1);
+  const totalSlotsNormalized = Math.max(totalSlots, 1);
 
   const filledByUser = new Map<string, number>();
   for (const row of albumRows) {
@@ -281,7 +286,7 @@ export async function buildLeaderboard(
     )
     .map((profile) => {
     const filled_slots = filledByUser.get(profile.id) ?? 0;
-    const album_pct = computeAlbumProgressPct(filled_slots, totalSlots);
+    const album_pct = computeAlbumProgressPct(filled_slots, totalSlotsNormalized);
     const packs_opened = openedByUser.get(profile.id) ?? 0;
     const packs_unopened = unopenedByUser.get(profile.id) ?? 0;
     const missions_completed = missionsByUserMap.get(profile.id) ?? 0;
@@ -319,7 +324,7 @@ export async function buildLeaderboard(
     admin,
     currentUserId,
     sorted,
-    totalSlots,
+    totalSlotsNormalized,
   );
 
   if (current_user_entry) {

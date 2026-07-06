@@ -9,6 +9,11 @@ import { createNotification } from "@/lib/notifications";
 import { createPacksForUser } from "@/lib/pack";
 import { RANKING_MISSION_BONUS } from "@/lib/ranking-constants";
 import { fetchAllPages } from "@/lib/supabase/fetch-all-pages";
+import {
+  buildSlotsByPage,
+  countUserFilledAssignedSlots,
+  loadAssignedAlbumSlotsByPage,
+} from "@/lib/album-progress";
 import { syncUserRankingScoreById } from "@/lib/sync-ranking-score";
 
 interface MissionRow {
@@ -74,8 +79,8 @@ async function loadMissionMetrics(
     tradesRes,
     quizRes,
     packsRes,
-    pastedRes,
-    slotsRes,
+    pastedCount,
+    assignedSlots,
     userAlbumRes,
   ] = await Promise.all([
     supabase
@@ -102,26 +107,23 @@ async function loadMissionMetrics(
       .select("*", { count: "exact", head: true })
       .eq("user_id", userId)
       .not("opened_at", "is", null),
+    countUserFilledAssignedSlots(supabase, userId),
+    loadAssignedAlbumSlotsByPage(supabase),
     supabase
       .from("user_album")
-      .select("*", { count: "exact", head: true })
-      .eq("user_id", userId),
-    supabase.from("album_slots").select("id, page_id"),
-    supabase
-      .from("user_album")
-      .select("slot_id, album_slots(page_id)")
-      .eq("user_id", userId),
+      .select("slot_id, album_slots!inner(page_id, sticker_id)")
+      .eq("user_id", userId)
+      .not("album_slots.sticker_id", "is", null),
   ]);
 
-  const slotsByPage = new Map<number, number>();
-  for (const slot of slotsRes.data ?? []) {
-    const pageId = slot.page_id as number;
-    slotsByPage.set(pageId, (slotsByPage.get(pageId) ?? 0) + 1);
-  }
+  const slotsByPage = buildSlotsByPage(assignedSlots);
 
   const pastedByPage = new Map<number, number>();
   for (const entry of userAlbumRes.data ?? []) {
-    const slotData = entry.album_slots as { page_id: number } | { page_id: number }[] | null;
+    const slotData = entry.album_slots as
+      | { page_id: number; sticker_id: number | null }
+      | { page_id: number; sticker_id: number | null }[]
+      | null;
     const pageId = Array.isArray(slotData) ? slotData[0]?.page_id : slotData?.page_id;
     if (!pageId) continue;
     pastedByPage.set(pageId, (pastedByPage.get(pageId) ?? 0) + 1);
@@ -140,7 +142,7 @@ async function loadMissionMetrics(
     tradeCount: tradesRes.count ?? 0,
     quizCorrectCount: quizRes.count ?? 0,
     openedPacksCount: packsRes.count ?? 0,
-    pastedStickersCount: pastedRes.count ?? 0,
+    pastedStickersCount: pastedCount,
     completedAlbumPages,
   };
 }
@@ -227,7 +229,7 @@ export async function buildRankingMissionCountsFromActivity(
     quizRows,
     openedPackRows,
     pastedRows,
-    slotsRes,
+    assignedSlotsRows,
     userAlbumRows,
     tradeRows,
   ] = await Promise.all([
@@ -271,17 +273,25 @@ export async function buildRankingMissionCountsFromActivity(
         .range(from, to),
     ),
     fetchAllPages<{ user_id: string }>((from, to) =>
-      admin.from("user_album").select("user_id").range(from, to),
+      admin
+        .from("user_album")
+        .select("user_id, album_slots!inner(sticker_id)")
+        .not("album_slots.sticker_id", "is", null)
+        .range(from, to),
     ),
-    admin.from("album_slots").select("id, page_id"),
+    loadAssignedAlbumSlotsByPage(admin),
     fetchAllPages<{
       user_id: string;
       slot_id: number;
-      album_slots: { page_id: number } | { page_id: number }[] | null;
+      album_slots:
+        | { page_id: number; sticker_id: number | null }
+        | { page_id: number; sticker_id: number | null }[]
+        | null;
     }>((from, to) =>
       admin
         .from("user_album")
-        .select("user_id, slot_id, album_slots(page_id)")
+        .select("user_id, slot_id, album_slots!inner(page_id, sticker_id)")
+        .not("album_slots.sticker_id", "is", null)
         .range(from, to),
     ),
     fetchAllPages<{ requester_id: string; receiver_id: string }>((from, to) =>
@@ -328,11 +338,7 @@ export async function buildRankingMissionCountsFromActivity(
     );
   }
 
-  const slotsByPage = new Map<number, number>();
-  for (const slot of slotsRes.data ?? []) {
-    const pageId = slot.page_id as number;
-    slotsByPage.set(pageId, (slotsByPage.get(pageId) ?? 0) + 1);
-  }
+  const slotsByPage = buildSlotsByPage(assignedSlotsRows);
 
   const pastedByUserPage = new Map<string, Map<number, number>>();
   for (const entry of userAlbumRows) {

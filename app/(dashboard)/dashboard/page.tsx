@@ -13,6 +13,10 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import {
+  countAssignedAlbumSlots,
+  countUserFilledAssignedSlots,
+} from "@/lib/album-progress";
 import { buildLeaderboard } from "@/lib/ranking";
 import { HeroBanner } from "@/components/dashboard/hero-banner";
 import { StatCard } from "@/components/dashboard/stat-card";
@@ -74,11 +78,8 @@ export default async function DashboardPage() {
       .select("*", { count: "exact", head: true })
       .eq("user_id", user.id)
       .is("opened_at", null),
-    supabase.from("album_slots").select("*", { count: "exact", head: true }),
-    supabase
-      .from("user_album")
-      .select("*", { count: "exact", head: true })
-      .eq("user_id", user.id),
+    countAssignedAlbumSlots(supabase),
+    countUserFilledAssignedSlots(supabase, user.id),
     supabase
       .from("trade_requests")
       .select("*", { count: "exact", head: true })
@@ -108,8 +109,8 @@ export default async function DashboardPage() {
 
   const totalStickers = stickersRes.count ?? 0;
   const availPacks = packsRes.count ?? 0;
-  const totalSlots = Math.max(slotsRes.count ?? 1, 1);
-  const filledSlots = filledRes.count ?? 0;
+  const totalSlots = Math.max(slotsRes, 1);
+  const filledSlots = filledRes;
   const albumPct = Math.round((filledSlots / totalSlots) * 100);
   const totalTrades = tradesRes.count ?? 0;
 

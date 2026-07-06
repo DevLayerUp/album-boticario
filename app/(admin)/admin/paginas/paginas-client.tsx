@@ -27,6 +27,7 @@ interface PageRow {
   layout_template: string;
   category_id: number;
   slot_count: number;
+  assigned_slot_count: number;
   page_type: "sticker" | "info";
   content: string | null;
 }
@@ -1382,6 +1383,7 @@ export function PaginasClient({ initialCategories, initialPages }: PaginasClient
       const newPage: PageRow = {
         ...data,
         slot_count: form.page_type === "sticker" ? (template?.total ?? 0) : 0,
+        assigned_slot_count: 0,
         page_type:  form.page_type,
         content:    null,
       };
@@ -1549,7 +1551,7 @@ export function PaginasClient({ initialCategories, initialPages }: PaginasClient
                         ) : isSocial ? (
                           <span className="text-emerald-700">Redes Sociais · imagem + texto + links</span>
                         ) : (
-                          `${p.layout_template} · ${p.slot_count} slots`
+                          `${p.layout_template} · ${p.assigned_slot_count}/${p.slot_count} figurinhas`
                         )}
                       </p>
                     </div>
