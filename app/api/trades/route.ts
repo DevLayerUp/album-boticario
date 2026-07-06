@@ -4,7 +4,14 @@ import { checkRateLimit } from "@/lib/rate-limit";
 import { sanitizeId, sanitizeUuid, sanitizeText } from "@/lib/sanitize";
 import { createNotification } from "@/lib/notifications";
 import { stickerTextToPlain } from "@/lib/sticker-text-format";
-import { NO_DUPLICATES_TRADE_MESSAGE, userHasDuplicateStickers, userHasTradeableSpareForSticker } from "@/lib/trade-duplicates";
+import {
+  NO_DUPLICATES_TRADE_MESSAGE,
+  NO_AVAILABLE_SPARE_MESSAGE,
+  loadPendingTradeCommitmentsForUsers,
+  loadUserTradeInventoryContext,
+  userCanOfferNewTrade,
+  userHasDuplicateStickers,
+} from "@/lib/trade-duplicates";
 
 const STICKER_SELECT = `
   id, name, image_url,
@@ -92,28 +99,45 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: NO_DUPLICATES_TRADE_MESSAGE }, { status: 403 });
   }
 
-  // 1. Requester must have a spare copy of the offered sticker (not only pasted in album)
-  const requesterCanOffer = await userHasTradeableSpareForSticker(
-    supabase,
-    user.id,
+  const [requesterContext, receiverContext, pendingMap] = await Promise.all([
+    loadUserTradeInventoryContext(supabase, user.id),
+    loadUserTradeInventoryContext(supabase, receiver_id),
+    loadPendingTradeCommitmentsForUsers(supabase, [user.id, receiver_id]),
+  ]);
+
+  const requesterPending = pendingMap.get(user.id);
+  const receiverPending = pendingMap.get(receiver_id);
+
+  const requesterCanOffer = userCanOfferNewTrade(
     offered_sticker_id,
+    requesterContext,
+    requesterPending,
   );
   if (!requesterCanOffer) {
     return NextResponse.json(
-      { error: "Você não tem repetida dessa figurinha para oferecer" },
+      {
+        error:
+          (requesterPending?.bySticker.get(offered_sticker_id) ?? 0) > 0
+            ? NO_AVAILABLE_SPARE_MESSAGE
+            : "Você não tem repetida dessa figurinha para oferecer",
+      },
       { status: 400 },
     );
   }
 
-  // 2. Receiver must have a spare copy of the requested sticker
-  const receiverCanTrade = await userHasTradeableSpareForSticker(
-    supabase,
-    receiver_id,
+  const receiverCanTrade = userCanOfferNewTrade(
     requested_sticker_id,
+    receiverContext,
+    receiverPending,
   );
   if (!receiverCanTrade) {
     return NextResponse.json(
-      { error: "Esse usuário não tem repetida dessa figurinha para trocar" },
+      {
+        error:
+          (receiverPending?.bySticker.get(requested_sticker_id) ?? 0) > 0
+            ? "Esse usuário já tem trocas pendentes com essa figurinha"
+            : "Esse usuário não tem repetida dessa figurinha para trocar",
+      },
       { status: 400 },
     );
   }

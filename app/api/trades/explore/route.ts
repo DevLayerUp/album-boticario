@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import {
-  getTradeableSpareForSticker,
+  getAvailableSpareForSticker,
+  loadPendingTradeCommitmentsForUsers,
   loadTradeInventoryContextForUsers,
   listTradeableInventoryRows,
 } from "@/lib/trade-duplicates";
@@ -39,7 +40,7 @@ export async function GET(request: NextRequest) {
     return p?.id;
   }).filter(Boolean) as string[];
 
-  const [{ data: tradeableRows }, contexts] = await Promise.all([
+  const [{ data: tradeableRows }, contexts, pendingMap] = await Promise.all([
     supabase
       .from("user_stickers")
       .select(`
@@ -49,6 +50,7 @@ export async function GET(request: NextRequest) {
       .in("user_id", ownerIds)
       .gte("quantity", 1),
     loadTradeInventoryContextForUsers(supabase, ownerIds),
+    loadPendingTradeCommitmentsForUsers(supabase, ownerIds),
   ]);
 
   const tradeableByUser = new Map<string, ReturnType<typeof listTradeableInventoryRows>>();
@@ -63,6 +65,7 @@ export async function GET(request: NextRequest) {
   for (const [uid, userRows] of rowsByUser) {
     const context = contexts.get(uid);
     if (!context) continue;
+    const pending = pendingMap.get(uid);
     const tradeable = listTradeableInventoryRows(
       userRows.map((row) => ({
         sticker_id: row.sticker_id,
@@ -70,6 +73,7 @@ export async function GET(request: NextRequest) {
         stickers: row.stickers,
       })),
       context,
+      pending,
     );
     if (tradeable.length > 0) tradeableByUser.set(uid, tradeable);
   }
@@ -83,8 +87,11 @@ export async function GET(request: NextRequest) {
       } | null;
       const uid = profile?.id ?? "";
       const context = contexts.get(uid);
+      const pending = pendingMap.get(uid);
       const spareQuantity =
-        context != null ? getTradeableSpareForSticker(Number(wantId), context) : 0;
+        context != null
+          ? getAvailableSpareForSticker(Number(wantId), context, pending)
+          : 0;
 
       return {
         user: profile,

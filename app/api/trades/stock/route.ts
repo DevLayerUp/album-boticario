@@ -108,9 +108,30 @@ export async function GET() {
   }
 
   const blockedStickerIds = new Set<number>();
+  const pendingBySticker = new Map<number, number>();
   for (const trade of [...(sentRes.data ?? []), ...(receivedRes.data ?? [])]) {
-    if (trade.offered_sticker_id) blockedStickerIds.add(trade.offered_sticker_id);
-    if (trade.requested_sticker_id) blockedStickerIds.add(trade.requested_sticker_id);
+    if (trade.offered_sticker_id) {
+      blockedStickerIds.add(trade.offered_sticker_id);
+    }
+    if (trade.requested_sticker_id) {
+      blockedStickerIds.add(trade.requested_sticker_id);
+    }
+  }
+  for (const trade of sentRes.data ?? []) {
+    if (trade.offered_sticker_id) {
+      pendingBySticker.set(
+        trade.offered_sticker_id,
+        (pendingBySticker.get(trade.offered_sticker_id) ?? 0) + 1,
+      );
+    }
+  }
+  for (const trade of receivedRes.data ?? []) {
+    if (trade.requested_sticker_id) {
+      pendingBySticker.set(
+        trade.requested_sticker_id,
+        (pendingBySticker.get(trade.requested_sticker_id) ?? 0) + 1,
+      );
+    }
   }
 
   const pasteTargetBySticker = new Map<number, { slotId: number; categoryId: number }>();
@@ -133,7 +154,9 @@ export async function GET() {
     const quantity = quantityBySticker.get(row.id) ?? 0;
     const isPasted = pastedStickerIds.has(row.id);
     const packAcquired = packAcquiredBySticker.get(row.id) ?? 0;
-    const spareQuantity = tradeableSpareCount(quantity, isPasted, packAcquired);
+    const grossSpare = tradeableSpareCount(quantity, isPasted, packAcquired);
+    const reserved = pendingBySticker.get(row.id) ?? 0;
+    const spareQuantity = Math.max(0, grossSpare - reserved);
     return {
       sticker,
       quantity,

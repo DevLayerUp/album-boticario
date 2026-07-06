@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import {
+  loadPendingTradeCommitmentsForUsers,
   loadTradeInventoryContextForUsers,
   listTradeableInventoryRows,
 } from "@/lib/trade-duplicates";
@@ -50,7 +51,10 @@ export async function GET(request: NextRequest) {
   type StickerRow = { id: number; name: string; image_url: string; rarities: unknown };
 
   const traderIds = [...new Set((traders ?? []).map((row) => row.user_id as string))];
-  const contexts = await loadTradeInventoryContextForUsers(supabase, traderIds);
+  const [contexts, pendingMap] = await Promise.all([
+    loadTradeInventoryContextForUsers(supabase, traderIds),
+    loadPendingTradeCommitmentsForUsers(supabase, traderIds),
+  ]);
 
   const byUser = new Map<string, {
     profile: ProfileRow;
@@ -67,6 +71,7 @@ export async function GET(request: NextRequest) {
   for (const [uid, userRows] of rowsByUser) {
     const profile = userRows[0]?.profiles as unknown as ProfileRow | null;
     const context = contexts.get(uid);
+    const pending = pendingMap.get(uid);
     if (!profile || !context) continue;
 
     const tradeable = listTradeableInventoryRows(
@@ -76,6 +81,7 @@ export async function GET(request: NextRequest) {
         stickers: row.stickers,
       })),
       context,
+      pending,
     ).map((row) => ({
       sticker: row.sticker as unknown as StickerRow,
       quantity: row.quantity,

@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { loadUserTradeInventoryContext, listTradeableInventoryRows } from "@/lib/trade-duplicates";
+import {
+  loadPendingTradeCommitmentsForUsers,
+  loadUserTradeInventoryContext,
+  listTradeableInventoryRows,
+} from "@/lib/trade-duplicates";
 
 /**
  * GET /api/trades/available
@@ -11,7 +15,7 @@ export async function GET() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const [{ data, error }, context] = await Promise.all([
+  const [{ data, error }, context, pendingMap] = await Promise.all([
     supabase
       .from("user_stickers")
       .select(`
@@ -25,10 +29,12 @@ export async function GET() {
       .gte("quantity", 1)
       .order("quantity", { ascending: false }),
     loadUserTradeInventoryContext(supabase, user.id),
+    loadPendingTradeCommitmentsForUsers(supabase, [user.id]),
   ]);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
+  const pending = pendingMap.get(user.id);
   const tradeable = listTradeableInventoryRows(
     (data ?? []).map((row) => ({
       sticker_id: row.sticker_id,
@@ -36,6 +42,7 @@ export async function GET() {
       stickers: row.stickers,
     })),
     context,
+    pending,
   );
 
   return NextResponse.json(

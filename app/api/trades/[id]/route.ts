@@ -1,103 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { incrementMissionProgress } from "@/lib/missions";
 import { createNotification } from "@/lib/notifications";
 import {
   loadUserTradeInventoryContext,
+  NO_AVAILABLE_SPARE_MESSAGE,
   NO_TRADEABLE_SPARE_MESSAGE,
-  userHasTradeableSpareInContext,
+  userCanFulfillPendingTrade,
 } from "@/lib/trade-duplicates";
+import { executeTradeInventorySwap } from "@/lib/trade-inventory-swap";
 
 type Params = { params: Promise<{ id: string }> };
-
-async function upsertSticker(
-  supabase: SupabaseClient,
-  userId: string,
-  stickerId: number,
-): Promise<string | null> {
-  const { data, error: fetchErr } = await supabase
-    .from("user_stickers")
-    .select("id, quantity")
-    .eq("user_id", userId)
-    .eq("sticker_id", stickerId)
-    .maybeSingle();
-
-  if (fetchErr) return fetchErr.message;
-
-  if (data) {
-    const { error } = await supabase
-      .from("user_stickers")
-      .update({ quantity: data.quantity + 1 })
-      .eq("id", data.id);
-    return error?.message ?? null;
-  }
-
-  const { error } = await supabase
-    .from("user_stickers")
-    .insert({ user_id: userId, sticker_id: stickerId, quantity: 1 });
-
-  return error?.message ?? null;
-}
-
-/**
- * Troca inventário entre requester e receiver.
- * Usa service-role: o receptor autenticado não pode alterar linhas do proponente (RLS).
- */
-async function executeTradeInventorySwap(
-  trade: {
-    requester_id: string;
-    receiver_id: string;
-    offered_sticker_id: number;
-    requested_sticker_id: number;
-  },
-  requesterHas: number,
-  receiverHas: number,
-): Promise<string | null> {
-  const admin = createAdminClient();
-
-  const [decRequesterRes, decReceiverRes] = await Promise.all([
-    admin
-      .from("user_stickers")
-      .update({ quantity: requesterHas - 1 })
-      .eq("user_id", trade.requester_id)
-      .eq("sticker_id", trade.offered_sticker_id),
-    admin
-      .from("user_stickers")
-      .update({ quantity: receiverHas - 1 })
-      .eq("user_id", trade.receiver_id)
-      .eq("sticker_id", trade.requested_sticker_id),
-  ]);
-
-  if (decRequesterRes.error) return decRequesterRes.error.message;
-  if (decReceiverRes.error) return decReceiverRes.error.message;
-
-  const [delRequesterRes, delReceiverRes] = await Promise.all([
-    admin
-      .from("user_stickers")
-      .delete()
-      .eq("user_id", trade.requester_id)
-      .eq("sticker_id", trade.offered_sticker_id)
-      .eq("quantity", 0),
-    admin
-      .from("user_stickers")
-      .delete()
-      .eq("user_id", trade.receiver_id)
-      .eq("sticker_id", trade.requested_sticker_id)
-      .eq("quantity", 0),
-  ]);
-
-  if (delRequesterRes.error) return delRequesterRes.error.message;
-  if (delReceiverRes.error) return delReceiverRes.error.message;
-
-  const [grantReceiverErr, grantRequesterErr] = await Promise.all([
-    upsertSticker(admin, trade.receiver_id, trade.offered_sticker_id),
-    upsertSticker(admin, trade.requester_id, trade.requested_sticker_id),
-  ]);
-
-  return grantReceiverErr ?? grantRequesterErr;
-}
 
 /**
  * POST /api/trades/[id]/accept   → accept trade (receiver only)
@@ -156,11 +70,11 @@ export async function POST(request: NextRequest, { params }: Params) {
     loadUserTradeInventoryContext(supabase, user.id),
   ]);
 
-  const requesterCanOffer = userHasTradeableSpareInContext(
+  const requesterCanOffer = userCanFulfillPendingTrade(
     trade.offered_sticker_id,
     requesterContext,
   );
-  const receiverCanTrade = userHasTradeableSpareInContext(
+  const receiverCanTrade = userCanFulfillPendingTrade(
     trade.requested_sticker_id,
     receiverContext,
   );
@@ -187,25 +101,23 @@ export async function POST(request: NextRequest, { params }: Params) {
     );
   }
 
-  const requesterHas = requesterContext.quantityBySticker.get(trade.offered_sticker_id) ?? 0;
-  const receiverHas = receiverContext.quantityBySticker.get(trade.requested_sticker_id) ?? 0;
-
-  const swapError = await executeTradeInventorySwap(
-    {
-      requester_id: trade.requester_id,
-      receiver_id: user.id,
-      offered_sticker_id: trade.offered_sticker_id,
-      requested_sticker_id: trade.requested_sticker_id,
-    },
-    requesterHas,
-    receiverHas,
-  );
+  const admin = createAdminClient();
+  const swapError = await executeTradeInventorySwap(admin, {
+    requester_id: trade.requester_id,
+    receiver_id: user.id,
+    offered_sticker_id: trade.offered_sticker_id,
+    requested_sticker_id: trade.requested_sticker_id,
+  });
 
   if (swapError) {
-    return NextResponse.json(
-      { error: "Não foi possível concluir a troca. Tente novamente." },
-      { status: 500 },
-    );
+    const message =
+      swapError === "INSUFFICIENT_QUANTITY"
+        ? NO_TRADEABLE_SPARE_MESSAGE
+        : swapError === "INVENTORY_CONFLICT"
+          ? NO_AVAILABLE_SPARE_MESSAGE
+          : "Não foi possível concluir a troca. Tente novamente.";
+
+    return NextResponse.json({ error: message }, { status: 409 });
   }
 
   const { error: acceptErr } = await supabase
@@ -234,7 +146,6 @@ export async function POST(request: NextRequest, { params }: Params) {
     .eq("sticker_id", trade.offered_sticker_id)
     .eq("status", "open");
 
-  const admin = createAdminClient();
   await Promise.all([
     incrementMissionProgress(admin, user.id, "trade_count", 1),
     incrementMissionProgress(admin, trade.requester_id, "trade_count", 1),

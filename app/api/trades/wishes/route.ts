@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import {
+  loadPendingTradeCommitmentsForUsers,
   loadTradeInventoryContextForUsers,
   listTradeableInventoryRows,
   NO_DUPLICATES_TRADE_MESSAGE,
@@ -63,7 +64,7 @@ export async function GET(request: NextRequest) {
   let tradeableByUser: Record<string, { sticker: unknown; quantity: number; spareQuantity: number }[]> =
     {};
   if (ownerIds.length > 0) {
-    const [{ data: rows }, contexts] = await Promise.all([
+    const [{ data: rows }, contexts, pendingMap] = await Promise.all([
       supabase
         .from("user_stickers")
         .select(`
@@ -73,6 +74,7 @@ export async function GET(request: NextRequest) {
         .in("user_id", ownerIds)
         .gte("quantity", 1),
       loadTradeInventoryContextForUsers(supabase, ownerIds),
+      loadPendingTradeCommitmentsForUsers(supabase, ownerIds),
     ]);
 
     const rowsByUser = new Map<string, NonNullable<typeof rows>>();
@@ -85,6 +87,7 @@ export async function GET(request: NextRequest) {
     for (const [uid, userRows] of rowsByUser) {
       const context = contexts.get(uid);
       if (!context) continue;
+      const pending = pendingMap.get(uid);
       const tradeable = listTradeableInventoryRows(
         userRows.map((row) => ({
           sticker_id: row.sticker_id,
@@ -92,6 +95,7 @@ export async function GET(request: NextRequest) {
           stickers: row.stickers,
         })),
         context,
+        pending,
       );
       if (tradeable.length > 0) tradeableByUser[uid] = tradeable;
     }
