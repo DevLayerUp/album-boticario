@@ -56,7 +56,7 @@ export async function POST(request: NextRequest, { params }: Params) {
       type: "trade_rejected",
       title: "Troca recusada",
       body: "Sua solicitação de troca foi recusada.",
-      href: "/trocas",
+      href: "/trocas?section=negociacao&subtab=historico",
       dedupeKey: `trade_rejected:${tradeId}`,
       payload: { trade_id: tradeId },
     });
@@ -156,7 +156,7 @@ export async function POST(request: NextRequest, { params }: Params) {
     type: "trade_accepted",
     title: "Troca aceita!",
     body: "Sua solicitação de troca foi aceita. As figurinhas já foram trocadas.",
-    href: "/trocas",
+    href: "/trocas?section=negociacao&subtab=historico",
     dedupeKey: `trade_accepted:${tradeId}`,
     payload: { trade_id: tradeId },
   });

@@ -170,10 +170,11 @@ export function TradeNegotiationCard({
 }
 
 interface NegotiationSubTabsProps {
-  active: "recebidas" | "solicitadas";
-  onChange: (tab: "recebidas" | "solicitadas") => void;
+  active: "recebidas" | "solicitadas" | "historico";
+  onChange: (tab: "recebidas" | "solicitadas" | "historico") => void;
   receivedCount: number;
   sentCount: number;
+  historyCount?: number;
 }
 
 export function NegotiationSubTabs({
@@ -181,6 +182,7 @@ export function NegotiationSubTabs({
   onChange,
   receivedCount,
   sentCount,
+  historyCount = 0,
 }: NegotiationSubTabsProps) {
   return (
     <div
@@ -200,6 +202,12 @@ export function NegotiationSubTabs({
         count={sentCount}
         onClick={() => onChange("solicitadas")}
       />
+      <SubTabPill
+        active={active === "historico"}
+        label="Histórico"
+        count={historyCount > 0 ? historyCount : undefined}
+        onClick={() => onChange("historico")}
+      />
     </div>
   );
 }
@@ -212,7 +220,7 @@ function SubTabPill({
 }: {
   active: boolean;
   label: string;
-  count: number;
+  count?: number;
   onClick: () => void;
 }) {
   return (
@@ -229,14 +237,16 @@ function SubTabPill({
       )}
     >
       {label}
-      <span
-        className={cn(
-          "flex h-6 min-w-6 items-center justify-center rounded-full px-1 text-[10px] font-bold sm:h-7 sm:min-w-7 sm:text-xs",
-          active ? "bg-amarelo text-verde-escuro-500" : "bg-verde-100 text-verde-escuro-500",
-        )}
-      >
-        {count}
-      </span>
+      {count != null && count > 0 ? (
+        <span
+          className={cn(
+            "flex h-6 min-w-6 items-center justify-center rounded-full px-1 text-[10px] font-bold sm:h-7 sm:min-w-7 sm:text-xs",
+            active ? "bg-amarelo text-verde-escuro-500" : "bg-verde-100 text-verde-escuro-500",
+          )}
+        >
+          {count}
+        </span>
+      ) : null}
     </button>
   );
 }

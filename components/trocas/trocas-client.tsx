@@ -8,11 +8,22 @@ import { NegociacaoView } from "./negociacao-view";
 import { EstoqueView } from "./estoque-view";
 import { TradeToastProvider, useTradeToast } from "./trade-toast";
 import { NO_DUPLICATES_TRADE_MESSAGE } from "@/lib/trade-duplicates";
+import type { NegociacaoSubTab } from "@/lib/trade-history";
 import type { TrocasSection } from "./types";
 
-function TrocasContent() {
+interface TrocasClientProps {
+  initialSection?: TrocasSection;
+  initialSubTab?: NegociacaoSubTab;
+  currentUserId?: string | null;
+}
+
+function TrocasContent({
+  initialSection,
+  initialSubTab,
+  currentUserId,
+}: TrocasClientProps) {
   const { showToast } = useTradeToast();
-  const [section, setSection] = useState<TrocasSection>("solicitar");
+  const [section, setSection] = useState<TrocasSection>(initialSection ?? "solicitar");
   const [pendingCount, setPendingCount] = useState(0);
   const [hasDuplicates, setHasDuplicates] = useState(false);
   const [metaLoaded, setMetaLoaded] = useState(false);
@@ -34,16 +45,8 @@ function TrocasContent() {
     void refreshTradeMeta();
   }, [refreshTradeMeta]);
 
-  const canOpenNegotiation = hasDuplicates || pendingCount > 0;
-
-  useEffect(() => {
-    if (metaLoaded && section === "negociacao" && !canOpenNegotiation) {
-      setSection("solicitar");
-    }
-  }, [section, metaLoaded, canOpenNegotiation]);
-
   function handleSectionChange(next: TrocasSection) {
-    if (next === "negociacao" && metaLoaded && !canOpenNegotiation) {
+    if (next === "solicitar" && metaLoaded && !hasDuplicates) {
       showToast({
         message: NO_DUPLICATES_TRADE_MESSAGE,
         variant: "warning",
@@ -68,7 +71,7 @@ function TrocasContent() {
         active={section}
         onChange={handleSectionChange}
         pendingCount={pendingCount}
-        negotiationLocked={metaLoaded && !canOpenNegotiation}
+        negotiationLocked={false}
       />
 
       <AnimatePresence mode="wait">
@@ -87,7 +90,11 @@ function TrocasContent() {
             />
           )}
           {section === "negociacao" && (
-            <NegociacaoView onTradeActivity={refreshTradeMeta} />
+            <NegociacaoView
+              onTradeActivity={refreshTradeMeta}
+              initialSubTab={initialSubTab}
+              currentUserId={currentUserId}
+            />
           )}
           {section === "estoque" && (
             <EstoqueView onTradeActivity={refreshTradeMeta} />
@@ -98,10 +105,18 @@ function TrocasContent() {
   );
 }
 
-export default function TrocasClient() {
+export default function TrocasClient({
+  initialSection,
+  initialSubTab,
+  currentUserId,
+}: TrocasClientProps) {
   return (
     <TradeToastProvider>
-      <TrocasContent />
+      <TrocasContent
+        initialSection={initialSection}
+        initialSubTab={initialSubTab}
+        currentUserId={currentUserId}
+      />
     </TradeToastProvider>
   );
 }

@@ -25,10 +25,18 @@ export { StickerThumb } from "./sticker-thumb";
 
 export const STATUS_META: Record<string, { label: string; bg: string; text: string }> = {
   pending: { label: "Aguardando", bg: "bg-verde-100", text: "text-verde-escuro-500" },
-  accepted: { label: "Aceita", bg: "bg-emerald-100", text: "text-emerald-700" },
+  accepted: { label: "Concluída", bg: "bg-emerald-100", text: "text-emerald-700" },
   rejected: { label: "Recusada", bg: "bg-red-100", text: "text-red-600" },
   cancelled: { label: "Cancelada", bg: "bg-gray-100", text: "text-gray-500" },
 };
+
+function formatTradeDate(iso: string) {
+  return new Date(iso).toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
 
 export function Avatar({
   profile,
@@ -179,6 +187,11 @@ export function TradeCard({
   const [busy, setBusy] = useState(false);
   const s = STATUS_META[trade.status] ?? STATUS_META.cancelled;
   const other = perspective === "sent" ? trade.receiver : trade.requester;
+  const eventDate = trade.resolved_at ?? trade.created_at;
+  const dateLabel =
+    trade.status === "pending"
+      ? `Enviada em ${formatTradeDate(trade.created_at)}`
+      : `Encerrada em ${formatTradeDate(eventDate)}`;
 
   async function act(fn?: (id: number) => void) {
     if (!fn) return;
@@ -206,12 +219,7 @@ export function TradeCard({
               {perspective === "sent" ? "Para" : "De"}{" "}
               <span className="text-verde-escuro-500">{other?.display_name ?? "Usuário"}</span>
             </p>
-            <p className="mt-0.5 text-[11px] text-verde-escuro-300">
-              {new Date(trade.created_at).toLocaleDateString("pt-BR", {
-                day: "2-digit",
-                month: "short",
-              })}
-            </p>
+            <p className="mt-0.5 text-[11px] text-verde-escuro-300">{dateLabel}</p>
           </div>
         </div>
         <span className={`rounded-pill px-3 py-1 text-xs font-semibold ${s.bg} ${s.text}`}>

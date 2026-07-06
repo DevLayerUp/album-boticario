@@ -12,6 +12,11 @@ import {
   userCanOfferNewTrade,
   userHasDuplicateStickers,
 } from "@/lib/trade-duplicates";
+import {
+  TRADE_HISTORY_PAGE_SIZE,
+  TRADE_HISTORY_STATUSES,
+  isTradeHistoryStatus,
+} from "@/lib/trade-history";
 
 const STICKER_SELECT = `
   id, name, image_url,
@@ -29,35 +34,74 @@ const TRADE_SELECT = `
 
 /**
  * GET /api/trades?tab=sent|received|history
- * Returns trade requests for the authenticated user.
+ * History: ?tab=history&offset=0&limit=20&status=accepted|rejected|cancelled
  */
 export async function GET(request: NextRequest) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const tab = new URL(request.url).searchParams.get("tab") ?? "sent";
-
-  let query = supabase
-    .from("trade_requests")
-    .select(TRADE_SELECT)
-    .order("created_at", { ascending: false });
+  const { searchParams } = new URL(request.url);
+  const tab = searchParams.get("tab") ?? "sent";
 
   if (tab === "sent") {
-    query = query.eq("requester_id", user.id).eq("status", "pending");
-  } else if (tab === "received") {
-    query = query.eq("receiver_id", user.id).eq("status", "pending");
-  } else {
-    // history: all resolved (accepted | rejected | cancelled) for this user
-    query = query
-      .or(`requester_id.eq.${user.id},receiver_id.eq.${user.id}`)
-      .in("status", ["accepted", "rejected", "cancelled"])
-      .limit(50);
+    const { data, error } = await supabase
+      .from("trade_requests")
+      .select(TRADE_SELECT)
+      .eq("requester_id", user.id)
+      .eq("status", "pending")
+      .order("created_at", { ascending: false });
+
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json(data ?? []);
   }
 
-  const { data, error } = await query;
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json(data ?? []);
+  if (tab === "received") {
+    const { data, error } = await supabase
+      .from("trade_requests")
+      .select(TRADE_SELECT)
+      .eq("receiver_id", user.id)
+      .eq("status", "pending")
+      .order("created_at", { ascending: false });
+
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json(data ?? []);
+  }
+
+  if (tab === "history") {
+    const offset = Math.max(0, Number(searchParams.get("offset")) || 0);
+    const limit = Math.min(
+      50,
+      Math.max(1, Number(searchParams.get("limit")) || TRADE_HISTORY_PAGE_SIZE),
+    );
+    const statusParam = searchParams.get("status");
+    const statuses = isTradeHistoryStatus(statusParam)
+      ? [statusParam]
+      : [...TRADE_HISTORY_STATUSES];
+
+    const base = supabase
+      .from("trade_requests")
+      .select(TRADE_SELECT, { count: "exact" })
+      .or(`requester_id.eq.${user.id},receiver_id.eq.${user.id}`)
+      .in("status", statuses);
+
+    const { data, error, count } = await base
+      .order("resolved_at", { ascending: false, nullsFirst: false })
+      .order("created_at", { ascending: false })
+      .range(offset, offset + limit - 1);
+
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+    const total = count ?? 0;
+    const loaded = data?.length ?? 0;
+    return NextResponse.json({
+      trades: data ?? [],
+      total,
+      has_more: offset + loaded < total,
+    });
+  }
+
+  return NextResponse.json({ error: "tab inválido" }, { status: 400 });
 }
 
 /**
@@ -190,7 +234,7 @@ export async function POST(request: NextRequest) {
     type: "trade_request",
     title: "Nova solicitação de troca",
     body: `${requesterProfile?.display_name ?? "Um colecionador"} quer trocar ${offeredSticker?.name ? stickerTextToPlain(offeredSticker.name) : "uma figurinha"} com você.`,
-    href: "/trocas",
+    href: "/trocas?section=negociacao&subtab=recebidas",
     dedupeKey: `trade_request:${trade.id}`,
     payload: { trade_id: trade.id },
   });
