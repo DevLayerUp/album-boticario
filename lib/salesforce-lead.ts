@@ -129,7 +129,7 @@ export function formatBirthDateBR(value?: string): string {
 }
 
 /**
- * Envia o cadastro para a CloudPage do Salesforce (x-www-form-urlencoded),
+ * Envia o cadastro para a CloudPage do Salesforce (application/json),
  * que gera a SubscriberKey, injeta na Data Extension e dispara o e-mail de
  * boas-vindas de forma síncrona. Retorna a mensagem estruturada da resposta.
  */
@@ -139,21 +139,22 @@ export async function forwardLeadToCloudPage(
   const url = getCloudPageSignupUrl();
 
   // Nomes dos campos conforme a CloudPage do Salesforce (case-sensitive).
-  const params = new URLSearchParams();
-  params.set("Email", payload.email);
-  params.set("Name", payload.name);
-  params.set("DataNascimento", formatBirthDateBR(payload.birthDate));
-  params.set("Estado", payload.estado ?? "");
-  params.set("Cidade", payload.cidade ?? "");
+  const body = JSON.stringify({
+    Email: payload.email,
+    Name: payload.name,
+    DataNascimento: formatBirthDateBR(payload.birthDate),
+    Estado: payload.estado ?? "",
+    Cidade: payload.cidade ?? "",
+  });
 
   try {
     const res = await fetch(url, {
       method: "POST",
       headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
+        "Content-Type": "application/json",
         Accept: "application/json",
       },
-      body: params.toString(),
+      body,
       cache: "no-store",
     });
 
