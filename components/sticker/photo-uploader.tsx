@@ -4,7 +4,7 @@ import { useCallback, useRef, useState } from "react";
 import { Camera } from "lucide-react";
 import { prepareImageFileForUpload } from "@/lib/normalize-image-file";
 import { STICKER_UPLOAD_ZONE, type StickerPhotoTransform } from "@/lib/sticker-card";
-import { removeBackgroundInBrowser } from "@/lib/remove-background-client";
+import { removeBackgroundWithFallback } from "@/lib/remove-background-client";
 import { assertCutoutHasTransparency } from "@/lib/validate-cutout-client";
 import { cn } from "@/lib/utils";
 import { FigurinhaOutlineButton } from "./figurinha-actions";
@@ -45,6 +45,7 @@ export function PhotoUploader({
 }: PhotoUploaderProps) {
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+  const processRunRef = useRef(0);
 
   const [phase, setPhase] = useState<Phase>("pick");
   const [cutoutSrc, setCutoutSrc] = useState<string | null>(null);
@@ -71,6 +72,7 @@ export function PhotoUploader({
   };
 
   const reset = useCallback(() => {
+    processRunRef.current += 1;
     if (cutoutSrc?.startsWith("blob:")) {
       URL.revokeObjectURL(cutoutSrc);
     }
@@ -81,6 +83,7 @@ export function PhotoUploader({
   }, [cutoutSrc]);
 
   const processFile = useCallback(async (file: File) => {
+    const runId = ++processRunRef.current;
     setLocalError(null);
     const err = validate(file);
     if (err) {
@@ -93,27 +96,32 @@ export function PhotoUploader({
 
     try {
       const normalized = await prepareImageFileForUpload(file);
-      const blob = await removeBackgroundInBrowser(normalized, (fraction) => {
-        setLoadingHint(
-          fraction < 0.2
-            ? "Carregando modelo (só na 1ª vez)…"
-            : "Removendo fundo…",
-        );
+      if (runId !== processRunRef.current) return;
+
+      const blob = await removeBackgroundWithFallback(normalized, (message) => {
+        if (runId === processRunRef.current) {
+          setLoadingHint(message);
+        }
       });
+      if (runId !== processRunRef.current) return;
 
       await assertCutoutHasTransparency(blob);
+      if (runId !== processRunRef.current) return;
 
       setCutoutBlob(blob);
       setCutoutSrc(URL.createObjectURL(blob));
       setLocalError(null);
       setPhase("edit");
     } catch (err) {
+      if (runId !== processRunRef.current) return;
       const message =
         err instanceof Error ? err.message : "Erro ao processar a foto.";
       setLocalError(message);
       setPhase("pick");
     } finally {
-      setLoadingHint(null);
+      if (runId === processRunRef.current) {
+        setLoadingHint(null);
+      }
     }
   }, []);
 
@@ -249,6 +257,8 @@ export function PhotoUploader({
               </FigurinhaOutlineButton>
             )}
           </>
+        ) : phase === "removing-bg" ? (
+          <FigurinhaOutlineButton onClick={reset}>Cancelar</FigurinhaOutlineButton>
         ) : null}
       </div>
 
