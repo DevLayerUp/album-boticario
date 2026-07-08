@@ -5,6 +5,7 @@ import { rarityColor } from "@/lib/rarity";
 import { cn } from "@/lib/utils";
 import { StickerFormattedText } from "@/components/sticker/sticker-formatted-text";
 import { NO_DUPLICATES_TRADE_MESSAGE } from "@/lib/trade-duplicates";
+import { DAILY_TRADE_LIMIT } from "@/lib/trade-daily-limit";
 import { Avatar, StickerThumb } from "./shared";
 import { RarityBadge } from "./rarity-badge";
 import type { Sticker, Wish } from "./types";
@@ -45,6 +46,7 @@ interface ExploreUserCardProps {
   eligible: boolean;
   hasSticker: boolean;
   noDuplicates: boolean;
+  proposalLimitReached?: boolean;
   onOffer: () => void;
 }
 
@@ -53,6 +55,7 @@ export function ExploreUserCard({
   eligible,
   hasSticker,
   noDuplicates,
+  proposalLimitReached = false,
   onOffer,
 }: ExploreUserCardProps) {
   if (!wish.user || !wish.sticker) return null;
@@ -113,6 +116,13 @@ export function ExploreUserCard({
             <ArrowLeftRight size={16} aria-hidden />
             Eu tenho essa
           </button>
+        ) : hasSticker && proposalLimitReached ? (
+          <div
+            className="flex items-center justify-center rounded-pill border border-dashed border-verde-200 bg-white/50 px-3 py-2.5 text-center text-[11px] leading-snug text-verde-escuro-300 sm:py-3 sm:text-xs"
+            title={`Você já enviou ${DAILY_TRADE_LIMIT} propostas de troca hoje. Tente novamente amanhã.`}
+          >
+            Limite diário de propostas atingido
+          </div>
         ) : hasSticker && noDuplicates ? (
           <div
             className="flex items-center justify-center rounded-pill border border-dashed border-verde-200 bg-white/50 px-3 py-2.5 text-center text-[11px] leading-snug text-verde-escuro-300 sm:py-3 sm:text-xs"

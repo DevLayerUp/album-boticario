@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { assertCanCreateTradeEventToday } from "@/lib/trade-daily-limit";
 import {
   loadPendingTradeCommitmentsForUsers,
   loadTradeInventoryContextForUsers,
@@ -138,6 +139,21 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: NO_DUPLICATES_TRADE_MESSAGE }, { status: 403 });
   }
 
+  let dailyLimit;
+  try {
+    const limitCheck = await assertCanCreateTradeEventToday(supabase, user.id);
+    dailyLimit = limitCheck.usage;
+    if (!limitCheck.ok) {
+      return NextResponse.json({ error: limitCheck.error, daily_limit: dailyLimit }, { status: 429 });
+    }
+  } catch (err) {
+    console.error("[trades/wishes] daily limit check:", err);
+    return NextResponse.json(
+      { error: "Não foi possível verificar o limite diário." },
+      { status: 500 },
+    );
+  }
+
   const { data, error } = await supabase
     .from("trade_wishes")
     .insert({ user_id: user.id, sticker_id })
@@ -154,5 +170,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ wish_id: data.id }, { status: 201 });
+  return NextResponse.json(
+    {
+      wish_id: data.id,
+      daily_limit: {
+        ...dailyLimit,
+        created: dailyLimit.created + 1,
+        remaining: Math.max(0, dailyLimit.remaining - 1),
+      },
+    },
+    { status: 201 },
+  );
 }

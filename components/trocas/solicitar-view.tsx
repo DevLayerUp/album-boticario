@@ -11,6 +11,7 @@ import {
 } from "./shared";
 import { parseTradeApiError, useTradeToast } from "./trade-toast";
 import { NO_DUPLICATES_TRADE_MESSAGE } from "@/lib/trade-duplicates";
+import { DAILY_TRADE_LIMIT } from "@/lib/trade-daily-limit";
 import { stickerTextToPlain } from "@/lib/sticker-text-format";
 import type { MyWish, Trade, TradeableEntry, Wish } from "./types";
 
@@ -22,15 +23,26 @@ interface ExploreWishesResponse {
   total?: number;
 }
 
+interface MyWishesResponse {
+  wishes?: MyWish[];
+  daily_limit?: {
+    limit: number;
+    created: number;
+    remaining: number;
+  } | null;
+}
+
 interface SolicitarViewProps {
   hasDuplicates: boolean;
   metaLoaded: boolean;
+  proposalDailyRemaining: number | null;
   onTradeActivity?: () => void;
 }
 
 export function SolicitarView({
   hasDuplicates,
   metaLoaded,
+  proposalDailyRemaining,
   onTradeActivity,
 }: SolicitarViewProps) {
   const { showToast } = useTradeToast();
@@ -43,6 +55,7 @@ export function SolicitarView({
   const [loadingExplore, setLoadingExplore] = useState(true);
   const [loadingMoreExplore, setLoadingMoreExplore] = useState(false);
   const [creatingEvent, setCreatingEvent] = useState(false);
+  const [dailyLimitRemaining, setDailyLimitRemaining] = useState<number | null>(null);
   const [fulfill, setFulfill] = useState<Wish | null>(null);
   const [busyWishId, setBusyWishId] = useState<number | null>(null);
   const [wishSearch, setWishSearch] = useState("");
@@ -54,7 +67,19 @@ export function SolicitarView({
         fetch("/api/trades/wishes/mine").then((r) => r.json()),
         fetch("/api/trades?tab=received").then((r) => r.json()),
       ]);
-      setWishes(Array.isArray(wishesRes) ? wishesRes : []);
+      const wishesPayload = wishesRes as MyWish[] | MyWishesResponse;
+      setWishes(
+        Array.isArray(wishesPayload)
+          ? wishesPayload
+          : Array.isArray(wishesPayload.wishes)
+            ? wishesPayload.wishes
+            : [],
+      );
+      setDailyLimitRemaining(
+        Array.isArray(wishesPayload)
+          ? null
+          : wishesPayload.daily_limit?.remaining ?? null,
+      );
       setReceivedOffers(Array.isArray(receivedRes) ? receivedRes : []);
     } finally {
       setLoadingWishes(false);
@@ -166,7 +191,17 @@ export function SolicitarView({
     );
   }
 
-  const canCreateEvent = metaLoaded && hasDuplicates;
+  const canSendProposal =
+    proposalDailyRemaining === null || proposalDailyRemaining > 0;
+
+  const canCreateEvent =
+    metaLoaded && hasDuplicates && (dailyLimitRemaining === null || dailyLimitRemaining > 0);
+  const dailyLimitMessage =
+    dailyLimitRemaining === 0
+      ? `Você já criou ${DAILY_TRADE_LIMIT} eventos de troca hoje. Tente novamente amanhã.`
+      : !hasDuplicates
+        ? NO_DUPLICATES_TRADE_MESSAGE
+        : undefined;
 
   return (
     <div className="space-y-6 sm:space-y-8 lg:space-y-10 2xl:space-y-14">
@@ -185,12 +220,22 @@ export function SolicitarView({
             <p className="mt-2 text-sm leading-relaxed text-verde-escuro-400 sm:text-base">
               Cadastre as figurinhas que você ainda precisa. Outros colecionadores verão seus pedidos
               e poderão oferecer trocas com repetidas.
+              {dailyLimitRemaining !== null ? (
+                <>
+                  {" "}
+                  Limite diário:{" "}
+                  <span className="font-semibold text-verde-escuro-500">
+                    {dailyLimitRemaining} de {DAILY_TRADE_LIMIT} restantes hoje
+                  </span>
+                  .
+                </>
+              ) : null}
             </p>
           </div>
 
           <span
             className="w-full shrink-0 sm:w-auto"
-            title={!canCreateEvent ? NO_DUPLICATES_TRADE_MESSAGE : undefined}
+            title={dailyLimitMessage}
           >
             <button
               type="button"
@@ -266,6 +311,16 @@ export function SolicitarView({
             <p className="mt-2 text-sm leading-relaxed text-verde-escuro-400 sm:text-base">
               Veja o que outros colecionadores estão procurando. Se você tiver a figurinha, ofereça
               e escolha qualquer repetida deles em troca.
+              {proposalDailyRemaining !== null ? (
+                <>
+                  {" "}
+                  Propostas hoje:{" "}
+                  <span className="font-semibold text-verde-escuro-500">
+                    {proposalDailyRemaining} de {DAILY_TRADE_LIMIT} restantes
+                  </span>
+                  .
+                </>
+              ) : null}
             </p>
           </div>
           <button
@@ -297,9 +352,10 @@ export function SolicitarView({
                   <ExploreUserCard
                     key={w.id}
                     wish={w}
-                    eligible={canOffer(w.sticker.id)}
+                    eligible={canOffer(w.sticker.id) && canSendProposal}
                     hasSticker={myAvailable.some((m) => m.sticker?.id === w.sticker!.id)}
                     noDuplicates={metaLoaded && !hasDuplicates}
+                    proposalLimitReached={!canSendProposal}
                     onOffer={() => setFulfill(w)}
                   />
                 );
@@ -341,6 +397,7 @@ export function SolicitarView({
           <FulfillWishModal
             wish={fulfill}
             myAvailable={myAvailable}
+            proposalDailyRemaining={proposalDailyRemaining}
             onClose={() => setFulfill(null)}
             onSuccess={() => {
               showToast({

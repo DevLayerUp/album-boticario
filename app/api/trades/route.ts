@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { checkRateLimit } from "@/lib/rate-limit";
+import { assertCanCreateTradeProposalToday } from "@/lib/trade-daily-limit";
 import { sanitizeId, sanitizeUuid, sanitizeText } from "@/lib/sanitize";
 import { createNotification } from "@/lib/notifications";
 import { stickerTextToPlain } from "@/lib/sticker-text-format";
@@ -114,10 +114,22 @@ export async function POST(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  // Rate limit: 20 propostas por hora
-  const rl = checkRateLimit(`trade:${user.id}`, 20, 60 * 60 * 1_000);
-  if (!rl.allowed) {
-    return NextResponse.json({ error: "Muitas tentativas. Tente novamente mais tarde." }, { status: 429 });
+  let dailyLimit;
+  try {
+    const limitCheck = await assertCanCreateTradeProposalToday(supabase, user.id);
+    dailyLimit = limitCheck.usage;
+    if (!limitCheck.ok) {
+      return NextResponse.json(
+        { error: limitCheck.error, daily_limit: dailyLimit },
+        { status: 429 },
+      );
+    }
+  } catch (err) {
+    console.error("[trades] daily limit check:", err);
+    return NextResponse.json(
+      { error: "Não foi possível verificar o limite diário." },
+      { status: 500 },
+    );
   }
 
   const body = await request.json().catch(() => ({}));
@@ -239,5 +251,15 @@ export async function POST(request: NextRequest) {
     payload: { trade_id: trade.id },
   });
 
-  return NextResponse.json({ trade_id: trade.id }, { status: 201 });
+  return NextResponse.json(
+    {
+      trade_id: trade.id,
+      daily_limit: {
+        ...dailyLimit,
+        created: dailyLimit.created + 1,
+        remaining: Math.max(0, dailyLimit.remaining - 1),
+      },
+    },
+    { status: 201 },
+  );
 }

@@ -26,6 +26,7 @@ function TrocasContent({
   const [section, setSection] = useState<TrocasSection>(initialSection ?? "solicitar");
   const [pendingCount, setPendingCount] = useState(0);
   const [hasDuplicates, setHasDuplicates] = useState(false);
+  const [proposalDailyRemaining, setProposalDailyRemaining] = useState<number | null>(null);
   const [metaLoaded, setMetaLoaded] = useState(false);
 
   const refreshTradeMeta = useCallback(async () => {
@@ -38,6 +39,11 @@ function TrocasContent({
       (Array.isArray(sent) ? sent.length : 0) + (Array.isArray(received) ? received.length : 0);
     setPendingCount(count);
     setHasDuplicates(Boolean(dupRes?.hasDuplicates));
+    setProposalDailyRemaining(
+      typeof dupRes?.proposal_daily_limit?.remaining === "number"
+        ? dupRes.proposal_daily_limit.remaining
+        : null,
+    );
     setMetaLoaded(true);
   }, []);
 
@@ -86,6 +92,7 @@ function TrocasContent({
             <SolicitarView
               hasDuplicates={hasDuplicates}
               metaLoaded={metaLoaded}
+              proposalDailyRemaining={proposalDailyRemaining}
               onTradeActivity={refreshTradeMeta}
             />
           )}

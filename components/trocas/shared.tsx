@@ -19,6 +19,7 @@ import { ProfileAvatarImage } from "@/components/profile/profile-avatar-image";
 import { StickerAutocomplete } from "./sticker-autocomplete";
 import { StickerThumb } from "./sticker-thumb";
 import { parseTradeApiError, useTradeToast } from "./trade-toast";
+import { DAILY_TRADE_LIMIT } from "@/lib/trade-daily-limit";
 import type { Profile, Sticker, Trade, TradeableEntry, Wish } from "./types";
 
 export { StickerThumb } from "./sticker-thumb";
@@ -443,11 +444,13 @@ export const AddWishModal = CreateTradeEventModal;
 export function FulfillWishModal({
   wish,
   myAvailable,
+  proposalDailyRemaining = null,
   onClose,
   onSuccess,
 }: {
   wish: Wish;
   myAvailable: TradeableEntry[];
+  proposalDailyRemaining?: number | null;
   onClose: () => void;
   onSuccess: () => void;
 }) {
@@ -463,6 +466,12 @@ export function FulfillWishModal({
       : undefined;
   const spareQuantity = myEntry?.spareQuantity ?? myEntry?.tradeable ?? 0;
   const canOffer = spareQuantity > 0;
+  const canSendProposal =
+    proposalDailyRemaining === null || proposalDailyRemaining > 0;
+  const proposalLimitMessage =
+    proposalDailyRemaining === 0
+      ? `Você já enviou ${DAILY_TRADE_LIMIT} propostas de troca hoje. Tente novamente amanhã.`
+      : null;
 
   async function send() {
     if (!selected || !wish.sticker || !wish.user) return;
@@ -587,6 +596,11 @@ export function FulfillWishModal({
         {error && (
           <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>
         )}
+        {proposalLimitMessage && !error ? (
+          <p className="rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-800" role="alert">
+            {proposalLimitMessage}
+          </p>
+        ) : null}
       </div>
 
       <div className="flex shrink-0 gap-2 border-t border-verde-100 px-3 py-2.5 sm:gap-3 sm:px-4 sm:py-3 lg:px-5 lg:py-4">
@@ -599,7 +613,8 @@ export function FulfillWishModal({
         </button>
         <button
           type="button"
-          disabled={!selected || !canOffer || sending}
+          disabled={!selected || !canOffer || !canSendProposal || sending}
+          title={proposalLimitMessage ?? undefined}
           onClick={send}
           className="flex flex-1 items-center justify-center gap-2 rounded-pill bg-verde-escuro-500 py-2.5 text-sm font-bold text-white transition-colors hover:bg-verde-escuro-400 disabled:opacity-50"
         >
