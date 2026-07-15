@@ -1,35 +1,22 @@
 /**
- * Cópias disponíveis para troca (além da que permanece no álbum).
+ * Cópias disponíveis para troca além da reservada ao álbum.
  *
- * Modelo atual: `user_stickers.quantity` não diminui ao colar — repetida = quantity > 1.
- * Legado: colar decrementava quantity; quem colou com 2 cópias ficou com quantity=1 + colada.
- * Nesse caso, packAcquired >= 2 indica que ainda há 1 repetida em estoque.
+ * `user_stickers.quantity` é a fonte da verdade (colar não decrementa quantity).
+ * Com quantity === 1, a única cópia fica reservada — não há repetida para trocar.
  */
-export function tradeableSpareCount(
-  quantity: number,
-  isPasted: boolean,
-  packAcquired = 0,
-): number {
+export function tradeableSpareCount(quantity: number, isPasted: boolean): number {
+  if (quantity <= 0) return 0;
   if (quantity > 1) return quantity - 1;
-  if (quantity === 1 && isPasted && packAcquired >= 2) return 1;
+  // quantity === 1: única cópia (colada ou não) — não é repetida negociável.
+  if (isPasted) return 0;
   return 0;
 }
 
-export function hasTradeableSpare(
-  quantity: number,
-  isPasted: boolean,
-  packAcquired = 0,
-): boolean {
-  return tradeableSpareCount(quantity, isPasted, packAcquired) > 0;
+export function hasTradeableSpare(quantity: number, isPasted: boolean): boolean {
+  return tradeableSpareCount(quantity, isPasted) > 0;
 }
 
-/** Total de cópias que o usuário possui (álbum + estoque). */
-export function totalOwnedCopies(
-  quantity: number,
-  isPasted: boolean,
-  packAcquired = 0,
-): number {
-  if (quantity > 1) return quantity;
-  if (isPasted) return 1 + tradeableSpareCount(quantity, isPasted, packAcquired);
-  return quantity;
+/** Total de cópias que o usuário possui no inventário. */
+export function totalOwnedCopies(quantity: number): number {
+  return Math.max(0, quantity);
 }

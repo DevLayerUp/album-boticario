@@ -31,7 +31,6 @@ export async function GET() {
     sentRes,
     receivedRes,
     slotsRes,
-    openedPacksRes,
   ] = await Promise.all([
     supabase
       .from("stickers")
@@ -67,11 +66,6 @@ export async function GET() {
       .from("album_slots")
       .select("id, sticker_id, album_pages ( category_id )")
       .not("sticker_id", "is", null),
-    supabase
-      .from("packs")
-      .select("id")
-      .eq("user_id", user.id)
-      .not("opened_at", "is", null),
   ]);
 
   if (stickersRes.error) {
@@ -81,23 +75,6 @@ export async function GET() {
   const quantityBySticker = new Map<number, number>();
   for (const row of inventoryRes.data ?? []) {
     quantityBySticker.set(row.sticker_id, row.quantity);
-  }
-
-  const openedPackIds = (openedPacksRes.data ?? []).map((row) => row.id);
-  const packAcquiredBySticker = new Map<number, number>();
-  if (openedPackIds.length > 0) {
-    const { data: packStickerRows } = await supabase
-      .from("pack_stickers")
-      .select("sticker_id")
-      .in("pack_id", openedPackIds);
-
-    for (const row of packStickerRows ?? []) {
-      if (row.sticker_id == null) continue;
-      packAcquiredBySticker.set(
-        row.sticker_id,
-        (packAcquiredBySticker.get(row.sticker_id) ?? 0) + 1,
-      );
-    }
   }
 
   const pastedStickerIds = collectPastedStickerIds(pastedRes.data ?? []);
@@ -153,8 +130,7 @@ export async function GET() {
     };
     const quantity = quantityBySticker.get(row.id) ?? 0;
     const isPasted = pastedStickerIds.has(row.id);
-    const packAcquired = packAcquiredBySticker.get(row.id) ?? 0;
-    const grossSpare = tradeableSpareCount(quantity, isPasted, packAcquired);
+    const grossSpare = tradeableSpareCount(quantity, isPasted);
     const reserved = pendingBySticker.get(row.id) ?? 0;
     const spareQuantity = Math.max(0, grossSpare - reserved);
     return {

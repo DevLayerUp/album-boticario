@@ -14,6 +14,11 @@ import {
   countUserFilledAssignedSlots,
   loadAssignedAlbumSlotsByPage,
 } from "@/lib/album-progress";
+import {
+  FOLLOW_SOCIAL_MISSION_TITLE,
+  isTieredMission,
+  isTierMissionUnlocked,
+} from "@/lib/mission-tiers";
 import { syncUserRankingScoreById } from "@/lib/sync-ranking-score";
 
 interface MissionRow {
@@ -21,6 +26,8 @@ interface MissionRow {
   title: string;
   type: string | null;
   target_value: number | null;
+  tier_group?: string | null;
+  tier_order?: number | null;
 }
 
 interface UserMissionRow {
@@ -38,6 +45,7 @@ interface ProfileSnapshot {
   city: string | null;
   state: string | null;
   social_shared_at: string | null;
+  social_followed_at: string | null;
 }
 
 interface MissionMetrics {
@@ -55,6 +63,7 @@ export const CUSTOM_MISSION_TITLES = {
   completeProfile: "Completar perfil",
   inviteFriends: "Convidar amigos",
   shareSocial: "Compartilhar nas redes",
+  followSocial: FOLLOW_SOCIAL_MISSION_TITLE,
 } as const;
 
 function isProfileComplete(profile: ProfileSnapshot | null): boolean {
@@ -85,7 +94,9 @@ async function loadMissionMetrics(
   ] = await Promise.all([
     supabase
       .from("profiles")
-      .select("display_name, avatar_url, sticker_url, bio, phone, city, state, social_shared_at")
+      .select(
+        "display_name, avatar_url, sticker_url, bio, phone, city, state, social_shared_at, social_followed_at",
+      )
       .eq("id", userId)
       .maybeSingle(),
     supabase
@@ -174,6 +185,8 @@ export function computeMissionActualProgress(
           return metrics.referralCount;
         case CUSTOM_MISSION_TITLES.shareSocial:
           return metrics.profile?.social_shared_at ? 1 : 0;
+        case CUSTOM_MISSION_TITLES.followSocial:
+          return metrics.profile?.social_followed_at ? 1 : 0;
         default:
           return 0;
       }
@@ -182,12 +195,25 @@ export function computeMissionActualProgress(
   }
 }
 
+function buildClaimByMissionId(
+  rows: Array<{ mission_id: number; reward_claimed: boolean }>,
+): Map<number, boolean> {
+  return new Map(rows.map((row) => [row.mission_id, row.reward_claimed]));
+}
+
 /** Missões elegíveis para pontuação do ranking (critério atendido na atividade real). */
 export function countRankingEligibleMissions(
   missions: MissionRow[],
   metrics: MissionMetrics,
+  claimByMissionId: Map<number, boolean> = new Map(),
 ): number {
   return missions.reduce((total, mission) => {
+    if (
+      isTieredMission(mission) &&
+      !isTierMissionUnlocked(mission, missions, claimByMissionId)
+    ) {
+      return total;
+    }
     const target = mission.target_value ?? 1;
     return computeMissionActualProgress(mission, metrics) >= target ? total + 1 : total;
   }, 0);
@@ -197,15 +223,25 @@ export async function countRankingEligibleMissionsForUser(
   supabase: SupabaseClient,
   userId: string,
 ): Promise<number> {
-  const { data: missions } = await supabase
-    .from("missions")
-    .select("id, title, type, target_value")
-    .eq("is_active", true);
+  const [{ data: missions }, { data: userMissions }] = await Promise.all([
+    supabase
+      .from("missions")
+      .select("id, title, type, target_value, tier_group, tier_order")
+      .eq("is_active", true),
+    supabase
+      .from("user_missions")
+      .select("mission_id, reward_claimed")
+      .eq("user_id", userId),
+  ]);
 
   if (!missions?.length) return 0;
 
   const metrics = await loadMissionMetrics(supabase, userId);
-  return countRankingEligibleMissions(missions, metrics);
+  return countRankingEligibleMissions(
+    missions,
+    metrics,
+    buildClaimByMissionId(userMissions ?? []),
+  );
 }
 
 /**
@@ -215,13 +251,31 @@ export async function countRankingEligibleMissionsForUser(
 export async function buildRankingMissionCountsFromActivity(
   admin: SupabaseClient,
 ): Promise<Map<string, number>> {
-  const { data: missions } = await admin
-    .from("missions")
-    .select("id, title, type, target_value")
-    .eq("is_active", true);
+  const [{ data: missions }, claimedMissionRows] = await Promise.all([
+    admin
+      .from("missions")
+      .select("id, title, type, target_value, tier_group, tier_order")
+      .eq("is_active", true),
+    fetchAllPages<{ user_id: string; mission_id: number; reward_claimed: boolean }>(
+      (from, to) =>
+        admin
+          .from("user_missions")
+          .select("user_id, mission_id, reward_claimed")
+          .eq("reward_claimed", true)
+          .range(from, to),
+    ),
+  ]);
 
   const counts = new Map<string, number>();
   if (!missions?.length) return counts;
+
+  const claimsByUser = new Map<string, Map<number, boolean>>();
+  for (const row of claimedMissionRows) {
+    if (!claimsByUser.has(row.user_id)) {
+      claimsByUser.set(row.user_id, new Map());
+    }
+    claimsByUser.get(row.user_id)!.set(row.mission_id, true);
+  }
 
   const [
     profiles,
@@ -243,11 +297,12 @@ export async function buildRankingMissionCountsFromActivity(
       city: string | null;
       state: string | null;
       social_shared_at: string | null;
+      social_followed_at: string | null;
     }>((from, to) =>
       admin
         .from("profiles")
         .select(
-          "id, display_name, avatar_url, sticker_url, bio, phone, city, state, social_shared_at",
+          "id, display_name, avatar_url, sticker_url, bio, phone, city, state, social_shared_at, social_followed_at",
         )
         .range(from, to),
     ),
@@ -377,6 +432,7 @@ export async function buildRankingMissionCountsFromActivity(
         city: profile.city,
         state: profile.state,
         social_shared_at: profile.social_shared_at,
+        social_followed_at: profile.social_followed_at,
       },
       referralCount: referralsByUser.get(profile.id) ?? 0,
       tradeCount: tradesByUser.get(profile.id) ?? 0,
@@ -386,7 +442,14 @@ export async function buildRankingMissionCountsFromActivity(
       completedAlbumPages: completedAlbumPagesFor(profile.id),
     };
 
-    counts.set(profile.id, countRankingEligibleMissions(missions, metrics));
+    counts.set(
+      profile.id,
+      countRankingEligibleMissions(
+        missions,
+        metrics,
+        claimsByUser.get(profile.id) ?? new Map(),
+      ),
+    );
   }
 
   return counts;
@@ -473,7 +536,7 @@ export async function validarMissoes(
 ): Promise<{ updated: number }> {
   const { data: missions, error } = await supabase
     .from("missions")
-    .select("id, title, type, target_value")
+    .select("id, title, type, target_value, tier_group, tier_order")
     .eq("is_active", true)
     .or("expires_at.is.null,expires_at.gt.now()");
 
@@ -489,6 +552,12 @@ export async function validarMissoes(
   const progressByMission = new Map(
     (userMissions ?? []).map((row) => [row.mission_id as number, row as UserMissionRow & { mission_id: number }]),
   );
+  const claimByMissionId = buildClaimByMissionId(
+    (userMissions ?? []).map((row) => ({
+      mission_id: row.mission_id as number,
+      reward_claimed: row.reward_claimed as boolean,
+    })),
+  );
 
   const metrics = await loadMissionMetrics(supabase, userId);
   let updated = 0;
@@ -496,6 +565,12 @@ export async function validarMissoes(
   for (const mission of missions) {
     const existing = progressByMission.get(mission.id) ?? null;
     if (existing?.completed_at && existing.reward_claimed) continue;
+    if (
+      isTieredMission(mission) &&
+      !isTierMissionUnlocked(mission, missions, claimByMissionId)
+    ) {
+      continue;
+    }
 
     const actualProgress = computeMissionActualProgress(mission, metrics);
     const changed = await syncMissionProgress(
@@ -520,12 +595,27 @@ export async function incrementMissionProgress(
 ) {
   const { data: missions } = await supabase
     .from("missions")
-    .select("id, title, target_value")
+    .select("id, title, type, target_value, tier_group, tier_order")
     .eq("type", missionType)
     .eq("is_active", true)
     .or("expires_at.is.null,expires_at.gt.now()");
 
-  for (const mission of missions ?? []) {
+  const { data: userMissionRows } = await supabase
+    .from("user_missions")
+    .select("mission_id, reward_claimed")
+    .eq("user_id", userId);
+
+  const claimByMissionId = buildClaimByMissionId(userMissionRows ?? []);
+  const missionList = missions ?? [];
+
+  for (const mission of missionList) {
+    if (
+      isTieredMission(mission) &&
+      !isTierMissionUnlocked(mission, missionList, claimByMissionId)
+    ) {
+      continue;
+    }
+
     const { data: userMission } = await supabase
       .from("user_missions")
       .select("progress, completed_at, reward_claimed")
@@ -547,6 +637,20 @@ export async function incrementMissionProgress(
     );
   }
 
+  await syncUserRankingScoreById(userId);
+}
+
+/** Marca a missão de seguir a Fundação nas redes como concluída para o usuário. */
+export async function markSocialFollowMission(
+  supabase: SupabaseClient,
+  userId: string,
+): Promise<void> {
+  await supabase
+    .from("profiles")
+    .update({ social_followed_at: new Date().toISOString() })
+    .eq("id", userId);
+
+  await validarMissoes(supabase, userId);
   await syncUserRankingScoreById(userId);
 }
 

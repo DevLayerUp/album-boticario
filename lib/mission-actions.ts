@@ -23,8 +23,22 @@ export const MISSION_ACTION_BY_TITLE: Record<string, MissionAction> = {
     label: "Compartilhar",
     href: "/album",
   },
+  [CUSTOM_MISSION_TITLES.followSocial]: {
+    label: "Ver redes sociais",
+    href: "/missoes",
+  },
   "Fazer 5 trocas": { label: "Ir para Trocas", href: "/trocas" },
   "Acertar 5 quizzes": { label: "Responder Quiz", href: "/quiz" },
+  "Fazer 15 trocas": { label: "Ir para Trocas", href: "/trocas" },
+  "Fazer 25 trocas": { label: "Ir para Trocas", href: "/trocas" },
+  "Fazer 50 trocas": { label: "Ir para Trocas", href: "/trocas" },
+  "Fazer 75 trocas": { label: "Ir para Trocas", href: "/trocas" },
+  "Fazer 100 trocas": { label: "Ir para Trocas", href: "/trocas" },
+  "Acertar 10 quizzes": { label: "Responder Quiz", href: "/quiz" },
+  "Acertar 15 quizzes": { label: "Responder Quiz", href: "/quiz" },
+  "Acertar 20 quizzes": { label: "Responder Quiz", href: "/quiz" },
+  "Acertar 30 quizzes": { label: "Responder Quiz", href: "/quiz" },
+  "Acertar 50 quizzes": { label: "Responder Quiz", href: "/quiz" },
 };
 
 export function resolveMissionAction(mission: {

@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { buildLeaderboard, RANKING_MISSION_BONUS } from "@/lib/ranking";
 import { resolveMissionAction } from "@/lib/mission-actions";
+import { filterVisibleMissions } from "@/lib/mission-tiers";
 import { validarMissoes } from "@/lib/missions";
 
 /**
@@ -22,7 +23,8 @@ export async function GET() {
       .from("missions")
       .select(
         `id, title, description, type, target_value, reward_packs, reward_points,
-         theme, instructions, action_label, action_href, progress_unit, expires_at, sort_order`,
+         theme, instructions, action_label, action_href, progress_unit, expires_at, sort_order,
+         tier_group, tier_order, progress_baseline`,
       )
       .eq("is_active", true)
       .or("expires_at.is.null,expires_at.gt.now()")
@@ -41,7 +43,15 @@ export async function GET() {
     (userMissionsRes.data ?? []).map((row) => [row.mission_id, row]),
   );
 
-  const missions = (missionsRes.data ?? []).map((mission) => {
+  const visibleMissions = filterVisibleMissions(
+    missionsRes.data ?? [],
+    (userMissionsRes.data ?? []).map((row) => ({
+      mission_id: row.mission_id as number,
+      reward_claimed: row.reward_claimed as boolean,
+    })),
+  );
+
+  const missions = visibleMissions.map((mission) => {
     const um = progressByMission.get(mission.id);
     const action = resolveMissionAction(mission);
     return {

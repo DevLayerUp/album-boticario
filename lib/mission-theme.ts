@@ -1,6 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 import {
   ArrowLeftRight,
+  Heart,
   HelpCircle,
   Pencil,
   Share2,
@@ -78,6 +79,17 @@ const TITLE_ICONS: Record<string, LucideIcon> = {
   "Acertar 5 quizzes": HelpCircle,
   "Convidar amigos": UserPlus,
   "Compartilhar nas redes": Share2,
+  "Seguir a Fundação nas redes": Heart,
+  "Fazer 15 trocas": ArrowLeftRight,
+  "Fazer 25 trocas": ArrowLeftRight,
+  "Fazer 50 trocas": ArrowLeftRight,
+  "Fazer 75 trocas": ArrowLeftRight,
+  "Fazer 100 trocas": ArrowLeftRight,
+  "Acertar 10 quizzes": HelpCircle,
+  "Acertar 15 quizzes": HelpCircle,
+  "Acertar 20 quizzes": HelpCircle,
+  "Acertar 30 quizzes": HelpCircle,
+  "Acertar 50 quizzes": HelpCircle,
 };
 
 export function missionIcon(title: string, type: string): LucideIcon {

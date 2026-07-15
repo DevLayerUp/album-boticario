@@ -41,11 +41,12 @@ export function MissionCard({
   const isClaimed = status === "COMPLETA" && mission.reward_claimed;
   const { label: actionLabel } = resolveMissionAction(mission);
   const isShareMission = mission.title === CUSTOM_MISSION_TITLES.shareSocial;
+  const isFollowMission = mission.title === CUSTOM_MISSION_TITLES.followSocial;
   const isInviteMission = mission.title === CUSTOM_MISSION_TITLES.inviteFriends;
   const buttonLabel =
     status === "COMPLETA"
       ? missionCardButtonLabel(status, mission.reward_claimed)
-      : isShareMission || isInviteMission
+      : isShareMission || isFollowMission || isInviteMission
         ? actionLabel
         : missionCardButtonLabel(status, mission.reward_claimed);
 

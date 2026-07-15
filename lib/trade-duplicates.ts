@@ -18,49 +18,11 @@ export const NO_AVAILABLE_SPARE_MESSAGE =
 export interface UserTradeInventoryContext {
   quantityBySticker: Map<number, number>;
   pastedStickerIds: Set<number>;
-  packAcquiredBySticker: Map<number, number>;
 }
 
 /** Contagem de trocas pendentes em que o usuário deve entregar cada figurinha. */
 export interface PendingTradeCommitments {
   bySticker: Map<number, number>;
-}
-
-async function loadPackAcquiredByStickerForUsers(
-  supabase: SupabaseClient,
-  userIds: string[],
-): Promise<Map<string, Map<number, number>>> {
-  const result = new Map<string, Map<number, number>>();
-  for (const userId of userIds) {
-    result.set(userId, new Map());
-  }
-  if (userIds.length === 0) return result;
-
-  const { data: packs } = await supabase
-    .from("packs")
-    .select("id, user_id")
-    .in("user_id", userIds)
-    .not("opened_at", "is", null);
-
-  if (!packs?.length) return result;
-
-  const packIdToUser = new Map(packs.map((pack) => [pack.id, pack.user_id as string]));
-  const { data: rows } = await supabase
-    .from("pack_stickers")
-    .select("pack_id, sticker_id")
-    .in(
-      "pack_id",
-      packs.map((pack) => pack.id),
-    );
-
-  for (const row of rows ?? []) {
-    const userId = packIdToUser.get(row.pack_id);
-    if (!userId || row.sticker_id == null) continue;
-    const acquired = result.get(userId)!;
-    acquired.set(row.sticker_id, (acquired.get(row.sticker_id) ?? 0) + 1);
-  }
-
-  return result;
 }
 
 function bumpCommitment(
@@ -118,7 +80,6 @@ export async function loadUserTradeInventoryContext(
     contexts.get(userId) ?? {
       quantityBySticker: new Map(),
       pastedStickerIds: new Set(),
-      packAcquiredBySticker: new Map(),
     }
   );
 }
@@ -134,28 +95,25 @@ export async function loadTradeInventoryContextForUsers(
     contexts.set(userId, {
       quantityBySticker: new Map(),
       pastedStickerIds: new Set(),
-      packAcquiredBySticker: new Map(),
     });
   }
 
   if (uniqueUserIds.length === 0) return contexts;
 
-  // user_album e pack_stickers são restritos por RLS ao dono — service-role para cálculo correto.
+  // user_album é restrito por RLS ao dono — service-role para cálculo correto.
   const admin = createAdminClient();
 
-  const [{ data: inventory }, { data: pasted }, packAcquiredByUser] =
-    await Promise.all([
-      supabase
-        .from("user_stickers")
-        .select("user_id, sticker_id, quantity")
-        .in("user_id", uniqueUserIds)
-        .gte("quantity", 1),
-      admin
-        .from("user_album")
-        .select("user_id, sticker_id, album_slots ( sticker_id )")
-        .in("user_id", uniqueUserIds),
-      loadPackAcquiredByStickerForUsers(admin, uniqueUserIds),
-    ]);
+  const [{ data: inventory }, { data: pasted }] = await Promise.all([
+    supabase
+      .from("user_stickers")
+      .select("user_id, sticker_id, quantity")
+      .in("user_id", uniqueUserIds)
+      .gte("quantity", 1),
+    admin
+      .from("user_album")
+      .select("user_id, sticker_id, album_slots ( sticker_id )")
+      .in("user_id", uniqueUserIds),
+  ]);
 
   for (const row of inventory ?? []) {
     const context = contexts.get(row.user_id as string);
@@ -178,11 +136,6 @@ export async function loadTradeInventoryContextForUsers(
     }
   }
 
-  for (const [userId, packAcquired] of packAcquiredByUser) {
-    const context = contexts.get(userId);
-    if (context) context.packAcquiredBySticker = packAcquired;
-  }
-
   return contexts;
 }
 
@@ -193,7 +146,6 @@ export function getTradeableSpareForSticker(
   return tradeableSpareCount(
     context.quantityBySticker.get(stickerId) ?? 0,
     context.pastedStickerIds.has(stickerId),
-    context.packAcquiredBySticker.get(stickerId) ?? 0,
   );
 }
 

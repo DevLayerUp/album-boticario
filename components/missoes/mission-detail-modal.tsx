@@ -15,6 +15,7 @@ import { resolveMissionAction } from "@/lib/mission-actions";
 import { CUSTOM_MISSION_TITLES } from "@/lib/missions";
 import { cn } from "@/lib/utils";
 import { MissionInvitePanel } from "./mission-invite-panel";
+import { MissionFollowPanel } from "./mission-follow-panel";
 import { MissionSharePanel } from "./mission-share-panel";
 import { MissionRewardBadges } from "./mission-reward-badges";
 import type { Mission } from "./types";
@@ -25,6 +26,7 @@ interface MissionDetailModalProps {
   onClose: () => void;
   onClaim: (missionId: number) => void;
   onShareComplete?: () => void;
+  onFollowComplete?: () => void;
 }
 
 export function MissionDetailModal({
@@ -33,6 +35,7 @@ export function MissionDetailModal({
   onClose,
   onClaim,
   onShareComplete,
+  onFollowComplete,
 }: MissionDetailModalProps) {
   const theme = missionTheme(mission.theme);
   const Icon = missionIcon(mission.title, mission.type);
@@ -48,6 +51,7 @@ export function MissionDetailModal({
   const showProgress = status === "EM ANDAMENTO";
 
   const isShareMission = mission.title === CUSTOM_MISSION_TITLES.shareSocial;
+  const isFollowMission = mission.title === CUSTOM_MISSION_TITLES.followSocial;
   const isInviteMission = mission.title === CUSTOM_MISSION_TITLES.inviteFriends;
 
   useEffect(() => {
@@ -188,6 +192,10 @@ export function MissionDetailModal({
             <MissionSharePanel onComplete={onShareComplete} />
           ) : null}
 
+          {isFollowMission && !canClaim && !isClaimed ? (
+            <MissionFollowPanel onComplete={onFollowComplete} />
+          ) : null}
+
           <MissionRewardBadges
             packs={mission.reward_packs}
             points={mission.ranking_points}
@@ -224,7 +232,7 @@ export function MissionDetailModal({
           >
             Recompensa Resgatada
           </button>
-        ) : isInviteMission || isShareMission ? null : (
+        ) : isInviteMission || isShareMission || isFollowMission ? null : (
           <Link
             href={actionHref}
             onClick={onClose}
