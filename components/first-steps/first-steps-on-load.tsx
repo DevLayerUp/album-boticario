@@ -30,7 +30,15 @@ export function FirstStepsOnLoad() {
   useEffect(() => {
     if (ran.current) return;
     ran.current = true;
-    void load();
+
+    const run = () => void load();
+    if (typeof requestIdleCallback !== "undefined") {
+      const idleId = requestIdleCallback(run, { timeout: 4000 });
+      return () => cancelIdleCallback(idleId);
+    }
+
+    const timeoutId = setTimeout(run, 2000);
+    return () => clearTimeout(timeoutId);
   }, [load]);
 
   if (!open || !config) return null;

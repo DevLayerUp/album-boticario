@@ -17,7 +17,7 @@ import {
   countAssignedAlbumSlots,
   countUserFilledAssignedSlots,
 } from "@/lib/album-progress";
-import { buildLeaderboard } from "@/lib/ranking";
+import { getUserRankPosition } from "@/lib/ranking";
 import { HeroBanner } from "@/components/dashboard/hero-banner";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { FeatureCard } from "@/components/dashboard/feature-card";
@@ -103,8 +103,7 @@ export default async function DashboardPage() {
     (user?.app_metadata?.role ?? user?.user_metadata?.role) === "admin";
 
   const admin = createAdminClient();
-  const leaderboard = await buildLeaderboard(admin, user.id);
-  const userRank = leaderboard.entries.find((e) => e.user_id === user.id)?.rank;
+  const userRank = await getUserRankPosition(admin, user.id);
   const rankDisplay = userRank ? `${userRank}º` : "—";
 
   const totalStickers = stickersRes.count ?? 0;

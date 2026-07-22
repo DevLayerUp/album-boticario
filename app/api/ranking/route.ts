@@ -20,7 +20,11 @@ export async function GET() {
   try {
     const admin = createAdminClient();
     const leaderboard = await buildLeaderboard(admin, user.id);
-    return NextResponse.json(leaderboard);
+    return NextResponse.json(leaderboard, {
+      headers: {
+        "Cache-Control": "private, max-age=60, stale-while-revalidate=30",
+      },
+    });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Erro ao carregar ranking";
     return NextResponse.json({ error: message }, { status: 500 });

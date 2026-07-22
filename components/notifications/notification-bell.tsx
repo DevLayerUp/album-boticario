@@ -96,9 +96,26 @@ export function NotificationBell() {
   }, []);
 
   useEffect(() => {
-    load();
+    let cancelled = false;
+    const run = () => {
+      if (!cancelled) void load();
+    };
+
+    let idleId: number | undefined;
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
+    if (typeof requestIdleCallback !== "undefined") {
+      idleId = requestIdleCallback(run, { timeout: 3000 });
+    } else {
+      timeoutId = setTimeout(run, 1500);
+    }
+
     const interval = setInterval(load, 60_000);
-    return () => clearInterval(interval);
+    return () => {
+      cancelled = true;
+      if (idleId !== undefined) cancelIdleCallback(idleId);
+      if (timeoutId !== undefined) clearTimeout(timeoutId);
+      clearInterval(interval);
+    };
   }, [load]);
 
   useEffect(() => {

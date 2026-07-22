@@ -1,5 +1,4 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { buildRankingMissionCountsFromActivity } from "@/lib/missions";
 import { countAssignedAlbumSlots } from "@/lib/album-progress";
 import { loadRankingScoreInput } from "@/lib/sync-ranking-score";
 import { fetchAllPages } from "@/lib/supabase/fetch-all-pages";
@@ -64,6 +63,33 @@ export interface RankingScoreBreakdown {
   efficiency_bonus: number;
   pack_penalty: number;
   score: number;
+}
+
+const LEADERBOARD_TTL_MS = 60_000;
+const ADMIN_IDS_TTL_MS = 5 * 60_000;
+
+let adminIdsCache: { ids: Set<string>; expires: number } | null = null;
+
+let leaderboardCoreCache: {
+  entries: RankingEntry[];
+  total_slots: number;
+  expires: number;
+} | null = null;
+
+interface LeaderboardStatsRow {
+  user_id: string;
+  display_name: string | null;
+  username: string | null;
+  sticker_url: string | null;
+  avatar_url: string | null;
+  show_in_ranking: boolean | null;
+  ranking_score: number;
+  ranking_score_updated_at: string | null;
+  filled_slots: number;
+  packs_opened: number;
+  packs_unopened: number;
+  missions_completed: number;
+  trades_accepted: number;
 }
 
 /**
@@ -139,6 +165,233 @@ function sortEntries(
     .map((entry, index) => ({ ...entry, rank: index + 1 }));
 }
 
+async function getCachedAdminUserIds(
+  admin: SupabaseClient,
+): Promise<Set<string>> {
+  const now = Date.now();
+  if (adminIdsCache && adminIdsCache.expires > now) {
+    return adminIdsCache.ids;
+  }
+  const ids = await listAdminUserIds(admin);
+  adminIdsCache = { ids, expires: now + ADMIN_IDS_TTL_MS };
+  return ids;
+}
+
+export function invalidateLeaderboardCache(): void {
+  leaderboardCoreCache = null;
+}
+
+async function fetchLeaderboardStatsRows(
+  admin: SupabaseClient,
+): Promise<LeaderboardStatsRow[] | null> {
+  const { data, error } = await admin.rpc("get_leaderboard_stats");
+  if (error) {
+    console.warn("[ranking] get_leaderboard_stats RPC unavailable:", error.message);
+    return null;
+  }
+  return (data ?? []) as LeaderboardStatsRow[];
+}
+
+async function buildMissionCountsFromUserMissions(
+  admin: SupabaseClient,
+): Promise<Map<string, number>> {
+  const rows = await fetchAllPages<{ user_id: string }>((from, to) =>
+    admin
+      .from("user_missions")
+      .select("user_id")
+      .not("completed_at", "is", null)
+      .range(from, to),
+  );
+
+  const counts = new Map<string, number>();
+  for (const row of rows) {
+    counts.set(row.user_id, (counts.get(row.user_id) ?? 0) + 1);
+  }
+  return counts;
+}
+
+function mapStatsRowToEntry(
+  row: LeaderboardStatsRow,
+  totalSlots: number,
+): Omit<RankingEntry, "rank"> {
+  const filled_slots = Number(row.filled_slots) || 0;
+  const album_pct = computeAlbumProgressPct(filled_slots, Math.max(totalSlots, 1));
+  const packs_opened = Number(row.packs_opened) || 0;
+  const packs_unopened = Number(row.packs_unopened) || 0;
+  const missions_completed = Number(row.missions_completed) || 0;
+  const trades_accepted = Number(row.trades_accepted) || 0;
+
+  return {
+    user_id: row.user_id,
+    display_name: row.display_name ?? row.username ?? "Colecionador",
+    username: row.username,
+    sticker_url: row.sticker_url,
+    avatar_url: row.avatar_url,
+    filled_slots,
+    album_pct,
+    total_slots: totalSlots,
+    packs_opened,
+    packs_unopened,
+    missions_completed,
+    trades_accepted,
+    score: row.ranking_score_updated_at
+      ? (row.ranking_score ?? 0)
+      : computeRankingScore({
+          filled_slots,
+          album_pct,
+          packs_opened,
+          missions_completed,
+          trades_accepted,
+        }),
+  };
+}
+
+async function buildLeaderboardCoreLegacy(
+  admin: SupabaseClient,
+  adminUserIds: Set<string>,
+): Promise<{ entries: RankingEntry[]; total_slots: number }> {
+  const [profiles, totalSlots, albumRows, packRows, missionsByUser, tradeRows] =
+    await Promise.all([
+      fetchAllPages<{
+        id: string;
+        display_name: string | null;
+        username: string | null;
+        sticker_url: string | null;
+        avatar_url: string | null;
+        show_in_ranking: boolean;
+        ranking_score: number;
+        ranking_score_updated_at: string | null;
+      }>((from, to) =>
+        admin
+          .from("profiles")
+          .select(
+            "id, display_name, username, sticker_url, avatar_url, show_in_ranking, ranking_score, ranking_score_updated_at",
+          )
+          .range(from, to),
+      ),
+      countAssignedAlbumSlots(admin),
+      fetchAllPages<{ user_id: string }>((from, to) =>
+        admin
+          .from("user_album")
+          .select("user_id, album_slots!inner(sticker_id)")
+          .not("album_slots.sticker_id", "is", null)
+          .range(from, to),
+      ),
+      fetchAllPages<{ user_id: string; opened_at: string | null }>((from, to) =>
+        admin.from("packs").select("user_id, opened_at").range(from, to),
+      ),
+      buildMissionCountsFromUserMissions(admin),
+      fetchAllPages<{ requester_id: string; receiver_id: string }>((from, to) =>
+        admin
+          .from("trade_requests")
+          .select("requester_id, receiver_id")
+          .eq("status", "accepted")
+          .range(from, to),
+      ),
+    ]);
+
+  const totalSlotsNormalized = Math.max(totalSlots, 1);
+
+  const filledByUser = new Map<string, number>();
+  for (const row of albumRows) {
+    filledByUser.set(row.user_id, (filledByUser.get(row.user_id) ?? 0) + 1);
+  }
+
+  const openedByUser = new Map<string, number>();
+  const unopenedByUser = new Map<string, number>();
+  for (const row of packRows) {
+    if (row.opened_at) {
+      openedByUser.set(row.user_id, (openedByUser.get(row.user_id) ?? 0) + 1);
+    } else {
+      unopenedByUser.set(
+        row.user_id,
+        (unopenedByUser.get(row.user_id) ?? 0) + 1,
+      );
+    }
+  }
+
+  const tradesByUser = new Map<string, number>();
+  for (const row of tradeRows) {
+    tradesByUser.set(
+      row.requester_id,
+      (tradesByUser.get(row.requester_id) ?? 0) + 1,
+    );
+    tradesByUser.set(
+      row.receiver_id,
+      (tradesByUser.get(row.receiver_id) ?? 0) + 1,
+    );
+  }
+
+  const entries = profiles
+    .filter(
+      (profile) =>
+        profile.show_in_ranking !== false && !adminUserIds.has(profile.id),
+    )
+    .map((profile) => {
+      const filled_slots = filledByUser.get(profile.id) ?? 0;
+      const album_pct = computeAlbumProgressPct(filled_slots, totalSlotsNormalized);
+      const packs_opened = openedByUser.get(profile.id) ?? 0;
+      const packs_unopened = unopenedByUser.get(profile.id) ?? 0;
+      const missions_completed = missionsByUser.get(profile.id) ?? 0;
+      const trades_accepted = tradesByUser.get(profile.id) ?? 0;
+
+      return {
+        user_id: profile.id,
+        display_name:
+          profile.display_name ?? profile.username ?? "Colecionador",
+        username: profile.username,
+        sticker_url: profile.sticker_url,
+        avatar_url: profile.avatar_url,
+        filled_slots,
+        album_pct,
+        total_slots: totalSlots,
+        packs_opened,
+        packs_unopened,
+        missions_completed,
+        trades_accepted,
+        score: profile.ranking_score_updated_at
+          ? (profile.ranking_score ?? 0)
+          : computeRankingScore({
+              filled_slots,
+              album_pct,
+              packs_opened,
+              missions_completed,
+              trades_accepted,
+            }),
+        rank: 0,
+      };
+    });
+
+  return {
+    entries: sortEntries(entries),
+    total_slots: totalSlots,
+  };
+}
+
+async function buildLeaderboardCore(
+  admin: SupabaseClient,
+): Promise<{ entries: RankingEntry[]; total_slots: number }> {
+  const [statsRows, totalSlots, adminUserIds] = await Promise.all([
+    fetchLeaderboardStatsRows(admin),
+    countAssignedAlbumSlots(admin),
+    getCachedAdminUserIds(admin),
+  ]);
+
+  if (statsRows) {
+    const entries = sortEntries(
+      statsRows
+        .filter(
+          (row) =>
+            row.show_in_ranking !== false && !adminUserIds.has(row.user_id),
+        )
+        .map((row) => mapStatsRowToEntry(row, totalSlots)),
+    );
+    return { entries, total_slots: totalSlots };
+  }
+
+  return buildLeaderboardCoreLegacy(admin, adminUserIds);
+}
+
 async function buildCurrentUserRankingEntry(
   admin: SupabaseClient,
   userId: string,
@@ -200,149 +453,89 @@ async function buildCurrentUserRankingEntry(
   };
 }
 
+/** Posição no ranking só para o usuário logado — sem varrer tabelas inteiras. */
+export async function getUserRankPosition(
+  admin: SupabaseClient,
+  userId: string,
+): Promise<number | null> {
+  const [{ data: profile }, adminUserIds] = await Promise.all([
+    admin
+      .from("profiles")
+      .select("ranking_score, show_in_ranking, ranking_score_updated_at")
+      .eq("id", userId)
+      .maybeSingle(),
+    getCachedAdminUserIds(admin),
+  ]);
+
+  if (!profile || profile.show_in_ranking === false || adminUserIds.has(userId)) {
+    return null;
+  }
+
+  let score = profile.ranking_score ?? 0;
+  if (!profile.ranking_score_updated_at) {
+    const input = await loadRankingScoreInput(admin, userId);
+    score = computeRankingScore(input);
+  }
+
+  const adminIdList = [...adminUserIds];
+  let query = admin
+    .from("profiles")
+    .select("id", { count: "exact", head: true })
+    .or("show_in_ranking.is.null,show_in_ranking.eq.true")
+    .gt("ranking_score", score);
+
+  if (adminIdList.length > 0) {
+    query = query.not("id", "in", `(${adminIdList.join(",")})`);
+  }
+
+  const { count, error } = await query;
+  if (error) throw error;
+
+  return (count ?? 0) + 1;
+}
+
 export async function buildLeaderboard(
   admin: SupabaseClient,
   currentUserId: string,
 ): Promise<LeaderboardResponse> {
-  const [profiles, totalSlots, albumRows, packRows, missionsByUser, tradeRows] =
-    await Promise.all([
-      fetchAllPages<{
-        id: string;
-        display_name: string | null;
-        username: string | null;
-        sticker_url: string | null;
-        avatar_url: string | null;
-        show_in_ranking: boolean;
-        ranking_score: number;
-        ranking_score_updated_at: string | null;
-      }>((from, to) =>
-        admin
-          .from("profiles")
-          .select(
-            "id, display_name, username, sticker_url, avatar_url, show_in_ranking, ranking_score, ranking_score_updated_at",
-          )
-          .range(from, to),
-      ),
-      countAssignedAlbumSlots(admin),
-      fetchAllPages<{ user_id: string }>((from, to) =>
-        admin
-          .from("user_album")
-          .select("user_id, album_slots!inner(sticker_id)")
-          .not("album_slots.sticker_id", "is", null)
-          .range(from, to),
-      ),
-      fetchAllPages<{ user_id: string; opened_at: string | null }>((from, to) =>
-        admin.from("packs").select("user_id, opened_at").range(from, to),
-      ),
-      buildRankingMissionCountsFromActivity(admin),
-      fetchAllPages<{ requester_id: string; receiver_id: string }>((from, to) =>
-        admin
-          .from("trade_requests")
-          .select("requester_id, receiver_id")
-          .eq("status", "accepted")
-          .range(from, to),
-      ),
-    ]);
+  const now = Date.now();
+  let core = leaderboardCoreCache;
 
-  const adminUserIds = await listAdminUserIds(admin);
-  const totalSlotsNormalized = Math.max(totalSlots, 1);
-
-  const filledByUser = new Map<string, number>();
-  for (const row of albumRows) {
-    filledByUser.set(row.user_id, (filledByUser.get(row.user_id) ?? 0) + 1);
-  }
-
-  const openedByUser = new Map<string, number>();
-  const unopenedByUser = new Map<string, number>();
-  for (const row of packRows) {
-    if (row.opened_at) {
-      openedByUser.set(row.user_id, (openedByUser.get(row.user_id) ?? 0) + 1);
-    } else {
-      unopenedByUser.set(
-        row.user_id,
-        (unopenedByUser.get(row.user_id) ?? 0) + 1,
-      );
-    }
-  }
-
-  const missionsByUserMap = missionsByUser;
-
-  const tradesByUser = new Map<string, number>();
-  for (const row of tradeRows) {
-    tradesByUser.set(
-      row.requester_id,
-      (tradesByUser.get(row.requester_id) ?? 0) + 1,
-    );
-    tradesByUser.set(
-      row.receiver_id,
-      (tradesByUser.get(row.receiver_id) ?? 0) + 1,
-    );
-  }
-
-  const entries = profiles
-    .filter(
-      (profile) =>
-        profile.show_in_ranking !== false && !adminUserIds.has(profile.id),
-    )
-    .map((profile) => {
-    const filled_slots = filledByUser.get(profile.id) ?? 0;
-    const album_pct = computeAlbumProgressPct(filled_slots, totalSlotsNormalized);
-    const packs_opened = openedByUser.get(profile.id) ?? 0;
-    const packs_unopened = unopenedByUser.get(profile.id) ?? 0;
-    const missions_completed = missionsByUserMap.get(profile.id) ?? 0;
-    const trades_accepted = tradesByUser.get(profile.id) ?? 0;
-
-    return {
-      user_id: profile.id,
-      display_name:
-        profile.display_name ?? profile.username ?? "Colecionador",
-      username: profile.username,
-      sticker_url: profile.sticker_url,
-      avatar_url: profile.avatar_url,
-      filled_slots,
-      album_pct,
-      total_slots: totalSlots,
-      packs_opened,
-      packs_unopened,
-      missions_completed,
-      trades_accepted,
-      score: profile.ranking_score_updated_at
-        ? (profile.ranking_score ?? 0)
-        : computeRankingScore({
-            filled_slots,
-            album_pct,
-            packs_opened,
-            missions_completed,
-            trades_accepted,
-          }),
-      rank: 0,
+  if (!core || core.expires <= now) {
+    const built = await buildLeaderboardCore(admin);
+    core = {
+      entries: built.entries,
+      total_slots: built.total_slots,
+      expires: now + LEADERBOARD_TTL_MS,
     };
-  });
+    leaderboardCoreCache = core;
+  }
 
-  const sorted = sortEntries(entries);
+  const totalSlotsNormalized = Math.max(core.total_slots, 1);
   const current_user_entry = await buildCurrentUserRankingEntry(
     admin,
     currentUserId,
-    sorted,
+    core.entries,
     totalSlotsNormalized,
   );
 
+  const entries = [...core.entries];
   if (current_user_entry) {
-    const listIndex = sorted.findIndex(
+    const listIndex = entries.findIndex(
       (entry) => entry.user_id === currentUserId,
     );
     if (listIndex >= 0) {
-      sorted[listIndex] = {
+      entries[listIndex] = {
         ...current_user_entry,
-        rank: sorted[listIndex].rank,
+        rank: entries[listIndex].rank,
       };
     }
   }
 
   return {
-    total_slots: totalSlots,
+    total_slots: core.total_slots,
     current_user_id: currentUserId,
     current_user_entry,
-    entries: sorted,
+    entries,
   };
 }

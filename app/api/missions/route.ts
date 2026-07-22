@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { buildLeaderboard, RANKING_MISSION_BONUS } from "@/lib/ranking";
+import { getUserRankPosition, RANKING_MISSION_BONUS } from "@/lib/ranking";
 import { resolveMissionAction } from "@/lib/mission-actions";
 import { filterVisibleMissions } from "@/lib/mission-tiers";
-import { validarMissoes } from "@/lib/missions";
 
 /**
  * GET /api/missions — active missions with user progress and summary stats.
@@ -15,8 +14,6 @@ export async function GET() {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  await validarMissoes(supabase, user.id);
 
   const [missionsRes, userMissionsRes] = await Promise.all([
     supabase
@@ -83,9 +80,7 @@ export async function GET() {
   let rankPosition: number | null = null;
   try {
     const admin = createAdminClient();
-    const leaderboard = await buildLeaderboard(admin, user.id);
-    const current = leaderboard.entries.find((e) => e.user_id === user.id);
-    rankPosition = current?.rank ?? null;
+    rankPosition = await getUserRankPosition(admin, user.id);
   } catch {
     rankPosition = null;
   }
