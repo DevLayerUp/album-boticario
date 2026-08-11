@@ -9,11 +9,14 @@ export const AMBASSADOR_MISSION_TITLE_LEGACY = "Divulgue o álbum";
 export const AMBASSADOR_MISSION_INSTRUCTIONS =
   "Compartilhe seu link de convite com amigos. Só contam cadastros feitos a partir do lançamento deste desafio, com perfil completo. Não há meta máxima — divulgue o máximo que puder. Os 3 colaboradores que mais trouxerem amigos para se tornarem Fãs por Natureza ganham a camiseta. Para mais informações, acesse o regulamento.";
 
-/** URL do regulamento do desafio (configure NEXT_PUBLIC_AMBASSADOR_REGULAMENTO_URL). */
-export function getAmbassadorRegulamentoUrl(): string | null {
+/** Regulamento oficial do Desafio GB (abre em nova aba). */
+export const AMBASSADOR_REGULAMENTO_URL =
+  "https://docs.google.com/document/d/1MWVaWHNqwYcSiVDC58BsYiPCUMwRtWnH/edit?usp=sharing&ouid=110253241166582239746&rtpof=true&sd=true";
+
+/** URL do regulamento — env sobrescreve o padrão quando definido. */
+export function getAmbassadorRegulamentoUrl(): string {
   const url = process.env.NEXT_PUBLIC_AMBASSADOR_REGULAMENTO_URL?.trim();
-  if (url) return url;
-  return null;
+  return url || AMBASSADOR_REGULAMENTO_URL;
 }
 
 export function isAmbassadorMissionTitle(title: string | null | undefined): boolean {
