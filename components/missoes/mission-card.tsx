@@ -2,7 +2,7 @@
 
 import { Loader2 } from "lucide-react";
 import { resolveMissionAction } from "@/lib/mission-actions";
-import { CUSTOM_MISSION_TITLES } from "@/lib/missions";
+import { CUSTOM_MISSION_TITLES, isAmbassadorMission } from "@/lib/missions";
 import {
   missionCardButtonLabel,
   missionIcon,
@@ -12,6 +12,7 @@ import {
   missionTheme,
 } from "@/lib/mission-theme";
 import { cn } from "@/lib/utils";
+import { MissionAmbassadorCounter } from "./mission-ambassador-counter";
 import { MissionRewardBadges } from "./mission-reward-badges";
 import type { Mission } from "./types";
 
@@ -31,12 +32,13 @@ export function MissionCard({
   const theme = missionTheme(mission.theme);
   const Icon = missionIcon(mission.title, mission.type);
   const unlimited = mission.target_value == null;
+  const isAmbassador = isAmbassadorMission(mission);
   const status = missionStatus(
     mission.progress,
     mission.target_value,
     mission.completed_at,
   );
-  const showProgress = unlimited || status === "EM ANDAMENTO";
+  const showProgress = !isAmbassador && (unlimited || status === "EM ANDAMENTO");
   const percent = missionProgressPercent(mission.progress, mission.target_value);
   const canClaim = status === "COMPLETA" && !mission.reward_claimed;
   const isClaimed = status === "COMPLETA" && mission.reward_claimed;
@@ -44,14 +46,14 @@ export function MissionCard({
   const isShareMission = mission.title === CUSTOM_MISSION_TITLES.shareSocial;
   const isFollowMission = mission.title === CUSTOM_MISSION_TITLES.followSocial;
   const isInviteMission =
-    mission.title === CUSTOM_MISSION_TITLES.inviteFriends ||
-    mission.title === CUSTOM_MISSION_TITLES.ambassador;
+    mission.title === CUSTOM_MISSION_TITLES.inviteFriends || isAmbassador;
   const buttonLabel =
     status === "COMPLETA"
       ? missionCardButtonLabel(status, mission.reward_claimed)
       : isShareMission || isFollowMission || isInviteMission
         ? actionLabel
         : missionCardButtonLabel(status, mission.reward_claimed);
+  const showRewards = !isAmbassador && (mission.reward_packs > 0 || mission.ranking_points > 0);
 
   function handleActionClick() {
     if (canClaim) {
@@ -68,19 +70,19 @@ export function MissionCard({
         theme.surface,
       )}
     >
-      <div className="flex items-center justify-between gap-2 sm:gap-3">
+      <div className="relative z-[1] flex items-center justify-between gap-2 sm:gap-3">
         <p className={cn("text-xs font-medium uppercase sm:text-sm", theme.statusLabel)}>
-          {theme.featured ? "Missão exclusiva" : "Status da missão"}
+          {theme.featured ? "Desafio exclusivo" : "Status da missão"}
         </p>
         <span className={cn("rounded-pill px-3 py-1 text-xs font-medium sm:px-4 sm:py-1.5 sm:text-sm 2xl:px-5", theme.badge)}>
-          {unlimited ? "SEM META" : status}
+          {isAmbassador ? "EM ANDAMENTO" : unlimited ? "SEM META" : status}
         </span>
       </div>
 
       <button
         type="button"
         onClick={() => onOpen(mission)}
-        className="flex w-full flex-1 items-center gap-4 text-left sm:gap-5 2xl:gap-8"
+        className="relative z-[1] flex w-full flex-1 items-center gap-4 text-left sm:gap-5 2xl:gap-8"
       >
         <div className="relative flex size-[72px] shrink-0 items-center justify-center sm:size-[84px] lg:size-[92px] 2xl:size-[105px]">
           <span
@@ -109,45 +111,50 @@ export function MissionCard({
         </div>
       </button>
 
-      <div
-        className={cn("space-y-2.5 sm:space-y-3 2xl:space-y-4", !showProgress && "invisible")}
-        aria-hidden={!showProgress}
-      >
-        <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3">
-          <span className={cn("rounded-pill px-3 py-1 text-xs font-medium sm:px-4 sm:py-1.5 sm:text-sm 2xl:px-5", theme.badge)}>
-            {unlimited ? "CONTADOR" : "EM ANDAMENTO"}
-          </span>
-          <div className={cn("flex flex-wrap items-center justify-end gap-2 text-sm sm:gap-3 sm:text-base lg:text-lg 2xl:gap-4 2xl:text-xl", theme.progressText)}>
-            {unlimited ? null : (
-              <>
-                <span className="font-bold">{percent}% Concluída</span>
-                <span aria-hidden>•</span>
-              </>
-            )}
-            <span className={cn(unlimited && "font-bold")}>
-              {missionProgressLabel(
-                mission.progress,
-                mission.target_value,
-                mission.progress_unit,
-              )}
-            </span>
-          </div>
+      {isAmbassador ? (
+        <div className="relative z-[1]">
+          <MissionAmbassadorCounter count={mission.progress} />
         </div>
-        {unlimited ? null : (
+      ) : (
+        <div
+          className={cn(
+            "relative z-[1] space-y-2.5 sm:space-y-3 2xl:space-y-4",
+            !showProgress && "invisible",
+          )}
+          aria-hidden={!showProgress}
+        >
+          <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3">
+            <span className={cn("rounded-pill px-3 py-1 text-xs font-medium sm:px-4 sm:py-1.5 sm:text-sm 2xl:px-5", theme.badge)}>
+              EM ANDAMENTO
+            </span>
+            <div className={cn("flex flex-wrap items-center justify-end gap-2 text-sm sm:gap-3 sm:text-base lg:text-lg 2xl:gap-4 2xl:text-xl", theme.progressText)}>
+              <span className="font-bold">{percent}% Concluída</span>
+              <span aria-hidden>•</span>
+              <span>
+                {missionProgressLabel(
+                  mission.progress,
+                  mission.target_value,
+                  mission.progress_unit,
+                )}
+              </span>
+            </div>
+          </div>
           <div className="h-4 overflow-hidden rounded-pill bg-white sm:h-5 2xl:h-[23px]">
             <div
               className={cn("h-full rounded-pill transition-[width] duration-700", theme.progressFill)}
               style={{ width: `${percent}%` }}
             />
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
-      <div className="mt-auto space-y-4 2xl:space-y-8">
-        <MissionRewardBadges
-          packs={mission.reward_packs}
-          points={mission.ranking_points}
-        />
+      <div className="relative z-[1] mt-auto space-y-4 2xl:space-y-8">
+        {showRewards ? (
+          <MissionRewardBadges
+            packs={mission.reward_packs}
+            points={mission.ranking_points}
+          />
+        ) : null}
 
         <button
           type="button"

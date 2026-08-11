@@ -63,16 +63,20 @@ export const MISSION_THEMES: Record<MissionThemeKey, MissionTheme> = {
     modalSurface: "bg-[#f6ead1]",
   },
   gold: {
-    surface: "bg-gradient-to-br from-[#fff6d6] via-[#ffe07a]/70 to-[#f6ead1] ring-2 ring-gold-500/50",
-    title: "text-gold-700",
-    statusLabel: "text-gold-700",
-    badge: "bg-gradient-to-r from-gold-700 to-gold-500 text-white",
-    badgeText: "text-white",
-    button: "bg-gradient-to-r from-gold-700 to-gold-500 hover:from-gold-500 hover:to-[#d2a309]",
-    iconBg: "bg-gradient-to-br from-gold-500 to-gold-700",
-    progressFill: "bg-gradient-to-r from-gold-700 to-gold-500",
-    progressText: "text-gold-700",
-    modalSurface: "bg-gradient-to-br from-[#fff6d6] via-[#ffe07a]/60 to-[#f6ead1]",
+    surface:
+      "mission-satin-gold relative overflow-hidden ring-2 ring-[#c9a227]/55 shadow-[0_8px_24px_rgba(181,125,2,0.18)]",
+    title: "text-[#71410a]",
+    statusLabel: "text-[#8a5a08]",
+    badge:
+      "bg-gradient-to-r from-[#8a5a08] via-[#d2a309] to-[#8a5a08] text-[#fff8e7] shadow-[inset_0_1px_0_rgba(255,255,255,0.35)]",
+    badgeText: "text-[#fff8e7]",
+    button:
+      "bg-gradient-to-r from-[#8a5a08] via-[#d2a309] to-[#b57d02] hover:from-[#71410a] hover:via-[#d2a309] hover:to-[#8a5a08] shadow-[0_2px_8px_rgba(181,125,2,0.35)]",
+    iconBg:
+      "bg-gradient-to-br from-[#ffe07a] via-[#d2a309] to-[#8a5a08] shadow-[inset_0_1px_0_rgba(255,255,255,0.45)]",
+    progressFill: "bg-gradient-to-r from-[#8a5a08] via-[#d2a309] to-[#ffe07a]",
+    progressText: "text-[#71410a]",
+    modalSurface: "mission-satin-gold relative overflow-hidden",
     featured: true,
   },
 };
@@ -93,6 +97,7 @@ const TITLE_ICONS: Record<string, LucideIcon> = {
   "Acertar 5 quizzes": HelpCircle,
   "Convidar amigos": UserPlus,
   "Divulgue o álbum": UserPlus,
+  "Desafio GB: Divulgue o álbum": UserPlus,
   "Compartilhar nas redes": Share2,
   "Seguir a Fundação nas redes": Heart,
   "Fazer 15 trocas": ArrowLeftRight,

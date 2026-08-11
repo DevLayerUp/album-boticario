@@ -2,7 +2,25 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { isProfileComplete, type ProfileCompleteFields } from "@/lib/profile-complete";
 
 export const AMBASSADOR_PROGRAM_STARTED_AT_KEY = "ambassador_program_started_at";
-export const AMBASSADOR_MISSION_TITLE = "Divulgue o álbum";
+export const AMBASSADOR_MISSION_TITLE = "Desafio GB: Divulgue o álbum";
+/** Título legado — mantido para migrações/consultas de transição. */
+export const AMBASSADOR_MISSION_TITLE_LEGACY = "Divulgue o álbum";
+
+export const AMBASSADOR_MISSION_INSTRUCTIONS =
+  "Compartilhe seu link de convite com amigos. Só contam cadastros feitos a partir do lançamento deste desafio, com perfil completo. Não há meta máxima — divulgue o máximo que puder. Os 3 colaboradores que mais trouxerem amigos para se tornarem Fãs por Natureza ganham a camiseta. Para mais informações, acesse o regulamento.";
+
+/** URL do regulamento do desafio (configure NEXT_PUBLIC_AMBASSADOR_REGULAMENTO_URL). */
+export function getAmbassadorRegulamentoUrl(): string | null {
+  const url = process.env.NEXT_PUBLIC_AMBASSADOR_REGULAMENTO_URL?.trim();
+  if (url) return url;
+  return null;
+}
+
+export function isAmbassadorMissionTitle(title: string | null | undefined): boolean {
+  return (
+    title === AMBASSADOR_MISSION_TITLE || title === AMBASSADOR_MISSION_TITLE_LEGACY
+  );
+}
 
 export type AmbassadorReferredProfile = ProfileCompleteFields & {
   created_at: string;
@@ -24,7 +42,8 @@ export async function getAmbassadorProgramStartedAt(
   const { data: mission } = await supabase
     .from("missions")
     .select("created_at")
-    .eq("title", AMBASSADOR_MISSION_TITLE)
+    .in("title", [AMBASSADOR_MISSION_TITLE, AMBASSADOR_MISSION_TITLE_LEGACY])
+    .limit(1)
     .maybeSingle();
 
   return mission?.created_at ?? null;

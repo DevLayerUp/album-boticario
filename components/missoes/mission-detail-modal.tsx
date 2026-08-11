@@ -12,10 +12,12 @@ import {
   missionTheme,
 } from "@/lib/mission-theme";
 import { resolveMissionAction } from "@/lib/mission-actions";
-import { CUSTOM_MISSION_TITLES } from "@/lib/missions";
+import { CUSTOM_MISSION_TITLES, isAmbassadorMission } from "@/lib/missions";
 import { cn } from "@/lib/utils";
+import { MissionAmbassadorCounter } from "./mission-ambassador-counter";
 import { MissionInvitePanel } from "./mission-invite-panel";
 import { MissionFollowPanel } from "./mission-follow-panel";
+import { MissionInstructions } from "./mission-instructions";
 import { MissionSharePanel } from "./mission-share-panel";
 import { MissionRewardBadges } from "./mission-reward-badges";
 import type { Mission } from "./types";
@@ -40,6 +42,7 @@ export function MissionDetailModal({
   const theme = missionTheme(mission.theme);
   const Icon = missionIcon(mission.title, mission.type);
   const unlimited = mission.target_value == null;
+  const isAmbassador = isAmbassadorMission(mission);
   const status = missionStatus(
     mission.progress,
     mission.target_value,
@@ -49,13 +52,14 @@ export function MissionDetailModal({
   const { label: actionLabel, href: actionHref } = resolveMissionAction(mission);
   const canClaim = Boolean(mission.completed_at) && !mission.reward_claimed;
   const isClaimed = Boolean(mission.completed_at) && mission.reward_claimed;
-  const showProgress = unlimited || status === "EM ANDAMENTO";
+  const showProgress = !isAmbassador && (unlimited || status === "EM ANDAMENTO");
 
   const isShareMission = mission.title === CUSTOM_MISSION_TITLES.shareSocial;
   const isFollowMission = mission.title === CUSTOM_MISSION_TITLES.followSocial;
   const isInviteMission =
-    mission.title === CUSTOM_MISSION_TITLES.inviteFriends ||
-    mission.title === CUSTOM_MISSION_TITLES.ambassador;
+    mission.title === CUSTOM_MISSION_TITLES.inviteFriends || isAmbassador;
+  const showRewards =
+    !isAmbassador && (mission.reward_packs > 0 || mission.ranking_points > 0);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -143,11 +147,16 @@ export function MissionDetailModal({
             </h2>
             <p className="text-[11px] leading-snug text-black sm:text-xs md:text-sm lg:leading-normal 2xl:text-lg">
               <span className="font-bold">Instruções</span>{" "}
-              {mission.instructions ?? mission.description}
+              <MissionInstructions
+                title={mission.title}
+                text={mission.instructions ?? mission.description ?? ""}
+              />
             </p>
           </div>
 
-          {showProgress ? (
+          {isAmbassador ? (
+            <MissionAmbassadorCounter count={mission.progress} className="w-full" />
+          ) : showProgress ? (
             <div className="w-full space-y-1.5 sm:space-y-2">
               <div className="flex flex-wrap items-start justify-between gap-1 sm:gap-1.5">
                 <span
@@ -156,7 +165,7 @@ export function MissionDetailModal({
                     theme.badge,
                   )}
                 >
-                  {unlimited ? "CONTADOR" : "EM ANDAMENTO"}
+                  EM ANDAMENTO
                 </span>
                 <div
                   className={cn(
@@ -164,13 +173,9 @@ export function MissionDetailModal({
                     theme.progressText,
                   )}
                 >
-                  {unlimited ? null : (
-                    <>
-                      <span className="font-bold">{percent}% Concluída</span>
-                      <span aria-hidden>•</span>
-                    </>
-                  )}
-                  <span className={cn(unlimited && "font-bold")}>
+                  <span className="font-bold">{percent}% Concluída</span>
+                  <span aria-hidden>•</span>
+                  <span>
                     {missionProgressLabel(
                       mission.progress,
                       mission.target_value,
@@ -179,14 +184,12 @@ export function MissionDetailModal({
                   </span>
                 </div>
               </div>
-              {unlimited ? null : (
-                <div className="h-2.5 overflow-hidden rounded-pill bg-white sm:h-3 2xl:h-4">
-                  <div
-                    className={cn("h-full rounded-pill", theme.progressFill)}
-                    style={{ width: `${percent}%` }}
-                  />
-                </div>
-              )}
+              <div className="h-2.5 overflow-hidden rounded-pill bg-white sm:h-3 2xl:h-4">
+                <div
+                  className={cn("h-full rounded-pill", theme.progressFill)}
+                  style={{ width: `${percent}%` }}
+                />
+              </div>
             </div>
           ) : null}
 
@@ -206,10 +209,12 @@ export function MissionDetailModal({
             <MissionFollowPanel onComplete={onFollowComplete} />
           ) : null}
 
-          <MissionRewardBadges
-            packs={mission.reward_packs}
-            points={mission.ranking_points}
-          />
+          {showRewards ? (
+            <MissionRewardBadges
+              packs={mission.reward_packs}
+              points={mission.ranking_points}
+            />
+          ) : null}
         </div>
 
         {canClaim ? (

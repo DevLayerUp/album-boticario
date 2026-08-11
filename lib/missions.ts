@@ -75,7 +75,7 @@ export const CUSTOM_MISSION_TITLES = {
   createSticker: "Criar figurinha personalizada",
   completeProfile: "Completar perfil",
   inviteFriends: "Convidar amigos",
-  ambassador: "Divulgue o álbum",
+  ambassador: "Desafio GB: Divulgue o álbum",
   shareSocial: "Compartilhar nas redes",
   followSocial: FOLLOW_SOCIAL_MISSION_TITLE,
 } as const;
@@ -90,19 +90,22 @@ export function isUnlimitedMission(
 export function isAmbassadorMission(
   mission: Pick<MissionRow, "title">,
 ): boolean {
-  return mission.title === CUSTOM_MISSION_TITLES.ambassador;
+  return (
+    mission.title === CUSTOM_MISSION_TITLES.ambassador ||
+    mission.title === "Divulgue o álbum"
+  );
 }
 
 /**
  * Visibilidade das missões de indicação:
- * - colaborador: só "Divulgue o álbum" (esconde "Convidar amigos")
- * - demais: só "Convidar amigos" (esconde "Divulgue o álbum")
+ * - colaborador: só desafio GB de divulgação (esconde "Convidar amigos")
+ * - demais: só "Convidar amigos" (esconde o desafio GB)
  */
 export function isMissionVisibleForUser(
   mission: Pick<MissionRow, "title">,
   isCollaborator: boolean,
 ): boolean {
-  if (mission.title === CUSTOM_MISSION_TITLES.ambassador) {
+  if (isAmbassadorMission(mission)) {
     return isCollaborator;
   }
   if (mission.title === CUSTOM_MISSION_TITLES.inviteFriends) {
