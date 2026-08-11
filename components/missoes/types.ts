@@ -3,7 +3,8 @@ export interface Mission {
   title: string;
   description: string | null;
   type: string;
-  target_value: number;
+  /** null = missão sem meta máxima (ex.: divulgação de colaboradores). */
+  target_value: number | null;
   reward_packs: number;
   reward_points: number;
   ranking_points: number;

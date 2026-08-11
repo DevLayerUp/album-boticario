@@ -14,11 +14,13 @@ import {
   countUserFilledAssignedSlots,
   loadAssignedAlbumSlotsByPage,
 } from "@/lib/album-progress";
+import { isCollaboratorAuthUser } from "@/lib/collaborator";
 import {
   FOLLOW_SOCIAL_MISSION_TITLE,
   isTieredMission,
   isTierMissionUnlocked,
 } from "@/lib/mission-tiers";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { syncUserRankingScoreById } from "@/lib/sync-ranking-score";
 
 interface MissionRow {
@@ -51,6 +53,8 @@ interface ProfileSnapshot {
 interface MissionMetrics {
   profile: ProfileSnapshot | null;
   referralCount: number;
+  /** Indicados com cadastro completo (perfil preenchido). */
+  completeReferralCount: number;
   tradeCount: number;
   quizCorrectCount: number;
   openedPacksCount: number;
@@ -62,9 +66,41 @@ export const CUSTOM_MISSION_TITLES = {
   createSticker: "Criar figurinha personalizada",
   completeProfile: "Completar perfil",
   inviteFriends: "Convidar amigos",
+  ambassador: "Divulgue o álbum",
   shareSocial: "Compartilhar nas redes",
   followSocial: FOLLOW_SOCIAL_MISSION_TITLE,
 } as const;
+
+/** Missão sem meta máxima — nunca completa / não pontua no ranking. */
+export function isUnlimitedMission(
+  mission: Pick<MissionRow, "target_value">,
+): boolean {
+  return mission.target_value == null;
+}
+
+export function isAmbassadorMission(
+  mission: Pick<MissionRow, "title">,
+): boolean {
+  return mission.title === CUSTOM_MISSION_TITLES.ambassador;
+}
+
+/**
+ * Visibilidade das missões de indicação:
+ * - colaborador: só "Divulgue o álbum" (esconde "Convidar amigos")
+ * - demais: só "Convidar amigos" (esconde "Divulgue o álbum")
+ */
+export function isMissionVisibleForUser(
+  mission: Pick<MissionRow, "title">,
+  isCollaborator: boolean,
+): boolean {
+  if (mission.title === CUSTOM_MISSION_TITLES.ambassador) {
+    return isCollaborator;
+  }
+  if (mission.title === CUSTOM_MISSION_TITLES.inviteFriends) {
+    return !isCollaborator;
+  }
+  return true;
+}
 
 function isProfileComplete(profile: ProfileSnapshot | null): boolean {
   if (!profile) return false;
@@ -85,6 +121,7 @@ async function loadMissionMetrics(
   const [
     profileRes,
     referralsRes,
+    referredProfilesRes,
     tradesRes,
     quizRes,
     packsRes,
@@ -102,6 +139,10 @@ async function loadMissionMetrics(
     supabase
       .from("profiles")
       .select("*", { count: "exact", head: true })
+      .eq("referred_by", userId),
+    supabase
+      .from("profiles")
+      .select("display_name, avatar_url, sticker_url, bio, phone, city, state")
       .eq("referred_by", userId),
     supabase
       .from("trade_requests")
@@ -147,9 +188,18 @@ async function loadMissionMetrics(
     }
   }
 
+  const completeReferralCount = (referredProfilesRes.data ?? []).filter((row) =>
+    isProfileComplete({
+      ...row,
+      social_shared_at: null,
+      social_followed_at: null,
+    }),
+  ).length;
+
   return {
     profile: profileRes.data,
     referralCount: referralsRes.count ?? 0,
+    completeReferralCount,
     tradeCount: tradesRes.count ?? 0,
     quizCorrectCount: quizRes.count ?? 0,
     openedPacksCount: packsRes.count ?? 0,
@@ -183,6 +233,8 @@ export function computeMissionActualProgress(
           return isProfileComplete(metrics.profile) ? 1 : 0;
         case CUSTOM_MISSION_TITLES.inviteFriends:
           return metrics.referralCount;
+        case CUSTOM_MISSION_TITLES.ambassador:
+          return metrics.completeReferralCount;
         case CUSTOM_MISSION_TITLES.shareSocial:
           return metrics.profile?.social_shared_at ? 1 : 0;
         case CUSTOM_MISSION_TITLES.followSocial:
@@ -208,6 +260,9 @@ export function countRankingEligibleMissions(
   claimByMissionId: Map<number, boolean> = new Map(),
 ): number {
   return missions.reduce((total, mission) => {
+    if (isUnlimitedMission(mission) || isAmbassadorMission(mission)) {
+      return total;
+    }
     if (
       isTieredMission(mission) &&
       !isTierMissionUnlocked(mission, missions, claimByMissionId)
@@ -435,6 +490,7 @@ export async function buildRankingMissionCountsFromActivity(
         social_followed_at: profile.social_followed_at,
       },
       referralCount: referralsByUser.get(profile.id) ?? 0,
+      completeReferralCount: 0,
       tradeCount: tradesByUser.get(profile.id) ?? 0,
       quizCorrectCount: quizByUser.get(profile.id) ?? 0,
       openedPacksCount: packsByUser.get(profile.id) ?? 0,
@@ -468,8 +524,11 @@ async function syncMissionProgress(
   existing: UserMissionRow | null,
   options: SyncMissionProgressOptions = {},
 ): Promise<boolean> {
+  const unlimited = isUnlimitedMission(mission);
   const target = mission.target_value ?? 1;
-  const syncedProgress = Math.min(Math.max(actualProgress, 0), target);
+  const syncedProgress = unlimited
+    ? Math.max(actualProgress, 0)
+    : Math.min(Math.max(actualProgress, 0), target);
   const storedProgress = existing?.progress ?? 0;
   const wasComplete = Boolean(existing?.completed_at);
   const rewardClaimed = existing?.reward_claimed ?? false;
@@ -477,7 +536,10 @@ async function syncMissionProgress(
   let finalProgress: number;
   let isComplete: boolean;
 
-  if (rewardClaimed) {
+  if (unlimited) {
+    finalProgress = syncedProgress;
+    isComplete = false;
+  } else if (rewardClaimed) {
     finalProgress = Math.max(storedProgress, syncedProgress);
     isComplete = true;
   } else if (options.reconcile) {
@@ -527,6 +589,23 @@ async function syncMissionProgress(
 }
 
 /**
+ * Reconcilia missões do indicador quando um indicado completa o perfil.
+ */
+export async function validarMissoesDoIndicador(
+  supabase: SupabaseClient,
+  userId: string,
+): Promise<void> {
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("referred_by")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (!profile?.referred_by || profile.referred_by === userId) return;
+  await validarMissoes(supabase, profile.referred_by);
+}
+
+/**
  * Reconcilia o progresso de todas as missões ativas com a atividade real do usuário.
  * Útil quando o evento de incremento não foi disparado (ex.: missões custom).
  */
@@ -560,9 +639,19 @@ export async function validarMissoes(
   );
 
   const metrics = await loadMissionMetrics(supabase, userId);
+  let isCollaborator = false;
+  try {
+    const admin = createAdminClient();
+    const { data } = await admin.auth.admin.getUserById(userId);
+    isCollaborator = isCollaboratorAuthUser(data?.user);
+  } catch {
+    isCollaborator = false;
+  }
+
   let updated = 0;
 
   for (const mission of missions) {
+    if (!isMissionVisibleForUser(mission, isCollaborator)) continue;
     const existing = progressByMission.get(mission.id) ?? null;
     if (existing?.completed_at && existing.reward_claimed) continue;
     if (
@@ -683,6 +772,16 @@ export async function claimMissionReward(
   missionId: number,
 ): Promise<ClaimMissionRewardResult> {
   await validarMissoes(supabase, userId);
+
+  const { data: missionMeta } = await supabase
+    .from("missions")
+    .select("target_value, title")
+    .eq("id", missionId)
+    .maybeSingle();
+
+  if (missionMeta && isUnlimitedMission(missionMeta)) {
+    throw new MissionClaimError("Esta missão não possui recompensa para resgate", 400);
+  }
 
   const { data: userMission, error: fetchError } = await supabase
     .from("user_missions")

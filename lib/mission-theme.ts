@@ -9,7 +9,7 @@ import {
   UserPlus,
 } from "lucide-react";
 
-export type MissionThemeKey = "green" | "blue" | "brown";
+export type MissionThemeKey = "green" | "blue" | "brown" | "gold";
 
 export interface MissionTheme {
   surface: string;
@@ -22,6 +22,7 @@ export interface MissionTheme {
   progressFill: string;
   progressText: string;
   modalSurface: string;
+  featured?: boolean;
 }
 
 export const MISSION_THEMES: Record<MissionThemeKey, MissionTheme> = {
@@ -61,6 +62,19 @@ export const MISSION_THEMES: Record<MissionThemeKey, MissionTheme> = {
     progressText: "text-[#71410a]",
     modalSurface: "bg-[#f6ead1]",
   },
+  gold: {
+    surface: "bg-gradient-to-br from-[#fff6d6] via-[#ffe07a]/70 to-[#f6ead1] ring-2 ring-gold-500/50",
+    title: "text-gold-700",
+    statusLabel: "text-gold-700",
+    badge: "bg-gradient-to-r from-gold-700 to-gold-500 text-white",
+    badgeText: "text-white",
+    button: "bg-gradient-to-r from-gold-700 to-gold-500 hover:from-gold-500 hover:to-[#d2a309]",
+    iconBg: "bg-gradient-to-br from-gold-500 to-gold-700",
+    progressFill: "bg-gradient-to-r from-gold-700 to-gold-500",
+    progressText: "text-gold-700",
+    modalSurface: "bg-gradient-to-br from-[#fff6d6] via-[#ffe07a]/60 to-[#f6ead1]",
+    featured: true,
+  },
 };
 
 const TYPE_ICONS: Record<string, LucideIcon> = {
@@ -78,6 +92,7 @@ const TITLE_ICONS: Record<string, LucideIcon> = {
   "Fazer 5 trocas": ArrowLeftRight,
   "Acertar 5 quizzes": HelpCircle,
   "Convidar amigos": UserPlus,
+  "Divulgue o álbum": UserPlus,
   "Compartilhar nas redes": Share2,
   "Seguir a Fundação nas redes": Heart,
   "Fazer 15 trocas": ArrowLeftRight,
@@ -105,24 +120,29 @@ export type MissionStatus = "AGUARDANDO" | "EM ANDAMENTO" | "COMPLETA";
 
 export function missionStatus(
   progress: number,
-  target: number,
+  target: number | null,
   completedAt: string | null,
 ): MissionStatus {
   if (completedAt) return "COMPLETA";
+  if (target == null) return progress > 0 ? "EM ANDAMENTO" : "AGUARDANDO";
   if (progress > 0) return "EM ANDAMENTO";
   return "AGUARDANDO";
 }
 
-export function missionProgressPercent(progress: number, target: number) {
-  if (target <= 0) return 0;
+export function missionProgressPercent(progress: number, target: number | null) {
+  if (target == null || target <= 0) return 0;
   return Math.min(100, Math.round((progress / target) * 100));
 }
 
 export function missionProgressLabel(
   progress: number,
-  target: number,
+  target: number | null,
   unit: string | null,
 ) {
+  const unitLabel = unit?.trim() || "convites";
+  if (target == null) {
+    return `${progress} ${unitLabel}`;
+  }
   if (unit) return `${progress}/${target} ${unit}`;
   return `${progress}/${target}`;
 }

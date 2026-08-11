@@ -19,6 +19,10 @@ export const MISSION_ACTION_BY_TITLE: Record<string, MissionAction> = {
     label: "Convidar Amigos",
     href: "/dashboard#convidar-amigos",
   },
+  [CUSTOM_MISSION_TITLES.ambassador]: {
+    label: "Convidar Amigos",
+    href: "/dashboard#convidar-amigos",
+  },
   [CUSTOM_MISSION_TITLES.shareSocial]: {
     label: "Compartilhar",
     href: "/album",

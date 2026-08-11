@@ -30,19 +30,22 @@ export function MissionCard({
 }: MissionCardProps) {
   const theme = missionTheme(mission.theme);
   const Icon = missionIcon(mission.title, mission.type);
+  const unlimited = mission.target_value == null;
   const status = missionStatus(
     mission.progress,
     mission.target_value,
     mission.completed_at,
   );
-  const showProgress = status === "EM ANDAMENTO";
+  const showProgress = unlimited || status === "EM ANDAMENTO";
   const percent = missionProgressPercent(mission.progress, mission.target_value);
   const canClaim = status === "COMPLETA" && !mission.reward_claimed;
   const isClaimed = status === "COMPLETA" && mission.reward_claimed;
   const { label: actionLabel } = resolveMissionAction(mission);
   const isShareMission = mission.title === CUSTOM_MISSION_TITLES.shareSocial;
   const isFollowMission = mission.title === CUSTOM_MISSION_TITLES.followSocial;
-  const isInviteMission = mission.title === CUSTOM_MISSION_TITLES.inviteFriends;
+  const isInviteMission =
+    mission.title === CUSTOM_MISSION_TITLES.inviteFriends ||
+    mission.title === CUSTOM_MISSION_TITLES.ambassador;
   const buttonLabel =
     status === "COMPLETA"
       ? missionCardButtonLabel(status, mission.reward_claimed)
@@ -67,10 +70,10 @@ export function MissionCard({
     >
       <div className="flex items-center justify-between gap-2 sm:gap-3">
         <p className={cn("text-xs font-medium uppercase sm:text-sm", theme.statusLabel)}>
-          Status da missão
+          {theme.featured ? "Missão exclusiva" : "Status da missão"}
         </p>
         <span className={cn("rounded-pill px-3 py-1 text-xs font-medium sm:px-4 sm:py-1.5 sm:text-sm 2xl:px-5", theme.badge)}>
-          {status}
+          {unlimited ? "SEM META" : status}
         </span>
       </div>
 
@@ -112,12 +115,16 @@ export function MissionCard({
       >
         <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3">
           <span className={cn("rounded-pill px-3 py-1 text-xs font-medium sm:px-4 sm:py-1.5 sm:text-sm 2xl:px-5", theme.badge)}>
-            EM ANDAMENTO
+            {unlimited ? "CONTADOR" : "EM ANDAMENTO"}
           </span>
           <div className={cn("flex flex-wrap items-center justify-end gap-2 text-sm sm:gap-3 sm:text-base lg:text-lg 2xl:gap-4 2xl:text-xl", theme.progressText)}>
-            <span className="font-bold">{percent}% Concluída</span>
-            <span aria-hidden>•</span>
-            <span>
+            {unlimited ? null : (
+              <>
+                <span className="font-bold">{percent}% Concluída</span>
+                <span aria-hidden>•</span>
+              </>
+            )}
+            <span className={cn(unlimited && "font-bold")}>
               {missionProgressLabel(
                 mission.progress,
                 mission.target_value,
@@ -126,12 +133,14 @@ export function MissionCard({
             </span>
           </div>
         </div>
-        <div className="h-4 overflow-hidden rounded-pill bg-white sm:h-5 2xl:h-[23px]">
-          <div
-            className={cn("h-full rounded-pill transition-[width] duration-700", theme.progressFill)}
-            style={{ width: `${percent}%` }}
-          />
-        </div>
+        {unlimited ? null : (
+          <div className="h-4 overflow-hidden rounded-pill bg-white sm:h-5 2xl:h-[23px]">
+            <div
+              className={cn("h-full rounded-pill transition-[width] duration-700", theme.progressFill)}
+              style={{ width: `${percent}%` }}
+            />
+          </div>
+        )}
       </div>
 
       <div className="mt-auto space-y-4 2xl:space-y-8">

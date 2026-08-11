@@ -104,8 +104,10 @@ export function MissoesClient({ packImageUrl }: MissoesClientProps) {
     }
   }
 
-  const totalMissions = missions.length;
-  const completedForLevel = missions.filter((m) => m.completed_at).length;
+  const totalMissions = missions.filter((m) => m.target_value != null).length;
+  const completedForLevel = missions.filter(
+    (m) => m.target_value != null && m.completed_at,
+  ).length;
 
   return (
     <div className="mx-auto w-full max-w-[1112px] space-y-5 sm:space-y-6 lg:space-y-8 2xl:space-y-10">

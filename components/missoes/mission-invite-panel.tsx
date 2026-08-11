@@ -14,10 +14,15 @@ import { buildShareText } from "@/lib/referrals";
 
 interface MissionInvitePanelProps {
   progress: number;
-  targetValue: number;
+  targetValue: number | null;
+  unitLabel?: string | null;
 }
 
-export function MissionInvitePanel({ progress, targetValue }: MissionInvitePanelProps) {
+export function MissionInvitePanel({
+  progress,
+  targetValue,
+  unitLabel,
+}: MissionInvitePanelProps) {
   const [data, setData] = useState<ReferralSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -108,6 +113,10 @@ export function MissionInvitePanel({ progress, targetValue }: MissionInvitePanel
   }
 
   const shareText = buildShareText(data.invite_url);
+  const countLabel =
+    targetValue == null
+      ? `${progress} ${unitLabel?.trim() || "cadastros"} completos`
+      : `${progress}/${targetValue} convites`;
 
   return (
     <div className="w-full space-y-2 rounded-block border border-verde-500/20 bg-verde-100/50 p-2.5 sm:space-y-2.5 sm:p-3">
@@ -116,7 +125,7 @@ export function MissionInvitePanel({ progress, targetValue }: MissionInvitePanel
           <Users className="size-3.5" aria-hidden />
         </span>
         <p className="min-w-0 text-left text-xs font-semibold text-verde-escuro-500 sm:text-sm">
-          {progress}/{targetValue} convites · código{" "}
+          {countLabel} · código{" "}
           <span className="font-mono">{data.referral_code}</span>
         </p>
       </div>

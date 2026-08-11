@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { adminGuard } from "@/lib/admin-guard";
+import { fetchAuthEmailsForUserIds } from "@/lib/admin-users";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export const runtime = "nodejs";
@@ -42,14 +43,12 @@ export async function GET() {
   }
 
   const userIds = [...new Set((rows ?? []).map((row) => row.user_id))];
-  const emailMap: Record<string, string | null> = {};
+  const emailMap = new Map<string, string | null>();
 
   if (userIds.length > 0) {
-    const { data: authData } = await supabase.auth.admin.listUsers({ perPage: 1000 });
-    for (const authUser of authData?.users ?? []) {
-      if (userIds.includes(authUser.id)) {
-        emailMap[authUser.id] = authUser.email ?? null;
-      }
+    const emails = await fetchAuthEmailsForUserIds(supabase, userIds);
+    for (const [userId, email] of emails) {
+      emailMap.set(userId, email);
     }
   }
 
@@ -77,7 +76,7 @@ export async function GET() {
     admin_reply_at: replyMap[row.id]?.admin_reply_at ?? null,
     display_name: profileMap[row.user_id]?.display_name ?? null,
     username: profileMap[row.user_id]?.username ?? null,
-    email: emailMap[row.user_id] ?? null,
+    email: emailMap.get(row.user_id) ?? null,
   }));
 
   return NextResponse.json({ feedback });

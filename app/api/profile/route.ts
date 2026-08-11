@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { fetchProfilePageData } from "@/lib/profile";
-import { validarMissoes } from "@/lib/missions";
+import { validarMissoes, validarMissoesDoIndicador } from "@/lib/missions";
 import { syncUserRankingScoreById } from "@/lib/sync-ranking-score";
 import { formatPhoneBR, isValidPhoneBR } from "@/lib/phone";
 
@@ -134,6 +134,7 @@ export async function PATCH(request: Request) {
   }
 
   await validarMissoes(supabase, user.id);
+  await validarMissoesDoIndicador(supabase, user.id);
   await syncUserRankingScoreById(user.id);
 
   try {

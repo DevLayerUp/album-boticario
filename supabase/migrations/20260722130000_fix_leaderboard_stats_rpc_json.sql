@@ -1,7 +1,5 @@
--- Agrega estatísticas do ranking em uma única query (evita centenas de round-trips via fetchAllPages).
--- Retorno JSONB (1 linha) evita o limite de 1000 linhas do PostgREST em funções setof.
+-- Corrige get_leaderboard_stats: retorno em JSONB (1 linha) evita o limite de 1000 linhas do PostgREST.
 
--- Necessário quando a função já existia com RETURNS TABLE (CREATE OR REPLACE não altera o tipo de retorno).
 do $$
 declare
   fn regprocedure;

@@ -39,6 +39,7 @@ export function MissionDetailModal({
 }: MissionDetailModalProps) {
   const theme = missionTheme(mission.theme);
   const Icon = missionIcon(mission.title, mission.type);
+  const unlimited = mission.target_value == null;
   const status = missionStatus(
     mission.progress,
     mission.target_value,
@@ -48,11 +49,13 @@ export function MissionDetailModal({
   const { label: actionLabel, href: actionHref } = resolveMissionAction(mission);
   const canClaim = Boolean(mission.completed_at) && !mission.reward_claimed;
   const isClaimed = Boolean(mission.completed_at) && mission.reward_claimed;
-  const showProgress = status === "EM ANDAMENTO";
+  const showProgress = unlimited || status === "EM ANDAMENTO";
 
   const isShareMission = mission.title === CUSTOM_MISSION_TITLES.shareSocial;
   const isFollowMission = mission.title === CUSTOM_MISSION_TITLES.followSocial;
-  const isInviteMission = mission.title === CUSTOM_MISSION_TITLES.inviteFriends;
+  const isInviteMission =
+    mission.title === CUSTOM_MISSION_TITLES.inviteFriends ||
+    mission.title === CUSTOM_MISSION_TITLES.ambassador;
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -153,7 +156,7 @@ export function MissionDetailModal({
                     theme.badge,
                   )}
                 >
-                  EM ANDAMENTO
+                  {unlimited ? "CONTADOR" : "EM ANDAMENTO"}
                 </span>
                 <div
                   className={cn(
@@ -161,9 +164,13 @@ export function MissionDetailModal({
                     theme.progressText,
                   )}
                 >
-                  <span className="font-bold">{percent}% Concluída</span>
-                  <span aria-hidden>•</span>
-                  <span>
+                  {unlimited ? null : (
+                    <>
+                      <span className="font-bold">{percent}% Concluída</span>
+                      <span aria-hidden>•</span>
+                    </>
+                  )}
+                  <span className={cn(unlimited && "font-bold")}>
                     {missionProgressLabel(
                       mission.progress,
                       mission.target_value,
@@ -172,12 +179,14 @@ export function MissionDetailModal({
                   </span>
                 </div>
               </div>
-              <div className="h-2.5 overflow-hidden rounded-pill bg-white sm:h-3 2xl:h-4">
-                <div
-                  className={cn("h-full rounded-pill", theme.progressFill)}
-                  style={{ width: `${percent}%` }}
-                />
-              </div>
+              {unlimited ? null : (
+                <div className="h-2.5 overflow-hidden rounded-pill bg-white sm:h-3 2xl:h-4">
+                  <div
+                    className={cn("h-full rounded-pill", theme.progressFill)}
+                    style={{ width: `${percent}%` }}
+                  />
+                </div>
+              )}
             </div>
           ) : null}
 
@@ -185,6 +194,7 @@ export function MissionDetailModal({
             <MissionInvitePanel
               progress={mission.progress}
               targetValue={mission.target_value}
+              unitLabel={mission.progress_unit}
             />
           ) : null}
 

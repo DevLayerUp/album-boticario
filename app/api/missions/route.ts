@@ -1,9 +1,15 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { isCollaboratorAuthUser } from "@/lib/collaborator";
 import { getUserRankPosition, RANKING_MISSION_BONUS } from "@/lib/ranking";
 import { resolveMissionAction } from "@/lib/mission-actions";
 import { filterVisibleMissions } from "@/lib/mission-tiers";
+import {
+  isMissionVisibleForUser,
+  isUnlimitedMission,
+  validarMissoes,
+} from "@/lib/missions";
 
 /**
  * GET /api/missions — active missions with user progress and summary stats.
@@ -14,6 +20,8 @@ export async function GET() {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  await validarMissoes(supabase, user.id);
 
   const [missionsRes, userMissionsRes] = await Promise.all([
     supabase
@@ -40,8 +48,12 @@ export async function GET() {
     (userMissionsRes.data ?? []).map((row) => [row.mission_id, row]),
   );
 
+  const isCollaborator = isCollaboratorAuthUser(user);
+
   const visibleMissions = filterVisibleMissions(
-    missionsRes.data ?? [],
+    (missionsRes.data ?? []).filter((mission) =>
+      isMissionVisibleForUser(mission, isCollaborator),
+    ),
     (userMissionsRes.data ?? []).map((row) => ({
       mission_id: row.mission_id as number,
       reward_claimed: row.reward_claimed as boolean,
@@ -51,28 +63,30 @@ export async function GET() {
   const missions = visibleMissions.map((mission) => {
     const um = progressByMission.get(mission.id);
     const action = resolveMissionAction(mission);
+    const unlimited = isUnlimitedMission(mission);
     return {
       id: mission.id,
       title: mission.title,
       description: mission.description,
       type: mission.type,
-      target_value: mission.target_value ?? 1,
+      target_value: unlimited ? null : (mission.target_value ?? 1),
       reward_packs: mission.reward_packs,
       reward_points: mission.reward_points ?? 100,
-      ranking_points: RANKING_MISSION_BONUS,
+      ranking_points: unlimited ? 0 : RANKING_MISSION_BONUS,
       theme: mission.theme ?? "green",
       instructions: mission.instructions,
       action_label: action.label,
       action_href: action.href,
       progress_unit: mission.progress_unit,
       progress: um?.progress ?? 0,
-      completed_at: um?.completed_at ?? null,
-      reward_claimed: um?.reward_claimed ?? false,
+      completed_at: unlimited ? null : (um?.completed_at ?? null),
+      reward_claimed: unlimited ? false : (um?.reward_claimed ?? false),
     };
   });
 
-  const completedCount = missions.filter((m) => m.completed_at).length;
-  const availableCount = missions.length - completedCount;
+  const countableMissions = missions.filter((m) => m.target_value != null);
+  const completedCount = countableMissions.filter((m) => m.completed_at).length;
+  const availableCount = countableMissions.length - completedCount;
   const packsEarned = missions
     .filter((m) => m.reward_claimed)
     .reduce((sum, m) => sum + m.reward_packs, 0);

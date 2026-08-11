@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminGuard } from "@/lib/admin-guard";
+import { resolveAuthUserEmail } from "@/lib/admin-users";
 import { isResendConfigured, sendFeedbackReplyEmail } from "@/lib/email/resend";
 import { sanitizeId } from "@/lib/sanitize";
 import {
@@ -61,7 +62,8 @@ export async function POST(request: NextRequest, { params }: Params) {
   const { data: authUser, error: authErr } = await supabase.auth.admin.getUserById(
     feedback.user_id,
   );
-  if (authErr || !authUser?.user?.email) {
+  const recipientEmail = resolveAuthUserEmail(authUser?.user);
+  if (authErr || !recipientEmail) {
     return NextResponse.json(
       { error: "Usuário sem e-mail cadastrado." },
       { status: 400 },
@@ -79,7 +81,7 @@ export async function POST(request: NextRequest, { params }: Params) {
 
   try {
     await sendFeedbackReplyEmail({
-      to: authUser.user.email,
+      to: recipientEmail,
       variables: {
         displayName: profile?.display_name ?? undefined,
         feedbackType,

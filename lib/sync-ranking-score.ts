@@ -9,6 +9,7 @@ import { fetchAllPages } from "@/lib/supabase/fetch-all-pages";
 import {
   computeRankingBreakdown,
   computeAlbumProgressPct,
+  invalidateLeaderboardCache,
   type RankingScoreBreakdown,
   type RankingScoreInput,
 } from "@/lib/ranking";
@@ -77,6 +78,8 @@ export async function syncUserRankingScore(
     .eq("id", userId);
 
   if (error) throw new Error(error.message);
+
+  invalidateLeaderboardCache();
 
   return { score: breakdown.score, breakdown };
 }

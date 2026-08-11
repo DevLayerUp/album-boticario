@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { buildRankingMissionCountsFromActivity } from "@/lib/missions";
 import { countAssignedAlbumSlots } from "@/lib/album-progress";
 import { loadRankingScoreInput } from "@/lib/sync-ranking-score";
 import { fetchAllPages } from "@/lib/supabase/fetch-all-pages";
@@ -189,25 +190,36 @@ async function fetchLeaderboardStatsRows(
     console.warn("[ranking] get_leaderboard_stats RPC unavailable:", error.message);
     return null;
   }
-  return (data ?? []) as LeaderboardStatsRow[];
+
+  if (Array.isArray(data)) {
+    return data as LeaderboardStatsRow[];
+  }
+
+  if (data && typeof data === "object") {
+    return data as LeaderboardStatsRow[];
+  }
+
+  return [];
 }
 
-async function buildMissionCountsFromUserMissions(
+async function getLeaderboardCore(
   admin: SupabaseClient,
-): Promise<Map<string, number>> {
-  const rows = await fetchAllPages<{ user_id: string }>((from, to) =>
-    admin
-      .from("user_missions")
-      .select("user_id")
-      .not("completed_at", "is", null)
-      .range(from, to),
-  );
-
-  const counts = new Map<string, number>();
-  for (const row of rows) {
-    counts.set(row.user_id, (counts.get(row.user_id) ?? 0) + 1);
+): Promise<{ entries: RankingEntry[]; total_slots: number }> {
+  const now = Date.now();
+  if (leaderboardCoreCache && leaderboardCoreCache.expires > now) {
+    return {
+      entries: leaderboardCoreCache.entries,
+      total_slots: leaderboardCoreCache.total_slots,
+    };
   }
-  return counts;
+
+  const built = await buildLeaderboardCore(admin);
+  leaderboardCoreCache = {
+    entries: built.entries,
+    total_slots: built.total_slots,
+    expires: now + LEADERBOARD_TTL_MS,
+  };
+  return built;
 }
 
 function mapStatsRowToEntry(
@@ -280,7 +292,7 @@ async function buildLeaderboardCoreLegacy(
       fetchAllPages<{ user_id: string; opened_at: string | null }>((from, to) =>
         admin.from("packs").select("user_id, opened_at").range(from, to),
       ),
-      buildMissionCountsFromUserMissions(admin),
+      buildRankingMissionCountsFromActivity(admin),
       fetchAllPages<{ requester_id: string; receiver_id: string }>((from, to) =>
         admin
           .from("trade_requests")
@@ -403,6 +415,7 @@ async function buildCurrentUserRankingEntry(
   const inList = sorted.find((entry) => entry.user_id === userId);
 
   if (inList) {
+    const score = inList.score;
     return {
       ...inList,
       filled_slots: accurate.filled_slots,
@@ -411,6 +424,7 @@ async function buildCurrentUserRankingEntry(
       packs_opened: accurate.packs_opened,
       missions_completed: accurate.missions_completed,
       trades_accepted: accurate.trades_accepted,
+      score,
     };
   }
 
@@ -453,7 +467,7 @@ async function buildCurrentUserRankingEntry(
   };
 }
 
-/** Posição no ranking só para o usuário logado — sem varrer tabelas inteiras. */
+/** Posição no ranking — usa o mesmo core cacheado da página de ranking. */
 export async function getUserRankPosition(
   admin: SupabaseClient,
   userId: string,
@@ -461,7 +475,7 @@ export async function getUserRankPosition(
   const [{ data: profile }, adminUserIds] = await Promise.all([
     admin
       .from("profiles")
-      .select("ranking_score, show_in_ranking, ranking_score_updated_at")
+      .select("show_in_ranking")
       .eq("id", userId)
       .maybeSingle(),
     getCachedAdminUserIds(admin),
@@ -471,46 +485,25 @@ export async function getUserRankPosition(
     return null;
   }
 
-  let score = profile.ranking_score ?? 0;
-  if (!profile.ranking_score_updated_at) {
-    const input = await loadRankingScoreInput(admin, userId);
-    score = computeRankingScore(input);
-  }
+  const core = await getLeaderboardCore(admin);
+  const entry = core.entries.find((row) => row.user_id === userId);
+  if (entry) return entry.rank;
 
-  const adminIdList = [...adminUserIds];
-  let query = admin
-    .from("profiles")
-    .select("id", { count: "exact", head: true })
-    .or("show_in_ranking.is.null,show_in_ranking.eq.true")
-    .gt("ranking_score", score);
-
-  if (adminIdList.length > 0) {
-    query = query.not("id", "in", `(${adminIdList.join(",")})`);
-  }
-
-  const { count, error } = await query;
-  if (error) throw error;
-
-  return (count ?? 0) + 1;
+  const totalSlotsNormalized = Math.max(core.total_slots, 1);
+  const currentUserEntry = await buildCurrentUserRankingEntry(
+    admin,
+    userId,
+    core.entries,
+    totalSlotsNormalized,
+  );
+  return currentUserEntry?.rank ?? null;
 }
 
 export async function buildLeaderboard(
   admin: SupabaseClient,
   currentUserId: string,
 ): Promise<LeaderboardResponse> {
-  const now = Date.now();
-  let core = leaderboardCoreCache;
-
-  if (!core || core.expires <= now) {
-    const built = await buildLeaderboardCore(admin);
-    core = {
-      entries: built.entries,
-      total_slots: built.total_slots,
-      expires: now + LEADERBOARD_TTL_MS,
-    };
-    leaderboardCoreCache = core;
-  }
-
+  const core = await getLeaderboardCore(admin);
   const totalSlotsNormalized = Math.max(core.total_slots, 1);
   const current_user_entry = await buildCurrentUserRankingEntry(
     admin,

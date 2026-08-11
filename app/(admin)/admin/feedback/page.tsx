@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { fetchAuthEmailsForUserIds } from "@/lib/admin-users";
 import { FeedbackAdminClient, type AdminFeedbackRow } from "./feedback-client";
 
 export const metadata: Metadata = { title: "Feedbacks" };
@@ -41,13 +42,11 @@ export default async function FeedbackAdminPage() {
   }
   const userIds = [...new Set(feedbackRows.map((row) => row.user_id))];
 
-  const emailMap: Record<string, string | null> = {};
+  const emailMap = new Map<string, string | null>();
   if (userIds.length > 0) {
-    const { data: authData } = await supabase.auth.admin.listUsers({ perPage: 1000 });
-    for (const authUser of authData?.users ?? []) {
-      if (userIds.includes(authUser.id)) {
-        emailMap[authUser.id] = authUser.email ?? null;
-      }
+    const emails = await fetchAuthEmailsForUserIds(supabase, userIds);
+    for (const [userId, email] of emails) {
+      emailMap.set(userId, email);
     }
   }
 
@@ -76,7 +75,7 @@ export default async function FeedbackAdminPage() {
     admin_reply_at: replyMap[row.id]?.admin_reply_at ?? null,
     display_name: profileMap[row.user_id]?.display_name ?? null,
     username: profileMap[row.user_id]?.username ?? null,
-    email: emailMap[row.user_id] ?? null,
+    email: emailMap.get(row.user_id) ?? null,
   }));
 
   return <FeedbackAdminClient initialData={initialData} />;

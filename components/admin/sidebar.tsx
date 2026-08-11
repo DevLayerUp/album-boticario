@@ -23,6 +23,7 @@ import {
   Sparkles,
   Search,
   Mail,
+  Shirt,
 } from "lucide-react";
 
 const NAV = [
@@ -39,6 +40,7 @@ const NAV = [
   { href: "/admin/raridades",    label: "Raridades",     icon: Layers },
   { href: "/admin/quiz",         label: "Quiz",          icon: HelpCircle },
   { href: "/admin/missoes",      label: "Missões",       icon: Target },
+  { href: "/admin/divulgacao",   label: "Divulgação",    icon: Shirt },
   { href: "/admin/avisos",       label: "Avisos",        icon: Megaphone },
   { href: "/admin/automacoes-email", label: "E-mails", icon: Mail },
   { href: "/admin/feedback",     label: "Feedbacks",     icon: MessageSquare },
