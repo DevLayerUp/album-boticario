@@ -27,7 +27,7 @@ from (
       0,
       0,
       'gold',
-      'Compartilhe seu link de convite. Só contam amigos que concluírem o cadastro completo (perfil preenchido). Não há meta máxima — divulgue o máximo que puder. Os 3 colaboradores com mais convites válidos ganham a camiseta.',
+      'Compartilhe seu link de convite. A contagem deste desafio começa do zero e é independente da missão Convidar amigos. Só contam amigos que se cadastrarem a partir do lançamento deste programa e concluírem o cadastro completo (perfil preenchido). Não há meta máxima — divulgue o máximo que puder. Os 3 colaboradores com mais convites válidos ganham a camiseta.',
       'Convidar Amigos',
       '/dashboard#convidar-amigos',
       'cadastros',

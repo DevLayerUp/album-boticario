@@ -1,7 +1,11 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { resolveAuthUserEmail } from "@/lib/admin-users";
+import {
+  countAmbassadorCompleteReferrals,
+  countAmbassadorSignups,
+  getAmbassadorProgramStartedAt,
+} from "@/lib/ambassador-program";
 import { isCollaboratorEmail } from "@/lib/collaborator";
-import { isProfileComplete } from "@/lib/profile-complete";
 import { fetchAllPages } from "@/lib/supabase/fetch-all-pages";
 
 export const ADMIN_DIVULGACAO_PAGE_SIZE = 25;
@@ -84,7 +88,7 @@ export async function listAdminDivulgacao(
 
   const collaboratorIdList = [...collaboratorIds];
 
-  const [profiles, referredProfiles] = await Promise.all([
+  const [profiles, referredProfiles, programStartedAt] = await Promise.all([
     (async () => {
       if (collaboratorIdList.length === 0) return [];
       const chunks: Array<{
@@ -108,6 +112,7 @@ export async function listAdminDivulgacao(
     })(),
     fetchAllPages<{
       referred_by: string;
+      created_at: string;
       display_name: string | null;
       bio: string | null;
       phone: string | null;
@@ -119,44 +124,40 @@ export async function listAdminDivulgacao(
       admin
         .from("profiles")
         .select(
-          "referred_by, display_name, bio, phone, city, state, avatar_url, sticker_url",
+          "referred_by, created_at, display_name, bio, phone, city, state, avatar_url, sticker_url",
         )
         .not("referred_by", "is", null)
         .range(from, to),
     ),
+    getAmbassadorProgramStartedAt(admin),
   ]);
 
   const profileById = new Map(profiles.map((row) => [row.id, row]));
 
-  const signupCount = new Map<string, number>();
-  const completeCount = new Map<string, number>();
+  const referredByCollaborator = new Map<
+    string,
+    Array<{
+      created_at: string;
+      display_name: string | null;
+      bio: string | null;
+      phone: string | null;
+      city: string | null;
+      state: string | null;
+      avatar_url: string | null;
+      sticker_url: string | null;
+    }>
+  >();
 
   for (const referred of referredProfiles) {
     if (!collaboratorIds.has(referred.referred_by)) continue;
-    signupCount.set(
-      referred.referred_by,
-      (signupCount.get(referred.referred_by) ?? 0) + 1,
-    );
-    if (
-      isProfileComplete({
-        display_name: referred.display_name,
-        bio: referred.bio,
-        phone: referred.phone,
-        city: referred.city,
-        state: referred.state,
-        avatar_url: referred.avatar_url,
-        sticker_url: referred.sticker_url,
-      })
-    ) {
-      completeCount.set(
-        referred.referred_by,
-        (completeCount.get(referred.referred_by) ?? 0) + 1,
-      );
-    }
+    const list = referredByCollaborator.get(referred.referred_by) ?? [];
+    list.push(referred);
+    referredByCollaborator.set(referred.referred_by, list);
   }
 
   let rows: AdminDivulgacaoRow[] = collaborators.map((auth) => {
     const profile = profileById.get(auth.id);
+    const referred = referredByCollaborator.get(auth.id) ?? [];
     return {
       id: auth.id,
       email: auth.email,
@@ -164,10 +165,18 @@ export async function listAdminDivulgacao(
       username: profile?.username ?? null,
       sticker_url: profile?.sticker_url ?? null,
       referral_code: profile?.referral_code ?? null,
-      complete_invites: completeCount.get(auth.id) ?? 0,
-      total_signups: signupCount.get(auth.id) ?? 0,
+      complete_invites: countAmbassadorCompleteReferrals(
+        referred,
+        programStartedAt,
+      ),
+      total_signups: countAmbassadorSignups(referred, programStartedAt),
     };
   });
+
+  const totalCompleteInvites = rows.reduce(
+    (sum, row) => sum + row.complete_invites,
+    0,
+  );
 
   if (search) {
     rows = rows.filter((row) => {
@@ -198,11 +207,6 @@ export async function listAdminDivulgacao(
   const safePage = Math.min(page, totalPages);
   const offset = (safePage - 1) * limit;
   const pageRows = rows.slice(offset, offset + limit);
-
-  const totalCompleteInvites = collaborators.reduce(
-    (sum, auth) => sum + (completeCount.get(auth.id) ?? 0),
-    0,
-  );
 
   return {
     collaborators: pageRows,

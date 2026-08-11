@@ -79,7 +79,9 @@ export function DivulgacaoClient() {
         </h1>
         <p className="mt-1 text-sm text-gray-500">
           Colaboradores elegíveis ao programa (e-mails corporativos), ordenados
-          por convites com cadastro completo. Os 3 primeiros ganham a camiseta.
+          por convites válidos após o lançamento da campanha (contagem
+          independente de &quot;Convidar amigos&quot;). Os 3 primeiros ganham a
+          camiseta.
         </p>
       </div>
 

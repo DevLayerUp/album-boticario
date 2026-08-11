@@ -14,6 +14,10 @@ import {
   countUserFilledAssignedSlots,
   loadAssignedAlbumSlotsByPage,
 } from "@/lib/album-progress";
+import {
+  countAmbassadorCompleteReferrals,
+  getAmbassadorProgramStartedAt,
+} from "@/lib/ambassador-program";
 import { isCollaboratorAuthUser } from "@/lib/collaborator";
 import {
   FOLLOW_SOCIAL_MISSION_TITLE,
@@ -53,8 +57,13 @@ interface ProfileSnapshot {
 interface MissionMetrics {
   profile: ProfileSnapshot | null;
   referralCount: number;
-  /** Indicados com cadastro completo (perfil preenchido). */
+  /** Indicados com cadastro completo (perfil preenchido) — histórico geral. */
   completeReferralCount: number;
+  /**
+   * Contagem da missão "Divulgue o álbum":
+   * só indicados criados após o início do programa + perfil completo.
+   */
+  ambassadorReferralCount: number;
   tradeCount: number;
   quizCorrectCount: number;
   openedPacksCount: number;
@@ -128,6 +137,7 @@ async function loadMissionMetrics(
     pastedCount,
     assignedSlots,
     userAlbumRes,
+    ambassadorStartedAt,
   ] = await Promise.all([
     supabase
       .from("profiles")
@@ -142,7 +152,9 @@ async function loadMissionMetrics(
       .eq("referred_by", userId),
     supabase
       .from("profiles")
-      .select("display_name, avatar_url, sticker_url, bio, phone, city, state")
+      .select(
+        "display_name, avatar_url, sticker_url, bio, phone, city, state, created_at",
+      )
       .eq("referred_by", userId),
     supabase
       .from("trade_requests")
@@ -166,6 +178,7 @@ async function loadMissionMetrics(
       .select("slot_id, album_slots!inner(page_id, sticker_id)")
       .eq("user_id", userId)
       .not("album_slots.sticker_id", "is", null),
+    getAmbassadorProgramStartedAt(supabase),
   ]);
 
   const slotsByPage = buildSlotsByPage(assignedSlots);
@@ -188,7 +201,8 @@ async function loadMissionMetrics(
     }
   }
 
-  const completeReferralCount = (referredProfilesRes.data ?? []).filter((row) =>
+  const referredRows = referredProfilesRes.data ?? [];
+  const completeReferralCount = referredRows.filter((row) =>
     isProfileComplete({
       ...row,
       social_shared_at: null,
@@ -196,10 +210,16 @@ async function loadMissionMetrics(
     }),
   ).length;
 
+  const ambassadorReferralCount = countAmbassadorCompleteReferrals(
+    referredRows,
+    ambassadorStartedAt,
+  );
+
   return {
     profile: profileRes.data,
     referralCount: referralsRes.count ?? 0,
     completeReferralCount,
+    ambassadorReferralCount,
     tradeCount: tradesRes.count ?? 0,
     quizCorrectCount: quizRes.count ?? 0,
     openedPacksCount: packsRes.count ?? 0,
@@ -234,7 +254,7 @@ export function computeMissionActualProgress(
         case CUSTOM_MISSION_TITLES.inviteFriends:
           return metrics.referralCount;
         case CUSTOM_MISSION_TITLES.ambassador:
-          return metrics.completeReferralCount;
+          return metrics.ambassadorReferralCount;
         case CUSTOM_MISSION_TITLES.shareSocial:
           return metrics.profile?.social_shared_at ? 1 : 0;
         case CUSTOM_MISSION_TITLES.followSocial:
@@ -491,6 +511,7 @@ export async function buildRankingMissionCountsFromActivity(
       },
       referralCount: referralsByUser.get(profile.id) ?? 0,
       completeReferralCount: 0,
+      ambassadorReferralCount: 0,
       tradeCount: tradesByUser.get(profile.id) ?? 0,
       quizCorrectCount: quizByUser.get(profile.id) ?? 0,
       openedPacksCount: packsByUser.get(profile.id) ?? 0,
