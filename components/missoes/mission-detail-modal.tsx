@@ -198,6 +198,7 @@ export function MissionDetailModal({
               progress={mission.progress}
               targetValue={mission.target_value}
               unitLabel={mission.progress_unit}
+              showShareButtons={!isAmbassador}
             />
           ) : null}
 

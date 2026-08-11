@@ -16,12 +16,15 @@ interface MissionInvitePanelProps {
   progress: number;
   targetValue: number | null;
   unitLabel?: string | null;
+  /** Ícones de redes sociais — desligados no Desafio GB. */
+  showShareButtons?: boolean;
 }
 
 export function MissionInvitePanel({
   progress,
   targetValue,
   unitLabel,
+  showShareButtons = true,
 }: MissionInvitePanelProps) {
   const [data, setData] = useState<ReferralSummary | null>(null);
   const [loading, setLoading] = useState(true);
@@ -145,11 +148,13 @@ export function MissionInvitePanel({
         </button>
       </div>
 
-      <SocialShareButtons
-        shareUrl={data.invite_url}
-        shareText={shareText}
-        onNativeShare={nativeShare}
-      />
+      {showShareButtons ? (
+        <SocialShareButtons
+          shareUrl={data.invite_url}
+          shareText={shareText}
+          onNativeShare={nativeShare}
+        />
+      ) : null}
     </div>
   );
 }
