@@ -2,7 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { resolveAuthUserEmail } from "@/lib/admin-users";
 import {
   countAmbassadorCompleteReferrals,
-  countAmbassadorSignups,
+  countAmbassadorReferrals,
   getAmbassadorProgramStartedAt,
 } from "@/lib/ambassador-program";
 import { isCollaboratorEmail } from "@/lib/collaborator";
@@ -17,9 +17,9 @@ export interface AdminDivulgacaoRow {
   username: string | null;
   sticker_url: string | null;
   referral_code: string | null;
-  /** Indicados com cadastro completo (contam no programa). */
+  /** Indicados cadastrados no período do programa (contam no desafio). */
   complete_invites: number;
-  /** Indicados que criaram conta (ainda sem perfil completo). */
+  /** Indicados do período com perfil completo (métrica auxiliar). */
   total_signups: number;
 }
 
@@ -165,11 +165,11 @@ export async function listAdminDivulgacao(
       username: profile?.username ?? null,
       sticker_url: profile?.sticker_url ?? null,
       referral_code: profile?.referral_code ?? null,
-      complete_invites: countAmbassadorCompleteReferrals(
+      complete_invites: countAmbassadorReferrals(referred, programStartedAt),
+      total_signups: countAmbassadorCompleteReferrals(
         referred,
         programStartedAt,
       ),
-      total_signups: countAmbassadorSignups(referred, programStartedAt),
     };
   });
 

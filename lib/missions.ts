@@ -15,7 +15,7 @@ import {
   loadAssignedAlbumSlotsByPage,
 } from "@/lib/album-progress";
 import {
-  countAmbassadorCompleteReferrals,
+  countAmbassadorReferrals,
   getAmbassadorProgramStartedAt,
 } from "@/lib/ambassador-program";
 import { isCollaboratorAuthUser } from "@/lib/collaborator";
@@ -60,8 +60,8 @@ interface MissionMetrics {
   /** Indicados com cadastro completo (perfil preenchido) — histórico geral. */
   completeReferralCount: number;
   /**
-   * Contagem da missão "Divulgue o álbum":
-   * só indicados criados após o início do programa + perfil completo.
+   * Contagem da missão "Desafio GB: Divulgue o álbum":
+   * só indicados com conta criada após o início do programa.
    */
   ambassadorReferralCount: number;
   tradeCount: number;
@@ -213,7 +213,7 @@ async function loadMissionMetrics(
     }),
   ).length;
 
-  const ambassadorReferralCount = countAmbassadorCompleteReferrals(
+  const ambassadorReferralCount = countAmbassadorReferrals(
     referredRows,
     ambassadorStartedAt,
   );
@@ -257,6 +257,7 @@ export function computeMissionActualProgress(
         case CUSTOM_MISSION_TITLES.inviteFriends:
           return metrics.referralCount;
         case CUSTOM_MISSION_TITLES.ambassador:
+        case "Divulgue o álbum":
           return metrics.ambassadorReferralCount;
         case CUSTOM_MISSION_TITLES.shareSocial:
           return metrics.profile?.social_shared_at ? 1 : 0;
@@ -613,20 +614,22 @@ async function syncMissionProgress(
 }
 
 /**
- * Reconcilia missões do indicador quando um indicado completa o perfil.
+ * Reconcilia missões do indicador quando um indicado se cadastra / atualiza perfil.
+ * Usa service role — o cliente do indicado não pode escrever em user_missions do indicador (RLS).
  */
 export async function validarMissoesDoIndicador(
-  supabase: SupabaseClient,
+  _supabase: SupabaseClient,
   userId: string,
 ): Promise<void> {
-  const { data: profile } = await supabase
+  const admin = createAdminClient();
+  const { data: profile } = await admin
     .from("profiles")
     .select("referred_by")
     .eq("id", userId)
     .maybeSingle();
 
   if (!profile?.referred_by || profile.referred_by === userId) return;
-  await validarMissoes(supabase, profile.referred_by);
+  await validarMissoes(admin, profile.referred_by);
 }
 
 /**

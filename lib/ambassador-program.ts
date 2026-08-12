@@ -7,7 +7,7 @@ export const AMBASSADOR_MISSION_TITLE = "Desafio GB: Divulgue o álbum";
 export const AMBASSADOR_MISSION_TITLE_LEGACY = "Divulgue o álbum";
 
 export const AMBASSADOR_MISSION_INSTRUCTIONS =
-  "Compartilhe seu link de convite com amigos. Só contam cadastros feitos a partir do lançamento deste desafio, com perfil completo. Não há meta máxima — divulgue o máximo que puder. Os 3 colaboradores que mais trouxerem amigos para se tornarem Fãs por Natureza ganham a camiseta. Para mais informações, acesse o regulamento.";
+  "Compartilhe seu link de convite com amigos. Só contam cadastros feitos a partir do lançamento deste desafio (conta criada via seu convite). Não há meta máxima — divulgue o máximo que puder. Os 3 colaboradores que mais trouxerem amigos para se tornarem Fãs por Natureza ganham a camiseta. Para mais informações, acesse o regulamento.";
 
 /** Regulamento oficial do Desafio GB (abre em nova aba). */
 export const AMBASSADOR_REGULAMENTO_URL =
@@ -77,6 +77,30 @@ export function isAmbassadorReferralInProgram(
   return Date.parse(createdAt) >= Date.parse(programStartedAt);
 }
 
+/**
+ * Conta indicados do Desafio GB: cadastros (conta criada) após o início do programa.
+ * Independente da missão "Convidar amigos" e sem exigir perfil completo.
+ */
+export function countAmbassadorReferrals(
+  referred: Array<{ created_at: string }>,
+  programStartedAt: string | null,
+): number {
+  return referred.filter((row) =>
+    isAmbassadorReferralInProgram(row.created_at, programStartedAt),
+  ).length;
+}
+
+/** @deprecated use countAmbassadorReferrals — mantido para compatibilidade. */
+export function countAmbassadorSignups(
+  referred: Array<{ created_at: string }>,
+  programStartedAt: string | null,
+): number {
+  return countAmbassadorReferrals(referred, programStartedAt);
+}
+
+/**
+ * Indicados do programa com perfil completo (métrica auxiliar no admin).
+ */
 export function countAmbassadorCompleteReferrals(
   referred: AmbassadorReferredProfile[],
   programStartedAt: string | null,
@@ -85,14 +109,5 @@ export function countAmbassadorCompleteReferrals(
     (row) =>
       isAmbassadorReferralInProgram(row.created_at, programStartedAt) &&
       isProfileComplete(row),
-  ).length;
-}
-
-export function countAmbassadorSignups(
-  referred: Array<{ created_at: string }>,
-  programStartedAt: string | null,
-): number {
-  return referred.filter((row) =>
-    isAmbassadorReferralInProgram(row.created_at, programStartedAt),
   ).length;
 }

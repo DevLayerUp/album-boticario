@@ -8,13 +8,12 @@ interface MissionAmbassadorCounterProps {
   className?: string;
 }
 
-/** Contagem visual de perfis trazidos no Desafio GB. */
+/** Contagem visual de cadastros via convite no Desafio GB. */
 export function MissionAmbassadorCounter({
   count,
   className,
 }: MissionAmbassadorCounterProps) {
-  const label =
-    count === 1 ? "perfil completo trazido" : "perfis completos trazidos";
+  const label = count === 1 ? "cadastro via convite" : "cadastros via convite";
 
   return (
     <div

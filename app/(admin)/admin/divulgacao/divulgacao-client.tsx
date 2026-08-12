@@ -98,7 +98,7 @@ export function DivulgacaoClient() {
         <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
           <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-amber-800">
             <Shirt size={14} />
-            Cadastros completos (total)
+            Cadastros via convite (total)
           </p>
           <p className="mt-1 font-display text-2xl font-bold text-amber-950">
             {totalCompleteInvites}
@@ -216,13 +216,13 @@ export function DivulgacaoClient() {
                         <span className="text-xs text-gray-400">—</span>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-center text-gray-600">
-                      {row.total_signups}
-                    </td>
                     <td className="px-4 py-3 text-center">
                       <span className="inline-flex min-w-8 items-center justify-center rounded-full bg-gb-green/10 px-2.5 py-0.5 text-sm font-semibold text-gb-green-deep">
                         {row.complete_invites}
                       </span>
+                    </td>
+                    <td className="px-4 py-3 text-center text-gray-600">
+                      {row.total_signups}
                     </td>
                   </tr>
                 );

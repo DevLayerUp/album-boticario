@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { validarMissoes } from "@/lib/missions";
 import { normalizeReferralCode } from "@/lib/referrals";
 import { syncUserRankingScoreById } from "@/lib/sync-ranking-score";
 
@@ -36,13 +38,15 @@ export async function POST(request: NextRequest) {
   }
 
   if (claimed) {
-    const { data: profile } = await supabase
+    const admin = createAdminClient();
+    const { data: profile } = await admin
       .from("profiles")
       .select("referred_by")
       .eq("id", user.id)
       .maybeSingle();
 
     if (profile?.referred_by) {
+      await validarMissoes(admin, profile.referred_by);
       await syncUserRankingScoreById(profile.referred_by);
     }
   }

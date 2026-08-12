@@ -118,7 +118,7 @@ export function MissionInvitePanel({
   const shareText = buildShareText(data.invite_url);
   const countLabel =
     targetValue == null
-      ? `${progress} ${unitLabel?.trim() || "cadastros"} completos`
+      ? `${progress} ${unitLabel?.trim() || "cadastros"} via convite`
       : `${progress}/${targetValue} convites`;
 
   return (
