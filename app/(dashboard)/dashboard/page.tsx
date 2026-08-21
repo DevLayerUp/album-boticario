@@ -29,6 +29,8 @@ import {
   parseDashboardFeatureCards,
 } from "@/lib/dashboard-feature-cards";
 import { InviteCard } from "@/components/dashboard/invite-card";
+import { Bonus10kPopup } from "@/components/dashboard/bonus-10k-popup";
+import { BONUS_10K_PACK_SOURCE } from "@/lib/bonus-10k";
 import { buildInviteUrl } from "@/lib/referrals";
 import { headers } from "next/headers";
 
@@ -55,6 +57,7 @@ export default async function DashboardPage() {
     filledRes,
     tradesRes,
     featureCardsRes,
+    bonus10kRes,
   ] = await Promise.all([
     supabase
       .from("profiles")
@@ -90,7 +93,14 @@ export default async function DashboardPage() {
       .select("value")
       .eq("key", DASHBOARD_FEATURE_CARDS_KEY)
       .maybeSingle(),
+    supabase
+      .from("packs")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .eq("source", BONUS_10K_PACK_SOURCE),
   ]);
+
+  const bonus10kClaimed = (bonus10kRes.count ?? 0) > 0;
 
   const nome =
     user?.user_metadata?.full_name ??
@@ -137,6 +147,8 @@ export default async function DashboardPage() {
 
   return (
     <div className="flex flex-col">
+      {!bonus10kClaimed && <Bonus10kPopup />}
+
       {/* ── Banner admin ──────────────────────────────────────────────── */}
       {isAdmin && (
         <Link

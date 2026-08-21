@@ -35,6 +35,16 @@ export const dashboardAssets = {
   pacotinhos: {
     page: `${BASE}/pacotinhos/bg-pacotinhos.png`,
   },
+  /** Pop-up da campanha 10 mil Fãs por Natureza. */
+  bonus10k: {
+    grid: `${BASE}/bonus-10k/grid.png`,
+    jiboia: `${BASE}/bonus-10k/jiboia.png`,
+    papagaio: `${BASE}/bonus-10k/papagaio.png`,
+    onca: `${BASE}/bonus-10k/onca.png`,
+    pacote: `${BASE}/bonus-10k/pacote.png`,
+    leaf: `${BASE}/bonus-10k/leaf.svg`,
+    close: `${BASE}/bonus-10k/close.svg`,
+  },
   /** Fundo do card de quiz (linhas topográficas, object-cover). */
   quiz: {
     background: `${BASE}/quiz/blob-lg.png`,

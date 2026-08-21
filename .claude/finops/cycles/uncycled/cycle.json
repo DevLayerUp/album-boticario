@@ -1,0 +1,65 @@
+{
+  "cycle_id": "uncycled",
+  "label": "uncycled",
+  "status": "active",
+  "started_at": null,
+  "sessions": [
+    "0a96537b-55df-4b61-bd0b-2c7ec4cb6816",
+    "925c7e55-05d9-4ed0-a6ad-cfc0b15d123e",
+    "551e51c1-da5b-4f3f-a2b7-3fd0be0f1bd0",
+    "2545fe97-9d2a-46d0-bb06-1fe69b516c12",
+    "d75c3444-d9d4-440c-90ea-a13bb1de4fd2",
+    "ecae0d36-672c-436e-b537-6cee6aef3628",
+    "7f0ac662-5e29-4d5f-8a5a-3627df8e072b"
+  ],
+  "session_count": 7,
+  "subagent_count": 1,
+  "totals": {
+    "input_tokens": 190858,
+    "output_tokens": 50381,
+    "cache_read_tokens": 0,
+    "cache_write_tokens": 0,
+    "total_tokens": 241239,
+    "cost_usd": 1.3282
+  },
+  "subagents_total": {
+    "input_tokens": 38129,
+    "output_tokens": 3321,
+    "cache_read_tokens": 0,
+    "cache_write_tokens": 0,
+    "total_tokens": 41450,
+    "cost_usd": 0.1642
+  },
+  "by_model": {
+    "grok-4.5": {
+      "input_tokens": 38129,
+      "output_tokens": 3481,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 0,
+      "cost_usd": 0.1666
+    },
+    "cursor-grok-4.5-high": {
+      "input_tokens": 38129,
+      "output_tokens": 3321,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 0,
+      "cost_usd": 0.1642
+    },
+    "composer-2.5": {
+      "input_tokens": 114551,
+      "output_tokens": 43171,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 0,
+      "cost_usd": 0.9911
+    },
+    "grok-4.6": {
+      "input_tokens": 49,
+      "output_tokens": 408,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 0,
+      "cost_usd": 0.0063
+    }
+  },
+  "cost_fidelity": "mixed_or_estimated",
+  "updated_at": "2026-08-21T10:42:24.134390-03:00"
+}

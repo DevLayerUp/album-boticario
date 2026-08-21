@@ -3,6 +3,7 @@ export const SOURCE_LABEL: Record<string, string> = {
   mission: "Missão",
   manual: "Bônus",
   admin_grant: "Admin",
+  bonus_10k: "Pacote Bônus",
 };
 
 export function formatPackDate(dateIso: string): string {

@@ -9,7 +9,7 @@ const barlow = Barlow({
   subsets: ["latin"],
   variable: "--font-barlow",
   display: "swap",
-  weight: ["400", "500", "700", "800"],
+  weight: ["400", "500", "700", "800", "900"],
 });
 
 const GTM_ID = process.env.NEXT_PUBLIC_GTM_ID ?? "GTM-MXPKJ4B2";
