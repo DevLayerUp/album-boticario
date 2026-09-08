@@ -4,7 +4,7 @@
 --
 -- O que faz:
 --   • Remove linhas de user_quiz_answers com answered_at no dia civil de hoje (BRT)
---   • Usa o MESMO critério da API (/api/quiz/daily): data BRT + janela 00:00–23:59:59
+--   • Usa o MESMO critério da API (/api/quiz/daily): dia civil BRT (00:00–24:00 -03)
 --   • Libera os usuários a responder o quiz diário de novo
 --
 -- O que NÃO faz (revisar manualmente se precisar):
@@ -30,8 +30,8 @@ select
   count(distinct uqa.user_id)::bigint as usuarios_afetados
 from today_brt t
 left join public.user_quiz_answers uqa
-  on uqa.answered_at >= (t.d || 'T00:00:00')::timestamptz
- and uqa.answered_at <= (t.d || 'T23:59:59')::timestamptz
+  on uqa.answered_at >= (t.d || 'T00:00:00-03:00')::timestamptz
+ and uqa.answered_at <  (t.d || 'T00:00:00-03:00')::timestamptz + interval '1 day'
 group by t.d;
 
 -- Detalhe por usuário (opcional)
@@ -64,8 +64,8 @@ with today_brt as (
 deleted as (
   delete from public.user_quiz_answers uqa
   using today_brt t
-  where uqa.answered_at >= (t.d || 'T00:00:00')::timestamptz
-    and uqa.answered_at <= (t.d || 'T23:59:59')::timestamptz
+  where uqa.answered_at >= (t.d || 'T00:00:00-03:00')::timestamptz
+    and uqa.answered_at <  (t.d || 'T00:00:00-03:00')::timestamptz + interval '1 day'
   returning uqa.id, uqa.user_id, uqa.quiz_id, uqa.is_correct
 )
 select
@@ -85,8 +85,8 @@ with today_brt as (
 select count(*)::bigint as respostas_restantes_hoje
 from today_brt t
 join public.user_quiz_answers uqa
-  on uqa.answered_at >= (t.d || 'T00:00:00')::timestamptz
- and uqa.answered_at <= (t.d || 'T23:59:59')::timestamptz;
+  on uqa.answered_at >= (t.d || 'T00:00:00-03:00')::timestamptz
+ and uqa.answered_at <  (t.d || 'T00:00:00-03:00')::timestamptz + interval '1 day';
 
 -- -----------------------------------------------------------------------------
 -- OPCIONAL — remover pacotinhos do quiz concedidos hoje e ainda não abertos

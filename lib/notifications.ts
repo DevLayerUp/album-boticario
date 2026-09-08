@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getTodayQuizAnswer, findAvailableDailyQuiz } from "@/lib/quiz-daily";
 import { getQuizToday } from "@/lib/quiz-schedule";
 
 export type NotificationType =
@@ -93,50 +94,11 @@ export async function syncQuizNotification(
   userId: string
 ) {
   const today = getQuizToday();
-
-  const { data: todayAnswer } = await supabase
-    .from("user_quiz_answers")
-    .select("id")
-    .eq("user_id", userId)
-    .gte("answered_at", `${today}T00:00:00`)
-    .lte("answered_at", `${today}T23:59:59`)
-    .maybeSingle();
-
+  const todayAnswer = await getTodayQuizAnswer(supabase, userId);
   if (todayAnswer) return;
 
-  const { data: dated } = await supabase
-    .from("quizzes")
-    .select("id")
-    .eq("valid_date", today)
-    .eq("is_active", true)
-    .maybeSingle();
-
-  let hasQuiz = !!dated;
-
-  if (!hasQuiz) {
-    const { data: answered } = await supabase
-      .from("user_quiz_answers")
-      .select("quiz_id")
-      .eq("user_id", userId);
-
-    const answeredIds = (answered ?? []).map((a) => a.quiz_id as number);
-
-    let q = supabase
-      .from("quizzes")
-      .select("id")
-      .eq("is_active", true)
-      .is("valid_date", null)
-      .limit(1);
-
-    if (answeredIds.length > 0) {
-      q = q.not("id", "in", `(${answeredIds.join(",")})`);
-    }
-
-    const { data: random } = await q.maybeSingle();
-    hasQuiz = !!random;
-  }
-
-  if (!hasQuiz) return;
+  const quiz = await findAvailableDailyQuiz(supabase, userId);
+  if (!quiz) return;
 
   await createNotification({
     userId,

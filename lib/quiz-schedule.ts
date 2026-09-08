@@ -7,6 +7,23 @@ export function getQuizToday(): string {
   }).format(new Date());
 }
 
+/**
+ * Inclusive start / exclusive end of the campaign day, as ISO timestamptz.
+ * Brazil has no DST since 2019 — offset is always -03:00.
+ */
+export function getQuizDayRange(today = getQuizToday()): {
+  start: string;
+  endExclusive: string;
+} {
+  const [year, month, day] = today.split("-").map(Number);
+  const next = new Date(Date.UTC(year, month - 1, day + 1));
+  const nextDay = `${next.getUTCFullYear()}-${String(next.getUTCMonth() + 1).padStart(2, "0")}-${String(next.getUTCDate()).padStart(2, "0")}`;
+  return {
+    start: `${today}T00:00:00.000-03:00`,
+    endExclusive: `${nextDay}T00:00:00.000-03:00`,
+  };
+}
+
 export async function getNextAvailableQuizDate(
   supabase: SupabaseClient,
   fromDate?: string,

@@ -3,6 +3,8 @@ import { createClient } from "@/lib/supabase/server";
 import { createPacksForUser } from "@/lib/pack";
 import { incrementMissionProgress } from "@/lib/missions";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { getTodayQuizAnswer } from "@/lib/quiz-daily";
+import { getQuizToday } from "@/lib/quiz-schedule";
 
 /**
  * POST /api/quiz/answer
@@ -40,6 +42,14 @@ export async function POST(request: NextRequest) {
     .maybeSingle();
 
   if (existing) {
+    return NextResponse.json(
+      { error: "Quiz já respondido", code: "already_answered" },
+      { status: 400 },
+    );
+  }
+
+  const todayAnswer = await getTodayQuizAnswer(supabase, user.id);
+  if (todayAnswer) {
     return NextResponse.json(
       { error: "Quiz já respondido", code: "already_answered" },
       { status: 400 },
@@ -106,7 +116,7 @@ export async function POST(request: NextRequest) {
     await incrementMissionProgress(supabase, user.id, "quiz_streak");
   }
 
-  const today = new Date().toISOString().split("T")[0];
+  const today = getQuizToday();
   await supabase
     .from("notifications")
     .update({ read_at: new Date().toISOString() })

@@ -1,27 +1,24 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { getQuizToday } from "@/lib/quiz-schedule";
+import {
+  findAvailableDailyQuiz,
+  getTodayQuizAnswer,
+  shuffleQuizOptions,
+} from "@/lib/quiz-daily";
 
 /**
  * GET /api/quiz/daily
- * Returns the quiz for today or a random one the user hasn't answered.
+ * Returns the quiz for today or a fallback the user hasn't answered.
  * NEVER exposes is_correct to the client.
  */
 export async function GET() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const today = getQuizToday();
-
-  // 1. Check if user already answered today
-  const { data: todayAnswer } = await supabase
-    .from("user_quiz_answers")
-    .select("id, is_correct, quiz_id")
-    .eq("user_id", user.id)
-    .gte("answered_at", `${today}T00:00:00`)
-    .lte("answered_at", `${today}T23:59:59`)
-    .maybeSingle();
+  const todayAnswer = await getTodayQuizAnswer(supabase, user.id);
 
   if (todayAnswer) {
     return NextResponse.json({
@@ -30,60 +27,19 @@ export async function GET() {
     });
   }
 
-  const { data: answered } = await supabase
-    .from("user_quiz_answers")
-    .select("quiz_id")
-    .eq("user_id", user.id);
-
-  const answeredIds = new Set(
-    (answered ?? []).map((a) => a.quiz_id as number),
-  );
-
-  // 2. Try quiz with matching valid_date (skip if user already answered this quiz)
-  const { data: dated } = await supabase
-    .from("quizzes")
-    .select("id, question, image_url, points, quiz_options(id, text)")
-    .eq("valid_date", today)
-    .eq("is_active", true)
-    .maybeSingle();
-
-  let quiz =
-    dated && !answeredIds.has(dated.id as number) ? dated : null;
-
-  if (!quiz) {
-    // 3. Random active quiz the user hasn't answered yet
-    let q = supabase
-      .from("quizzes")
-      .select("id, question, image_url, points, quiz_options(id, text)")
-      .eq("is_active", true)
-      .is("valid_date", null);
-
-    if (answeredIds.size > 0) {
-      q = q.not("id", "in", `(${[...answeredIds].join(",")})`);
-    }
-
-    const { data: random } = await q.limit(1).maybeSingle();
-    quiz = random;
-  }
+  const quiz = await findAvailableDailyQuiz(supabase, user.id);
 
   if (!quiz) {
     return NextResponse.json({ no_quiz_available: true });
   }
 
-  // 4. Shuffle options — never expose is_correct
-  const options = Array.isArray(quiz.quiz_options)
-    ? [...(quiz.quiz_options as { id: number; text: string }[])].sort(
-        () => Math.random() - 0.5
-      )
-    : [];
-
   return NextResponse.json({
     quiz: {
-      id:        quiz.id,
-      question:  quiz.question,
+      id: quiz.id,
+      question: quiz.question,
       image_url: quiz.image_url,
-      points:    quiz.points,
-      options,  // just id + text, no is_correct
+      points: quiz.points,
+      options: shuffleQuizOptions(quiz.quiz_options),
     },
   });
 }
