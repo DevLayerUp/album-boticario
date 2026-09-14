@@ -589,7 +589,7 @@ function Grid4Page({ page, side, pastedSlotIds, ownedMap, onPaste, userStickerUr
   const rows = albumGridRows(assigned.length, cols);
 
   const textClass = cn(
-    "mx-auto w-full max-w-[520px] text-center leading-[1.45] text-white [&_a]:underline [&_p]:mb-2.5 [&_p:last-child]:mb-0 [&_strong]:font-bold [&_strong]:text-amarelo",
+    "w-full max-w-[520px] text-left leading-[1.45] text-white [&_a]:underline [&_p]:mb-2.5 [&_p:last-child]:mb-0 [&_strong]:font-bold [&_strong]:text-amarelo",
     inFlipBook ? "text-sm sm:text-base" : "text-base",
   );
 

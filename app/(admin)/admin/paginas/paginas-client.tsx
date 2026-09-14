@@ -837,7 +837,7 @@ function LayoutContentModal({
                 {isDuo2
                   ? "Este texto aparece acima das duas figurinhas, centralizado."
                   : isGrid4
-                    ? "Este texto aparece abaixo das figurinhas, centralizado. Use negrito para destacar trechos."
+                    ? "Este texto aparece abaixo das figurinhas, alinhado à esquerda. Use negrito para destacar trechos."
                   : "Este texto aparece abaixo do título, depois das figurinhas."}
               </p>
             </div>
