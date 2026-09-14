@@ -41,8 +41,8 @@ export interface StickerSlotProps {
   onPaste?: (slotId: number, stickerId: number) => Promise<void>;
   /** URL atual da figurinha personalizada (profiles.sticker_url) */
   userStickerUrl?: string | null;
-  /** default 160×229 — large 199×284 (tri3) — duo 267×381 (duo2) — cta 170×243 (grid6cta) */
-  size?: "default" | "large" | "duo" | "cta";
+  /** default 160×229 — large 199×284 (tri3) — duo 267×381 (duo2) — cta 170×243 (grid6cta) — grid4 177×253 */
+  size?: "default" | "large" | "duo" | "cta" | "grid4";
   /** Abre o modal de colagem ao montar (deep link do estoque). */
   autoOpenPaste?: boolean;
 }
@@ -313,24 +313,30 @@ export function StickerSlot({
   slotId, slotNumber, sticker, isPasted, owned, onPaste, userStickerUrl = null, size = "default", autoOpenPaste = false,
 }: StickerSlotProps) {
   const aspectClass =
-    size === "cta"
-      ? "aspect-[170/243]"
-      : size === "duo"
-        ? "aspect-[267/381]"
-        : size === "large"
-          ? "aspect-[199/284]"
-          : "aspect-160/229";
+    size === "grid4"
+      ? "aspect-[177/253]"
+      : size === "cta"
+        ? "aspect-[170/243]"
+        : size === "duo"
+          ? "aspect-[267/381]"
+          : size === "large"
+            ? "aspect-[199/284]"
+            : "aspect-160/229";
   const radiusClass =
-    size === "cta" || size === "duo" ? "rounded-[16px]" : "rounded-input";
+    size === "cta" || size === "duo" || size === "grid4"
+      ? "rounded-[16px]"
+      : "rounded-input";
   const imageSizes  =
-    size === "cta"
-      ? "170px"
-      : size === "duo"
-        ? "267px"
-        : size === "large"
-          ? "199px"
-          : "(max-width: 768px) 30vw, 200px";
-  const isBigCard   = size === "large" || size === "duo" || size === "cta";
+    size === "grid4"
+      ? "177px"
+      : size === "cta"
+        ? "170px"
+        : size === "duo"
+          ? "267px"
+          : size === "large"
+            ? "199px"
+            : "(max-width: 768px) 30vw, 200px";
+  const isBigCard   = size === "large" || size === "duo" || size === "cta" || size === "grid4";
   const [showPasteModal, setShowPasteModal]   = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [pasting, setPasting]                 = useState(false);

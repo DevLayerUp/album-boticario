@@ -1,6 +1,6 @@
 "use client";
 
-import { ALBUM_TEMPLATES, ALBUM_GRID_CARD, type TemplateId } from "@/lib/album-templates";
+import { ALBUM_TEMPLATES, ALBUM_GRID_CARD, ALBUM_GRID4_CARD, type TemplateId } from "@/lib/album-templates";
 
 interface TemplatePickerProps {
   value: TemplateId;
@@ -91,14 +91,14 @@ function TemplatePreview({ id, selected }: { id: TemplateId; selected: boolean }
   if (id === "grid4") {
     return (
       <div
-        className="grid gap-0.5"
+        className="grid gap-1"
         style={{ gridTemplateColumns: "repeat(2, 1fr)", width: 52, height: 52 }}
       >
         {Array.from({ length: 4 }).map((_, i) => (
           <div
             key={i}
-            className={`rounded-sm ${base}`}
-            style={{ aspectRatio: `${ALBUM_GRID_CARD.width}/${ALBUM_GRID_CARD.height}` }}
+            className={`rounded-[3px] ${base}`}
+            style={{ aspectRatio: `${ALBUM_GRID4_CARD.width}/${ALBUM_GRID4_CARD.height}` }}
           />
         ))}
       </div>

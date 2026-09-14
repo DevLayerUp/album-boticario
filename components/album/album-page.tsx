@@ -11,11 +11,14 @@ import {
   type Grid6Data,
   type Grid6CtaData,
   ALBUM_GRID6_CTA_CARD,
+  type Grid4Data,
+  DEFAULT_GRID4_FOOTER_HTML,
   type Duo2Data,
   type ProfileData,
   ALBUM_DUO2_CARD,
   ALBUM_DUO2_DESIGN,
   ALBUM_GRID_CARD,
+  ALBUM_GRID4_CARD,
 } from "@/lib/album-templates";
 import {
   AlbumDuo2Scaler,
@@ -333,8 +336,8 @@ function renderGridSlots(
   focusSlotId?: number | null,
   userStickerUrl?: string | null,
   options?: {
-    card?: typeof ALBUM_DUO2_CARD | typeof ALBUM_GRID6_CTA_CARD;
-    slotSize?: "default" | "large" | "duo" | "cta";
+    card?: typeof ALBUM_DUO2_CARD | typeof ALBUM_GRID6_CTA_CARD | typeof ALBUM_GRID4_CARD;
+    slotSize?: "default" | "large" | "duo" | "cta" | "grid4";
   },
 ) {
   const card = options?.card ?? ALBUM_GRID_CARD;
@@ -579,16 +582,42 @@ function Duo2Page({ page, side, pastedSlotIds, ownedMap, onPaste, userStickerUrl
 }
 
 function Grid4Page({ page, side, pastedSlotIds, ownedMap, onPaste, userStickerUrl, inFlipBook, focusSlotId }: AlbumPageProps) {
+  const data = parseLayoutData(page.content) as Grid4Data;
+  const text = data.text?.trim() ? data.text : DEFAULT_GRID4_FOOTER_HTML;
   const assigned = getAssignedAlbumSlots(page.album_slots, 4);
   const cols = 2;
   const rows = albumGridRows(assigned.length, cols);
 
+  const textClass = cn(
+    "mx-auto w-full max-w-[520px] text-center leading-[1.45] text-white [&_a]:underline [&_p]:mb-2.5 [&_p:last-child]:mb-0 [&_strong]:font-bold [&_strong]:text-amarelo",
+    inFlipBook ? "text-sm sm:text-base" : "text-base",
+  );
+
+  const footerContent = text ? (
+    <div className={cn(inFlipBook ? "mt-2 sm:mt-4" : "mt-4")}>
+      {inFlipBook ? (
+        <FlipBookHtmlContent html={text} className={textClass} />
+      ) : (
+        <div className={textClass} dangerouslySetInnerHTML={{ __html: text }} />
+      )}
+    </div>
+  ) : null;
+
   return (
     <PageShell side={side} pageNumber={page.page_number} inFlipBook={inFlipBook}>
-      <AlbumGridFrame inFlipBook={inFlipBook}>
+      <AlbumGridFrame inFlipBook={inFlipBook} afterGrid={footerContent}>
         {rows > 0 ? (
-          <AlbumStickerGrid cols={cols} rows={rows}>
-            {renderGridSlots(page.album_slots, 4, pastedSlotIds, ownedMap, onPaste, focusSlotId, userStickerUrl)}
+          <AlbumStickerGrid cols={cols} rows={rows} card={ALBUM_GRID4_CARD}>
+            {renderGridSlots(
+              page.album_slots,
+              4,
+              pastedSlotIds,
+              ownedMap,
+              onPaste,
+              focusSlotId,
+              userStickerUrl,
+              { card: ALBUM_GRID4_CARD, slotSize: "grid4" },
+            )}
           </AlbumStickerGrid>
         ) : null}
       </AlbumGridFrame>

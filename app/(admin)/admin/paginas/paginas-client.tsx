@@ -14,6 +14,7 @@ import {
   TEMPLATE_MAP, type TemplateId,
   parseLayoutData, type Title3Data, type SocialPageData, type Grid6CtaData, type AlbumSocialLink,
   DEFAULT_ALBUM_SOCIAL_LINKS,
+  DEFAULT_GRID4_FOOTER_HTML,
   isProfileTemplate, isSocialTemplate, isSlotlessTemplate, hasRichTextContent,
   parseSocialPageData,
 } from "@/lib/album-templates";
@@ -678,6 +679,7 @@ function LayoutContentModal({
   const isTitle3      = page.layout_template === "title3";
   const isGrid6       = page.layout_template === "grid6";
   const isGrid6Cta    = page.layout_template === "grid6cta";
+  const isGrid4       = page.layout_template === "grid4";
   const isDuo2        = page.layout_template === "duo2";
   const isSocial      = isSocialTemplate(page.layout_template);
   const hasRichText   = hasRichTextContent(page.layout_template);
@@ -692,8 +694,9 @@ function LayoutContentModal({
     hasRichText
       ? isSocial
         ? (initialSocial.text ?? "")
-        : isDuo2
-          ? ((parseLayoutData(page.content) as { text?: string }).text ?? "")
+        : isDuo2 || isGrid4
+          ? ((parseLayoutData(page.content) as { text?: string }).text
+              || (isGrid4 ? DEFAULT_GRID4_FOOTER_HTML : ""))
           : (initial.text ?? "")
       : "",
   );
@@ -739,7 +742,7 @@ function LayoutContentModal({
           text: text || undefined,
           social_links: socialLinks,
         };
-      } else if (isDuo2) {
+      } else if (isDuo2 || isGrid4) {
         layoutData = { text: text || undefined };
       } else if (isGrid6Cta) {
         layoutData = {
@@ -785,6 +788,8 @@ function LayoutContentModal({
                     ? "Título e texto abaixo das figurinhas"
                     : isGrid6Cta
                       ? "Botão de ação abaixo das seis figurinhas"
+                      : isGrid4
+                        ? "Texto abaixo das quatro figurinhas"
                       : isDuo2
                       ? "Texto acima das duas figurinhas"
                       : isSocial
@@ -802,7 +807,7 @@ function LayoutContentModal({
 
         <div className="p-6 space-y-5">
           {/* Title */}
-          {!isDuo2 && !isGrid6Cta && (
+          {!isDuo2 && !isGrid4 && !isGrid6Cta && (
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-gray-500">
               Título da Página
@@ -831,6 +836,8 @@ function LayoutContentModal({
               <p className="mt-1 text-xs text-gray-400">
                 {isDuo2
                   ? "Este texto aparece acima das duas figurinhas, centralizado."
+                  : isGrid4
+                    ? "Este texto aparece abaixo das figurinhas, centralizado. Use negrito para destacar trechos."
                   : "Este texto aparece abaixo do título, depois das figurinhas."}
               </p>
             </div>

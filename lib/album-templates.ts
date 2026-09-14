@@ -5,7 +5,7 @@
  *   title3  → title + rich-text paragraph + optional image + 3 sticker slots
  *   grid6   → 6 sticker slots (2 × 3) + title + rich-text paragraph below
  *   grid6cta→ 6 sticker slots (3 × 2) + CTA pill below (Figma 360:147)
- *   grid4   → 4 sticker slots in a 2 × 2 grid (Figma 339:2764)
+ *   grid4   → 4 sticker slots in a 2 × 2 grid + rich text below (Figma 40000070:1281)
  *   duo2    → rich text above + 2 large sticker slots side by side (Figma 334:2607)
  *   tri3    → 3 sticker slots in a V layout (1 left + 2 stacked right), larger cards
  *   3x3     → 9 sticker slots in a 3 × 3 grid
@@ -75,7 +75,7 @@ export const ALBUM_TEMPLATES: AlbumTemplate[] = [
   { id: "title3",  label: "Título + 3",      cols: 3, rows: 1, total: 3 },
   { id: "grid6",    label: "6 + Texto",       cols: 3, rows: 2, total: 6 },
   { id: "grid6cta", label: "6 + CTA",         cols: 3, rows: 2, total: 6 },
-  { id: "grid4",   label: "2 × 2",           cols: 2, rows: 2, total: 4 },
+  { id: "grid4",   label: "2 × 2 + Texto",   cols: 2, rows: 2, total: 4 },
   { id: "duo2",    label: "2 + Texto",       cols: 2, rows: 1, total: 2 },
   { id: "tri3",    label: "3 em V",          cols: 2, rows: 2, total: 3 },
   { id: "3x3",     label: "3 × 3",           cols: 3, rows: 3, total: 9 },
@@ -116,6 +116,16 @@ export const ALBUM_GRID_CARD = {
   borderWidth: 5,
   gapX: 20,
   gapY: 24,
+} as const;
+
+/** Cards do template grid4 — Figma 40000070:1281 (177×253, gap 53×35). */
+export const ALBUM_GRID4_CARD = {
+  width: 177,
+  height: 253,
+  gapX: 53,
+  gapY: 35,
+  borderRadius: 16,
+  borderWidth: 5,
 } as const;
 
 /** Cards do template grid6cta — Figma 360:147 (170×243, gap 25×32). */
@@ -177,7 +187,16 @@ export interface Grid6CtaData {
   cta_href?: string;
 }
 
-/** Fields for the "grid4", "tri3" and "3x3" templates */
+/** Fields for the "grid4" template (Figma 40000070:1281) */
+export interface Grid4Data {
+  text?: string;
+}
+
+/** Texto padrão abaixo das figurinhas no template 2 × 2. */
+export const DEFAULT_GRID4_FOOTER_HTML =
+  "<p>Quer ver o conhecimento sobre Soluções Baseadas na Natureza sair da teoria e virar ação no seu dia a dia?</p><p>Vire a página e torne-se um <strong>Guardião do Futuro</strong>!</p>";
+
+/** Fields for the "tri3" and "3x3" templates */
 export interface Grid3x3Data {
   title?: string;
 }
@@ -196,7 +215,7 @@ export interface SocialPageData {
 }
 
 /** Union of all possible layout data shapes */
-export type LayoutData = Title3Data | Grid6Data | Grid6CtaData | Duo2Data | Grid3x3Data | ProfileData | SocialPageData;
+export type LayoutData = Title3Data | Grid6Data | Grid6CtaData | Grid4Data | Duo2Data | Grid3x3Data | ProfileData | SocialPageData;
 
 export function hasCtaContent(templateId: string): boolean {
   return templateId === "grid6cta";
@@ -207,6 +226,7 @@ export function hasRichTextContent(templateId: string): boolean {
   return (
     templateId === "title3" ||
     templateId === "grid6" ||
+    templateId === "grid4" ||
     templateId === "duo2" ||
     templateId === "social"
   );
