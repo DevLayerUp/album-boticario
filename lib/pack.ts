@@ -9,6 +9,10 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { STICKERS_PER_PACK } from "@/lib/pack-settings";
 import { excludeLockedPromotionStickers } from "@/lib/sticker-promotion";
+import {
+  excludePrivateStickers,
+  isMissingStickerPublicColumn,
+} from "@/lib/sticker-visibility";
 
 interface Rarity { id: number; slug: string; drop_percentage: number }
 interface StickerRow {
@@ -16,6 +20,35 @@ interface StickerRow {
   rarity_id: number | null;
   promotion_enabled?: boolean | null;
   promotion_unlocks_at?: string | null;
+  is_public?: boolean | null;
+}
+
+const DROPPABLE_STICKER_SELECT =
+  "id, rarity_id, promotion_enabled, promotion_unlocks_at, is_public";
+const DROPPABLE_STICKER_SELECT_FALLBACK =
+  "id, rarity_id, promotion_enabled, promotion_unlocks_at";
+
+export async function loadDroppableCatalogStickers(): Promise<StickerRow[]> {
+  const admin = createAdminClient();
+  const first = await admin
+    .from("stickers")
+    .select(DROPPABLE_STICKER_SELECT)
+    .eq("is_active", true)
+    .eq("is_user_type", false);
+
+  let rows = first.data;
+  if (first.error && isMissingStickerPublicColumn(first.error)) {
+    const fallback = await admin
+      .from("stickers")
+      .select(DROPPABLE_STICKER_SELECT_FALLBACK)
+      .eq("is_active", true)
+      .eq("is_user_type", false);
+    rows = (fallback.data ?? []).map((row) => ({ ...row, is_public: true }));
+  }
+
+  return excludePrivateStickers(
+    excludeLockedPromotionStickers((rows ?? []) as StickerRow[]),
+  );
 }
 
 function drawSticker(rarities: Rarity[], stickers: StickerRow[]): number {
@@ -68,21 +101,13 @@ export async function createPacksForUser(
   const admin = createAdminClient();
 
   // Load rarities & stickers — rarities may be empty (fine, we degrade gracefully)
-  const [{ data: rarities }, { data: allStickers }] = await Promise.all([
+  const [{ data: rarities }, droppableStickers] = await Promise.all([
     admin
       .from("rarities")
       .select("id, slug, drop_percentage")
       .order("drop_percentage"),
-    admin
-      .from("stickers")
-      .select("id, rarity_id, promotion_enabled, promotion_unlocks_at")
-      .eq("is_active", true)
-      .eq("is_user_type", false),
+    loadDroppableCatalogStickers(),
   ]);
-
-  const droppableStickers = excludeLockedPromotionStickers(
-    (allStickers ?? []) as StickerRow[],
-  );
 
   // If truly no stickers exist at all, bail
   if (!droppableStickers.length) {

@@ -4,26 +4,23 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { incrementMissionProgress } from "@/lib/missions";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { STICKERS_PER_PACK } from "@/lib/pack-settings";
-import { excludeLockedPromotionStickers } from "@/lib/sticker-promotion";
+import { loadDroppableCatalogStickers } from "@/lib/pack";
 
 // Inline sticker draw for retrocompat when pack has no pack_stickers.
 // Uses admin client to bypass the RLS SELECT-only policy on pack_stickers.
 async function generateStickersForPack(packId: number): Promise<boolean> {
   const admin = createAdminClient();
 
-  const [{ data: rarities }, { data: allStickers }] = await Promise.all([
+  const [{ data: rarities }, sList] = await Promise.all([
     admin.from("rarities").select("id, slug, drop_percentage").order("drop_percentage"),
-    admin.from("stickers").select("id, rarity_id, promotion_enabled, promotion_unlocks_at").eq("is_active", true).eq("is_user_type", false),
+    loadDroppableCatalogStickers(),
   ]);
 
   // Need at least some stickers
-  if (!allStickers?.length) return false;
+  if (!sList.length) return false;
 
   type R = { id: number; slug: string; drop_percentage: number };
-  type S = { id: number; rarity_id: number | null; promotion_enabled?: boolean | null; promotion_unlocks_at?: string | null };
   const rList = (rarities ?? []) as R[];
-  const sList = excludeLockedPromotionStickers(allStickers as S[]);
-  if (!sList.length) return false;
 
   function draw(): number {
     if (!rList.length) {

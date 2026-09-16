@@ -1,6 +1,11 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { buildRankingMissionCountsFromActivity } from "@/lib/missions";
-import { countAssignedAlbumSlots } from "@/lib/album-progress";
+import {
+  applyUserAlbumPublicFilters,
+  countAssignedAlbumSlots,
+  userAlbumSlotEmbed,
+  withPublicContentFilters,
+} from "@/lib/album-progress";
 import { loadRankingScoreInput } from "@/lib/sync-ranking-score";
 import { fetchAllPages } from "@/lib/supabase/fetch-all-pages";
 import {
@@ -282,13 +287,15 @@ async function buildLeaderboardCoreLegacy(
           .range(from, to),
       ),
       countAssignedAlbumSlots(admin),
-      fetchAllPages<{ user_id: string }>((from, to) =>
-        admin
-          .from("user_album")
-          .select("user_id, album_slots!inner(sticker_id, album_pages!inner(is_public))")
-          .not("album_slots.sticker_id", "is", null)
-          .eq("album_slots.album_pages.is_public", true)
-          .range(from, to),
+      withPublicContentFilters((filters) =>
+        fetchAllPages<{ user_id: string }>((from, to) => {
+          let query: any = admin.from("user_album");
+          query = query
+            .select(`user_id, album_slots!inner(${userAlbumSlotEmbed("sticker_id", filters)})`)
+            .not("album_slots.sticker_id", "is", null)
+            .range(from, to);
+          return applyUserAlbumPublicFilters(query, filters);
+        }),
       ),
       fetchAllPages<{ user_id: string; opened_at: string | null }>((from, to) =>
         admin.from("packs").select("user_id, opened_at").range(from, to),

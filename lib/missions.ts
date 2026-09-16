@@ -10,9 +10,12 @@ import { createPacksForUser } from "@/lib/pack";
 import { RANKING_MISSION_BONUS } from "@/lib/ranking-constants";
 import { fetchAllPages } from "@/lib/supabase/fetch-all-pages";
 import {
+  applyUserAlbumPublicFilters,
   buildSlotsByPage,
   countUserFilledAssignedSlots,
   loadAssignedAlbumSlotsByPage,
+  userAlbumSlotEmbed,
+  withPublicContentFilters,
 } from "@/lib/album-progress";
 import {
   countAmbassadorReferrals,
@@ -176,12 +179,18 @@ async function loadMissionMetrics(
       .not("opened_at", "is", null),
     countUserFilledAssignedSlots(supabase, userId),
     loadAssignedAlbumSlotsByPage(supabase),
-    supabase
-      .from("user_album")
-      .select("slot_id, album_slots!inner(page_id, sticker_id, album_pages!inner(is_public))")
-      .eq("user_id", userId)
-      .not("album_slots.sticker_id", "is", null)
-      .eq("album_slots.album_pages.is_public", true),
+    withPublicContentFilters(async (filters) => {
+      let query: any = supabase.from("user_album");
+      query = query
+        .select(`slot_id, album_slots!inner(${userAlbumSlotEmbed("page_id, sticker_id", filters)})`)
+        .eq("user_id", userId)
+        .not("album_slots.sticker_id", "is", null);
+      const res = await applyUserAlbumPublicFilters(query, filters);
+      if (res.error) {
+        throw Object.assign(new Error(res.error.message), { code: res.error.code });
+      }
+      return res;
+    }),
     getAmbassadorProgramStartedAt(supabase),
   ]);
 
@@ -407,29 +416,33 @@ export async function buildRankingMissionCountsFromActivity(
         .not("opened_at", "is", null)
         .range(from, to),
     ),
-    fetchAllPages<{ user_id: string }>((from, to) =>
-      admin
-        .from("user_album")
-        .select("user_id, album_slots!inner(sticker_id, album_pages!inner(is_public))")
-        .not("album_slots.sticker_id", "is", null)
-        .eq("album_slots.album_pages.is_public", true)
-        .range(from, to),
+    withPublicContentFilters((filters) =>
+      fetchAllPages<{ user_id: string }>((from, to) => {
+        let query: any = admin.from("user_album");
+        query = query
+          .select(`user_id, album_slots!inner(${userAlbumSlotEmbed("sticker_id", filters)})`)
+          .not("album_slots.sticker_id", "is", null)
+          .range(from, to);
+        return applyUserAlbumPublicFilters(query, filters);
+      }),
     ),
     loadAssignedAlbumSlotsByPage(admin),
-    fetchAllPages<{
-      user_id: string;
-      slot_id: number;
-      album_slots:
-        | { page_id: number; sticker_id: number | null }
-        | { page_id: number; sticker_id: number | null }[]
-        | null;
-    }>((from, to) =>
-      admin
-        .from("user_album")
-        .select("user_id, slot_id, album_slots!inner(page_id, sticker_id, album_pages!inner(is_public))")
-        .not("album_slots.sticker_id", "is", null)
-        .eq("album_slots.album_pages.is_public", true)
-        .range(from, to),
+    withPublicContentFilters((filters) =>
+      fetchAllPages<{
+        user_id: string;
+        slot_id: number;
+        album_slots:
+          | { page_id: number; sticker_id: number | null }
+          | { page_id: number; sticker_id: number | null }[]
+          | null;
+      }>((from, to) => {
+        let query: any = admin.from("user_album");
+        query = query
+          .select(`user_id, slot_id, album_slots!inner(${userAlbumSlotEmbed("page_id, sticker_id", filters)})`)
+          .not("album_slots.sticker_id", "is", null)
+          .range(from, to);
+        return applyUserAlbumPublicFilters(query, filters);
+      }),
     ),
     fetchAllPages<{ requester_id: string; receiver_id: string }>((from, to) =>
       admin

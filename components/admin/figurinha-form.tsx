@@ -14,6 +14,7 @@ import {
   validateStickerFormattedText,
 } from "@/lib/sticker-text-format";
 import { StickerFormattedTextField } from "./sticker-formatted-text-field";
+import { VisibilityToggle } from "@/components/admin/visibility-toggle";
 import {
   DEFAULT_STICKER_PROMOTION_MESSAGE,
   DEFAULT_STICKER_PROMOTION_UNLOCK_LOCAL,
@@ -32,6 +33,7 @@ interface FormData {
   rarity_id: string;
   is_user_type: boolean;
   is_active: boolean;
+  is_public: boolean;
   promotion_enabled: boolean;
   promotion_unlocks_at: string;
   promotion_message: string;
@@ -53,6 +55,7 @@ const defaults: FormData = {
   rarity_id: "",
   is_user_type: false,
   is_active: true,
+  is_public: true,
   promotion_enabled: false,
   promotion_unlocks_at: "",
   promotion_message: "",
@@ -294,6 +297,15 @@ export function FigurinhaForm({
               />
               Ativo
             </label>
+          </div>
+
+          <div className="sm:col-span-2">
+            <VisibilityToggle
+              value={form.is_public}
+              onChange={(is_public) => set("is_public", is_public)}
+              publicDescription="Todos os usuários veem no álbum e na galeria"
+              privateDescription="Só administradores veem no álbum e na galeria"
+            />
           </div>
 
           <div className="sm:col-span-2 space-y-3 rounded-xl border border-dashed border-verde-genz/40 bg-[#f7ffe8] p-4">

@@ -4,7 +4,13 @@ export function isMissingAlbumPagePublicColumn(
 ): boolean {
   if (!error) return false;
   const message = error.message ?? "";
-  return error.code === "42703" || /is_public/i.test(message);
+  const looksMissing =
+    error.code === "42703" ||
+    /is_public/i.test(message) ||
+    /schema cache/i.test(message);
+  if (!looksMissing) return false;
+  if (/stickers/i.test(message) && !/album_pages/i.test(message)) return false;
+  return true;
 }
 
 export function albumPageIsPublic(page: { is_public?: boolean | null }): boolean {

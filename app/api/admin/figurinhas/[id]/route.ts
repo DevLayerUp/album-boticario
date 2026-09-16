@@ -3,6 +3,7 @@ import { adminGuard } from "@/lib/admin-guard";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { normalizeRedirectUrl } from "@/lib/sticker-redirect-url";
 import { normalizeStickerPromotionInput } from "@/lib/sticker-promotion";
+import { isMissingStickerPublicColumn } from "@/lib/sticker-visibility";
 import {
   normalizeStickerDescription,
   validateStickerDescription,
@@ -51,6 +52,7 @@ export async function PUT(
     is_user_type,
     is_active,
     redirect_url,
+    is_public,
   } = body;
 
   if (!name?.trim()) {
@@ -90,25 +92,29 @@ export async function PUT(
   }
 
   const supabase = createAdminClient();
-  const { data, error } = await supabase
-    .from("stickers")
-    .update({
-      name: normalizeStickerName(name),
-      description: normalizeStickerDescription(description),
-      image_url,
-      redirect_url: normalizeRedirectUrl(redirect_url),
-      category_id: category_id || null,
-      rarity_id: rarity_id || null,
-      is_user_type: !!is_user_type,
-      is_active: is_active ?? true,
-      ...promotion,
-    })
-    .eq("id", id)
-    .select()
-    .single();
+  const row: Record<string, unknown> = {
+    name: normalizeStickerName(name),
+    description: normalizeStickerDescription(description),
+    image_url,
+    redirect_url: normalizeRedirectUrl(redirect_url),
+    category_id: category_id || null,
+    rarity_id: rarity_id || null,
+    is_user_type: !!is_user_type,
+    is_active: is_active ?? true,
+    ...promotion,
+  };
+  if (typeof is_public === "boolean") row.is_public = is_public;
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json(data);
+  const first = await supabase.from("stickers").update(row).eq("id", id).select().single();
+  if (first.error && isMissingStickerPublicColumn(first.error) && "is_public" in row) {
+    const { is_public: _ignored, ...without } = row;
+    const retry = await supabase.from("stickers").update(without).eq("id", id).select().single();
+    if (retry.error) return NextResponse.json({ error: retry.error.message }, { status: 500 });
+    return NextResponse.json(retry.data);
+  }
+
+  if (first.error) return NextResponse.json({ error: first.error.message }, { status: 500 });
+  return NextResponse.json(first.data);
 }
 
 export async function DELETE(

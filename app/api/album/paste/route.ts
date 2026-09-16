@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { incrementMissionProgress } from "@/lib/missions";
 import { isStickerPromotionLocked } from "@/lib/sticker-promotion";
+import { isAdminRole } from "@/lib/admin-users";
+import {
+  isMissingStickerPublicColumn,
+  stickerIsPublic,
+} from "@/lib/sticker-visibility";
 
 /**
  * POST /api/album/paste
@@ -35,11 +40,33 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Você não possui esta figurinha" }, { status: 400 });
   }
 
-  const { data: catalogSticker } = await supabase
+  let catalog = await supabase
     .from("stickers")
-    .select("promotion_enabled, promotion_unlocks_at")
+    .select("promotion_enabled, promotion_unlocks_at, is_public")
     .eq("id", sticker_id)
     .maybeSingle();
+
+  if (catalog.error && isMissingStickerPublicColumn(catalog.error)) {
+    catalog = await supabase
+      .from("stickers")
+      .select("promotion_enabled, promotion_unlocks_at")
+      .eq("id", sticker_id)
+      .maybeSingle();
+  }
+
+  if (catalog.error) {
+    return NextResponse.json({ error: catalog.error.message }, { status: 500 });
+  }
+
+  const catalogSticker = catalog.data;
+  const isAdmin = isAdminRole(user.app_metadata, user.user_metadata);
+
+  if (!catalogSticker || (!stickerIsPublic(catalogSticker) && !isAdmin)) {
+    return NextResponse.json(
+      { error: "Esta figurinha não está disponível" },
+      { status: 403 },
+    );
+  }
 
   if (isStickerPromotionLocked(catalogSticker)) {
     return NextResponse.json(

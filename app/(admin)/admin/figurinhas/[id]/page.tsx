@@ -35,6 +35,7 @@ export default async function EditarFigurinhaPage({
         redirect_url: s.redirect_url ?? "",
         is_user_type: s.is_user_type,
         is_active: s.is_active,
+        is_public: s.is_public !== false,
         promotion_enabled: Boolean(s.promotion_enabled),
         promotion_unlocks_at: toDatetimeLocalBRT(s.promotion_unlocks_at),
         promotion_message: s.promotion_message ?? "",

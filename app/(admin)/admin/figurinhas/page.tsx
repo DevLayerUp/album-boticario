@@ -3,7 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { FigurinhasFilters } from "./figurinhas-filters";
-import { Plus } from "lucide-react";
+import { Globe, Lock, Plus } from "lucide-react";
 
 export const metadata: Metadata = { title: "Figurinhas" };
 export const dynamic = "force-dynamic";
@@ -76,6 +76,7 @@ export default async function FigurinhasPage({
                 <th className="px-4 py-3 text-left">Categoria</th>
                 <th className="px-4 py-3 text-left">Raridade</th>
                 <th className="px-4 py-3 text-center">Tipo</th>
+                <th className="px-4 py-3 text-center">Visibilidade</th>
                 <th className="px-4 py-3 text-center">Status</th>
                 <th className="px-4 py-3 text-right">Ações</th>
               </tr>
@@ -113,6 +114,17 @@ export default async function FigurinhasPage({
                           Usuário
                         </span>
                       ) : "—"}
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      {(s as { is_public?: boolean | null }).is_public === false ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">
+                          <Lock size={11} /> Privada
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700">
+                          <Globe size={11} /> Pública
+                        </span>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-center">
                       <span

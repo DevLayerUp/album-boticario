@@ -3,6 +3,7 @@ import { adminGuard } from "@/lib/admin-guard";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { normalizeRedirectUrl } from "@/lib/sticker-redirect-url";
 import { normalizeStickerPromotionInput } from "@/lib/sticker-promotion";
+import { isMissingStickerPublicColumn } from "@/lib/sticker-visibility";
 import {
   normalizeStickerDescription,
   validateStickerDescription,
@@ -49,7 +50,7 @@ export async function POST(request: NextRequest) {
   if (guard) return guard;
 
   const body = await request.json();
-  const { name, description, image_url, category_id, rarity_id, is_user_type, redirect_url } = body;
+  const { name, description, image_url, category_id, rarity_id, is_user_type, redirect_url, is_public } = body;
 
   if (!name?.trim()) {
     return NextResponse.json({ error: "Nome é obrigatório" }, { status: 400 });
@@ -91,22 +92,27 @@ export async function POST(request: NextRequest) {
   }
 
   const supabase = createAdminClient();
-  const { data, error } = await supabase
-    .from("stickers")
-    .insert({
-      name: normalizeStickerName(name),
-      description: normalizeStickerDescription(description),
-      image_url,
-      redirect_url: normalizeRedirectUrl(redirect_url),
-      category_id: category_id || null,
-      rarity_id: rarity_id || null,
-      is_user_type: !!is_user_type,
-      is_active: true,
-      ...promotion,
-    })
-    .select()
-    .single();
+  const row = {
+    name: normalizeStickerName(name),
+    description: normalizeStickerDescription(description),
+    image_url,
+    redirect_url: normalizeRedirectUrl(redirect_url),
+    category_id: category_id || null,
+    rarity_id: rarity_id || null,
+    is_user_type: !!is_user_type,
+    is_active: true,
+    ...promotion,
+    is_public: is_public !== false,
+  };
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json(data, { status: 201 });
+  const first = await supabase.from("stickers").insert(row).select().single();
+  if (first.error && isMissingStickerPublicColumn(first.error)) {
+    const { is_public: _ignored, ...without } = row;
+    const retry = await supabase.from("stickers").insert(without).select().single();
+    if (retry.error) return NextResponse.json({ error: retry.error.message }, { status: 500 });
+    return NextResponse.json(retry.data, { status: 201 });
+  }
+
+  if (first.error) return NextResponse.json({ error: first.error.message }, { status: 500 });
+  return NextResponse.json(first.data, { status: 201 });
 }
