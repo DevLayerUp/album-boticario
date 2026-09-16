@@ -139,6 +139,12 @@
   }
 }
 
+/* Negrito do HTML das páginas do álbum — Figma #DEDA00 (vence **:text-white) */
+.album-html-body :is(strong, b) {
+  color: var(--color-amarelo) !important;
+  font-weight: 700;
+}
+
 /* ── Auth page — grid lines & particles ─────────────────────────────── */
 .auth-hline {
   position: absolute;

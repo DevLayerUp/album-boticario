@@ -20,6 +20,7 @@ import {
   isProfileTemplate, isSocialTemplate, isSlotlessTemplate, hasRichTextContent,
   parseSocialPageData,
 } from "@/lib/album-templates";
+import { dashboardAssets } from "@/lib/dashboard-assets";
 
 interface Category { id: number; name: string }
 interface PageRow {
@@ -747,6 +748,7 @@ function LayoutContentModal({
   const [ctaLabel, setCtaLabel] = useState(isGrid6Cta ? (initialGrid6Cta.cta_label ?? "") : "");
   const [ctaHref, setCtaHref] = useState(isGrid6Cta ? (initialGrid6Cta.cta_href ?? "") : "");
   const [isPublic, setIsPublic] = useState(page.is_public !== false);
+  const [showTopLogo, setShowTopLogo] = useState(Boolean(isTitle3 && initial.show_top_logo));
   const [uploading, setUploading] = useState(false);
   const [saving,   setSaving]   = useState(false);
   const [saved,    setSaved]    = useState(false);
@@ -786,6 +788,7 @@ function LayoutContentModal({
       } else {
         if (hasRichText && text) (layoutData as Title3Data).text = text;
         if (isTitle3 && imageUrl) (layoutData as Title3Data).image_url = imageUrl;
+        if (isTitle3 && showTopLogo) (layoutData as Title3Data).show_top_logo = true;
       }
 
       const res = await fetch(`/api/admin/paginas/${page.id}`, {
@@ -821,7 +824,7 @@ function LayoutContentModal({
               </h2>
               <p className="text-xs text-muted">
                 {isTitle3
-                  ? "Título, texto e imagem opcional"
+                  ? "Título, texto, logo no topo e imagem opcional"
                   : isGrid6
                     ? "Título e texto abaixo das figurinhas"
                     : isGrid6Cta
@@ -921,6 +924,44 @@ function LayoutContentModal({
           {/* Image + rich text — only for title3 */}
           {isTitle3 && (
             <>
+              <div>
+                <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-gray-500">
+                  Logo no topo
+                </label>
+                <button
+                  type="button"
+                  onClick={() => { setShowTopLogo((v) => !v); setSaved(false); }}
+                  className={`flex w-full items-center gap-4 rounded-xl border-2 p-4 text-left transition-all ${
+                    showTopLogo ? "border-gb-green bg-gb-green/5" : "border-border hover:border-gray-300"
+                  }`}
+                >
+                  <Image
+                    src={dashboardAssets.album.guardioesLogo}
+                    alt="Guardiões do Futuro"
+                    width={208}
+                    height={105}
+                    className="h-12 w-auto shrink-0 object-contain"
+                  />
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-semibold text-gb-ink">
+                      Logo Guardiões do Futuro
+                    </span>
+                    <span className="mt-0.5 block text-xs text-muted">
+                      {showTopLogo
+                        ? "Ativo — aparece no canto superior direito, ao lado do título."
+                        : "Desligado por padrão. Clique para exibir o logo no topo da página."}
+                    </span>
+                  </span>
+                  <span
+                    className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+                      showTopLogo ? "bg-gb-green/15 text-gb-green" : "bg-gray-100 text-gray-500"
+                    }`}
+                  >
+                    {showTopLogo ? "Ativo" : "Inativo"}
+                  </span>
+                </button>
+              </div>
+
               {/* Image */}
               <div>
                 <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-gray-500">

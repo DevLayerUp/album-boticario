@@ -2,7 +2,7 @@
  * Album page layout templates.
  *
  * Templates:
- *   title3  → title + rich-text paragraph + optional image + 3 sticker slots
+ *   title3  → title + rich-text paragraph + optional top logo + 3 sticker slots
  *   grid6   → 6 sticker slots (2 × 3) + title + rich-text paragraph below
  *   grid6cta→ 6 sticker slots (3 × 2) + CTA pill below (Figma 360:147)
  *   grid4   → 4 sticker slots in a 2 × 2 grid + rich text below (Figma 40000070:1281)
@@ -168,7 +168,13 @@ export interface Title3Data {
   title?: string;
   text?: string;      // rich HTML paragraph
   image_url?: string;
+  /** Logo Guardiões do Futuro no topo (desligado por padrão). */
+  show_top_logo?: boolean;
 }
+
+/** Negrito do HTML das páginas do álbum (Figma #DEDA00). */
+export const ALBUM_HTML_STRONG_CLASS =
+  "album-html-body [&_strong]:font-bold [&_strong]:!text-amarelo [&_b]:font-bold [&_b]:!text-amarelo";
 
 /** Fields for the "grid6" template */
 export interface Grid6Data {

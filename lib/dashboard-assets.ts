@@ -32,6 +32,7 @@ export const dashboardAssets = {
     page:  `${BASE}/album/bg-page.png`,
     pageCompleteClose: `${BASE}/album/page-complete-close.svg`,
     pageCompleteLogos: `${BASE}/album/page-complete-logos.svg`,
+    guardioesLogo: `${BASE}/album/logo-guardioes.png`,
   },
   /** Fundo geral da página /pacotinhos (position bottom). */
   pacotinhos: {

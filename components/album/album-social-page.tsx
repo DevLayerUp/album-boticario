@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { parseSocialPageData } from "@/lib/album-templates";
+import { ALBUM_HTML_STRONG_CLASS, parseSocialPageData } from "@/lib/album-templates";
 import { cn } from "@/lib/utils";
 import type { AlbumPageProps } from "./album-page";
 import { AlbumPageShell } from "./album-page-chrome";
@@ -69,7 +69,8 @@ export function AlbumSocialPage({
               <FlipBookHtmlContent
                 html={data.text}
                 className={cn(
-                  "max-w-[92%] text-center leading-[1.3] text-white **:text-white [&_a]:underline [&_p]:mb-1.5 [&_strong]:font-semibold",
+                  "max-w-[92%] text-center leading-[1.3] text-white **:text-white [&_a]:underline [&_p]:mb-1.5",
+                  ALBUM_HTML_STRONG_CLASS,
                   inFlipBook
                     ? "text-xs sm:text-sm md:text-base"
                     : "text-base sm:text-lg md:text-xl",
@@ -78,7 +79,8 @@ export function AlbumSocialPage({
             ) : (
               <div
                 className={cn(
-                  "max-w-[92%] text-center leading-[1.35] text-white **:text-white [&_a]:underline [&_p]:mb-2 [&_strong]:font-semibold",
+                  "max-w-[92%] text-center leading-[1.35] text-white **:text-white [&_a]:underline [&_p]:mb-2",
+                  ALBUM_HTML_STRONG_CLASS,
                   "text-base sm:text-lg md:text-xl",
                 )}
                 dangerouslySetInnerHTML={{ __html: data.text }}

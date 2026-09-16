@@ -19,7 +19,9 @@ import {
   ALBUM_DUO2_DESIGN,
   ALBUM_GRID_CARD,
   ALBUM_GRID4_CARD,
+  ALBUM_HTML_STRONG_CLASS,
 } from "@/lib/album-templates";
+import { dashboardAssets } from "@/lib/dashboard-assets";
 import {
   AlbumDuo2Scaler,
   AlbumFitScaler,
@@ -120,6 +122,7 @@ function Title3Page({ page, side, pastedSlotIds, ownedMap, onPaste, userStickerU
   const data  = parseLayoutData(page.content) as Title3Data;
   const title = data.title ?? page.title ?? null;
   const text  = data.text ?? null;
+  const showTopLogo = Boolean(data.show_top_logo);
 
   return (
     <PageShell side={side} pageNumber={page.page_number} inFlipBook={inFlipBook} fillContent>
@@ -132,15 +135,41 @@ function Title3Page({ page, side, pastedSlotIds, ownedMap, onPaste, userStickerU
             : "px-6 pb-4 pt-6 sm:px-[10%]",
         )}
       >
-        {title && (
-          <h2
+        {(title || showTopLogo) && (
+          <div
             className={cn(
-              "font-display font-bold leading-[1.35] text-white",
-              inFlipBook ? "text-xl sm:text-3xl md:text-5xl" : "text-3xl md:text-5xl",
+              "flex items-start gap-3 sm:gap-5",
+              showTopLogo ? "justify-between" : "justify-start",
             )}
           >
-            {title}
-          </h2>
+            {title ? (
+              <h2
+                className={cn(
+                  "min-w-0 flex-1 font-display font-bold leading-[1.35]",
+                  showTopLogo ? "text-amarelo" : "text-white",
+                  inFlipBook ? "text-xl sm:text-3xl md:text-5xl" : "text-3xl md:text-5xl",
+                )}
+              >
+                {title}
+              </h2>
+            ) : (
+              <span className="min-w-0 flex-1" />
+            )}
+            {showTopLogo ? (
+              <Image
+                src={dashboardAssets.album.guardioesLogo}
+                alt="Guardiões do Futuro"
+                width={416}
+                height={210}
+                className={cn(
+                  "shrink-0 object-contain object-right",
+                  inFlipBook
+                    ? "h-[36px] w-auto sm:h-[48px] md:h-[68px]"
+                    : "h-[48px] w-auto md:h-[68px]",
+                )}
+              />
+            ) : null}
+          </div>
         )}
 
         {text && (
@@ -148,14 +177,16 @@ function Title3Page({ page, side, pastedSlotIds, ownedMap, onPaste, userStickerU
             <FlipBookHtmlContent
               html={text}
               className={cn(
-                "max-w-[450px] leading-[1.4] text-white **:text-white [&_p]:mb-3 [&_strong]:font-semibold",
+                "max-w-[450px] leading-[1.4] text-white **:text-white [&_p]:mb-3",
+                ALBUM_HTML_STRONG_CLASS,
                 "mt-2 text-sm sm:mt-4 sm:text-base",
               )}
             />
           ) : (
             <div
               className={cn(
-                "max-w-[450px] leading-[1.4] text-white **:text-white [&_p]:mb-3 [&_strong]:font-semibold",
+                "max-w-[450px] leading-[1.4] text-white **:text-white [&_p]:mb-3",
+                ALBUM_HTML_STRONG_CLASS,
                 "mt-4 text-base",
               )}
               dangerouslySetInnerHTML={{ __html: text }}
@@ -426,7 +457,8 @@ function Grid6Page({ page, side, pastedSlotIds, ownedMap, onPaste, userStickerUr
         {text ? (
           <div
             className={cn(
-              "max-w-[520px] leading-[1.45] text-white **:text-white [&_p]:mb-2.5 [&_strong]:font-semibold",
+              "max-w-[520px] leading-[1.45] text-white **:text-white [&_p]:mb-2.5",
+              ALBUM_HTML_STRONG_CLASS,
               inFlipBook ? "mt-2 text-xs sm:text-sm" : "mt-3 text-sm md:text-base",
             )}
             dangerouslySetInnerHTML={{ __html: text }}
@@ -550,7 +582,8 @@ function Duo2Page({ page, side, pastedSlotIds, ownedMap, onPaste, userStickerUrl
             <div
               className={cn(
                 "w-full text-white",
-                "**:text-white [&_p]:mb-0 [&_p]:leading-[30px] [&_p:last-child]:mb-0 [&_strong]:font-bold",
+                "**:text-white [&_p]:mb-0 [&_p]:leading-[30px] [&_p:last-child]:mb-0",
+                ALBUM_HTML_STRONG_CLASS,
               )}
               style={{
                 maxWidth: ALBUM_DUO2_DESIGN.textMaxWidth,
@@ -589,7 +622,8 @@ function Grid4Page({ page, side, pastedSlotIds, ownedMap, onPaste, userStickerUr
   const rows = albumGridRows(assigned.length, cols);
 
   const textClass = cn(
-    "w-full max-w-[520px] text-left leading-[1.45] text-white [&_a]:underline [&_p]:mb-2.5 [&_p:last-child]:mb-0 [&_strong]:font-bold [&_strong]:text-amarelo",
+    "w-full max-w-[520px] text-left leading-[1.45] text-white [&_a]:underline [&_p]:mb-2.5 [&_p:last-child]:mb-0",
+    ALBUM_HTML_STRONG_CLASS,
     inFlipBook ? "text-sm sm:text-base" : "text-base",
   );
 
@@ -684,14 +718,16 @@ function InfoPage({ page, side, inFlipBook }: AlbumPageProps) {
               <FlipBookHtmlContent
                 html={html}
                 className={cn(
-                  "max-w-[520px] text-center leading-[1.45] text-white **:text-white [&_a]:underline [&_p]:mb-2.5 [&_strong]:font-semibold",
+                  "max-w-[520px] text-center leading-[1.45] text-white **:text-white [&_a]:underline [&_p]:mb-2.5",
+                  ALBUM_HTML_STRONG_CLASS,
                   "text-sm sm:text-base",
                 )}
               />
             ) : (
               <div
                 className={cn(
-                  "max-w-[520px] text-center leading-[1.45] text-white **:text-white [&_a]:underline [&_p]:mb-2.5 [&_strong]:font-semibold",
+                  "max-w-[520px] text-center leading-[1.45] text-white **:text-white [&_a]:underline [&_p]:mb-2.5",
+                  ALBUM_HTML_STRONG_CLASS,
                   "text-base",
                 )}
                 dangerouslySetInnerHTML={{ __html: html }}
