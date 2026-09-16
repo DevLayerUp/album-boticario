@@ -25,6 +25,7 @@ export async function GET(request: NextRequest) {
          id, slot_number, position_x, position_y,
          stickers (
            id, name, description, image_url, is_user_type, redirect_url,
+           promotion_enabled, promotion_unlocks_at, promotion_message,
            rarities (name, slug, color_hex, animation_type)
          )
        )`

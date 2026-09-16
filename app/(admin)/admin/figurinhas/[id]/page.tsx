@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { FigurinhaForm } from "@/components/admin/figurinha-form";
+import { toDatetimeLocalBRT } from "@/lib/sticker-promotion";
 
 export const metadata: Metadata = { title: "Editar Figurinha" };
 
@@ -34,6 +35,9 @@ export default async function EditarFigurinhaPage({
         redirect_url: s.redirect_url ?? "",
         is_user_type: s.is_user_type,
         is_active: s.is_active,
+        promotion_enabled: Boolean(s.promotion_enabled),
+        promotion_unlocks_at: toDatetimeLocalBRT(s.promotion_unlocks_at),
+        promotion_message: s.promotion_message ?? "",
       }}
       categories={catsRes.data ?? []}
       rarities={raritiesRes.data ?? []}

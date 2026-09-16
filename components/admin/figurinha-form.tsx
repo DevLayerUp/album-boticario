@@ -14,6 +14,11 @@ import {
   validateStickerFormattedText,
 } from "@/lib/sticker-text-format";
 import { StickerFormattedTextField } from "./sticker-formatted-text-field";
+import {
+  DEFAULT_STICKER_PROMOTION_MESSAGE,
+  DEFAULT_STICKER_PROMOTION_UNLOCK_LOCAL,
+  fromDatetimeLocalBRT,
+} from "@/lib/sticker-promotion";
 
 interface Category { id: number; name: string }
 interface Rarity { id: number; name: string; color_hex: string }
@@ -27,6 +32,9 @@ interface FormData {
   rarity_id: string;
   is_user_type: boolean;
   is_active: boolean;
+  promotion_enabled: boolean;
+  promotion_unlocks_at: string;
+  promotion_message: string;
 }
 
 interface FigurinhaFormProps {
@@ -45,6 +53,9 @@ const defaults: FormData = {
   rarity_id: "",
   is_user_type: false,
   is_active: true,
+  promotion_enabled: false,
+  promotion_unlocks_at: "",
+  promotion_message: "",
 };
 
 export function FigurinhaForm({
@@ -105,6 +116,21 @@ export function FigurinhaForm({
       return;
     }
 
+    if (form.promotion_enabled) {
+      if (!form.promotion_unlocks_at) {
+        setError("Informe a data de desbloqueio da promoção");
+        return;
+      }
+      if (!fromDatetimeLocalBRT(form.promotion_unlocks_at)) {
+        setError("Data de desbloqueio inválida");
+        return;
+      }
+      if (!form.promotion_message.trim()) {
+        setError("Informe a mensagem da promoção");
+        return;
+      }
+    }
+
     setSaving(true);
     setError(null);
     try {
@@ -119,6 +145,13 @@ export function FigurinhaForm({
           redirect_url: form.redirect_url.trim() || null,
           category_id: form.category_id ? Number(form.category_id) : null,
           rarity_id: form.rarity_id ? Number(form.rarity_id) : null,
+          promotion_enabled: form.promotion_enabled,
+          promotion_unlocks_at: form.promotion_enabled
+            ? fromDatetimeLocalBRT(form.promotion_unlocks_at)
+            : null,
+          promotion_message: form.promotion_enabled
+            ? form.promotion_message.trim()
+            : null,
         }),
       });
       const data = await res.json();
@@ -261,6 +294,68 @@ export function FigurinhaForm({
               />
               Ativo
             </label>
+          </div>
+
+          <div className="sm:col-span-2 space-y-3 rounded-xl border border-dashed border-verde-genz/40 bg-[#f7ffe8] p-4">
+            <label className="flex items-center gap-2 text-sm font-medium text-gray-800">
+              <input
+                type="checkbox"
+                checked={form.promotion_enabled}
+                onChange={(e) => {
+                  const enabled = e.target.checked;
+                  setForm((current) => ({
+                    ...current,
+                    promotion_enabled: enabled,
+                    promotion_unlocks_at:
+                      enabled && !current.promotion_unlocks_at
+                        ? DEFAULT_STICKER_PROMOTION_UNLOCK_LOCAL
+                        : current.promotion_unlocks_at,
+                    promotion_message:
+                      enabled && !current.promotion_message.trim()
+                        ? DEFAULT_STICKER_PROMOTION_MESSAGE
+                        : current.promotion_message,
+                  }));
+                  setError(null);
+                }}
+                className="accent-gb-green"
+              />
+              Figurinha promocional (bloqueada até a data)
+            </label>
+            <p className="text-xs text-gray-500">
+              Fica com cadeado pixelado no álbum, fora dos pacotinhos, até o horário informado.
+            </p>
+            {form.promotion_enabled ? (
+              <>
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-gray-700">
+                    Desbloqueia em
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={form.promotion_unlocks_at}
+                    onChange={(e) => set("promotion_unlocks_at", e.target.value)}
+                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gb-green focus:ring-1 focus:ring-gb-green"
+                  />
+                  <p className="mt-1 text-xs text-gray-500">Horário de Brasília (GMT−3).</p>
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-gray-700">
+                    Mensagem da promoção
+                  </label>
+                  <textarea
+                    value={form.promotion_message}
+                    onChange={(e) => set("promotion_message", e.target.value)}
+                    rows={4}
+                    maxLength={400}
+                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gb-green focus:ring-1 focus:ring-gb-green"
+                    placeholder={DEFAULT_STICKER_PROMOTION_MESSAGE}
+                  />
+                  <p className="mt-1 text-xs text-gray-500">
+                    Aparece ao passar o mouse ou tocar na figurinha bloqueada.
+                  </p>
+                </div>
+              </>
+            ) : null}
           </div>
 
           <div className="sm:col-span-2">

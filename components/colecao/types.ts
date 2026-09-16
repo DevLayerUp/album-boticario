@@ -4,6 +4,9 @@ export interface CollectionSticker {
   description: string | null;
   image_url: string;
   is_user_type: boolean;
+  promotion_enabled?: boolean | null;
+  promotion_unlocks_at?: string | null;
+  promotion_message?: string | null;
   sticker_categories: { id: number; name: string } | null;
   rarities: {
     id: number;

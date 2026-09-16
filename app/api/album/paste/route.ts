@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { incrementMissionProgress } from "@/lib/missions";
+import { isStickerPromotionLocked } from "@/lib/sticker-promotion";
 
 /**
  * POST /api/album/paste
@@ -32,6 +33,19 @@ export async function POST(request: NextRequest) {
 
   if (!owned || owned.quantity < 1) {
     return NextResponse.json({ error: "Você não possui esta figurinha" }, { status: 400 });
+  }
+
+  const { data: catalogSticker } = await supabase
+    .from("stickers")
+    .select("promotion_enabled, promotion_unlocks_at")
+    .eq("id", sticker_id)
+    .maybeSingle();
+
+  if (isStickerPromotionLocked(catalogSticker)) {
+    return NextResponse.json(
+      { error: "Esta figurinha promocional ainda não foi desbloqueada" },
+      { status: 403 },
+    );
   }
 
   // 2. Check slot is not already pasted

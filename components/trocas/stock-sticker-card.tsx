@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -11,6 +12,8 @@ import { NO_DUPLICATES_TRADE_MESSAGE } from "@/lib/trade-duplicates";
 import { StickerFormattedText } from "@/components/sticker/sticker-formatted-text";
 import { StickerRarityEffects } from "@/components/sticker/sticker-rarity-effects";
 import { RarityBadge } from "./rarity-badge";
+import { StickerPromotionArt, StickerPromotionHoverCopy, StickerPromotionModalHost } from "@/components/sticker/sticker-promotion-lock";
+import { isStickerPromotionLocked } from "@/lib/sticker-promotion";
 import type { Sticker } from "./types";
 
 export type StockCardState = "missing" | "owned" | "pasted";
@@ -61,9 +64,15 @@ export function StockStickerCard({
         ? "#09357a"
         : "var(--color-verde-escuro-500)";
   const animType = sticker.rarities?.animation_type;
+  const promotionLocked = isStickerPromotionLocked(sticker);
   const showRequestTrade =
-    canRequestTrade && state === "missing" && !hasOpenWish && Boolean(onRequestTrade);
-  const canPaste = state === "owned" && Boolean(pasteHref);
+    canRequestTrade &&
+    state === "missing" &&
+    !hasOpenWish &&
+    Boolean(onRequestTrade) &&
+    !promotionLocked;
+  const canPaste = state === "owned" && Boolean(pasteHref) && !promotionLocked;
+  const [showPromoModal, setShowPromoModal] = useState(false);
 
   const cardImage = (
     <div className="relative w-full">
@@ -77,14 +86,22 @@ export function StockStickerCard({
           canPaste && "group-hover:border-verde-500 group-hover:shadow-md",
         )}
         style={{
-          borderColor:
-            state === "missing"
+          borderColor: promotionLocked
+            ? borderColor
+            : state === "missing"
               ? `${borderColor}55`
               : state === "owned"
                 ? `${borderColor}b3`
                 : borderColor,
         }}
       >
+        {promotionLocked ? (
+          <>
+            <StickerPromotionArt imageUrl={sticker.image_url} sizes="160px" lockSize="sm" />
+            <StickerPromotionHoverCopy sticker={sticker} />
+          </>
+        ) : (
+          <>
         <Image
           src={sticker.image_url}
           alt=""
@@ -181,6 +198,8 @@ export function StockStickerCard({
               </span>
             </div>
           )}
+          </>
+        )}
         </div>
 
         {showCopiesBadge && (
@@ -225,6 +244,10 @@ export function StockStickerCard({
         <p className="mt-1 text-[10px] font-semibold text-verde-500 sm:text-xs">
           Toque para colar
         </p>
+      ) : promotionLocked ? (
+        <p className="mt-1 text-[10px] font-semibold text-verde-escuro-400 sm:text-xs">
+          Bloqueada até a promoção
+        </p>
       ) : null}
     </>
   );
@@ -237,7 +260,17 @@ export function StockStickerCard({
       transition={{ duration: 0.25, delay: Math.min(index * 0.02, 0.35) }}
       className="flex flex-col items-start gap-0"
     >
-      {showRequestTrade ? (
+      {promotionLocked ? (
+        <button
+          type="button"
+          onClick={() => setShowPromoModal(true)}
+          className="group w-full cursor-pointer text-left"
+          aria-label={`${stickerTextToPlain(sticker.name)}, bloqueada até a data da promoção`}
+        >
+          {cardImage}
+          {cardMeta}
+        </button>
+      ) : showRequestTrade ? (
         <button
           type="button"
           onClick={onRequestTrade}
@@ -270,6 +303,11 @@ export function StockStickerCard({
           {cardMeta}
         </>
       )}
+      <StickerPromotionModalHost
+        open={showPromoModal}
+        sticker={sticker}
+        onClose={() => setShowPromoModal(false)}
+      />
     </motion.div>
   );
 }

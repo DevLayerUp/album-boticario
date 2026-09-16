@@ -14,7 +14,13 @@ import { playPasteSound } from "@/lib/play-paste-sound";
 import { rarityColor, rarityTheme, type RarityTheme } from "@/lib/rarity";
 import { stickerTextToPlain } from "@/lib/sticker-text-format";
 import { resolveUserStickerImageUrl } from "@/lib/user-sticker";
+import { isStickerPromotionLocked } from "@/lib/sticker-promotion";
 import { cn } from "@/lib/utils";
+import {
+  StickerPromotionArt,
+  StickerPromotionHoverCopy,
+  StickerPromotionModalHost,
+} from "@/components/sticker/sticker-promotion-lock";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 export interface SlotSticker {
@@ -24,6 +30,9 @@ export interface SlotSticker {
   image_url: string;
   redirect_url?: string | null;
   is_user_type: boolean;
+  promotion_enabled?: boolean | null;
+  promotion_unlocks_at?: string | null;
+  promotion_message?: string | null;
   rarities: {
     name: string;
     slug: string;
@@ -339,6 +348,7 @@ export function StickerSlot({
   const isBigCard   = size === "large" || size === "duo" || size === "cta" || size === "grid4";
   const [showPasteModal, setShowPasteModal]   = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [showPromoModal, setShowPromoModal]   = useState(false);
   const [pasting, setPasting]                 = useState(false);
   const [justPasted, setJustPasted]           = useState(false);
   const [isFlying, setIsFlying]               = useState(false);
@@ -359,10 +369,11 @@ export function StickerSlot({
   const raritySlug  = sticker?.rarities?.slug ?? "common";
   const theme       = rarityTheme(raritySlug, sticker?.rarities?.color_hex);
   const animation   = sticker?.rarities?.animation_type ?? "none";
+  const isPromotionLocked = isStickerPromotionLocked(sticker);
   const isOwned     = owned > 0;
-  const canPaste    = isOwned && !isPasted && !isFlying && sticker !== null;
-  const isMissing   = !isOwned && sticker !== null;
-  const isComplete  = (isPasted || justPasted) && !isFlying;
+  const canPaste    = isOwned && !isPasted && !isFlying && sticker !== null && !isPromotionLocked;
+  const isMissing   = !isOwned && sticker !== null && !isPromotionLocked;
+  const isComplete  = (isPasted || justPasted) && !isFlying && !isPromotionLocked;
   const isAwaitingLand = isFlying;
 
   const slotLabel = isComplete
@@ -371,6 +382,8 @@ export function StickerSlot({
       : `Espaço ${slotNumber}`
     : canPaste
       ? `Colar ${sticker?.name ? stickerTextToPlain(sticker.name) : `figurinha ${slotNumber}`}`
+      : isPromotionLocked
+        ? `${stickerTextToPlain(sticker?.name ?? "")}, bloqueada até a data da promoção`
       : isMissing
         ? `${stickerTextToPlain(sticker.name)}, ainda não obtida`
         : `Espaço ${slotNumber}`;
@@ -439,13 +452,15 @@ export function StickerSlot({
         data-slot-id={slotId}
         aria-label={slotLabel}
         className={[
-          `relative block ${aspectClass} w-full overflow-hidden ${radiusClass} border-[5px] text-left transition-colors duration-300`,
+          `group relative block ${aspectClass} w-full overflow-hidden ${radiusClass} border-[5px] text-left transition-colors duration-300`,
           isComplete
             ? "cursor-pointer"
             : isAwaitingLand
             ? "border-dashed bg-white/5"
             : canPaste
             ? "cursor-pointer border-dashed bg-white/10 hover:bg-white/20"
+            : isPromotionLocked
+            ? "cursor-pointer border-solid bg-black/20"
             : isMissing
             ? "cursor-default border-dashed bg-black/15"
             : "cursor-default border-white/15 bg-black/20",
@@ -456,19 +471,27 @@ export function StickerSlot({
             ? { borderColor: color }
             : isAwaitingLand || canPaste
             ? { borderColor: `${color}b3` }
+            : isPromotionLocked
+            ? { borderColor: "#deda00" }
             : isMissing
             ? { borderColor: `${color}55` }
             : undefined
         }
         onClick={() => {
-          if (isComplete) setShowDetailModal(true);
+          if (isPromotionLocked) setShowPromoModal(true);
+          else if (isComplete) setShowDetailModal(true);
           else if (canPaste) setShowPasteModal(true);
         }}
-        whileHover={!isComplete && canPaste ? { scale: 1.04, y: -2 } : undefined}
-        whileTap={!isComplete && canPaste ? { scale: 0.96 } : undefined}
+        whileHover={!isComplete && (canPaste || isPromotionLocked) ? { scale: 1.04, y: -2 } : undefined}
+        whileTap={!isComplete && (canPaste || isPromotionLocked) ? { scale: 0.96 } : undefined}
         transition={{ type: "spring", stiffness: 400, damping: 25 }}
       >
-        {isComplete ? (
+        {isPromotionLocked && sticker ? (
+          <div className="pointer-events-none relative h-full w-full">
+            <StickerPromotionArt imageUrl={stickerImageUrl} sizes={imageSizes} lockSize={isBigCard ? "md" : "sm"} />
+            <StickerPromotionHoverCopy sticker={sticker} />
+          </div>
+        ) : isComplete ? (
           /* ── COLADA: imagem ocupa todo o card ─────────────────────── */
           <motion.div
             initial={justPasted ? { filter: "brightness(1.25)" } : false}
@@ -611,6 +634,15 @@ export function StickerSlot({
           </div>
         )}
       </motion.button>
+
+      {mounted && createPortal(
+        <StickerPromotionModalHost
+          open={showPromoModal && Boolean(sticker)}
+          sticker={sticker ?? {}}
+          onClose={() => setShowPromoModal(false)}
+        />,
+        document.body
+      )}
 
       {/* ── Sticker detail modal (flip frente/verso) ─────────────────────────── */}
       {mounted && createPortal(

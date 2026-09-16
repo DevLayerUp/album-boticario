@@ -8,9 +8,15 @@
  */
 import { createAdminClient } from "@/lib/supabase/admin";
 import { STICKERS_PER_PACK } from "@/lib/pack-settings";
+import { excludeLockedPromotionStickers } from "@/lib/sticker-promotion";
 
 interface Rarity { id: number; slug: string; drop_percentage: number }
-interface StickerRow { id: number; rarity_id: number | null }
+interface StickerRow {
+  id: number;
+  rarity_id: number | null;
+  promotion_enabled?: boolean | null;
+  promotion_unlocks_at?: string | null;
+}
 
 function drawSticker(rarities: Rarity[], stickers: StickerRow[]): number {
   // No rarities configured → pure random
@@ -69,18 +75,22 @@ export async function createPacksForUser(
       .order("drop_percentage"),
     admin
       .from("stickers")
-      .select("id, rarity_id")
+      .select("id, rarity_id, promotion_enabled, promotion_unlocks_at")
       .eq("is_active", true)
       .eq("is_user_type", false),
   ]);
 
+  const droppableStickers = excludeLockedPromotionStickers(
+    (allStickers ?? []) as StickerRow[],
+  );
+
   // If truly no stickers exist at all, bail
-  if (!allStickers?.length) {
+  if (!droppableStickers.length) {
     return { success: false, packsCreated: 0 };
   }
 
   const rarityList = (rarities ?? []) as Rarity[];
-  const stickerList = allStickers as StickerRow[];
+  const stickerList = droppableStickers;
 
   let packsCreated = 0;
 

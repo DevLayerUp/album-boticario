@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { excludeLockedPromotionStickers } from "@/lib/sticker-promotion";
 
 type RarityRow = {
   name: string;
@@ -24,7 +25,7 @@ export async function GET(request: NextRequest) {
 
   let query = supabase
     .from("stickers")
-    .select("id, name, image_url, rarities ( name, slug, color_hex )")
+    .select("id, name, image_url, promotion_enabled, promotion_unlocks_at, rarities ( name, slug, color_hex )")
     .eq("is_active", true)
     .eq("is_user_type", false)
     .order("name")
@@ -37,13 +38,15 @@ export async function GET(request: NextRequest) {
   const { data, error } = await query;
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  const stickers = (data ?? []).map((row) => {
-    const rarities = row.rarities as RarityRow | RarityRow[] | null;
-    return {
-      ...row,
-      rarities: Array.isArray(rarities) ? (rarities[0] ?? null) : rarities,
-    };
-  });
+  const stickers = excludeLockedPromotionStickers(
+    (data ?? []).map((row) => {
+      const rarities = row.rarities as RarityRow | RarityRow[] | null;
+      return {
+        ...row,
+        rarities: Array.isArray(rarities) ? (rarities[0] ?? null) : rarities,
+      };
+    }),
+  );
 
   return NextResponse.json(stickers);
 }

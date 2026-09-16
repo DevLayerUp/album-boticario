@@ -8,6 +8,8 @@ import { stickerTextToPlain } from "@/lib/sticker-text-format";
 import { cn } from "@/lib/utils";
 import { StickerFormattedText } from "@/components/sticker/sticker-formatted-text";
 import { StickerRarityEffects } from "@/components/sticker/sticker-rarity-effects";
+import { StickerPromotionArt, StickerPromotionHoverCopy } from "@/components/sticker/sticker-promotion-lock";
+import { isStickerPromotionLocked } from "@/lib/sticker-promotion";
 import type { CollectionSticker } from "./types";
 
 interface CollectionStickerCardProps {
@@ -32,6 +34,8 @@ export function CollectionStickerCard({
   const color    = rarityColor(slug, sticker.rarities?.color_hex);
   const animType = sticker.rarities?.animation_type ?? "none";
   const isSuper  = slug === "super_rare";
+  const isPromoLocked = isStickerPromotionLocked(sticker);
+  const showOwned = owned && !isPromoLocked;
 
   return (
     <motion.button
@@ -42,7 +46,9 @@ export function CollectionStickerCard({
       transition={{ duration: 0.28, delay: Math.min(index * 0.025, 0.35), ease: "easeOut" }}
       onClick={onSelect}
       aria-label={
-        owned
+        isPromoLocked
+          ? `${stickerTextToPlain(sticker.name)}, bloqueada até a data da promoção`
+          : showOwned
           ? `${stickerTextToPlain(sticker.name)}, ${quantity > 1 ? `${quantity} cópias` : "obtida"}`
           : `${stickerTextToPlain(sticker.name)}, ainda não obtida`
       }
@@ -51,26 +57,33 @@ export function CollectionStickerCard({
       <div
         className={cn(
           "relative aspect-160/229 w-full overflow-hidden rounded-block border-[5px] transition-shadow duration-200",
-          owned
+          showOwned
             ? "shadow-[0_2px_6px_rgba(0,0,0,0.12),0_1px_2px_rgba(0,0,0,0.08)] group-hover:shadow-[0_6px_16px_rgba(0,0,0,0.14)]"
             : "border-dashed bg-verde-escuro-capa/[0.04]",
         )}
         style={{
-          borderColor: owned ? color : `${color}55`,
+          borderColor: isPromoLocked ? color : showOwned ? color : `${color}55`,
         }}
       >
+        {isPromoLocked ? (
+          <>
+            <StickerPromotionArt imageUrl={sticker.image_url} sizes="160px" lockSize="sm" />
+            <StickerPromotionHoverCopy sticker={sticker} />
+          </>
+        ) : (
+          <>
         <Image
           src={sticker.image_url}
           alt=""
           fill
           className={cn(
             "object-cover transition-[filter,transform] duration-300",
-            owned ? "group-hover:scale-[1.03]" : "grayscale opacity-35",
+            showOwned ? "group-hover:scale-[1.03]" : "grayscale opacity-35",
           )}
           sizes="(max-width: 640px) 33vw, (max-width: 1024px) 20vw, 160px"
         />
 
-        {!owned && (
+        {!showOwned && (
           <div className="absolute inset-0 flex items-center justify-center bg-verde-escuro-capa/25">
             <span className="flex size-9 items-center justify-center rounded-full bg-surface/90 shadow-sm">
               <Lock size={16} className="text-verde-escuro-300" aria-hidden />
@@ -78,7 +91,7 @@ export function CollectionStickerCard({
           </div>
         )}
 
-        {owned ? (
+        {showOwned ? (
           <StickerRarityEffects
             slug={slug}
             animationType={animType}
@@ -95,30 +108,32 @@ export function CollectionStickerCard({
           />
         )}
 
-        {owned && isSuper && (
+        {showOwned && isSuper && (
           <span className="absolute left-1.5 top-1.5 flex items-center gap-0.5 rounded-pill bg-gold-700/90 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white">
             <Sparkles size={9} aria-hidden />
             Rara
           </span>
         )}
 
-        {quantity > 1 && (
+        {quantity > 1 && !isPromoLocked && (
           <span className="absolute right-1.5 top-1.5 rounded-pill bg-amarelo px-1.5 py-0.5 text-[10px] font-bold text-verde-escuro-500">
             {quantity}×
           </span>
         )}
 
-        {owned && quantity === 1 && sticker.is_user_type && (
+        {showOwned && quantity === 1 && sticker.is_user_type && (
           <span className="absolute bottom-1.5 left-1.5 rounded-pill bg-verde-500/90 px-1.5 py-0.5 text-[9px] font-bold uppercase text-white">
             Sua
           </span>
+        )}
+          </>
         )}
       </div>
 
       <p
         className={cn(
           "truncate px-0.5 text-center font-display text-[11px] font-bold uppercase leading-tight tracking-wide",
-          owned ? "text-verde-escuro-500" : "text-verde-escuro-300",
+          showOwned ? "text-verde-escuro-500" : "text-verde-escuro-300",
         )}
       >
         <StickerFormattedText text={sticker.name} uppercasePlain className="truncate" />

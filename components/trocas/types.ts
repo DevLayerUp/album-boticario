@@ -10,6 +10,9 @@ export interface Sticker {
   name: string;
   image_url: string;
   rarities: Rarity | null;
+  promotion_enabled?: boolean | null;
+  promotion_unlocks_at?: string | null;
+  promotion_message?: string | null;
 }
 
 export interface Profile {

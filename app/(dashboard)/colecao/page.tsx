@@ -20,6 +20,7 @@ export default async function ColecaoPage() {
     .from("stickers")
     .select(
       `id, name, description, image_url, is_user_type,
+       promotion_enabled, promotion_unlocks_at, promotion_message,
        sticker_categories (id, name),
        rarities (id, name, slug, color_hex, animation_type)`
     )

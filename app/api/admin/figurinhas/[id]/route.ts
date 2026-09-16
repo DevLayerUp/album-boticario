@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { adminGuard } from "@/lib/admin-guard";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { normalizeRedirectUrl } from "@/lib/sticker-redirect-url";
+import { normalizeStickerPromotionInput } from "@/lib/sticker-promotion";
 import {
   normalizeStickerDescription,
   validateStickerDescription,
@@ -83,6 +84,11 @@ export async function PUT(
     return NextResponse.json({ error: descriptionError }, { status: 400 });
   }
 
+  const promotion = normalizeStickerPromotionInput(body);
+  if ("error" in promotion) {
+    return NextResponse.json({ error: promotion.error }, { status: 400 });
+  }
+
   const supabase = createAdminClient();
   const { data, error } = await supabase
     .from("stickers")
@@ -95,6 +101,7 @@ export async function PUT(
       rarity_id: rarity_id || null,
       is_user_type: !!is_user_type,
       is_active: is_active ?? true,
+      ...promotion,
     })
     .eq("id", id)
     .select()

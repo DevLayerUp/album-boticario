@@ -34,7 +34,7 @@ export async function GET() {
   ] = await Promise.all([
     supabase
       .from("stickers")
-      .select("id, name, image_url, rarities ( name, slug, color_hex, animation_type )")
+      .select("id, name, image_url, promotion_enabled, promotion_unlocks_at, promotion_message, rarities ( name, slug, color_hex, animation_type )")
       .eq("is_active", true)
       .eq("is_user_type", false)
       .order("name"),

@@ -19,6 +19,8 @@ import { cn } from "@/lib/utils";
 import { StickerFormattedText } from "@/components/sticker/sticker-formatted-text";
 import { AutoFitText } from "@/components/sticker/auto-fit-text";
 import { StickerRarityEffects } from "@/components/sticker/sticker-rarity-effects";
+import { StickerPromotionArt, StickerPromotionCalendarButton } from "@/components/sticker/sticker-promotion-lock";
+import { isStickerPromotionLocked, resolvePromotionMessage } from "@/lib/sticker-promotion";
 import type { CollectionSticker } from "./types";
 
 interface CollectionStickerModalProps {
@@ -86,6 +88,7 @@ export function CollectionStickerModal({
 }: CollectionStickerModalProps) {
   const [showBack, setShowBack] = useState(false);
   const owned = quantity > 0;
+  const isPromoLocked = isStickerPromotionLocked(sticker);
   const slug  = sticker.rarities?.slug ?? "common";
   const theme = rarityTheme(slug, sticker.rarities?.color_hex);
   const rarityName = sticker.rarities?.name ?? "Comum";
@@ -137,7 +140,7 @@ export function CollectionStickerModal({
         {/* Status + meta */}
         <div className="pr-10">
           <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-gold-700/80">
-            {owned ? "Na sua coleção" : "Ainda não obtida"}
+            {isPromoLocked ? "Figurinha promocional" : owned ? "Na sua coleção" : "Ainda não obtida"}
           </p>
           <h2
             id="collection-modal-title"
@@ -152,7 +155,20 @@ export function CollectionStickerModal({
           )}
         </div>
 
-        {!owned ? (
+        {isPromoLocked ? (
+          <div className="mx-auto mt-8 flex w-full max-w-[280px] flex-col items-center gap-4 text-center">
+            <div
+              className="relative aspect-160/229 w-full overflow-hidden rounded-block border-[5px]"
+              style={{ borderColor: theme.border }}
+            >
+              <StickerPromotionArt imageUrl={sticker.image_url} sizes="280px" lockSize="lg" />
+            </div>
+            <p className="text-sm leading-relaxed text-verde-escuro-capa/75">
+              {resolvePromotionMessage(sticker)}
+            </p>
+            <StickerPromotionCalendarButton sticker={sticker} className="w-full" />
+          </div>
+        ) : !owned ? (
           <div className="mx-auto mt-8 flex w-full max-w-[280px] flex-col items-center gap-4 text-center">
             <div
               className="relative aspect-160/229 w-full overflow-hidden rounded-block border-[5px] border-dashed opacity-80"

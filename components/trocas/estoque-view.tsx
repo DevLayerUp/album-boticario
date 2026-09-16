@@ -12,6 +12,7 @@ import {
 } from "./stock-sticker-card";
 import { useTradeToast } from "./trade-toast";
 import { NO_DUPLICATES_TRADE_MESSAGE } from "@/lib/trade-duplicates";
+import { isStickerPromotionLocked } from "@/lib/sticker-promotion";
 import type { Sticker, StockItem } from "./types";
 
 interface EstoqueViewProps {
@@ -118,7 +119,8 @@ export function EstoqueView({ onTradeActivity }: EstoqueViewProps) {
       canTrade &&
       item.quantity === 0 &&
       !item.isPasted &&
-      !item.hasOpenWish
+      !item.hasOpenWish &&
+      !isStickerPromotionLocked(item.sticker)
     );
   }
 
@@ -144,6 +146,7 @@ export function EstoqueView({ onTradeActivity }: EstoqueViewProps) {
   }
 
   function pasteHrefFor(item: StockItem) {
+    if (isStickerPromotionLocked(item.sticker)) return null;
     if (item.quantity <= 0 || item.isPasted || !item.pasteTarget) return null;
     const { slotId, categoryId } = item.pasteTarget;
     return `/album?slot=${slotId}&category=${categoryId}`;
