@@ -1,12 +1,14 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowLeftRight, Flag, HelpCircle, Loader2 } from "lucide-react";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { FlipBook } from "@/components/album/flip-book";
+import { PageCompletedModal } from "@/components/album/page-completed-modal";
 import type { AlbumPageData } from "@/components/album/album-page";
+import { findPageCompletedByPaste } from "@/lib/album-page-complete";
 import { patchAlbumPagesWithUserSticker } from "@/lib/user-sticker";
 
 interface Category {
@@ -61,6 +63,8 @@ export function AlbumClient({
   const [userAlbum, setUserAlbum]           = useState<AlbumEntry[]>(initialUserAlbum);
   const [userStickers, setUserStickers]     = useState<UserSticker[]>(initialUserStickers);
   const [userStickerUrl, setUserStickerUrl] = useState<string | null>(initialUserStickerUrl);
+  const [showPageCompleted, setShowPageCompleted] = useState(false);
+  const pageCompleteTimerRef = useRef<number | null>(null);
 
   const refreshUserStickerUrl = useCallback(async () => {
     try {
@@ -117,7 +121,17 @@ export function AlbumClient({
     setPages((prev) => patchAlbumPagesWithUserSticker(prev, userStickerUrl));
   }, [userStickerUrl]);
 
+  useEffect(() => {
+    return () => {
+      if (pageCompleteTimerRef.current != null) {
+        window.clearTimeout(pageCompleteTimerRef.current);
+      }
+    };
+  }, []);
+
   async function handlePaste(slotId: number, stickerId: number) {
+    const completedPage = findPageCompletedByPaste(pages, pastedSlotIds, slotId);
+
     const res = await fetch("/api/album/paste", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -133,6 +147,15 @@ export function AlbumClient({
       ...prev,
       { slot_id: slotId, sticker_id: stickerId, pasted_at: new Date().toISOString() },
     ]);
+
+    if (completedPage) {
+      if (pageCompleteTimerRef.current != null) {
+        window.clearTimeout(pageCompleteTimerRef.current);
+      }
+      pageCompleteTimerRef.current = window.setTimeout(() => {
+        setShowPageCompleted(true);
+      }, 750);
+    }
   }
 
   // Progress
@@ -265,6 +288,12 @@ export function AlbumClient({
           </div>
         </div>
       )}
+
+      <AnimatePresence>
+        {showPageCompleted ? (
+          <PageCompletedModal onClose={() => setShowPageCompleted(false)} />
+        ) : null}
+      </AnimatePresence>
     </div>
   );
 }

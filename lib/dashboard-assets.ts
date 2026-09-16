@@ -30,6 +30,8 @@ export const dashboardAssets = {
     right: `${BASE}/album/bg-direito.png`,
     /** Imagem decorativa do fundo geral da página /album (position bottom). */
     page:  `${BASE}/album/bg-page.png`,
+    pageCompleteClose: `${BASE}/album/page-complete-close.svg`,
+    pageCompleteLogos: `${BASE}/album/page-complete-logos.svg`,
   },
   /** Fundo geral da página /pacotinhos (position bottom). */
   pacotinhos: {
