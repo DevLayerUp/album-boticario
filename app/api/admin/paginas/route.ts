@@ -2,6 +2,19 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { adminGuard } from "@/lib/admin-guard";
 import { TEMPLATE_MAP, type TemplateId } from "@/lib/album-templates";
+import { isMissingAlbumPagePublicColumn } from "@/lib/album-page-visibility";
+import type { SupabaseClient } from "@supabase/supabase-js";
+
+async function insertAlbumPage(
+  supabase: SupabaseClient,
+  row: Record<string, unknown>,
+) {
+  const withVisibility = { ...row, is_public: row.is_public !== false };
+  const first = await supabase.from("album_pages").insert(withVisibility).select().single();
+  if (!first.error || !isMissingAlbumPagePublicColumn(first.error)) return first;
+  const { is_public: _ignored, ...without } = withVisibility;
+  return supabase.from("album_pages").insert(without).select().single();
+}
 
 /**
  * GET /api/admin/paginas?category_id=1
@@ -18,7 +31,7 @@ export async function GET(request: NextRequest) {
   let query = supabase
     .from("album_pages")
     .select(
-      `id, page_number, title, background_url, layout_template, category_id,
+      `id, page_number, title, background_url, layout_template, category_id, is_public,
        sticker_categories (id, name),
        album_slots (id, slot_number, sticker_id)`
     )
@@ -28,6 +41,21 @@ export async function GET(request: NextRequest) {
   if (categoryId) query = query.eq("category_id", categoryId);
 
   const { data, error } = await query;
+  if (error && isMissingAlbumPagePublicColumn(error)) {
+    let fallbackQuery = supabase
+      .from("album_pages")
+      .select(
+        `id, page_number, title, background_url, layout_template, category_id,
+         sticker_categories (id, name),
+         album_slots (id, slot_number, sticker_id)`
+      )
+      .order("category_id")
+      .order("page_number");
+    if (categoryId) fallbackQuery = fallbackQuery.eq("category_id", categoryId);
+    const fallback = await fallbackQuery;
+    if (fallback.error) return NextResponse.json({ error: fallback.error.message }, { status: 500 });
+    return NextResponse.json(fallback.data ?? []);
+  }
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json(data ?? []);
 }
@@ -53,6 +81,7 @@ export async function POST(request: NextRequest) {
     layout_template,
     page_type = "sticker",
     content,
+    is_public,
   } = body as {
     category_id?: number;
     page_number?: number;
@@ -61,6 +90,7 @@ export async function POST(request: NextRequest) {
     layout_template?: string;
     page_type?: string;
     content?: string;
+    is_public?: boolean;
   };
 
   if (!category_id || !page_number) {
@@ -81,18 +111,15 @@ export async function POST(request: NextRequest) {
     }
 
     // 1. Create the page
-    const { data: page, error: pageErr } = await supabase
-      .from("album_pages")
-      .insert({
-        category_id,
-        page_number,
-        title: title ?? null,
-        background_url: background_url ?? null,
-        layout_template,
-        page_type: "sticker",
-      })
-      .select()
-      .single();
+    const { data: page, error: pageErr } = await insertAlbumPage(supabase, {
+      category_id,
+      page_number,
+      title: title ?? null,
+      background_url: background_url ?? null,
+      layout_template,
+      page_type: "sticker",
+      is_public: is_public !== false,
+    });
 
     if (pageErr) return NextResponse.json({ error: pageErr.message }, { status: 500 });
 
@@ -111,19 +138,16 @@ export async function POST(request: NextRequest) {
   }
 
   // Info page — no slots, just content
-  const { data: page, error: pageErr } = await supabase
-    .from("album_pages")
-    .insert({
-      category_id,
-      page_number,
-      title: title ?? null,
-      background_url: background_url ?? null,
-      layout_template: layout_template ?? "info",
-      page_type: "info",
-      content: content ?? null,
-    })
-    .select()
-    .single();
+  const { data: page, error: pageErr } = await insertAlbumPage(supabase, {
+    category_id,
+    page_number,
+    title: title ?? null,
+    background_url: background_url ?? null,
+    layout_template: layout_template ?? "info",
+    page_type: "info",
+    content: content ?? null,
+    is_public: is_public !== false,
+  });
 
   if (pageErr) return NextResponse.json({ error: pageErr.message }, { status: 500 });
   return NextResponse.json(page, { status: 201 });

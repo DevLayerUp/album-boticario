@@ -6,6 +6,7 @@ import { AdminStorageImage } from "@/components/admin/admin-storage-image";
 import {
   Plus, Trash2, BookOpen, Layers, Settings2, Save, X,
   Loader2, CheckCircle2, FileText, ImageIcon, Upload, PenLine, Hash,
+  Globe, Lock,
 } from "lucide-react";
 import { TemplatePicker } from "@/components/admin/template-picker";
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
@@ -31,6 +32,7 @@ interface PageRow {
   assigned_slot_count: number;
   page_type: "sticker" | "info";
   content: string | null;
+  is_public: boolean;
 }
 interface SlotRow {
   id: number;
@@ -57,7 +59,48 @@ const EMPTY_FORM = {
   background_url: "",
   layout_template: "title3" as TemplateId,
   page_type: "sticker" as "sticker" | "info",
+  is_public: true,
 };
+
+function PageVisibilityToggle({
+  value,
+  onChange,
+}: {
+  value: boolean;
+  onChange: (isPublic: boolean) => void;
+}) {
+  return (
+    <div>
+      <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-gray-500">
+        Visibilidade no álbum
+      </label>
+      <div className="grid grid-cols-2 gap-3">
+        <button
+          type="button"
+          onClick={() => onChange(true)}
+          className={`flex flex-col items-start rounded-xl border-2 p-4 text-left transition-all ${
+            value ? "border-gb-green bg-gb-green/5" : "border-border hover:border-gray-300"
+          }`}
+        >
+          <Globe size={16} className={value ? "text-gb-green" : "text-gray-400"} />
+          <span className="mt-2 text-sm font-semibold text-gb-ink">Pública</span>
+          <span className="mt-0.5 text-xs text-muted">Todos os usuários veem esta página</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => onChange(false)}
+          className={`flex flex-col items-start rounded-xl border-2 p-4 text-left transition-all ${
+            !value ? "border-amber-400 bg-amber-50" : "border-border hover:border-gray-300"
+          }`}
+        >
+          <Lock size={16} className={!value ? "text-amber-600" : "text-gray-400"} />
+          <span className="mt-2 text-sm font-semibold text-gb-ink">Privada</span>
+          <span className="mt-0.5 text-xs text-muted">Só administradores veem no álbum</span>
+        </button>
+      </div>
+    </div>
+  );
+}
 
 // ─── Slot configurator modal ──────────────────────────────────────────────────
 function SlotConfigModal({
@@ -278,6 +321,7 @@ function InfoPageEditorModal({
   const [title, setTitle]          = useState(page.title ?? "");
   const [content, setContent]      = useState(page.content ?? "");
   const [imageUrl, setImageUrl]    = useState(page.background_url ?? "");
+  const [isPublic, setIsPublic]    = useState(page.is_public !== false);
   const [uploading, setUploading]  = useState(false);
   const [saving, setSaving]        = useState(false);
   const [saved, setSaved]          = useState(false);
@@ -311,12 +355,18 @@ function InfoPageEditorModal({
           title:          title || null,
           background_url: imageUrl || null,
           content:        content || null,
+          is_public:      isPublic,
         }),
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error ?? "Erro ao salvar"); return; }
       setSaved(true);
-      setTimeout(() => onClose({ title: title || null, background_url: imageUrl || null, content: content || null }), 800);
+      setTimeout(() => onClose({
+        title: title || null,
+        background_url: imageUrl || null,
+        content: content || null,
+        is_public: isPublic,
+      }), 800);
     } finally {
       setSaving(false);
     }
@@ -375,6 +425,11 @@ function InfoPageEditorModal({
                   className="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm outline-none focus:border-gb-green"
                 />
               </div>
+
+              <PageVisibilityToggle
+                value={isPublic}
+                onChange={(next) => { setIsPublic(next); setSaved(false); }}
+              />
 
               {/* Image upload */}
               <div>
@@ -713,6 +768,7 @@ function LayoutContentModal({
   const initialGrid6Cta = parseLayoutData(page.content) as { cta_label?: string; cta_href?: string };
   const [ctaLabel, setCtaLabel] = useState(isGrid6Cta ? (initialGrid6Cta.cta_label ?? "") : "");
   const [ctaHref, setCtaHref] = useState(isGrid6Cta ? (initialGrid6Cta.cta_href ?? "") : "");
+  const [isPublic, setIsPublic] = useState(page.is_public !== false);
   const [uploading, setUploading] = useState(false);
   const [saving,   setSaving]   = useState(false);
   const [saved,    setSaved]    = useState(false);
@@ -757,12 +813,16 @@ function LayoutContentModal({
       const res = await fetch(`/api/admin/paginas/${page.id}`, {
         method:  "PATCH",
         headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ layout_data: layoutData }),
+        body:    JSON.stringify({ layout_data: layoutData, is_public: isPublic }),
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error ?? "Erro ao salvar"); return; }
       setSaved(true);
-      setTimeout(() => onClose({ title: title || null, content: JSON.stringify(layoutData) }), 700);
+      setTimeout(() => onClose({
+        title: title || null,
+        content: JSON.stringify(layoutData),
+        is_public: isPublic,
+      }), 700);
     } finally { setSaving(false); }
   }
 
@@ -806,6 +866,11 @@ function LayoutContentModal({
         </div>
 
         <div className="p-6 space-y-5">
+          <PageVisibilityToggle
+            value={isPublic}
+            onChange={(next) => { setIsPublic(next); setSaved(false); }}
+          />
+
           {/* Title */}
           {!isDuo2 && !isGrid4 && !isGrid6Cta && (
           <div>
@@ -1342,6 +1407,7 @@ export function PaginasClient({ initialCategories, initialPages }: PaginasClient
   const [contentEditPage, setContentEditPage] = useState<PageRow | null>(null);
   const [numberEditPage, setNumberEditPage]   = useState<PageRow | null>(null);
   const [templateEditPage, setTemplateEditPage] = useState<PageRow | null>(null);
+  const [visibilityBusyId, setVisibilityBusyId] = useState<number | null>(null);
 
   const categories = initialCategories;
 
@@ -1371,6 +1437,7 @@ export function PaginasClient({ initialCategories, initialPages }: PaginasClient
         page_number:  form.page_number,
         title:        form.title || null,
         page_type:    form.page_type,
+        is_public:    form.is_public,
       };
 
       if (form.page_type === "sticker") {
@@ -1393,6 +1460,7 @@ export function PaginasClient({ initialCategories, initialPages }: PaginasClient
         assigned_slot_count: 0,
         page_type:  form.page_type,
         content:    null,
+        is_public:  form.is_public,
       };
 
       setPages((prev) => [...prev, newPage]);
@@ -1418,6 +1486,28 @@ export function PaginasClient({ initialCategories, initialPages }: PaginasClient
     const res = await fetch(`/api/admin/paginas/${id}`, { method: "DELETE" });
     if (res.ok) setPages((prev) => prev.filter((p) => p.id !== id));
     setDeleteId(null);
+  }
+
+  async function handleTogglePublic(page: PageRow) {
+    const next = !page.is_public;
+    setVisibilityBusyId(page.id);
+    try {
+      const res = await fetch(`/api/admin/paginas/${page.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ is_public: next }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error ?? "Erro ao alterar visibilidade");
+        return;
+      }
+      setPages((prev) =>
+        prev.map((item) => (item.id === page.id ? { ...item, is_public: next } : item)),
+      );
+    } finally {
+      setVisibilityBusyId(null);
+    }
   }
 
   return (
@@ -1475,8 +1565,12 @@ export function PaginasClient({ initialCategories, initialPages }: PaginasClient
 
       {/* Info box */}
       <div className="rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-700">
-        <strong>Como funciona:</strong> Crie páginas de <strong>Figurinhas</strong> (grid de slots) ou <strong>Informativas</strong> (imagem + texto). Cada par de páginas forma uma abertura do álbum.
+        <strong>Como funciona:</strong> Crie páginas de <strong>Figurinhas</strong> (grid de slots) ou <strong>Informativas</strong> (imagem + texto). Cada par de páginas forma uma abertura do álbum. Páginas <strong>privadas</strong> só aparecem no álbum para administradores.
       </div>
+
+      {error && !showForm ? (
+        <p className="rounded-xl bg-red-50 px-4 py-2.5 text-sm text-red-600">{error}</p>
+      ) : null}
 
       {/* Pages grouped by category */}
       {grouped.map(({ cat, pages: catPages }) => (
@@ -1549,6 +1643,15 @@ export function PaginasClient({ initialCategories, initialPages }: PaginasClient
                         Pág. {p.page_number}{p.title ? ` — ${p.title}` : ""}
                       </p>
                       <p className="text-xs text-muted">
+                        {p.is_public ? (
+                          <span className="mr-2 inline-flex items-center gap-1 text-gb-green-dark">
+                            <Globe size={10} /> Pública
+                          </span>
+                        ) : (
+                          <span className="mr-2 inline-flex items-center gap-1 text-amber-700">
+                            <Lock size={10} /> Privada
+                          </span>
+                        )}
                         {isInfo ? (
                           <span className="inline-flex items-center gap-1 text-violet-600">
                             <FileText size={10} /> Informativa
@@ -1564,6 +1667,24 @@ export function PaginasClient({ initialCategories, initialPages }: PaginasClient
                     </div>
 
                     {/* Action buttons */}
+                    <button
+                      onClick={() => handleTogglePublic(p)}
+                      disabled={visibilityBusyId === p.id}
+                      title={p.is_public ? "Tornar privada (só admin vê no álbum)" : "Tornar pública"}
+                      className={`shrink-0 rounded-lg p-1.5 disabled:opacity-40 ${
+                        p.is_public
+                          ? "text-gb-green hover:bg-gb-green/10"
+                          : "text-amber-600 hover:bg-amber-50"
+                      }`}
+                    >
+                      {visibilityBusyId === p.id ? (
+                        <Loader2 size={15} className="animate-spin" />
+                      ) : p.is_public ? (
+                        <Globe size={15} />
+                      ) : (
+                        <Lock size={15} />
+                      )}
+                    </button>
                     <button
                       onClick={() => setNumberEditPage(p)}
                       title="Editar numeração"
@@ -1719,6 +1840,11 @@ export function PaginasClient({ initialCategories, initialPages }: PaginasClient
                   />
                 </div>
               </div>
+
+              <PageVisibilityToggle
+                value={form.is_public}
+                onChange={(is_public) => setForm((f) => ({ ...f, is_public }))}
+              />
 
               {form.page_type === "info" && (
                 <div className="rounded-xl border border-violet-100 bg-violet-50 px-4 py-3 text-sm text-violet-700">

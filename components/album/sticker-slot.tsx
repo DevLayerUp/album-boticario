@@ -488,7 +488,7 @@ export function StickerSlot({
       >
         {isPromotionLocked && sticker ? (
           <div className="pointer-events-none relative h-full w-full">
-            <StickerPromotionArt imageUrl={stickerImageUrl} sizes={imageSizes} lockSize={isBigCard ? "md" : "sm"} />
+            <StickerPromotionArt sizes={imageSizes} />
             <StickerPromotionHoverCopy sticker={sticker} />
           </div>
         ) : isComplete ? (

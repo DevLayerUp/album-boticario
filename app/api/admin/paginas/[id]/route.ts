@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { adminGuard } from "@/lib/admin-guard";
 import { TEMPLATE_MAP, type TemplateId } from "@/lib/album-templates";
+import { isMissingAlbumPagePublicColumn } from "@/lib/album-page-visibility";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 async function reconcilePageSlots(
@@ -160,12 +161,14 @@ export async function PATCH(
     title,
     layout_data,   // ← for sticker pages: LayoutData object OR JSON string
     layout_template,
+    is_public,
   } = body as {
     content?: string;
     background_url?: string;
     title?: string;
     layout_data?: unknown;
     layout_template?: string;
+    is_public?: boolean;
   };
 
   const patch: Record<string, unknown> = {};
@@ -209,6 +212,7 @@ export async function PATCH(
   if (content !== undefined)        patch.content        = content ?? null;
   if (background_url !== undefined) patch.background_url = background_url ?? null;
   if (title !== undefined)          patch.title          = title ?? null;
+  if (typeof is_public === "boolean") patch.is_public    = is_public;
 
   // Sticker page layout data: serialise to JSON if an object was passed
   if (layout_data !== undefined) {
@@ -241,6 +245,24 @@ export async function PATCH(
     .eq("id", id)
     .select()
     .single();
+
+  if (error && isMissingAlbumPagePublicColumn(error) && "is_public" in patch) {
+    const { is_public: _ignored, ...without } = patch;
+    if (Object.keys(without).length === 0) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+    const retry = await supabase
+      .from("album_pages")
+      .update(without)
+      .eq("id", id)
+      .select()
+      .single();
+    if (retry.error) return NextResponse.json({ error: retry.error.message }, { status: 500 });
+    return NextResponse.json({
+      ...retry.data,
+      ...(slotCount !== undefined ? { slot_count: slotCount } : {}),
+    });
+  }
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({

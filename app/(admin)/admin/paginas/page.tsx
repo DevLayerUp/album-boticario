@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { isMissingAlbumPagePublicColumn } from "@/lib/album-page-visibility";
 import { PaginasClient } from "./paginas-client";
 
 export const metadata: Metadata = { title: "Páginas do Álbum" };
@@ -8,7 +9,7 @@ export const dynamic = "force-dynamic";
 export default async function PaginasPage() {
   const supabase = createAdminClient();
 
-  const [{ data: categories }, { data: pages }] = await Promise.all([
+  const [{ data: categories }, pagesRes] = await Promise.all([
     supabase
       .from("sticker_categories")
       .select("id, name")
@@ -17,12 +18,26 @@ export default async function PaginasPage() {
       .from("album_pages")
       .select(
         `id, page_number, title, background_url, layout_template, category_id,
-         page_type, content,
+         page_type, content, is_public,
          album_slots (id, sticker_id)`
       )
       .order("category_id")
       .order("page_number"),
   ]);
+
+  let pages = pagesRes.data;
+  if (pagesRes.error && isMissingAlbumPagePublicColumn(pagesRes.error)) {
+    const fallback = await supabase
+      .from("album_pages")
+      .select(
+        `id, page_number, title, background_url, layout_template, category_id,
+         page_type, content,
+         album_slots (id, sticker_id)`
+      )
+      .order("category_id")
+      .order("page_number");
+    pages = fallback.data;
+  }
 
   // Count slots per page
   const pagesWithCount = (pages ?? []).map((p) => {
@@ -42,6 +57,7 @@ export default async function PaginasPage() {
     assigned_slot_count: assignedSlotCount,
     page_type: ((p.page_type as string) ?? "sticker") as "sticker" | "info",
     content: (p.content ?? null) as string | null,
+    is_public: (p as { is_public?: boolean | null }).is_public !== false,
   };
   });
 

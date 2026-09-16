@@ -64,7 +64,7 @@ export async function GET() {
       .eq("status", "pending"),
     supabase
       .from("album_slots")
-      .select("id, sticker_id, album_pages ( category_id )")
+      .select("id, sticker_id, album_pages ( category_id, is_public )")
       .not("sticker_id", "is", null),
   ]);
 

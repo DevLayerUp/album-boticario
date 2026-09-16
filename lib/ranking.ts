@@ -285,8 +285,9 @@ async function buildLeaderboardCoreLegacy(
       fetchAllPages<{ user_id: string }>((from, to) =>
         admin
           .from("user_album")
-          .select("user_id, album_slots!inner(sticker_id)")
+          .select("user_id, album_slots!inner(sticker_id, album_pages!inner(is_public))")
           .not("album_slots.sticker_id", "is", null)
+          .eq("album_slots.album_pages.is_public", true)
           .range(from, to),
       ),
       fetchAllPages<{ user_id: string; opened_at: string | null }>((from, to) =>

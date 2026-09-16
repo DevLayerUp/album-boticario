@@ -178,9 +178,10 @@ async function loadMissionMetrics(
     loadAssignedAlbumSlotsByPage(supabase),
     supabase
       .from("user_album")
-      .select("slot_id, album_slots!inner(page_id, sticker_id)")
+      .select("slot_id, album_slots!inner(page_id, sticker_id, album_pages!inner(is_public))")
       .eq("user_id", userId)
-      .not("album_slots.sticker_id", "is", null),
+      .not("album_slots.sticker_id", "is", null)
+      .eq("album_slots.album_pages.is_public", true),
     getAmbassadorProgramStartedAt(supabase),
   ]);
 
@@ -409,8 +410,9 @@ export async function buildRankingMissionCountsFromActivity(
     fetchAllPages<{ user_id: string }>((from, to) =>
       admin
         .from("user_album")
-        .select("user_id, album_slots!inner(sticker_id)")
+        .select("user_id, album_slots!inner(sticker_id, album_pages!inner(is_public))")
         .not("album_slots.sticker_id", "is", null)
+        .eq("album_slots.album_pages.is_public", true)
         .range(from, to),
     ),
     loadAssignedAlbumSlotsByPage(admin),
@@ -424,8 +426,9 @@ export async function buildRankingMissionCountsFromActivity(
     }>((from, to) =>
       admin
         .from("user_album")
-        .select("user_id, slot_id, album_slots!inner(page_id, sticker_id)")
+        .select("user_id, slot_id, album_slots!inner(page_id, sticker_id, album_pages!inner(is_public))")
         .not("album_slots.sticker_id", "is", null)
+        .eq("album_slots.album_pages.is_public", true)
         .range(from, to),
     ),
     fetchAllPages<{ requester_id: string; receiver_id: string }>((from, to) =>
