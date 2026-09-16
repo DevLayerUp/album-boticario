@@ -36,7 +36,7 @@ export default async function PaginasPage() {
       )
       .order("category_id")
       .order("page_number");
-    pages = fallback.data;
+    pages = (fallback.data ?? []).map((row) => ({ ...row, is_public: true }));
   }
 
   // Count slots per page
