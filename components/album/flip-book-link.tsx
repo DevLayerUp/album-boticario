@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import {
   useRef,
+  type CSSProperties,
   type MouseEvent,
   type PointerEvent,
   type ReactNode,
@@ -94,10 +95,11 @@ export function FlipBookLink({
 interface FlipBookHtmlContentProps {
   html: string;
   className?: string;
+  style?: CSSProperties;
 }
 
 /** HTML do admin com links clicáveis dentro do flipbook. */
-export function FlipBookHtmlContent({ html, className }: FlipBookHtmlContentProps) {
+export function FlipBookHtmlContent({ html, className, style }: FlipBookHtmlContentProps) {
   const router = useRouter();
   const touchedRef = useRef(false);
 
@@ -154,6 +156,7 @@ export function FlipBookHtmlContent({ html, className }: FlipBookHtmlContentProp
   return (
     <div
       className={cn("relative z-30 [touch-action:manipulation]", className)}
+      style={style}
       onMouseDown={blockLinkGesture}
       onMouseDownCapture={blockLinkGesture}
       onPointerDown={blockLinkGesture}

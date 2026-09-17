@@ -478,7 +478,7 @@ function InfoPageEditorModal({
                   minHeight={240}
                 />
                 <p className="mt-1 text-xs text-gray-400">
-                  Use a barra de formatação para criar cabeçalhos, listas, negrito, etc.
+                  Use a barra de formatação para criar cabeçalhos, listas, negrito e links.
                 </p>
               </div>
             </>
@@ -883,7 +883,7 @@ function LayoutContentModal({
                 {isDuo2
                   ? "Este texto aparece acima das duas figurinhas, centralizado."
                   : isGrid4
-                    ? "Este texto aparece abaixo das figurinhas, alinhado à esquerda. Use negrito para destacar trechos."
+                    ? "Este texto aparece abaixo das figurinhas, alinhado à esquerda. Use negrito para destacar trechos e o ícone de link para URLs."
                   : "Este texto aparece abaixo do título, depois das figurinhas."}
               </p>
             </div>
@@ -1028,7 +1028,7 @@ function LayoutContentModal({
                   minHeight={200}
                 />
                 <p className="mt-1 text-xs text-gray-400">
-                  Este texto aparece abaixo do título, antes das figurinhas.
+                  Este texto aparece abaixo do título, antes das figurinhas. Selecione um trecho e use o ícone de link para uma URL.
                 </p>
               </div>
             </>

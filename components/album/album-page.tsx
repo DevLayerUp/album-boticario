@@ -177,7 +177,7 @@ function Title3Page({ page, side, pastedSlotIds, ownedMap, onPaste, userStickerU
             <FlipBookHtmlContent
               html={text}
               className={cn(
-                "max-w-[450px] leading-[1.4] text-white **:text-white [&_p]:mb-3",
+                "max-w-[450px] leading-[1.4] text-white **:text-white [&_a]:underline [&_p]:mb-3",
                 ALBUM_HTML_STRONG_CLASS,
                 "mt-2 text-sm sm:mt-4 sm:text-base",
               )}
@@ -185,7 +185,7 @@ function Title3Page({ page, side, pastedSlotIds, ownedMap, onPaste, userStickerU
           ) : (
             <div
               className={cn(
-                "max-w-[450px] leading-[1.4] text-white **:text-white [&_p]:mb-3",
+                "max-w-[450px] leading-[1.4] text-white **:text-white [&_a]:underline [&_p]:mb-3",
                 ALBUM_HTML_STRONG_CLASS,
                 "mt-4 text-base",
               )}
@@ -455,14 +455,25 @@ function Grid6Page({ page, side, pastedSlotIds, ownedMap, onPaste, userStickerUr
           </h2>
         ) : null}
         {text ? (
-          <div
-            className={cn(
-              "max-w-[520px] leading-[1.45] text-white **:text-white [&_p]:mb-2.5",
-              ALBUM_HTML_STRONG_CLASS,
-              inFlipBook ? "mt-2 text-xs sm:text-sm" : "mt-3 text-sm md:text-base",
-            )}
-            dangerouslySetInnerHTML={{ __html: text }}
-          />
+          inFlipBook ? (
+            <FlipBookHtmlContent
+              html={text}
+              className={cn(
+                "max-w-[520px] leading-[1.45] text-white **:text-white [&_a]:underline [&_p]:mb-2.5",
+                ALBUM_HTML_STRONG_CLASS,
+                "mt-2 text-xs sm:text-sm",
+              )}
+            />
+          ) : (
+            <div
+              className={cn(
+                "max-w-[520px] leading-[1.45] text-white **:text-white [&_a]:underline [&_p]:mb-2.5",
+                ALBUM_HTML_STRONG_CLASS,
+                "mt-3 text-sm md:text-base",
+              )}
+              dangerouslySetInnerHTML={{ __html: text }}
+            />
+          )
         ) : null}
       </div>
     ) : null;
@@ -579,10 +590,25 @@ function Duo2Page({ page, side, pastedSlotIds, ownedMap, onPaste, userStickerUrl
       >
         <AlbumDuo2Scaler inFlipBook={inFlipBook}>
           {text ? (
+            inFlipBook ? (
+              <FlipBookHtmlContent
+                html={text}
+                className={cn(
+                  "w-full text-white",
+                  "**:text-white [&_a]:underline [&_p]:mb-0 [&_p]:leading-[30px] [&_p:last-child]:mb-0",
+                  ALBUM_HTML_STRONG_CLASS,
+                )}
+                style={{
+                  maxWidth: ALBUM_DUO2_DESIGN.textMaxWidth,
+                  fontSize: ALBUM_DUO2_DESIGN.textFontSize,
+                  lineHeight: `${ALBUM_DUO2_DESIGN.textLineHeight}px`,
+                }}
+              />
+            ) : (
             <div
               className={cn(
                 "w-full text-white",
-                "**:text-white [&_p]:mb-0 [&_p]:leading-[30px] [&_p:last-child]:mb-0",
+                "**:text-white [&_a]:underline [&_p]:mb-0 [&_p]:leading-[30px] [&_p:last-child]:mb-0",
                 ALBUM_HTML_STRONG_CLASS,
               )}
               style={{
@@ -592,6 +618,7 @@ function Duo2Page({ page, side, pastedSlotIds, ownedMap, onPaste, userStickerUrl
               }}
               dangerouslySetInnerHTML={{ __html: text }}
             />
+            )
           ) : null}
 
           {text ? (

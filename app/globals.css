@@ -145,6 +145,12 @@
   font-weight: 700;
 }
 
+.album-html-body a {
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+  cursor: pointer;
+}
+
 /* ── Auth page — grid lines & particles ─────────────────────────────── */
 .auth-hline {
   position: absolute;

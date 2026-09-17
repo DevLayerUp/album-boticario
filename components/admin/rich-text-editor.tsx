@@ -1,8 +1,8 @@
 "use client";
 
-import { useRef, useEffect, useCallback } from "react";
+import { useRef, useEffect, useCallback, useState } from "react";
 import {
-  Bold, Italic, Underline, Link, List, ListOrdered,
+  Bold, Italic, Underline, Link, Unlink, List, ListOrdered,
   Heading2, Heading3, AlignLeft, AlignCenter, AlignRight,
   RemoveFormatting,
 } from "lucide-react";
@@ -53,6 +53,36 @@ function Divider() {
   return <div className="mx-1 h-5 w-px bg-border" />;
 }
 
+function normalizeExternalUrl(raw: string): string | null {
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+  if (/^(javascript|data|vbscript):/i.test(trimmed)) return null;
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  if (trimmed.startsWith("//")) return `https:${trimmed}`;
+  return `https://${trimmed}`;
+}
+
+function findAnchor(node: Node | null, root: HTMLElement | null): HTMLAnchorElement | null {
+  let current: Node | null = node;
+  while (current && current !== root) {
+    if (current instanceof HTMLAnchorElement) return current;
+    current = current.parentNode;
+  }
+  return null;
+}
+
+function decorateExternalLinks(root: HTMLElement) {
+  root.querySelectorAll("a[href]").forEach((anchor) => {
+    const href = anchor.getAttribute("href") ?? "";
+    if (/^(javascript|data|vbscript):/i.test(href)) {
+      anchor.replaceWith(...Array.from(anchor.childNodes));
+      return;
+    }
+    anchor.setAttribute("target", "_blank");
+    anchor.setAttribute("rel", "noopener noreferrer");
+  });
+}
+
 export function RichTextEditor({
   value,
   onChange,
@@ -61,7 +91,13 @@ export function RichTextEditor({
   minHeight = 280,
 }: RichTextEditorProps) {
   const editorRef = useRef<HTMLDivElement>(null);
+  const linkInputRef = useRef<HTMLInputElement>(null);
+  const savedRange = useRef<Range | null>(null);
   const isInternalUpdate = useRef(false);
+  const [linkOpen, setLinkOpen] = useState(false);
+  const [linkUrl, setLinkUrl] = useState("");
+  const [linkError, setLinkError] = useState("");
+  const [hasExistingLink, setHasExistingLink] = useState(false);
 
   // Sync external value → editor (only when different to avoid cursor jump)
   useEffect(() => {
@@ -103,12 +139,99 @@ export function RichTextEditor({
     editorRef.current?.focus();
   }
 
-  function insertLink() {
-    const url = window.prompt("URL do link:");
-    if (url) exec("bold"); // focus first
-    if (url) document.execCommand("createLink", false, url);
+  function restoreSelection() {
+    const range = savedRange.current;
+    if (!range) return;
+    const selection = window.getSelection();
+    selection?.removeAllRanges();
+    selection?.addRange(range);
+  }
+
+  function closeLinkPanel() {
+    setLinkOpen(false);
+    setLinkError("");
     editorRef.current?.focus();
   }
+
+  function openLinkPanel() {
+    const editor = editorRef.current;
+    const selection = window.getSelection();
+    const range =
+      editor && selection && selection.rangeCount > 0 && editor.contains(selection.anchorNode)
+        ? selection.getRangeAt(0).cloneRange()
+        : null;
+
+    savedRange.current = range;
+    const anchor = range
+      ? findAnchor(range.commonAncestorContainer, editor) ?? findAnchor(range.startContainer, editor)
+      : null;
+
+    if (anchor) {
+      setLinkUrl(anchor.getAttribute("href") ?? "");
+      setHasExistingLink(true);
+      setLinkError("");
+    } else if (!range || range.collapsed) {
+      setLinkUrl("");
+      setHasExistingLink(false);
+      setLinkError("Selecione um trecho do texto para aplicar o link.");
+    } else {
+      setLinkUrl("");
+      setHasExistingLink(false);
+      setLinkError("");
+    }
+
+    setLinkOpen(true);
+    requestAnimationFrame(() => linkInputRef.current?.focus());
+  }
+
+  function applyLink() {
+    const editor = editorRef.current;
+    const href = normalizeExternalUrl(linkUrl);
+    if (!href) {
+      setLinkError("Informe uma URL válida, como https://exemplo.com");
+      return;
+    }
+    if (!editor) return;
+
+    const existing = savedRange.current
+      ? findAnchor(savedRange.current.commonAncestorContainer, editor)
+        ?? findAnchor(savedRange.current.startContainer, editor)
+      : null;
+
+    if (existing) {
+      existing.setAttribute("href", href);
+      decorateExternalLinks(editor);
+    } else {
+      if (!savedRange.current || savedRange.current.collapsed) {
+        setLinkError("Selecione um trecho do texto para aplicar o link.");
+        return;
+      }
+      restoreSelection();
+      editor.focus();
+      restoreSelection();
+      document.execCommand("createLink", false, href);
+      decorateExternalLinks(editor);
+    }
+
+    handleInput();
+    closeLinkPanel();
+  }
+
+  function removeLink() {
+    restoreSelection();
+    document.execCommand("unlink", false);
+    handleInput();
+    closeLinkPanel();
+  }
+
+  useEffect(() => {
+    if (!linkOpen) return;
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") closeLinkPanel();
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [linkOpen]);
 
   return (
     <div className={`overflow-hidden rounded-xl border border-border bg-white focus-within:border-gb-green ${className}`}>
@@ -156,13 +279,66 @@ export function RichTextEditor({
 
         <Divider />
 
-        <ToolbarBtn onClick={insertLink} title="Inserir link">
+        <ToolbarBtn onClick={openLinkPanel} title="Inserir link" active={linkOpen}>
           <Link size={14} />
         </ToolbarBtn>
         <ToolbarBtn onClick={() => exec("removeFormat")} title="Remover formatação">
           <RemoveFormatting size={14} />
         </ToolbarBtn>
       </div>
+
+      {linkOpen ? (
+        <div className="flex flex-col gap-2 border-b border-border bg-white px-3 py-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <input
+              ref={linkInputRef}
+              type="url"
+              value={linkUrl}
+              onChange={(e) => { setLinkUrl(e.target.value); setLinkError(""); }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  applyLink();
+                }
+              }}
+              placeholder="https://exemplo.com"
+              className="min-w-0 flex-1 rounded-lg border border-border bg-surface px-2.5 py-1.5 text-sm outline-none focus:border-gb-green"
+            />
+            <button
+              type="button"
+              onClick={applyLink}
+              className="rounded-lg bg-gb-green px-3 py-1.5 text-xs font-semibold text-white hover:bg-gb-green-dark"
+            >
+              Aplicar
+            </button>
+            {hasExistingLink ? (
+              <button
+                type="button"
+                onClick={removeLink}
+                title="Remover link"
+                aria-label="Remover link"
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 hover:text-red-600"
+              >
+                <Unlink size={14} />
+              </button>
+            ) : null}
+            <button
+              type="button"
+              onClick={closeLinkPanel}
+              className="rounded-lg px-2 py-1.5 text-xs font-medium text-gray-500 hover:bg-gray-100"
+            >
+              Cancelar
+            </button>
+          </div>
+          {linkError ? (
+            <p className="text-xs text-red-500">{linkError}</p>
+          ) : (
+            <p className="text-xs text-gray-400">
+              Selecione um trecho e cole a URL. O link abre em uma nova aba.
+            </p>
+          )}
+        </div>
+      ) : null}
 
       {/* Editable area */}
       <div className="relative">
@@ -191,6 +367,11 @@ export function RichTextEditor({
             content: attr(data-placeholder);
             color: #9ca3af;
             pointer-events: none;
+          }
+          [contenteditable] a {
+            color: #0d6632;
+            text-decoration: underline;
+            text-underline-offset: 0.15em;
           }
         `}</style>
       </div>
