@@ -370,8 +370,8 @@ export function RichTextEditor({
           }
           [contenteditable] a {
             color: #0d6632;
-            text-decoration: underline;
-            text-underline-offset: 0.15em;
+            text-decoration: underline !important;
+            text-underline-offset: 0.18em;
           }
         `}</style>
       </div>

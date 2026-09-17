@@ -146,8 +146,9 @@
 }
 
 .album-html-body a {
-  text-decoration: underline;
-  text-underline-offset: 0.15em;
+  text-decoration: underline !important;
+  text-underline-offset: 0.18em;
+  text-decoration-thickness: 1.5px;
   cursor: pointer;
 }
 

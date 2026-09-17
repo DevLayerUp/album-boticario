@@ -174,7 +174,7 @@ export interface Title3Data {
 
 /** Negrito do HTML das páginas do álbum (Figma #DEDA00). */
 export const ALBUM_HTML_STRONG_CLASS =
-  "album-html-body [&_strong]:font-bold [&_strong]:!text-amarelo [&_b]:font-bold [&_b]:!text-amarelo";
+  "album-html-body [&_strong]:font-bold [&_strong]:!text-amarelo [&_b]:font-bold [&_b]:!text-amarelo [&_a]:!underline";
 
 /** Fields for the "grid6" template */
 export interface Grid6Data {
