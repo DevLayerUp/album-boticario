@@ -27,19 +27,22 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Nenhum arquivo enviado" }, { status: 400 });
   }
 
-  const imageTypes = ["image/png", "image/jpeg", "image/webp", "image/gif"];
+  const imageTypes = ["image/png", "image/jpeg", "image/webp", "image/gif", "image/svg+xml"];
   const videoTypes = ["video/mp4", "video/webm", "video/quicktime"];
   const allowed = [...imageTypes, ...videoTypes];
+  const isSvg =
+    file.type === "image/svg+xml" || file.name.toLowerCase().endsWith(".svg");
 
-  if (!allowed.includes(file.type)) {
+  if (!allowed.includes(file.type) && !isSvg) {
     return NextResponse.json(
-      { error: "Formato não suportado. Use PNG, JPG, WEBP, GIF, MP4, WebM ou MOV." },
+      { error: "Formato não suportado. Use PNG, JPG, WEBP, GIF, SVG, MP4, WebM ou MOV." },
       { status: 400 },
     );
   }
 
   const isVideo = videoTypes.includes(file.type);
   const isGif = file.type === "image/gif";
+  const uploadMime = isSvg ? "image/svg+xml" : file.type;
   const maxBytes = isVideo
     ? 50 * 1024 * 1024
     : isGif
@@ -60,12 +63,12 @@ export async function POST(request: NextRequest) {
   const rawBuffer = await file.arrayBuffer();
 
   let uploadBody: ArrayBuffer | Buffer = rawBuffer;
-  let uploadContentType = file.type;
+  let uploadContentType = uploadMime || file.type;
   let uploadPath = path;
 
   if (!isVideo) {
     try {
-      const prepared = await prepareAdminImageUpload(rawBuffer, file.type, ext);
+      const prepared = await prepareAdminImageUpload(rawBuffer, uploadMime || file.type, ext);
       uploadBody = prepared.buffer;
       uploadContentType = prepared.contentType;
       uploadPath = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2)}.${prepared.ext}`;

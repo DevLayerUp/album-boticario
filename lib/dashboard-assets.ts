@@ -62,6 +62,23 @@ export const dashboardAssets = {
   },
   /** Card de criação de figurinha personalizada. */
   figurinhaCard: `${BASE}/new-bg-figurinha.png`,
+  concurso: {
+    logos: `${BASE}/concurso/logotipos.svg`,
+    medal1: `${BASE}/concurso/medal-1.svg`,
+    medal2: `${BASE}/concurso/medal-2.svg`,
+    medal3: `${BASE}/concurso/medal-3.svg`,
+    sticker1: `${BASE}/concurso/sticker-1.png`,
+    sticker2: `${BASE}/concurso/sticker-2.png`,
+    sticker3: `${BASE}/concurso/sticker-3.png`,
+    topo: `${BASE}/concurso/topo.svg`,
+    clock: `${BASE}/concurso/clock-badge.svg`,
+    clockIcon: `${BASE}/concurso/clock-icon.svg`,
+    successBadge: `${BASE}/concurso/sucesso-badge.svg`,
+    heroWave1: `${BASE}/concurso/hero-wave-1.svg`,
+    heroWave2: `${BASE}/concurso/hero-wave-2.svg`,
+    heroWave3: `${BASE}/concurso/hero-wave-3.svg`,
+    heroWave4: `${BASE}/concurso/hero-wave-4.svg`,
+  },
   /** Headers dos feature cards da seção "Explorar". */
   cards: {
     figurinha: `${BASE}/cards/figurinha.png`,

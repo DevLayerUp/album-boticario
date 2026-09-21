@@ -9,7 +9,8 @@ interface DashboardMainProps {
 
 export function DashboardMain({ children }: DashboardMainProps) {
   const pathname = usePathname();
-  const isFullBleed = pathname === "/perfil" || pathname === "/figurinha";
+  const isFullBleed =
+    pathname === "/perfil" || pathname === "/figurinha" || pathname === "/concurso";
   const isAlbum = pathname === "/album" || pathname.startsWith("/album/");
 
   return (

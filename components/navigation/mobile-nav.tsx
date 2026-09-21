@@ -10,6 +10,7 @@ import {
   HelpCircle,
   Target,
   Trophy,
+  Award,
   User,
   type LucideIcon,
 } from "lucide-react";
@@ -29,11 +30,13 @@ const NAV: MobileNavLink[] = [
   { href: "/quiz", label: "Quizz", icon: HelpCircle },
   { href: "/missoes", label: "Missões", icon: Target },
   { href: "/ranking", label: "Ranking", icon: Trophy },
+  { href: "/concurso", label: "Concurso", icon: Award },
   { href: "/perfil", label: "Perfil", icon: User },
 ];
 
-export function MobileNav() {
+export function MobileNav({ showConcurso = false }: { showConcurso?: boolean }) {
   const pathname = usePathname();
+  const items = NAV.filter((item) => item.href !== "/concurso" || showConcurso);
 
   return (
     <nav
@@ -41,8 +44,13 @@ export function MobileNav() {
       data-mobile-nav
       className="sticky bottom-0 z-20 border-t border-border bg-surface/95 backdrop-blur-md md:hidden"
     >
-      <ul className="grid grid-cols-8 px-1 pt-1.5 pb-[max(0.375rem,env(safe-area-inset-bottom))] sm:px-2">
-        {NAV.map(({ href, label, icon: Icon }) => {
+      <ul
+        className={cn(
+          "grid px-0.5 pt-1.5 pb-[max(0.375rem,env(safe-area-inset-bottom))] sm:px-1",
+          items.length >= 9 ? "grid-cols-9" : "grid-cols-8",
+        )}
+      >
+        {items.map(({ href, label, icon: Icon }) => {
           const isActive =
             href === "/dashboard"
               ? pathname === href

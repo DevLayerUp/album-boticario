@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { User } from "lucide-react";
-import { getUser } from "@/lib/supabase/server";
+import { createClient, getUser } from "@/lib/supabase/server";
+import { isAdminRole } from "@/lib/admin-users";
+import { canViewConcurso, loadConcursoPageConfig } from "@/lib/concurso-page";
 import { NavItem } from "@/components/navigation/nav-item";
 import { MobileNav } from "@/components/navigation/mobile-nav";
 import { SignOutButton } from "@/components/auth/sign-out-button";
@@ -22,6 +24,7 @@ const NAV = [
   { href: "/quiz",       label: "Quizz" },
   { href: "/missoes",    label: "Missões" },
   { href: "/ranking",    label: "Ranking" },
+  { href: "/concurso",   label: "Concurso" },
 ];
 
 const NAV_ACTION_CLASS =
@@ -36,6 +39,14 @@ export default async function DashboardLayout({
 
   if (!user) redirect("/login");
 
+  const supabase = await createClient();
+  const concursoConfig = await loadConcursoPageConfig(supabase);
+  const showConcurso = canViewConcurso(
+    concursoConfig,
+    isAdminRole(user.app_metadata, user.user_metadata),
+  );
+  const navItems = NAV.filter((item) => item.href !== "/concurso" || showConcurso);
+
   return (
     <DashboardShell>
       <ReferralClaimOnLoad />
@@ -48,7 +59,7 @@ export default async function DashboardLayout({
             aria-label="Navegação principal"
             className="hidden min-w-0 flex-1 items-center justify-center gap-1 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] md:flex [&::-webkit-scrollbar]:hidden"
           >
-            {NAV.map((item) => (
+            {navItems.map((item) => (
               <NavItem key={item.href} href={item.href} label={item.label} />
             ))}
           </nav>
@@ -71,7 +82,7 @@ export default async function DashboardLayout({
       <DashboardMain>{children}</DashboardMain>
 
       <FeedbackFloatingButton />
-      <MobileNav />
+      <MobileNav showConcurso={showConcurso} />
     </DashboardShell>
   );
 }

@@ -16,6 +16,8 @@ interface ImageUploaderProps {
   priority?:     boolean;
   /** Aceitar GIF animado além de PNG/JPG/WEBP. */
   acceptGif?:    boolean;
+  /** Aceitar SVG além de PNG/JPG/WEBP. */
+  acceptSvg?:    boolean;
 }
 
 export function ImageUploader({
@@ -27,13 +29,27 @@ export function ImageUploader({
   maxSizeBytes = 5 * 1024 * 1024,
   priority     = false,
   acceptGif    = false,
+  acceptSvg    = false,
 }: ImageUploaderProps) {
-  const allowedTypes = acceptGif
-    ? ["image/png", "image/jpeg", "image/webp", "image/gif"]
-    : ["image/png", "image/jpeg", "image/webp"];
-  const acceptAttr = acceptGif
-    ? "image/png,image/jpeg,image/webp,image/gif"
-    : "image/png,image/jpeg,image/webp";
+  const allowedTypes = ["image/png", "image/jpeg", "image/webp"];
+  if (acceptGif) allowedTypes.push("image/gif");
+  if (acceptSvg) allowedTypes.push("image/svg+xml");
+  const acceptAttr = [
+    "image/png",
+    "image/jpeg",
+    "image/webp",
+    acceptGif ? "image/gif" : null,
+    acceptSvg ? "image/svg+xml,.svg" : null,
+  ]
+    .filter(Boolean)
+    .join(",");
+  const formatHint = acceptSvg && acceptGif
+    ? "Formato inválido. Use PNG, JPG, WEBP, GIF ou SVG."
+    : acceptSvg
+      ? "Formato inválido. Use PNG, JPG, WEBP ou SVG."
+      : acceptGif
+        ? "Formato inválido. Use PNG, JPG, WEBP ou GIF."
+        : "Formato inválido. Use PNG, JPG ou WEBP.";
   const inputRef   = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [error,     setError]     = useState<string | null>(null);
@@ -45,8 +61,10 @@ export function ImageUploader({
       setError(`Arquivo muito grande. Máximo ${maxMb} MB.`);
       return;
     }
-    if (!allowedTypes.includes(file.type)) {
-      setError(acceptGif ? "Formato inválido. Use PNG, JPG, WEBP ou GIF." : "Formato inválido. Use PNG, JPG ou WEBP.");
+    const isSvgFile =
+      file.type === "image/svg+xml" || file.name.toLowerCase().endsWith(".svg");
+    if (!allowedTypes.includes(file.type) && !(acceptSvg && isSvgFile)) {
+      setError(formatHint);
       return;
     }
     setError(null);
@@ -97,7 +115,12 @@ export function ImageUploader({
       <p className="block text-sm font-medium text-gray-700">{label}</p>
 
       {value ? (
-        <div className="relative h-40 w-40 overflow-hidden rounded-xl border border-gray-200 bg-gray-50">
+        <div
+          className="relative h-40 w-40 cursor-pointer overflow-hidden rounded-xl border border-gray-200 bg-gray-50"
+          onClick={openPicker}
+          onDrop={handleDrop}
+          onDragOver={(e) => e.preventDefault()}
+        >
           <AdminStorageImage
             src={value}
             alt="Preview"
@@ -106,9 +129,17 @@ export function ImageUploader({
             priority={priority}
             className="object-contain"
           />
+          {uploading ? (
+            <div className="absolute inset-0 flex items-center justify-center bg-white/70">
+              <Loader2 size={20} className="animate-spin text-gb-green" />
+            </div>
+          ) : null}
           <button
             type="button"
-            onClick={() => onChange(null)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onChange(null);
+            }}
             className="absolute right-1.5 top-1.5 rounded-full bg-white/90 p-1 shadow-sm transition-colors hover:bg-red-50 hover:text-red-600"
             aria-label="Remover imagem"
           >

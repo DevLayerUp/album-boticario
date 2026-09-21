@@ -33,6 +33,7 @@ import { Bonus10kPopup } from "@/components/dashboard/bonus-10k-popup";
 import { BONUS_10K_PACK_SOURCE } from "@/lib/bonus-10k";
 import { buildInviteUrl } from "@/lib/referrals";
 import { headers } from "next/headers";
+import { canViewConcurso, loadConcursoPageConfig } from "@/lib/concurso-page";
 
 export async function generateMetadata(): Promise<Metadata> {
   return buildAppPageMetadata("dashboard");
@@ -58,6 +59,7 @@ export default async function DashboardPage() {
     tradesRes,
     featureCardsRes,
     bonus10kRes,
+    concursoConfig,
   ] = await Promise.all([
     supabase
       .from("profiles")
@@ -98,6 +100,7 @@ export default async function DashboardPage() {
       .select("id", { count: "exact", head: true })
       .eq("user_id", user.id)
       .eq("source", BONUS_10K_PACK_SOURCE),
+    loadConcursoPageConfig(supabase),
   ]);
 
   const bonus10kClaimed = (bonus10kRes.count ?? 0) > 0;
@@ -111,6 +114,7 @@ export default async function DashboardPage() {
   const primeiroNome = nome.split(" ")[0];
   const isAdmin =
     (user?.app_metadata?.role ?? user?.user_metadata?.role) === "admin";
+  const showConcurso = canViewConcurso(concursoConfig, isAdmin);
 
   const admin = createAdminClient();
   const userRank = await getUserRankPosition(admin, user.id);
@@ -295,6 +299,16 @@ export default async function DashboardPage() {
             theme="gold"
             backgroundImage={getFeatureCardBackground("ranking", featureCards)}
           />
+          {showConcurso ? (
+          <FeatureCard
+            title="Concurso Cultural"
+            description="Vista a camisa da nossa natureza. Conte como você demonstra sua paixão e concorra a prêmios exclusivos."
+            href="/concurso"
+            cta="Participar"
+            theme="green"
+            backgroundImage={dashboardAssets.concurso.sticker3}
+          />
+          ) : null}
         </div>
       </section>
 

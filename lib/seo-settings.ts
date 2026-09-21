@@ -20,7 +20,8 @@ export type SeoAppPageKey =
   | "ranking"
   | "trocas"
   | "figurinha"
-  | "perfil";
+  | "perfil"
+  | "concurso";
 
 export const SEO_ROUTE_LABELS: Record<
   SeoRouteKey,
@@ -60,6 +61,7 @@ export const SEO_APP_PAGE_LABELS: Record<
   trocas: { label: "Trocas", path: "/trocas" },
   figurinha: { label: "Minha Figurinha", path: "/figurinha" },
   perfil: { label: "Meu Perfil", path: "/perfil" },
+  concurso: { label: "Concurso", path: "/concurso" },
 };
 
 /** Configuração SEO por rota pública. Campos vazios herdam os valores globais. */
@@ -117,6 +119,7 @@ export const DEFAULT_APP_PAGES: Record<SeoAppPageKey, SeoAppPageConfig> = {
   trocas: { tabTitle: "Trocas" },
   figurinha: { tabTitle: "Minha Figurinha" },
   perfil: { tabTitle: "Meu Perfil" },
+  concurso: { tabTitle: "Concurso Cultural" },
 };
 
 export const DEFAULT_SEO_SETTINGS: SeoSettings = {

@@ -24,6 +24,7 @@ import {
   Search,
   Mail,
   Shirt,
+  Trophy,
 } from "lucide-react";
 
 const NAV = [
@@ -44,6 +45,7 @@ const NAV = [
   { href: "/admin/avisos",       label: "Avisos",        icon: Megaphone },
   { href: "/admin/automacoes-email", label: "E-mails", icon: Mail },
   { href: "/admin/feedback",     label: "Feedbacks",     icon: MessageSquare },
+  { href: "/admin/concurso",     label: "Concurso",      icon: Trophy },
   { href: "/admin/usuarios",     label: "Usuários",      icon: Users },
 ];
 

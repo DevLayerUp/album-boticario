@@ -3,6 +3,7 @@ import { revalidatePath } from "next/cache";
 import { adminGuard } from "@/lib/admin-guard";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { CONCURSO_PAGE_CONFIG_KEY } from "@/lib/concurso-page";
 import { SEO_SETTINGS_KEY } from "@/lib/seo-settings";
 
 /**
@@ -74,9 +75,15 @@ export async function PUT(request: NextRequest) {
       "/trocas",
       "/figurinha",
       "/perfil",
+      "/concurso",
     ];
     revalidatePath("/", "layout");
     for (const path of paths) revalidatePath(path);
+  }
+
+  if (body.key === CONCURSO_PAGE_CONFIG_KEY) {
+    revalidatePath("/concurso");
+    revalidatePath("/dashboard");
   }
 
   return NextResponse.json({ ok: true });
