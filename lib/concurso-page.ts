@@ -28,6 +28,7 @@ export interface ConcursoPageImages {
   medal1: string;
   medal2: string;
   medal3: string;
+  prizeJersey: string;
   sticker1: string;
   sticker2: string;
   sticker3: string;
@@ -84,16 +85,21 @@ export interface ConcursoPageConfig {
 const DEFAULT_PRIZES: ConcursoPrizeConfig[] = [
   {
     place: "1º Lugar",
-    copy: '01 Camisa exclusiva da campanha "Somos Fãs por Natureza" autografada pelo jogador Kaká!',
+    copy: "01 Camisa exclusiva autografada pelo jogador Kaká!",
   },
   {
     place: "2º Lugar",
-    copy: '01 Camisa exclusiva da campanha "Somos Fãs por Natureza" autografada pelo jogador Kaká!',
+    copy: "01 Camisa exclusiva autografada pelo jogador Kaká!",
   },
   {
     place: "3º Lugar",
-    copy: "01 Kit exclusivo institucional da Fundação Grupo Boticário (com itens promocionais e sustentáveis).",
+    copy: "01 Kit Exclusivo institucional da Fundação Grupo Boticário (com itens promocionais e sustentáveis).",
   },
+];
+
+const PREVIOUS_PRIZE_COPY = [
+  '01 Camisa exclusiva da campanha "Somos Fãs por Natureza" autografada pelo jogador Kaká!',
+  "01 Kit exclusivo institucional da Fundação Grupo Boticário (com itens promocionais e sustentáveis).",
 ];
 
 const DEFAULT_IMAGES: ConcursoPageImages = {
@@ -106,6 +112,7 @@ const DEFAULT_IMAGES: ConcursoPageImages = {
   medal1: dashboardAssets.concurso.medal1,
   medal2: dashboardAssets.concurso.medal2,
   medal3: dashboardAssets.concurso.medal3,
+  prizeJersey: dashboardAssets.concurso.jersey,
   sticker1: dashboardAssets.concurso.sticker1,
   sticker2: dashboardAssets.concurso.sticker2,
   sticker3: dashboardAssets.concurso.sticker3,
@@ -151,12 +158,12 @@ export const DEFAULT_CONCURSO_PAGE_CONFIG: ConcursoPageConfig = {
 
   prizesTitle: "Descubra o que o nosso pódio vai levar!",
   prizesIntro:
-    "Quem é fã de verdade da nossa biodiversidade merece reconhecimento à altura! Responda à pergunta “Como você demonstra a sua paixão pela natureza?” e concorra a este pódio histórico:",
-  prizesQuestion: "Como você demonstra a sua paixão pela natureza?",
+    "Quem é fã de verdade da nossa biodiversidade merece reconhecimento à altura! Então, como você demonstra a sua paixão pela natureza?",
+  prizesQuestion: "como você demonstra a sua paixão pela natureza?",
   prizes: DEFAULT_PRIZES,
   prizesFooter:
     "A nossa comissão julgadora vai selecionar as respostas mais autênticas, criativas e apaixonadas para definir os grandes campeões.",
-  prizesCta: "DESBLOQUEAR MINHA PARTICIPAÇÃO!",
+  prizesCta: "PARTICIPAR DO CONCURSO!",
 
   howTitle: "Como funciona a escalação?",
   howBullets: [
@@ -196,6 +203,13 @@ function str(value: unknown, fallback: string): string {
   return typeof value === "string" && value.trim() ? value.trim() : fallback;
 }
 
+function migratedStr(value: unknown, nextDefault: string, previousDefaults: string[]): string {
+  if (typeof value !== "string" || !value.trim()) return nextDefault;
+  const trimmed = value.trim();
+  if (previousDefaults.includes(trimmed)) return nextDefault;
+  return trimmed;
+}
+
 function optionalUrl(value: unknown, fallback: string): string {
   if (typeof value !== "string") return fallback;
   return value.trim();
@@ -213,7 +227,7 @@ function mergePrizes(partial?: unknown): ConcursoPrizeConfig[] {
     const row = rows[index] as Partial<ConcursoPrizeConfig> | undefined;
     return {
       place: str(row?.place, base.place),
-      copy: str(row?.copy, base.copy),
+      copy: migratedStr(row?.copy, base.copy, PREVIOUS_PRIZE_COPY),
     };
   });
 }
@@ -281,11 +295,17 @@ export function mergeConcursoPageConfig(
     heroCta: str(partial.heroCta, base.heroCta),
 
     prizesTitle: str(partial.prizesTitle, base.prizesTitle),
-    prizesIntro: str(partial.prizesIntro, base.prizesIntro),
-    prizesQuestion: str(partial.prizesQuestion, base.prizesQuestion),
+    prizesIntro: migratedStr(partial.prizesIntro, base.prizesIntro, [
+      "Quem é fã de verdade da nossa biodiversidade merece reconhecimento à altura! Responda à pergunta “Como você demonstra a sua paixão pela natureza?” e concorra a este pódio histórico:",
+    ]),
+    prizesQuestion: migratedStr(partial.prizesQuestion, base.prizesQuestion, [
+      "Como você demonstra a sua paixão pela natureza?",
+    ]),
     prizes: mergePrizes(partial.prizes),
     prizesFooter: str(partial.prizesFooter, base.prizesFooter),
-    prizesCta: str(partial.prizesCta, base.prizesCta),
+    prizesCta: migratedStr(partial.prizesCta, base.prizesCta, [
+      "DESBLOQUEAR MINHA PARTICIPAÇÃO!",
+    ]),
 
     howTitle: str(partial.howTitle, base.howTitle),
     howBullets: mergeStringList(partial.howBullets, base.howBullets, 1, 8),

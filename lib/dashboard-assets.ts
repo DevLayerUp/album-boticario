@@ -67,6 +67,7 @@ export const dashboardAssets = {
     medal1: `${BASE}/concurso/medal-1.svg`,
     medal2: `${BASE}/concurso/medal-2.svg`,
     medal3: `${BASE}/concurso/medal-3.svg`,
+    jersey: `${BASE}/concurso/jersey.webp`,
     sticker1: `${BASE}/concurso/sticker-1.png`,
     sticker2: `${BASE}/concurso/sticker-2.png`,
     sticker3: `${BASE}/concurso/sticker-3.png`,

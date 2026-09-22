@@ -224,6 +224,12 @@ export function ConcursoContentAdminClient({
           value={config.images.prizesBackground}
           onChange={patchImage}
         />
+        <ConcursoImageField
+          label="Camisa (pódio)"
+          imageKey="prizeJersey"
+          value={config.images.prizeJersey}
+          onChange={patchImage}
+        />
         {config.prizes.map((prize, index) => {
           const medalKey = (`medal${index + 1}` as keyof ConcursoPageImages);
           return (
