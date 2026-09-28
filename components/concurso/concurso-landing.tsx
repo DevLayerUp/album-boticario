@@ -122,112 +122,102 @@ function Hero({ config }: { config: ConcursoPageConfig }) {
 
 function Prizes({ config }: { config: ConcursoPageConfig }) {
   const jersey = config.images.prizeJersey;
+  const medals = [config.images.medal1, config.images.medal2, config.images.medal3];
 
   return (
     <section
-      className="relative bg-[#fcfcfc] py-16 sm:py-20 md:py-24"
+      className="relative overflow-x-clip bg-[#fcfcfc] py-16 sm:py-20 xl:py-20"
       aria-labelledby="concurso-podio-title"
     >
-      <div className="mx-auto flex w-full max-w-[1920px] items-center">
-        <div
-          aria-hidden
-          className="pointer-events-none hidden w-[min(22vw,340px)] shrink-0 px-3 xl:block 2xl:w-[min(24vw,420px)]"
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-y-0 left-0 z-0 hidden w-[min(32vw,542px)] 2xl:block"
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={jersey}
+          alt=""
+          className="absolute top-[8%] left-[-18%] h-auto max-h-[632px] w-[542px] object-contain"
+        />
+      </div>
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-y-0 right-0 z-0 hidden w-[min(32vw,542px)] 2xl:block"
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={jersey}
+          alt=""
+          className="absolute top-[8%] right-[-18%] h-auto max-h-[632px] w-[542px] object-contain"
+        />
+      </div>
+
+      <div className="relative z-10 mx-auto flex w-full max-w-[1434px] flex-col items-center gap-10 px-5 sm:px-8 xl:gap-20">
+        <h2
+          id="concurso-podio-title"
+          className="text-center font-display text-3xl font-bold leading-tight text-verde-500 sm:text-4xl md:text-5xl xl:text-[58px] xl:leading-[66px]"
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={jersey}
-            alt=""
-            className="mx-auto h-auto max-h-[480px] w-full object-contain 2xl:max-h-[580px]"
+          {config.prizesTitle}
+        </h2>
+
+        <p className="w-full text-left text-lg leading-snug text-black sm:text-2xl md:text-[28px] xl:text-[36px] xl:leading-[35px]">
+          <Highlighted
+            text={config.prizesIntro}
+            highlight={config.prizesQuestion}
+            className="font-semibold text-verde-escuro-500"
           />
-        </div>
+        </p>
 
-        <div className="mx-auto flex min-w-0 flex-1 flex-col items-center gap-10 px-5 sm:px-8 md:gap-12 xl:gap-14 2xl:gap-16">
-          <h2
-            id="concurso-podio-title"
-            className="text-center font-display text-3xl font-bold leading-tight text-verde-500 sm:text-4xl md:text-5xl 2xl:text-[58px] 2xl:leading-[66px]"
-          >
-            {config.prizesTitle}
-          </h2>
-
-          <p className="w-full text-left text-lg leading-snug text-foreground sm:text-2xl md:text-[28px] md:leading-10 2xl:text-[36px] 2xl:leading-[1.15]">
-            <Highlighted
-              text={config.prizesIntro}
-              highlight={config.prizesQuestion}
-              className="font-semibold text-verde-escuro-500"
-            />
-          </p>
-
-          <div className="grid w-full gap-5 lg:grid-cols-3 lg:gap-5 xl:gap-6 2xl:gap-8">
-            {config.prizes.map((prize, index) => {
-              const medal =
-                index === 0
-                  ? config.images.medal1
-                  : index === 1
-                    ? config.images.medal2
-                    : config.images.medal3;
-              const showJersey = index < 2;
-              return (
-                <article
-                  key={`${prize.place}-${index}`}
-                  className={cn(
-                    "relative flex items-center gap-4 overflow-hidden rounded-card bg-verde-100 px-5 py-7 shadow-card sm:gap-5 sm:px-6 sm:py-8",
-                    showJersey && "lg:pr-24 2xl:pr-28",
-                  )}
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
+        <ul className="grid w-full list-none grid-cols-1 gap-5 p-0 xl:grid-cols-3 xl:gap-[33px]">
+          {config.prizes.map((prize, index) => (
+            <li key={`${prize.place}-${index}`} className="min-w-0">
+              <article className="relative flex h-full items-center justify-center gap-5 overflow-hidden rounded-card bg-verde-100 px-6 py-8 shadow-[0_4px_20px_rgba(0,0,0,0.15)] sm:px-[30px] sm:py-10 xl:min-h-[252px] xl:gap-[51px]">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={medals[index] ?? medals[0]}
+                  alt=""
+                  width={67}
+                  height={102}
+                  className="h-[88px] w-[58px] shrink-0 object-contain xl:h-[102px] xl:w-[67px]"
+                />
+                <div className="flex min-w-0 flex-1 flex-col gap-3">
+                  <h3 className="font-display text-[28px] font-bold leading-10 whitespace-nowrap text-verde-escuro-500 xl:text-[32px] xl:leading-[40px]">
+                    {prize.place}
+                  </h3>
+                  <p
+                    className={cn(
+                      "text-base leading-7 text-black xl:text-[22px] xl:leading-[30px]",
+                      index === 2 ? "max-w-[275px]" : "max-w-[250px]",
+                    )}
+                  >
+                    {prize.copy}
+                  </p>
+                </div>
+                {index < 2 ? (
+                  // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    src={medal}
+                    src={jersey}
                     alt=""
-                    width={67}
-                    height={102}
-                    className="h-[72px] w-auto shrink-0 object-contain sm:h-[88px] 2xl:h-[102px]"
+                    width={113}
+                    height={132}
+                    className="pointer-events-none absolute top-4 right-2 z-[2] h-[100px] w-[86px] object-contain sm:top-5 sm:right-3 sm:h-[116px] sm:w-[100px] xl:top-[22px] xl:right-2 xl:h-[132px] xl:w-[113px]"
                   />
-                  <div className="min-w-0">
-                    <h3 className="font-display text-xl font-bold text-verde-escuro-500 sm:text-2xl 2xl:text-[32px] 2xl:leading-10">
-                      {prize.place}
-                    </h3>
-                    <p className="mt-2 text-sm leading-6 text-foreground sm:text-base sm:leading-7 2xl:text-[22px] 2xl:leading-[30px]">
-                      {prize.copy}
-                    </p>
-                  </div>
-                  {showJersey ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={jersey}
-                      alt=""
-                      width={113}
-                      height={132}
-                      className="pointer-events-none absolute top-4 right-2 z-[2] hidden h-[96px] w-[82px] object-contain lg:block 2xl:top-5 2xl:h-[132px] 2xl:w-[113px]"
-                    />
-                  ) : null}
-                </article>
-              );
-            })}
-          </div>
+                ) : null}
+              </article>
+            </li>
+          ))}
+        </ul>
 
-          <p className="max-w-[640px] text-center text-base leading-7 text-foreground sm:text-[22px] sm:leading-[30px]">
-            {config.prizesFooter}
-          </p>
+        <p className="max-w-[633px] text-center text-base leading-7 text-black sm:text-[22px] sm:leading-[30px]">
+          {config.prizesFooter}
+        </p>
 
-          <a
-            href="#formulario"
-            className="inline-flex min-h-[68px] w-full max-w-[560px] cursor-pointer items-center justify-center rounded-pill bg-amarelo px-8 py-3 text-center text-lg font-bold text-verde-escuro-500 shadow-paper transition-[filter,transform] duration-200 hover:-translate-y-px hover:brightness-95 sm:text-xl md:text-2xl"
-          >
-            {config.prizesCta}
-          </a>
-        </div>
-
-        <div
-          aria-hidden
-          className="pointer-events-none hidden w-[min(22vw,340px)] shrink-0 px-3 xl:block 2xl:w-[min(24vw,420px)]"
+        <a
+          href="#formulario"
+          className="inline-flex h-[68px] min-h-12 w-full max-w-[560px] cursor-pointer items-center justify-center rounded-pill bg-amarelo px-[34px] text-center text-lg font-bold leading-[30px] text-verde-escuro-500 shadow-[0_20px_24px_rgba(13,102,50,0.18)] transition-[filter,transform] duration-200 hover:brightness-95 motion-safe:hover:-translate-y-px sm:text-xl xl:text-[24px]"
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={jersey}
-            alt=""
-            className="mx-auto h-auto max-h-[480px] w-full object-contain 2xl:max-h-[580px]"
-          />
-        </div>
+          {config.prizesCta}
+        </a>
       </div>
     </section>
   );
