@@ -1,12 +1,9 @@
 import Image from "next/image";
 import type { ContestEntry } from "@/lib/concurso";
-import {
-  isConcursoWindowOpen,
-  resolveConcursoRegulamentoUrl,
-  type ConcursoPageConfig,
-} from "@/lib/concurso-page";
+import { isConcursoWindowOpen, type ConcursoPageConfig } from "@/lib/concurso-page";
 import { cn } from "@/lib/utils";
 import { ConcursoForm, type ConcursoFormPrefill } from "./concurso-form";
+import { ConcursoRegulamentoLink } from "./concurso-regulamento-modal";
 
 const TIMELINE_ACCENTS = ["bg-verde-500", "bg-azul-500", "bg-amarelo", "bg-[#ac7f5e]"] as const;
 
@@ -20,13 +17,12 @@ export function ConcursoLanding({
   config: ConcursoPageConfig;
 }) {
   const open = isConcursoWindowOpen(config);
-  const regulamentoUrl = resolveConcursoRegulamentoUrl(config);
 
   return (
     <div className="flex flex-col bg-[#fcfcfc]">
       <Hero config={config} />
       <Prizes config={config} />
-      <HowItWorks config={config} regulamentoUrl={regulamentoUrl} />
+      <HowItWorks config={config} />
       <FormSection prefill={prefill} entry={entry} open={open} config={config} />
       <Timeline config={config} />
     </div>
@@ -223,13 +219,7 @@ function Prizes({ config }: { config: ConcursoPageConfig }) {
   );
 }
 
-function HowItWorks({
-  config,
-  regulamentoUrl,
-}: {
-  config: ConcursoPageConfig;
-  regulamentoUrl: string;
-}) {
+function HowItWorks({ config }: { config: ConcursoPageConfig }) {
   return (
     <section
       className="relative overflow-hidden bg-verde-escuro-500 px-5 py-16 sm:px-8 sm:py-20 lg:px-16"
@@ -250,16 +240,11 @@ function HowItWorks({
               </li>
             ))}
           </ul>
-          <p className="mt-8 text-base font-medium leading-snug text-amarelo sm:text-xl md:text-2xl">
-            <a
-              href={regulamentoUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline underline-offset-4"
-            >
+          <div className="mt-8 text-base font-medium leading-snug text-amarelo sm:text-xl md:text-2xl">
+            <ConcursoRegulamentoLink className="underline underline-offset-4">
               {config.howRegulamentoLabel}
-            </a>
-          </p>
+            </ConcursoRegulamentoLink>
+          </div>
         </div>
 
         <div className="relative mx-auto hidden h-[520px] w-full max-w-[520px] lg:block">

@@ -8,13 +8,11 @@ import {
   isValidCpf,
   type ContestEntry,
 } from "@/lib/concurso";
-import {
-  resolveConcursoRegulamentoUrl,
-  type ConcursoPageConfig,
-} from "@/lib/concurso-page";
+import { type ConcursoPageConfig } from "@/lib/concurso-page";
 import { formatPhoneBR, isValidPhoneBR } from "@/lib/phone";
 import { cn } from "@/lib/utils";
 import { ConcursoConfirmModal } from "./concurso-confirm-modal";
+import { ConcursoRegulamentoLink } from "./concurso-regulamento-modal";
 
 export interface ConcursoFormPrefill {
   fullName: string;
@@ -45,8 +43,6 @@ export function ConcursoForm({
   const [entry, setEntry] = useState<ContestEntry | null>(initialEntry);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const submitted = Boolean(entry);
-
-  const regulamentoUrl = resolveConcursoRegulamentoUrl(config);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -210,14 +206,9 @@ export function ConcursoForm({
           disabled={submitted}
         >
           {config.formConsentRulesPrefix}{" "}
-          <a
-            href={regulamentoUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-semibold text-verde-escuro-500 underline underline-offset-2"
-          >
+          <ConcursoRegulamentoLink className="inline font-semibold text-verde-escuro-500 underline underline-offset-2">
             {config.formConsentLinkLabel}
-          </a>
+          </ConcursoRegulamentoLink>
           .
         </CheckRow>
         <CheckRow
