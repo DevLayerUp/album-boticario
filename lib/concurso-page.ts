@@ -138,7 +138,7 @@ const DEFAULT_TIMELINE: ConcursoTimelineItemConfig[] = [
   },
   {
     title: "Envio dos Prêmios!",
-    body: "Envio dos Prêmios: A partir de 20/10/2026.",
+    body: "Entrega dos Prêmios: a partir de 29/10/2026, com envio logístico a ser acordado diretamente com os vencedores.",
   },
 ];
 
@@ -161,6 +161,7 @@ const PREVIOUS_TIMELINE_BODIES: string[][] = [
     "Em outubro de 2026 (nos canais oficiais e notificação na plataforma).",
     "14/10/2026 (nos canais oficiais e notificação na plataforma).",
   ],
+  ["Envio dos Prêmios: A partir de 20/10/2026."],
 ];
 const PREVIOUS_CLOSED_BODY = [
   "O prazo de envio foi até 30/09/2026, às 23h59 (horário de Brasília).",

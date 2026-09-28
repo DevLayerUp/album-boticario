@@ -19,7 +19,7 @@ export function ConcursoLanding({
   const open = isConcursoWindowOpen(config);
 
   return (
-    <div className="flex flex-col bg-[#fcfcfc]">
+    <div className="flex flex-col overflow-x-hidden bg-[#fcfcfc]">
       <Hero config={config} />
       <Prizes config={config} />
       <HowItWorks config={config} />
@@ -43,20 +43,42 @@ function Highlighted({
   text,
   highlight,
   className,
+  breakBefore = false,
 }: {
   text: string;
   highlight: string;
   className: string;
+  breakBefore?: boolean;
 }) {
   const needle = highlight.trim();
   if (!needle) return <>{text}</>;
   const index = text.toLowerCase().indexOf(needle.toLowerCase());
   if (index < 0) return <>{text}</>;
+
+  const before = text.slice(0, index);
+  const marked = text.slice(index, index + needle.length);
+  const after = text.slice(index + needle.length);
+  const splitAt = before.lastIndexOf("!");
+  const firstLine = splitAt >= 0 ? before.slice(0, splitAt + 1).trim() : before.trim();
+  const leadIn = splitAt >= 0 ? before.slice(splitAt + 1).trim() : "";
+
+  if (!breakBefore) {
+    return (
+      <>
+        {text.slice(0, index)}
+        <span className={className}>{marked}</span>
+        {after}
+      </>
+    );
+  }
+
   return (
     <>
-      {text.slice(0, index)}
-      <span className={className}>{text.slice(index, index + needle.length)}</span>
-      {text.slice(index + needle.length)}
+      {firstLine}
+      <br />
+      {leadIn ? `${leadIn} ` : null}
+      <span className={className}>{marked}</span>
+      {after}
     </>
   );
 }
@@ -122,29 +144,29 @@ function Prizes({ config }: { config: ConcursoPageConfig }) {
 
   return (
     <section
-      className="relative overflow-x-clip bg-[#fcfcfc] py-16 sm:py-20 xl:py-20"
+      className="relative overflow-visible bg-[#fcfcfc] py-16 sm:py-20 xl:py-20"
       aria-labelledby="concurso-podio-title"
     >
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-y-0 left-0 z-0 hidden w-[min(32vw,542px)] 2xl:block"
+        className="pointer-events-none absolute top-1/2 left-0 z-[1] hidden w-[min(42vw,542px)] -translate-x-[28%] -translate-y-1/2 lg:block"
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={jersey}
           alt=""
-          className="absolute top-[8%] left-[-18%] h-auto max-h-[632px] w-[542px] object-contain"
+          className="h-auto w-full max-h-[632px] object-contain"
         />
       </div>
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-y-0 right-0 z-0 hidden w-[min(32vw,542px)] 2xl:block"
+        className="pointer-events-none absolute top-1/2 right-0 z-[1] hidden w-[min(42vw,542px)] translate-x-[28%] -translate-y-1/2 lg:block"
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={jersey}
           alt=""
-          className="absolute top-[8%] right-[-18%] h-auto max-h-[632px] w-[542px] object-contain"
+          className="h-auto w-full max-h-[632px] object-contain"
         />
       </div>
 
@@ -156,18 +178,19 @@ function Prizes({ config }: { config: ConcursoPageConfig }) {
           {config.prizesTitle}
         </h2>
 
-        <p className="w-full text-left text-lg leading-snug text-black sm:text-2xl md:text-[28px] xl:text-[36px] xl:leading-[35px]">
+        <p className="mx-auto w-full max-w-[22em] text-center text-lg leading-snug text-black sm:max-w-[20em] sm:text-2xl md:text-[28px] lg:max-w-[18em] xl:max-w-[16.5em] xl:text-[36px] xl:leading-[1.2]">
           <Highlighted
             text={config.prizesIntro}
             highlight={config.prizesQuestion}
             className="font-semibold text-verde-escuro-500"
+            breakBefore
           />
         </p>
 
         <ul className="grid w-full list-none grid-cols-1 gap-5 p-0 xl:grid-cols-3 xl:gap-[33px]">
           {config.prizes.map((prize, index) => (
             <li key={`${prize.place}-${index}`} className="min-w-0">
-              <article className="relative flex h-full items-center justify-center gap-5 overflow-hidden rounded-card bg-verde-100 px-6 py-8 shadow-[0_4px_20px_rgba(0,0,0,0.15)] sm:px-[30px] sm:py-10 xl:min-h-[252px] xl:gap-[51px]">
+              <article className="relative flex h-full items-center justify-center gap-5 overflow-visible rounded-card bg-verde-100 px-6 py-8 shadow-[0_4px_20px_rgba(0,0,0,0.15)] sm:px-[30px] sm:py-10 xl:min-h-[252px] xl:gap-[51px]">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={medals[index] ?? medals[0]}
@@ -196,7 +219,7 @@ function Prizes({ config }: { config: ConcursoPageConfig }) {
                     alt=""
                     width={113}
                     height={132}
-                    className="pointer-events-none absolute top-4 right-2 z-[2] h-[100px] w-[86px] object-contain sm:top-5 sm:right-3 sm:h-[116px] sm:w-[100px] xl:top-[22px] xl:right-2 xl:h-[132px] xl:w-[113px]"
+                    className="pointer-events-none absolute -top-3 -right-3 z-[2] h-[100px] w-[86px] object-contain sm:-top-4 sm:-right-4 sm:h-[116px] sm:w-[100px] xl:-top-5 xl:-right-6 xl:h-[132px] xl:w-[113px]"
                   />
                 ) : null}
               </article>
