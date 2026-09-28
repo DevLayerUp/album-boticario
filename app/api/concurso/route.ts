@@ -12,6 +12,7 @@ import {
 } from "@/lib/concurso";
 import { isConcursoWindowOpen, loadConcursoPageConfig, canViewConcurso } from "@/lib/concurso-page";
 import { isAdminRole } from "@/lib/admin-users";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export const runtime = "nodejs";
 
@@ -33,7 +34,27 @@ function mapEntry(row: {
   };
 }
 
-export async function GET() {
+const CPF_TAKEN_MESSAGE =
+  "Este CPF já possui uma inscrição. Só é permitida uma resposta por CPF.";
+const USER_TAKEN_MESSAGE = "Você já enviou uma resposta neste concurso.";
+
+async function findEntryByCpf(cpfDigits: string) {
+  const admin = createAdminClient();
+  const { data, error } = await admin
+    .from("contest_entries")
+    .select("id, user_id")
+    .eq("cpf_digits", cpfDigits)
+    .maybeSingle();
+
+  if (error) {
+    console.error("[concurso] cpf lookup:", error.message, error.code);
+    return { error: true as const, row: null };
+  }
+
+  return { error: false as const, row: data };
+}
+
+export async function GET(request: NextRequest) {
   const supabase = await createClient();
   const {
     data: { user },
@@ -60,9 +81,23 @@ export async function GET() {
     return NextResponse.json({ error: "Não foi possível carregar a inscrição." }, { status: 500 });
   }
 
+  const cpfParam = request.nextUrl.searchParams.get("cpf");
+  let cpfTaken = false;
+  if (cpfParam) {
+    const digits = getCpfDigits(cpfParam);
+    if (isValidCpf(digits)) {
+      const lookup = await findEntryByCpf(digits);
+      if (lookup.error) {
+        return NextResponse.json({ error: "Não foi possível validar o CPF." }, { status: 500 });
+      }
+      cpfTaken = Boolean(lookup.row) && lookup.row?.user_id !== user.id;
+    }
+  }
+
   return NextResponse.json({
     open: isConcursoWindowOpen(config),
     entry: data ? mapEntry(data) : null,
+    cpfTaken,
   });
 }
 
@@ -148,6 +183,29 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  const admin = createAdminClient();
+  const { data: ownEntry, error: ownError } = await admin
+    .from("contest_entries")
+    .select("id")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (ownError) {
+    console.error("[concurso] user lookup:", ownError.message, ownError.code);
+    return NextResponse.json({ error: "Não foi possível validar a inscrição." }, { status: 500 });
+  }
+  if (ownEntry) {
+    return NextResponse.json({ error: USER_TAKEN_MESSAGE }, { status: 409 });
+  }
+
+  const cpfLookup = await findEntryByCpf(cpfDigits);
+  if (cpfLookup.error) {
+    return NextResponse.json({ error: "Não foi possível validar o CPF." }, { status: 500 });
+  }
+  if (cpfLookup.row) {
+    return NextResponse.json({ error: CPF_TAKEN_MESSAGE }, { status: 409 });
+  }
+
   const { data, error } = await supabase
     .from("contest_entries")
     .insert({
@@ -165,8 +223,9 @@ export async function POST(request: NextRequest) {
 
   if (error) {
     if (error.code === "23505") {
+      const duplicateCpf = /cpf/i.test(`${error.message} ${error.details ?? ""}`);
       return NextResponse.json(
-        { error: "Já existe uma inscrição com este usuário ou CPF. Só é permitida uma resposta." },
+        { error: duplicateCpf ? CPF_TAKEN_MESSAGE : USER_TAKEN_MESSAGE },
         { status: 409 },
       );
     }

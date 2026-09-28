@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   CONCURSO_ANSWER_MAX,
   CONCURSO_ANSWER_MIN,
   formatCpf,
+  getCpfDigits,
   isValidCpf,
   type ContestEntry,
 } from "@/lib/concurso";
@@ -35,6 +36,7 @@ export function ConcursoForm({
   const [email, setEmail] = useState(initialEntry?.email ?? prefill.email);
   const [phone, setPhone] = useState(initialEntry?.phone ?? prefill.phone);
   const [cpf, setCpf] = useState("");
+  const [cpfTaken, setCpfTaken] = useState(false);
   const [answer, setAnswer] = useState(initialEntry?.answer ?? "");
   const [acceptedRules, setAcceptedRules] = useState(Boolean(initialEntry));
   const [acceptedData, setAcceptedData] = useState(Boolean(initialEntry));
@@ -43,6 +45,26 @@ export function ConcursoForm({
   const [entry, setEntry] = useState<ContestEntry | null>(initialEntry);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const submitted = Boolean(entry);
+
+  useEffect(() => {
+    if (submitted || !isValidCpf(cpf)) {
+      setCpfTaken(false);
+      return;
+    }
+
+    const digits = getCpfDigits(cpf);
+    const timer = window.setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/concurso?cpf=${encodeURIComponent(digits)}`);
+        const data = (await res.json()) as { cpfTaken?: boolean };
+        if (res.ok) setCpfTaken(Boolean(data.cpfTaken));
+      } catch {
+        /* a validação definitiva acontece no envio */
+      }
+    }, 400);
+
+    return () => window.clearTimeout(timer);
+  }, [cpf, submitted]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -63,6 +85,10 @@ export function ConcursoForm({
     }
     if (!isValidCpf(cpf)) {
       setError("Informe um CPF válido.");
+      return;
+    }
+    if (cpfTaken) {
+      setError("Este CPF já possui uma inscrição. Só é permitida uma resposta por CPF.");
       return;
     }
     if (answer.trim().length < CONCURSO_ANSWER_MIN) {
@@ -132,7 +158,7 @@ export function ConcursoForm({
     >
       {submitted ? (
         <p className="w-full rounded-2xl bg-verde-100 px-4 py-3 text-center text-sm font-medium text-verde-escuro-500 sm:text-base">
-          Sua resposta já foi enviada. A comissão julgadora recebe apenas uma inscrição por pessoa.
+          Sua resposta já foi enviada. A comissão julgadora recebe apenas uma inscrição por CPF.
         </p>
       ) : null}
       <Field
@@ -166,15 +192,28 @@ export function ConcursoForm({
         disabled={submitted}
       />
       {submitted ? null : (
-      <Field
-        id="concurso-cpf"
-        label="CPF:"
-        value={cpf}
-        onChange={(v) => setCpf(formatCpf(v))}
-        placeholder="000.000.000-00"
-        autoComplete="off"
-        inputMode="numeric"
-      />
+        <div className="flex w-full flex-col gap-2">
+          <Field
+            id="concurso-cpf"
+            label="CPF:"
+            value={cpf}
+            onChange={(v) => {
+              setCpf(formatCpf(v));
+              setError("");
+            }}
+            placeholder="000.000.000-00"
+            autoComplete="off"
+            inputMode="numeric"
+          />
+          <p className="px-4 text-sm leading-snug text-muted">
+            Só é permitida uma resposta por CPF, conforme o regulamento.
+          </p>
+          {cpfTaken ? (
+            <p className="px-4 text-sm font-medium text-red-600" role="alert">
+              Este CPF já possui uma inscrição. Só é permitida uma resposta por CPF.
+            </p>
+          ) : null}
+        </div>
       )}
 
       <div className="flex w-full flex-col gap-2">
@@ -230,7 +269,7 @@ export function ConcursoForm({
       {submitted ? null : (
       <button
         type="submit"
-        disabled={saving}
+        disabled={saving || cpfTaken}
         className="inline-flex min-h-12 w-full max-w-[520px] cursor-pointer items-center justify-center rounded-pill bg-amarelo px-8 py-3 text-center text-lg font-bold text-verde-escuro-500 shadow-paper transition-[filter,transform] duration-200 hover:-translate-y-px hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60 sm:text-xl"
       >
         {saving ? "Enviando…" : config.formSubmitLabel}
