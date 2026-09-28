@@ -126,20 +126,47 @@ const IMAGE_KEYS = Object.keys(DEFAULT_IMAGES) as (keyof ConcursoPageImages)[];
 const DEFAULT_TIMELINE: ConcursoTimelineItemConfig[] = [
   {
     title: "Envie sua resposta!",
-    body: "Envio das respostas: Até 30/09/2026 (às 23h59).",
+    body: "Envio das respostas: Até 12/10/2026 (às 23h59).",
   },
   {
     title: "Avaliação!",
-    body: "Avaliação da Comissão: De 01/10/2026 a 07/10/2026.",
+    body: "Avaliação da Comissão: De 14/10/2026 a 23/10/2026.",
   },
   {
     title: "Vencedores!",
-    body: "Em outubro de 2026 (nos canais oficiais e notificação na plataforma).",
+    body: "26/10/2026 (nos canais oficiais e notificação na plataforma).",
   },
   {
     title: "Envio dos Prêmios!",
     body: "Envio dos Prêmios: A partir de 20/10/2026.",
   },
+];
+
+const PREVIOUS_START_ISO = ["2026-09-21T00:00:00-03:00"];
+const PREVIOUS_DEADLINE_ISO = ["2026-09-30T23:59:59.999-03:00"];
+const PREVIOUS_PRAZO_BULLETS = [
+  "Prazos de envio: de 21/09/2026 até 30/09/2026, às 23h59 (horário de Brasília).",
+  "Prazos de envio: de 21/09/2026 até 07/10/2026, às 23h59 (horário de Brasília).",
+];
+const PREVIOUS_TIMELINE_BODIES: string[][] = [
+  [
+    "Envio das respostas: Até 30/09/2026 (às 23h59).",
+    "Envio das respostas: Até 07/10/2026 (às 23h59).",
+  ],
+  [
+    "Avaliação da Comissão: De 01/10/2026 a 07/10/2026.",
+    "Avaliação da Comissão: De 07/10/2026 a 11/10/2026.",
+  ],
+  [
+    "Em outubro de 2026 (nos canais oficiais e notificação na plataforma).",
+    "14/10/2026 (nos canais oficiais e notificação na plataforma).",
+  ],
+];
+const PREVIOUS_CLOSED_BODY = [
+  "O prazo de envio foi até 30/09/2026, às 23h59 (horário de Brasília).",
+];
+const PREVIOUS_RESULT_COPY = [
+  "O resultado sai a partir de outubro de 2026 nos nossos canais oficiais e por notificação no site do álbum.",
 ];
 
 export const DEFAULT_CONCURSO_PAGE_CONFIG: ConcursoPageConfig = {
@@ -168,7 +195,7 @@ export const DEFAULT_CONCURSO_PAGE_CONFIG: ConcursoPageConfig = {
   howTitle: "Como funciona a escalação?",
   howBullets: [
     "Quem entra em campo? Qualquer pessoa maior de 18 anos cadastrada na plataforma do nosso álbum de figurinhas.",
-    "Prazos de envio: de 21/09/2026 até 30/09/2026, às 23h59 (horário de Brasília).",
+    "Prazos de envio: de 28/09/2026 até 12/10/2026, às 23h59 (horário de Brasília).",
     "Critérios de seleção: as respostas serão avaliadas em formato anônimo (sem identificação de autoria), levando em conta Adequação ao Tema, Criatividade/Originalidade e Clareza de Expressão.",
     "Passe único: É permitida apenas UMA resposta por CPF.",
   ],
@@ -180,7 +207,7 @@ export const DEFAULT_CONCURSO_PAGE_CONFIG: ConcursoPageConfig = {
   formQuestion: "Como você demonstra a sua paixão pela natureza?",
   formSubmitLabel: "Enviar Resposta e Concorrer!",
   formClosedTitle: "Inscrições encerradas",
-  formClosedBody: "O prazo de envio foi até 30/09/2026, às 23h59 (horário de Brasília).",
+  formClosedBody: "O prazo de envio foi até 12/10/2026, às 23h59 (horário de Brasília).",
   formConsentRulesPrefix: "Declaro que li e aceito o",
   formConsentLinkLabel: "Regulamento Completo do Concurso",
   formConsentData:
@@ -189,7 +216,7 @@ export const DEFAULT_CONCURSO_PAGE_CONFIG: ConcursoPageConfig = {
   confirmTitle: "Golaço! Resposta enviada com sucesso.",
   confirmParagraphs: [
     "Muito bom ter você junto com a gente na torcida pelo futuro do nosso planeta. Sua resposta já tá nas mãos da nossa comissão julgadora.",
-    "O resultado sai a partir de outubro de 2026 nos nossos canais oficiais e por notificação no site do álbum.",
+    "O resultado sai em 26/10/2026 nos nossos canais oficiais e por notificação no site do álbum.",
     "Enquanto a comissão avalia, continue colando suas figurinhas, escalando o seu álbum e descobrindo mais sobre as nossas florestas e a nossa biodiversidade!",
   ],
   confirmButtonLabel: "Voltar para o álbum de figurinhas",
@@ -219,6 +246,13 @@ function validIso(value: unknown, fallback: string): string {
   if (typeof value !== "string" || !value.trim()) return fallback;
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? fallback : value.trim();
+}
+
+function migratedIso(value: unknown, nextDefault: string, previousDefaults: string[]): string {
+  if (typeof value !== "string" || !value.trim()) return nextDefault;
+  const trimmed = value.trim();
+  if (previousDefaults.includes(trimmed)) return nextDefault;
+  return validIso(trimmed, nextDefault);
 }
 
 function mergePrizes(partial?: unknown): ConcursoPrizeConfig[] {
@@ -264,7 +298,7 @@ function mergeTimeline(partial?: unknown): ConcursoTimelineItemConfig[] {
     const base = DEFAULT_TIMELINE[index] ?? DEFAULT_TIMELINE[0];
     return {
       title: str(row?.title, base.title),
-      body: str(row?.body, base.body),
+      body: migratedStr(row?.body, base.body, PREVIOUS_TIMELINE_BODIES[index] ?? []),
     };
   });
 }
@@ -283,8 +317,8 @@ export function mergeConcursoPageConfig(
 ): ConcursoPageConfig {
   const base = DEFAULT_CONCURSO_PAGE_CONFIG;
   return {
-    startIso: validIso(partial.startIso, base.startIso),
-    deadlineIso: validIso(partial.deadlineIso, base.deadlineIso),
+    startIso: migratedIso(partial.startIso, base.startIso, PREVIOUS_START_ISO),
+    deadlineIso: migratedIso(partial.deadlineIso, base.deadlineIso, PREVIOUS_DEADLINE_ISO),
     regulamentoUrl: optionalUrl(partial.regulamentoUrl, base.regulamentoUrl),
     published: partial.published === true,
 
@@ -308,7 +342,9 @@ export function mergeConcursoPageConfig(
     ]),
 
     howTitle: str(partial.howTitle, base.howTitle),
-    howBullets: mergeStringList(partial.howBullets, base.howBullets, 1, 8),
+    howBullets: mergeStringList(partial.howBullets, base.howBullets, 1, 8).map((item) =>
+      PREVIOUS_PRAZO_BULLETS.includes(item) ? base.howBullets[1] : item,
+    ),
     howRegulamentoLabel: str(partial.howRegulamentoLabel, base.howRegulamentoLabel),
     howStickerCaption: str(partial.howStickerCaption, base.howStickerCaption),
 
@@ -317,13 +353,15 @@ export function mergeConcursoPageConfig(
     formQuestion: str(partial.formQuestion, base.formQuestion),
     formSubmitLabel: str(partial.formSubmitLabel, base.formSubmitLabel),
     formClosedTitle: str(partial.formClosedTitle, base.formClosedTitle),
-    formClosedBody: str(partial.formClosedBody, base.formClosedBody),
+    formClosedBody: migratedStr(partial.formClosedBody, base.formClosedBody, PREVIOUS_CLOSED_BODY),
     formConsentRulesPrefix: str(partial.formConsentRulesPrefix, base.formConsentRulesPrefix),
     formConsentLinkLabel: str(partial.formConsentLinkLabel, base.formConsentLinkLabel),
     formConsentData: str(partial.formConsentData, base.formConsentData),
 
     confirmTitle: str(partial.confirmTitle, base.confirmTitle),
-    confirmParagraphs: mergeStringList(partial.confirmParagraphs, base.confirmParagraphs, 1, 6),
+    confirmParagraphs: mergeStringList(partial.confirmParagraphs, base.confirmParagraphs, 1, 6).map(
+      (item) => (PREVIOUS_RESULT_COPY.includes(item) ? base.confirmParagraphs[1] : item),
+    ),
     confirmButtonLabel: str(partial.confirmButtonLabel, base.confirmButtonLabel),
 
     timelineTitle: str(partial.timelineTitle, base.timelineTitle),

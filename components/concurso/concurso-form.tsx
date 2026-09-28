@@ -14,7 +14,7 @@ import {
 } from "@/lib/concurso-page";
 import { formatPhoneBR, isValidPhoneBR } from "@/lib/phone";
 import { cn } from "@/lib/utils";
-import { ConcursoConfirmCard, ConcursoConfirmModal } from "./concurso-confirm-modal";
+import { ConcursoConfirmModal } from "./concurso-confirm-modal";
 
 export interface ConcursoFormPrefill {
   fullName: string;
@@ -33,22 +33,24 @@ export function ConcursoForm({
   open: boolean;
   config: ConcursoPageConfig;
 }) {
-  const [fullName, setFullName] = useState(prefill.fullName);
-  const [email, setEmail] = useState(prefill.email);
-  const [phone, setPhone] = useState(prefill.phone);
+  const [fullName, setFullName] = useState(initialEntry?.full_name ?? prefill.fullName);
+  const [email, setEmail] = useState(initialEntry?.email ?? prefill.email);
+  const [phone, setPhone] = useState(initialEntry?.phone ?? prefill.phone);
   const [cpf, setCpf] = useState("");
   const [answer, setAnswer] = useState(initialEntry?.answer ?? "");
-  const [acceptedRules, setAcceptedRules] = useState(false);
-  const [acceptedData, setAcceptedData] = useState(false);
+  const [acceptedRules, setAcceptedRules] = useState(Boolean(initialEntry));
+  const [acceptedData, setAcceptedData] = useState(Boolean(initialEntry));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [entry, setEntry] = useState<ContestEntry | null>(initialEntry);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const submitted = Boolean(entry);
 
   const regulamentoUrl = resolveConcursoRegulamentoUrl(config);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (submitted) return;
     setError("");
 
     if (fullName.trim().length < 2) {
@@ -109,15 +111,7 @@ export function ConcursoForm({
     }
   }
 
-  if (entry) {
-    return showConfirmModal ? (
-      <ConcursoConfirmModal config={config} onClose={() => setShowConfirmModal(false)} />
-    ) : (
-      <ConcursoConfirmCard config={config} />
-    );
-  }
-
-  if (!open) {
+  if (!open && !submitted) {
     return (
       <div className="rounded-[40px] bg-white px-6 py-10 text-center shadow-paper sm:px-10">
         <p className="font-display text-2xl font-bold text-verde-escuro-500">
@@ -131,11 +125,20 @@ export function ConcursoForm({
   }
 
   return (
+    <>
+    {showConfirmModal ? (
+      <ConcursoConfirmModal config={config} onClose={() => setShowConfirmModal(false)} />
+    ) : null}
     <form
       onSubmit={onSubmit}
       className="flex flex-col items-center gap-8 rounded-[40px] bg-white px-5 py-8 shadow-paper sm:px-8 sm:py-10 md:px-12"
       noValidate
     >
+      {submitted ? (
+        <p className="w-full rounded-2xl bg-verde-100 px-4 py-3 text-center text-sm font-medium text-verde-escuro-500 sm:text-base">
+          Sua resposta já foi enviada. A comissão julgadora recebe apenas uma inscrição por pessoa.
+        </p>
+      ) : null}
       <Field
         id="concurso-nome"
         label="Nome:"
@@ -143,6 +146,7 @@ export function ConcursoForm({
         onChange={setFullName}
         placeholder="Seu Nome"
         autoComplete="name"
+        disabled={submitted}
       />
       <Field
         id="concurso-email"
@@ -152,6 +156,7 @@ export function ConcursoForm({
         onChange={setEmail}
         placeholder="email@email.com.br"
         autoComplete="email"
+        disabled={submitted}
       />
       <Field
         id="concurso-celular"
@@ -162,7 +167,9 @@ export function ConcursoForm({
         placeholder="(11) 99999-9999"
         autoComplete="tel"
         inputMode="tel"
+        disabled={submitted}
       />
+      {submitted ? null : (
       <Field
         id="concurso-cpf"
         label="CPF:"
@@ -172,6 +179,7 @@ export function ConcursoForm({
         autoComplete="off"
         inputMode="numeric"
       />
+      )}
 
       <div className="flex w-full flex-col gap-2">
         <label htmlFor="concurso-resposta" className="px-4 text-base font-medium text-verde-escuro-500 sm:text-lg">
@@ -185,7 +193,8 @@ export function ConcursoForm({
             maxLength={CONCURSO_ANSWER_MAX}
             rows={8}
             placeholder={config.formQuestion}
-            className={inputClassName("min-h-[220px] resize-y py-4")}
+            disabled={submitted}
+            className={inputClassName("min-h-[220px] resize-y py-4 disabled:cursor-not-allowed disabled:opacity-80")}
           />
           <p className="pointer-events-none absolute bottom-3 right-6 text-sm text-verde-300">
             {answer.length}/{CONCURSO_ANSWER_MAX} caracteres
@@ -198,6 +207,7 @@ export function ConcursoForm({
           id="concurso-regras"
           checked={acceptedRules}
           onChange={setAcceptedRules}
+          disabled={submitted}
         >
           {config.formConsentRulesPrefix}{" "}
           <a
@@ -214,6 +224,7 @@ export function ConcursoForm({
           id="concurso-dados"
           checked={acceptedData}
           onChange={setAcceptedData}
+          disabled={submitted}
         >
           {config.formConsentData}
         </CheckRow>
@@ -225,6 +236,7 @@ export function ConcursoForm({
         </p>
       ) : null}
 
+      {submitted ? null : (
       <button
         type="submit"
         disabled={saving}
@@ -232,7 +244,9 @@ export function ConcursoForm({
       >
         {saving ? "Enviando…" : config.formSubmitLabel}
       </button>
+      )}
     </form>
+    </>
   );
 }
 
@@ -253,6 +267,7 @@ function Field({
   type = "text",
   autoComplete,
   inputMode,
+  disabled = false,
 }: {
   id: string;
   label: string;
@@ -262,6 +277,7 @@ function Field({
   type?: string;
   autoComplete?: string;
   inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"];
+  disabled?: boolean;
 }) {
   return (
     <div className="flex w-full flex-col gap-2">
@@ -276,7 +292,8 @@ function Field({
         placeholder={placeholder}
         autoComplete={autoComplete}
         inputMode={inputMode}
-        className={inputClassName("h-[52px] sm:h-[60px]")}
+        disabled={disabled}
+        className={inputClassName("h-[52px] sm:h-[60px] disabled:cursor-not-allowed disabled:opacity-80")}
       />
     </div>
   );
@@ -286,21 +303,30 @@ function CheckRow({
   id,
   checked,
   onChange,
+  disabled = false,
   children,
 }: {
   id: string;
   checked: boolean;
   onChange: (value: boolean) => void;
+  disabled?: boolean;
   children: React.ReactNode;
 }) {
   return (
-    <label htmlFor={id} className="flex cursor-pointer items-start gap-3 sm:items-center sm:gap-4">
+    <label
+      htmlFor={id}
+      className={cn(
+        "flex items-start gap-3 sm:items-center sm:gap-4",
+        disabled ? "cursor-default" : "cursor-pointer",
+      )}
+    >
       <input
         id={id}
         type="checkbox"
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
-        className="mt-0.5 size-7 shrink-0 cursor-pointer rounded-lg border-2 border-verde-300 accent-verde-500"
+        disabled={disabled}
+        className="mt-0.5 size-7 shrink-0 rounded-lg border-2 border-verde-300 accent-verde-500 disabled:cursor-not-allowed"
       />
       <span className="text-left text-sm leading-snug text-foreground sm:text-base sm:leading-relaxed">
         {children}

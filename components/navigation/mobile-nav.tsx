@@ -63,12 +63,17 @@ export function MobileNav({ showConcurso = false }: { showConcurso?: boolean }) 
                 aria-current={isActive ? "page" : undefined}
                 className={cn(
                   "relative flex min-h-11 touch-manipulation flex-col items-center justify-center gap-1 rounded-lg px-0.5 py-1 transition-colors duration-200",
-                  isActive
-                    ? "text-verde-500"
-                    : "text-verde-escuro-500/60 active:text-verde-escuro-500/80",
+                  href === "/concurso"
+                    ? cn(
+                        "bg-amarelo text-verde-escuro-500",
+                        isActive && "ring-1 ring-verde-escuro-500/30",
+                      )
+                    : isActive
+                      ? "text-verde-500"
+                      : "text-verde-escuro-500/60 active:text-verde-escuro-500/80",
                 )}
               >
-                {isActive ? (
+                {isActive && href !== "/concurso" ? (
                   <span
                     className="absolute inset-x-1 top-0 h-0.5 rounded-full bg-verde-500"
                     aria-hidden
@@ -82,7 +87,7 @@ export function MobileNav({ showConcurso = false }: { showConcurso?: boolean }) 
                 <span
                   className={cn(
                     "block w-full truncate text-center text-[8px] font-medium leading-none tracking-tight xs:text-[9px]",
-                    isActive && "font-bold",
+                    (isActive || href === "/concurso") && "font-bold",
                   )}
                 >
                   {label}

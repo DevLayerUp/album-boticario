@@ -57,10 +57,15 @@ export default async function DashboardLayout({
 
           <nav
             aria-label="Navegação principal"
-            className="hidden min-w-0 flex-1 items-center justify-center gap-1 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] md:flex [&::-webkit-scrollbar]:hidden"
+            className="hidden min-w-0 flex-1 items-center justify-center gap-1 overflow-x-auto py-2 [-ms-overflow-style:none] [scrollbar-width:none] md:flex [&::-webkit-scrollbar]:hidden"
           >
             {navItems.map((item) => (
-              <NavItem key={item.href} href={item.href} label={item.label} />
+              <NavItem
+                key={item.href}
+                href={item.href}
+                label={item.label}
+                featured={item.href === "/concurso"}
+              />
             ))}
           </nav>
 

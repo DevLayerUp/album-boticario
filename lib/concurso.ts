@@ -4,9 +4,9 @@ export const CONCURSO_ANSWER_MAX = 500;
 export const CONCURSO_ANSWER_MIN = 40;
 
 /** Início das inscrições (horário de Brasília). */
-export const CONCURSO_START_ISO = "2026-09-21T00:00:00-03:00";
-/** Encerramento do envio: 30/09/2026 às 23h59 BRT. */
-export const CONCURSO_DEADLINE_ISO = "2026-09-30T23:59:59.999-03:00";
+export const CONCURSO_START_ISO = "2026-09-28T00:00:00-03:00";
+/** Encerramento do envio: 12/10/2026 às 23h59 BRT. */
+export const CONCURSO_DEADLINE_ISO = "2026-10-12T23:59:59.999-03:00";
 
 export const CONCURSO_REGULAMENTO_FALLBACK =
   "https://fundacaogrupoboticario.org.br/";
