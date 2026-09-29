@@ -79,6 +79,10 @@ export const dashboardAssets = {
     heroWave2: `${BASE}/concurso/hero-wave-2.svg`,
     heroWave3: `${BASE}/concurso/hero-wave-3.svg`,
     heroWave4: `${BASE}/concurso/hero-wave-4.svg`,
+    promoGlow: `${BASE}/concurso/promo/header-glow.svg`,
+    promoMarca: `${BASE}/concurso/promo/marca.svg`,
+    promoClose: `${BASE}/concurso/promo/fechar.svg`,
+    promoJersey: `${BASE}/concurso/promo/jersey.webp`,
   },
   /** Headers dos feature cards da seção "Explorar". */
   cards: {
