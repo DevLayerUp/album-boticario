@@ -4,6 +4,7 @@ import {
   CONCURSO_REGULAMENTO_FALLBACK,
   CONCURSO_START_ISO,
 } from "@/lib/concurso";
+import { CONCURSO_INELEGIBILIDADE_GRUPO } from "@/lib/concurso-regulamento";
 import { dashboardAssets } from "@/lib/dashboard-assets";
 
 export const CONCURSO_PAGE_CONFIG_KEY = "concurso_page_config";
@@ -196,6 +197,7 @@ export const DEFAULT_CONCURSO_PAGE_CONFIG: ConcursoPageConfig = {
   howTitle: "Como funciona a escalação?",
   howBullets: [
     "Quem entra em campo? Qualquer pessoa maior de 18 anos cadastrada na plataforma do nosso álbum de figurinhas.",
+    CONCURSO_INELEGIBILIDADE_GRUPO,
     "Prazos de envio: de 28/09/2026 até 12/10/2026, às 23h59 (horário de Brasília).",
     "Critérios de seleção: as respostas serão avaliadas em formato anônimo (sem identificação de autoria), levando em conta Adequação ao Tema, Criatividade/Originalidade e Clareza de Expressão.",
     "Passe único: É permitida apenas UMA resposta por CPF.",
@@ -313,6 +315,18 @@ export function parseConcursoPageConfig(raw: string | null | undefined): Concurs
   }
 }
 
+function ensureGrupoIneligibleBullet(bullets: string[]): string[] {
+  const marker = "pessoas vinculadas ao grupo boticário";
+  if (bullets.some((item) => item.toLowerCase().includes(marker))) {
+    return bullets.slice(0, 8);
+  }
+  const whoIndex = bullets.findIndex((item) => /^quem entra em campo\?/i.test(item));
+  const insertAt = whoIndex >= 0 ? whoIndex + 1 : Math.min(1, bullets.length);
+  const next = [...bullets];
+  next.splice(insertAt, 0, CONCURSO_INELEGIBILIDADE_GRUPO);
+  return next.slice(0, 8);
+}
+
 export function mergeConcursoPageConfig(
   partial: Partial<ConcursoPageConfig>,
 ): ConcursoPageConfig {
@@ -343,8 +357,10 @@ export function mergeConcursoPageConfig(
     ]),
 
     howTitle: str(partial.howTitle, base.howTitle),
-    howBullets: mergeStringList(partial.howBullets, base.howBullets, 1, 8).map((item) =>
-      PREVIOUS_PRAZO_BULLETS.includes(item) ? base.howBullets[1] : item,
+    howBullets: ensureGrupoIneligibleBullet(
+      mergeStringList(partial.howBullets, base.howBullets, 1, 8).map((item) =>
+        PREVIOUS_PRAZO_BULLETS.includes(item) ? base.howBullets[2] : item,
+      ),
     ),
     howRegulamentoLabel: str(partial.howRegulamentoLabel, base.howRegulamentoLabel),
     howStickerCaption: str(partial.howStickerCaption, base.howStickerCaption),

@@ -2,10 +2,10 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import Link from "next/link";
 import { ClipboardList, Medal, Trophy, X } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 import type { ConcursoPageConfig } from "@/lib/concurso-page";
+import { CONCURSO_INELEGIBILIDADE_GRUPO } from "@/lib/concurso-regulamento";
 import { dashboardAssets } from "@/lib/dashboard-assets";
 import { cn } from "@/lib/utils";
 import { ConcursoRegulamentoLink } from "./concurso-regulamento-modal";
@@ -178,13 +178,13 @@ export function ConcursoPromoModal({ config }: { config: ConcursoPageConfig }) {
                 <p className="rounded-[18px] bg-verde-escuro-500 px-5 py-4 font-semibold leading-6 text-amarelo sm:min-h-[130px] sm:py-6">
                   {config.formQuestion}
                 </p>
-                <Link
-                  href="/concurso"
+                <a
+                  href="#formulario"
                   onClick={dismiss}
                   className="inline-flex min-h-12 w-full cursor-pointer items-center justify-center rounded-pill bg-amarelo px-8 py-3 text-center text-lg font-bold leading-[30px] text-verde-escuro-500 transition-[filter,transform] duration-200 hover:brightness-95 motion-safe:hover:-translate-y-px sm:text-[21px]"
                 >
                   PARTICIPAR!
-                </Link>
+                </a>
               </section>
 
               <section className="rounded-card border border-verde-400 bg-white p-5 sm:p-6">
@@ -230,6 +230,10 @@ export function ConcursoPromoModal({ config }: { config: ConcursoPageConfig }) {
                     Quem pode participar? Todos os colecionadores com 18 anos ou mais cadastrados
                     no faspornatureza.com.br
                   </span>
+                </li>
+                <li className="flex gap-3">
+                  <span className="mt-1.5 size-3 shrink-0 rounded-full bg-amarelo" aria-hidden />
+                  <span className="font-semibold">{CONCURSO_INELEGIBILIDADE_GRUPO}</span>
                 </li>
                 <li className="flex gap-3">
                   <span className="mt-1.5 size-3 shrink-0 rounded-full bg-amarelo" aria-hidden />

@@ -34,7 +34,6 @@ import { BONUS_10K_PACK_SOURCE } from "@/lib/bonus-10k";
 import { buildInviteUrl } from "@/lib/referrals";
 import { headers } from "next/headers";
 import { canViewConcurso, loadConcursoPageConfig } from "@/lib/concurso-page";
-import { ConcursoPromoModal } from "@/components/concurso/concurso-promo-modal";
 
 export async function generateMetadata(): Promise<Metadata> {
   return buildAppPageMetadata("dashboard");
@@ -153,7 +152,6 @@ export default async function DashboardPage() {
   return (
     <div className="flex flex-col">
       {!bonus10kClaimed && <Bonus10kPopup />}
-      <ConcursoPromoModal config={concursoConfig} />
 
       {/* ── Banner admin ──────────────────────────────────────────────── */}
       {isAdmin && (

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { buildAppPageMetadata } from "@/lib/seo-metadata";
 import { createClient } from "@/lib/supabase/server";
 import { ConcursoLanding } from "@/components/concurso/concurso-landing";
+import { ConcursoPromoModal } from "@/components/concurso/concurso-promo-modal";
 import type { ContestEntry } from "@/lib/concurso";
 import { canViewConcurso, loadConcursoPageConfig } from "@/lib/concurso-page";
 import { isAdminRole } from "@/lib/admin-users";
@@ -45,14 +46,17 @@ export default async function ConcursoPage() {
     "";
 
   return (
-    <ConcursoLanding
-      prefill={{
-        fullName: nome,
-        email: user.email ?? "",
-        phone: profileRes.data?.phone ?? "",
-      }}
-      entry={entry}
-      config={config}
-    />
+    <>
+      <ConcursoPromoModal config={config} />
+      <ConcursoLanding
+        prefill={{
+          fullName: nome,
+          email: user.email ?? "",
+          phone: profileRes.data?.phone ?? "",
+        }}
+        entry={entry}
+        config={config}
+      />
+    </>
   );
 }

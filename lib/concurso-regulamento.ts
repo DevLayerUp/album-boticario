@@ -9,6 +9,9 @@ export interface RegulamentoSection {
   blocks: RegulamentoBlock[];
 }
 
+export const CONCURSO_INELEGIBILIDADE_GRUPO =
+  "Não poderão participar deste Concurso Cultural os funcionários, colaboradores, prestadores de serviços e demais pessoas vinculadas ao Grupo Boticário.";
+
 export const CONCURSO_REGULAMENTO_TITLE = "Regulamento do Concurso Cultural";
 export const CONCURSO_REGULAMENTO_SUBTITLE = "Fãs por Natureza";
 export const CONCURSO_REGULAMENTO_PROMOTORA =
@@ -47,18 +50,15 @@ export const CONCURSO_REGULAMENTO_SECTIONS: RegulamentoSection[] = [
       },
       {
         type: "p",
-        text: "2.3. Estão impedidos de participar:",
-      },
-      {
-        type: "list",
-        items: [
-          "Colaboradores ativos da Fundação Grupo Boticário e de outras unidades do Grupo Boticário;",
-          "Membros da equipe organizadora da Ação e seus familiares colaboradores da Fundação Grupo Boticário e Grupo Boticário.",
-        ],
+        text: `2.3. ${CONCURSO_INELEGIBILIDADE_GRUPO}`,
       },
       {
         type: "p",
-        text: "2.3. A participação é voluntária, não envolve qualquer tipo de remuneração e poderá ser reconhecida por meio de experiências, vivências ou brindes simbólicos, conforme critérios definidos pela Fundação.",
+        text: "2.4. Também estão impedidos de participar os membros da equipe organizadora da Ação e seus familiares colaboradores da Fundação Grupo Boticário e Grupo Boticário.",
+      },
+      {
+        type: "p",
+        text: "2.5. A participação é voluntária, não envolve qualquer tipo de remuneração e poderá ser reconhecida por meio de experiências, vivências ou brindes simbólicos, conforme critérios definidos pela Fundação.",
       },
     ],
   },

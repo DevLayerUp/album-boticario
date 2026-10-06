@@ -258,7 +258,12 @@ function HowItWorks({ config }: { config: ConcursoPageConfig }) {
           </h2>
           <ul className="mt-8 list-disc space-y-4 pl-6 text-base leading-snug text-white sm:text-xl sm:leading-9 md:text-2xl">
             {config.howBullets.map((bullet, index) => (
-              <li key={index}>
+              <li
+                key={index}
+                className={
+                  bullet.includes("vinculadas ao Grupo Boticário") ? "font-bold" : undefined
+                }
+              >
                 <BoldLead text={bullet} />
               </li>
             ))}
