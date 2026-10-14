@@ -1,7 +1,11 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getCpfDigits } from "@/lib/concurso";
+import { fetchAllPages } from "@/lib/supabase/fetch-all-pages";
 
 export const ADMIN_CONCURSO_PAGE_SIZE = 20;
+
+const ENTRY_COLUMNS =
+  "id, user_id, full_name, email, phone, cpf_digits, answer, accepted_rules, accepted_data, created_at";
 
 export interface AdminContestEntry {
   id: number;
@@ -51,10 +55,7 @@ export async function listAdminContestEntries(
 
   let query = admin
     .from("contest_entries")
-    .select(
-      "id, user_id, full_name, email, phone, cpf_digits, answer, accepted_rules, accepted_data, created_at",
-      { count: "exact" },
-    )
+    .select(ENTRY_COLUMNS, { count: "exact" })
     .order("created_at", { ascending: false });
 
   if (q) {
@@ -92,4 +93,28 @@ export async function listAdminContestEntries(
       totalPages: Math.max(1, Math.ceil(total / limit)),
     },
   };
+}
+
+/** Todas as inscrições, da mais antiga para a mais recente, para a planilha. */
+export async function listAllAdminContestEntries(
+  admin: SupabaseClient,
+): Promise<AdminContestEntry[]> {
+  try {
+    return await fetchAllPages<AdminContestEntry>((from, to) =>
+      admin
+        .from("contest_entries")
+        .select(ENTRY_COLUMNS)
+        .order("created_at", { ascending: true })
+        .order("id", { ascending: true })
+        .range(from, to),
+    );
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "";
+    if (isMissingContestTable({ message })) {
+      throw new Error(
+        "A tabela de inscrições ainda não existe. Aplique a migration contest_entries.",
+      );
+    }
+    throw err;
+  }
 }

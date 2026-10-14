@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import {
   ChevronLeft,
   ChevronRight,
+  Download,
   Eye,
   Loader2,
   Search,
@@ -31,6 +32,8 @@ export function ConcursoAdminClient({ embedded = false }: { embedded?: boolean }
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<AdminContestEntry | null>(null);
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search), 350);
@@ -71,28 +74,77 @@ export function ConcursoAdminClient({ embedded = false }: { embedded?: boolean }
   const rangeStart = total === 0 ? 0 : (page - 1) * limit + 1;
   const rangeEnd = Math.min(page * limit, total);
 
+  async function handleExport() {
+    setExporting(true);
+    setExportError(null);
+    try {
+      const res = await fetch("/api/admin/concurso/export");
+      if (!res.ok) {
+        let message = "Falha ao exportar";
+        try {
+          const data = await res.json();
+          if (data?.error) message = data.error;
+        } catch {
+          // resposta sem JSON
+        }
+        throw new Error(message);
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      const disposition = res.headers.get("Content-Disposition") ?? "";
+      const filename = disposition.match(/filename="([^"]+)"/)?.[1];
+      link.href = url;
+      link.download = filename ?? `respostas-concurso-${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setExportError(err instanceof Error ? err.message : "Erro ao exportar");
+    } finally {
+      setExporting(false);
+    }
+  }
+
+  const countLabel = (
+    <p className="text-sm text-gray-500">
+      {total.toLocaleString("pt-BR")} resposta(s)
+      {total > 0 && (
+        <> · exibindo {rangeStart}–{rangeEnd}</>
+      )}
+    </p>
+  );
+
   return (
     <div className="space-y-5">
-      {!embedded ? (
-        <div className="flex flex-wrap items-start justify-between gap-3">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        {!embedded ? (
           <div>
             <h1 className="text-2xl font-semibold text-gray-900">Concurso Cultural</h1>
-            <p className="text-sm text-gray-500">
-              {total.toLocaleString("pt-BR")} resposta(s)
-              {total > 0 && (
-                <> · exibindo {rangeStart}–{rangeEnd}</>
-              )}
-            </p>
+            {countLabel}
           </div>
+        ) : (
+          countLabel
+        )}
+        <div className="flex flex-col items-end gap-1">
+          <button
+            type="button"
+            onClick={() => void handleExport()}
+            disabled={exporting}
+            title="Baixar todas as respostas em CSV"
+            className="inline-flex items-center gap-2 rounded-lg border border-gb-green bg-gb-green px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-60"
+          >
+            {exporting ? (
+              <Loader2 size={14} className="animate-spin" />
+            ) : (
+              <Download size={14} />
+            )}
+            Exportar planilha
+          </button>
+          {exportError ? <p className="text-xs text-red-600">{exportError}</p> : null}
         </div>
-      ) : (
-        <p className="text-sm text-gray-500">
-          {total.toLocaleString("pt-BR")} resposta(s)
-          {total > 0 && (
-            <> · exibindo {rangeStart}–{rangeEnd}</>
-          )}
-        </p>
-      )}
+      </div>
 
       <div className="relative max-w-md">
         <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
